@@ -1,0 +1,447 @@
+ext {
+    versions = [
+    aspectj:                '1.7.2',
+    groovy:                 '2.1.3',
+    hibernate:              '3.5.6-Final',
+    httpcomponents:         '4.2.5',
+    jetty:                  '8.1.10.v20130312',
+    jstl:                   '1.2',
+    morphia:                '1.2.3',
+    poi:                    '3.9',
+    slf4j:                  '1.7.5',
+    spring:                 '3.1.3.RELEASE',
+    spring_security:        '3.1.3.RELEASE',
+    travelzen:              '4.25.0-SNAPSHOT'
+    ]
+
+    libraries = [
+    /* A */
+
+    // allinpay01(telpay)
+    allinpay01:             'com.allinpay:allinpay01:1.0',
+    allinpay02:             'com.allinpay:allinpay02:2.0',
+
+    activiti_engine:        'org.activiti:activiti-engine:5.14',
+    activiti_spring:        'org.activiti:activiti-spring:5.14',
+
+    // ant
+    ant:                    'org.apache.ant:ant:1.9.0',
+
+    // axis
+    axis:                   'axis:axis:1.4',
+
+    // aspectj
+    aspectj:                "org.aspectj:aspectjweaver:${versions.aspectj}",
+    aspectj_rt:             "org.aspectj:aspectjrt:${versions.aspectj}",
+    aspectj_tools:          "org.aspectj:aspectjtools:${versions.aspectj}",
+
+    /* B */
+
+    // bcprov_jdk15
+    bcprov_jdk15:           'bouncycastle:bcprov-jdk15:140',
+
+    /* C */
+
+    // c3p0
+    c3p0:                   'c3p0:c3p0:0.9.1.2',
+
+    // chinapnr
+    chinapnr01:             'com.chinapnr:chinapnr01:1.0',
+    chinapnr02:             'com.chinapnr:chinapnr02:2.0',
+
+    // closure compiler
+    closure_compiler:       'com.google.javascript:closure-compiler:r1592',
+
+    // cobertura
+    cobertura:              'net.sourceforge.cobertura:cobertura:1.9.4',
+
+    // collections
+    collections_generic:    'net.sourceforge.collections:collections-generic:4.01',
+
+    // commons:
+    commons_beanutils:      'commons-beanutils:commons-beanutils:1.8.3',
+    commons_cli:            'commons-cli:commons-cli:1.2',
+    commons_collections:    'commons-collections:commons-collections:3.2.1',
+    commons_configuration:  'commons-configuration:commons-configuration:1.9',
+    commons_dbcp:           'commons-dbcp:commons-dbcp:1.4',
+    commons_discovery:      'commons-discovery:commons-discovery:20040218.194635',
+    commons_fileupload:     'commons-fileupload:commons-fileupload:1.3',
+    commons_httpclient:     'commons-httpclient:commons-httpclient:3.1',
+    commons_io:             'commons-io:commons-io:2.4',
+    commons_id:             'org.littleshoot:littleshoot-commons-id:1.0.3',
+    commons_jexl:           'commons-jexl:commons-jexl:20040901.055348',
+    commons_lang:           'commons-lang:commons-lang:2.6',
+    commons_lang3:          'org.apache.commons:commons-lang3:3.1',
+    commons_logging:        'org.gatein.common:commons-logging:2.1.0.Final',
+    commons_net:            'commons-net:commons-net:3.2',
+    commons_pool:           'commons-pool:commons-pool:1.6',
+    commons_compress:       'org.apache.commons:commons-compress:1.5',
+
+    // cglib
+    cglib_asm:              'cglib:cglib-asm:1.0',
+    cglib_nodep:            'cglib:cglib-nodep:2.1_3',
+
+    // curator
+    curator:                'com.netflix.curator:curator-recipes:1.2.5',
+
+    // cxf
+    cxf:                    'org.apache.cxf:cxf-bundle:2.7.5',
+
+    /* D */
+
+    // dnsjava
+    dnsjava:                'dnsjava:dnsjava:2.1.1',
+
+    // dom4j
+    dom4j:                  'dom4j:dom4j:1.6.1',
+
+    // dozer
+    dozer:                  'net.sf.dozer:dozer:5.4.0',
+
+    /* E */
+
+    // easymock
+    easymock:               'org.easymock:easymock:3.0',
+
+    // ebuildapi
+    ebuildapi:              'com.travelsky:ebuildapi:1.0',
+
+    // ehcache
+    ehcache:                'net.sf.ehcache:ehcache-core:2.6.5',
+
+    /* F */
+
+    // allcom's faxapi
+    faxapi:                 'allcom:faxapi:1.0',
+
+    // freemarker
+    freemarker:             'org.freemarker:freemarker:2.3.19',
+
+    /* G */
+
+    // groovy
+    groovy:                 "org.codehaus.groovy:groovy:${versions.groovy}",
+    groovy_console:         "org.codehaus.groovy:groovy-console:${versions.groovy}",
+    groovy_jsr223:          "org.codehaus.groovy:groovy-jsr223:${versions.groovy}",
+    guice:                  "com.google.inject:guice:3.0",
+
+    // gson
+    gson:                   'com.google.code.gson:gson:2.2.4',
+
+    // guava
+    guava:                  'com.google.guava:guava:14.0.1',
+
+    /* H */
+
+    // hadoop
+    hadoop_core:            'org.apache.hadoop:hadoop-core:0.20.2',
+
+    // hbase
+    hbase:                  'org.apache.hbase:hbase:0.90.5',
+
+    // hibernate
+    hibernate_annotation:   "org.hibernate:hibernate-annotations:${versions.hibernate}",
+    hibernate_core:         "org.hibernate:hibernate-core:${versions.hibernate}",
+    hibernate_validator:    'org.hibernate:hibernate-validator:4.1.0.Final',
+
+    // httpcomponents
+    httpclient:             "org.apache.httpcomponents:httpclient:${versions.httpcomponents}",
+    httpmime:               "org.apache.httpcomponents:httpmime:${versions.httpcomponents}",
+
+    /* I */
+
+    // ibatis
+    ibatis:                 'org.apache.ibatis:ibatis-sqlmap:2.3.4.726',
+
+    // ibator
+    ibator:                 'org.apache.ibatis:ibator:1.2.1.681',
+
+    // icu4j
+    icu4j:                  'com.ibm.icu:icu4j:51.1',
+
+    // inject
+    inject:                 'javax.inject:javax.inject:1',
+
+    /* J */
+
+    // jackson json processor
+    jackson_mapper_asl:     'org.codehaus.jackson:jackson-mapper-asl:1.9.12',
+
+    // jacob
+    jacob:                  'net.sf.jacob-project:jacob:1.17',
+
+    // jactor
+    jactor:                 'org.agilewiki.jactor:jactor:4.6.2.0',
+
+    // javacsv
+    javacsv:                'net.sourceforge.javacsv:javacsv:2.0',
+
+    // javassist
+    javassist:              'org.javassist:javassist:3.17.1-GA',
+
+    // javaee-api
+    javaee_api:             'javax:javaee-api:6.0',
+
+    // javatuples
+    javatuples:             'org.javatuples:javatuples:1.2',
+
+    // jaxen
+    jaxen:                  'jaxen:jaxen:1.1.6',
+
+    // jchardet
+    jchardet:               'net.sourceforge.jchardet:jchardet:1.0',
+
+    // jdom
+    jdom:                   'org.jdom:jdom:2.0.2',
+
+    // jedis
+    jedis:                  'redis.clients:jedis:2.1.0',
+
+    // jetty
+    jetty_servlet:          "org.eclipse.jetty:jetty-servlet:${versions.jetty}",
+    jetty_util:             "org.eclipse.jetty:jetty-util:${versions.jetty}",
+    jetty_websocket:        "org.eclipse.jetty:jetty-websocket:${versions.jetty}",
+    jetty_xml:              "org.eclipse.jetty:jetty-xml:${versions.jetty}",
+
+    // jfreechart
+    jfreechart:             'jfree:jfreechart:1.0.13',
+
+    // jgraph
+    jgraph:                 'jgraph:jgraph:5.13.0.0',
+
+    // jgrapht
+    jgrapht:                'org.jgrapht:jgrapht-jdk1.5:0.7.3',
+
+    // jivesoftware
+    jivesoftware_smack:     'jivesoftware:smack:3.1.0',
+
+    // jmagick
+    jmagick:                'jmagick:jmagick:6.6.9',
+
+    // jna
+    jna:                    'net.java.dev.jna:jna:3.5.2',
+
+    // joda
+    joda_time:              'joda-time:joda-time:2.2',
+
+    // jscience
+    jscience:               'org.jscience:jscience:4.3.1',
+
+    // json
+    json_lib:               'net.sf.json-lib:json-lib:2.3:jdk15',
+
+    // fastjson
+    fastjson:               'com.alibaba:fastjson:1.1.29',
+
+    // jsr305
+    jsr305:                 'net.sourceforge.findbugs:jsr305:1.3.7',
+
+    // jstl
+    jstl_api:               "javax.servlet.jsp.jstl:jstl-api:${versions.jstl}",
+    jstl_impl:              "org.glassfish.web:jstl-impl:${versions.jstl}",
+
+    // junit
+    junit:                  'junit:junit:4.11',
+
+    // jta
+    jta:                    'javax.transaction:javax.transaction-api:1.2',
+
+    // jxl
+    jxl:                    'net.sourceforge.jexcelapi:jxl:2.6.12',
+
+    /* K */
+    kaptcha:                'com.github.axet:kaptcha:0.0.7',
+
+    /* L */
+
+    // log4j
+    log4j:                  'log4j:log4j:1.2.17',
+
+    // logging
+    slf4j_api:              "org.slf4j:slf4j-api:${versions.slf4j}",
+    slf4j_nop:              "org.slf4j:slf4j-nop:${versions.slf4j}",
+    slf4j_log:              "org.slf4j:slf4j-log4j12:${versions.slf4j}",
+    jcl_over_slf4j:         "org.slf4j:jcl-over-slf4j:${versions.slf4j}",
+    log4j_over_slf4j:       "org.slf4j:log4j-over-slf4j:${versions.slf4j}",
+    logback:                'ch.qos.logback:logback-classic:1.0.13',
+
+    // lucene
+    luecne_core:            'org.apache.lucene:lucene-core:3.6.2',
+    IKAnalyzer:             'org.wltea.analyzer.lucene:IKAnalyzer:2012_u5',
+
+    /* M */
+
+    // mail
+    mail:                   'javax.mail:mail:1.4.7',
+
+    // mchange
+    mchange_commons_java:   'com.mchange:mchange-commons-java:0.2.6',
+
+    //mockito
+    mockito:                'org.mockito:mockito-all:1.8.4',
+
+    // mongodb
+    mongo_java_driver:      'org.mongodb:mongo-java-driver:2.11.1',
+    morphia:                "com.github.jmkgreen.morphia:morphia:${versions.morphia}",
+    morphia_validation:     "com.github.jmkgreen.morphia:morphia-validation:${versions.morphia}",
+    // mx4j
+    mx4j_tools:             'mx4j:mx4j-tools:3.0.1',
+    // mybatis
+    mybatis:                'org.mybatis:mybatis:3.2.2',
+    mybatis_spring:         'org.mybatis:mybatis-spring:1.2.0',
+    mybatis_generator:      'org.mybatis.generator:mybatis-generator-core:1.3.2',
+
+    // htmlcleaner
+    myhtmlcleaner:          'com.travelzen.tops.myhtmlcleaner:htmlcleaner:2.1',
+
+    // mysql connector
+    mysql_connector:        'mysql:mysql-connector-java:5.1.24',
+
+    /* N */
+
+    /* O */
+
+    // op4j
+    op4j:                   'org.op4j:op4j:1.2',
+
+    // opencsv
+    opencsv:                   'net.sf.opencsv:opencsv:2.3',
+
+    // oracle
+    oracle:                 'oracle:ojdbc:11.2.0.1.0',
+
+    /* P */
+
+    // perf4j
+    perf4j:                 'org.perf4j:perf4j:0.9.16',
+
+    // pinyin4j
+    pinyin4j:               'com.belerweb:pinyin4j:2.5.0',
+
+    // poi
+    poi:                    "org.apache.poi:poi:${versions.poi}",
+    poi_ooxml:              "org.apache.poi:poi-ooxml:${versions.poi}",
+    poi_scratchpad:         "org.apache.poi:poi-scratchpad:${versions.poi}",
+
+    // postgresql
+    postgresql:             'postgresql:postgresql:9.1-901.jdbc4',
+
+    // proxytoys
+    proxytoys:              'com.thoughtworks.proxytoys:proxytoys:1.0',
+
+    /* Q */
+
+    // quartz
+    quartz:                 'org.quartz-scheduler:quartz:2.1.7',
+
+    /* R */
+
+    // rabbitmq
+    rabbitmq:               'com.rabbitmq:amqp-client:3.1.4',
+
+    // reflections
+    reflections:            'org.reflections:reflections:0.9.8',
+
+    // rhino
+    rhino:                  'org.mozilla:rhino:1.7R4',
+
+    // rome atom+rss
+    rome:                   'net.java.dev.rome:rome:1.0.0',
+
+    /* S */
+
+    // servlet api
+    servlet_api:            'javax.servlet:javax.servlet-api:3.1.0',
+
+    // simple xml
+    simple_xml:             'org.simpleframework:simple-xml:2.7',
+
+    // snakeyaml
+    snakeyaml:              'org.yaml:snakeyaml:1.12',
+
+    // spring
+    spring_agent:           'org.springframework:spring-agent:2.5.6',
+    spring_aspects:         "org.springframework:spring-aspects:${versions.spring}",
+    spring_context:         "org.springframework:spring-context:${versions.spring}",
+    spring_context_support: "org.springframework:spring-context-support:${versions.spring}",
+    spring_expression:      "org.springframework:spring-expression:${versions.spring}",
+    spring_instrument:      "org.springframework:spring-instrument:${versions.spring}",
+    spring_jdbc:            "org.springframework:spring-jdbc:${versions.spring}",
+    spring_orm:             "org.springframework:spring-orm:${versions.spring}",
+    spring_test:            "org.springframework:spring-test:${versions.spring}",
+    spring_tx:              "org.springframework:spring-tx:${versions.spring}",
+    spring_web:             "org.springframework:spring-web:${versions.spring}",
+    spring_webmvc:          "org.springframework:spring-webmvc:${versions.spring}",
+
+    // spring batch
+    spring_batch_core:      'org.springframework.batch:spring-batch-core:2.1.9.RELEASE',
+
+    // spring data
+    spring_data_redis:      'org.springframework.data:spring-data-redis:1.0.4.RELEASE',
+
+    // spring security
+    spring_security_acl:    "org.springframework.security:spring-security-acl:${versions.spring_security}",
+    spring_security_config: "org.springframework.security:spring-security-config:${versions.spring_security}",
+    spring_security_core:   "org.springframework.security:spring-security-core:${versions.spring_security}",
+    spring_security_web:    "org.springframework.security:spring-security-web:${versions.spring_security}",
+
+    // spring unitils
+    spring_unitils:         'org.unitils:unitils-spring:3.3',
+
+    // spring rabbitmq
+    spring_rabbit:          'org.springframework.amqp:spring-rabbit:1.2.0.RELEASE',
+
+    // spring retry
+    spring_retry:             "org.springframework.retry:spring-retry:1.0.0.RELEASE",
+
+    // sqljdbc4
+    sqljdbc4:               'com.microsoft.sqlserver:sqljdbc4:1.0',
+
+    // sstable
+    sstable:                'com.google:sstable:1.0.1',
+
+    /* T */
+
+    // thrift
+    thrift:                 'org.apache.thrift:libthrift:0.9.0',
+
+    // tz
+    tz_core:                "com.travelzen.commons:tz-core:${versions.travelzen}",
+    tz_common_utilities:    "com.travelzen.commons:tz-common-utilities:${versions.travelzen}",
+    tz_db:                  "com.travelzen.commons:tz-db:${versions.travelzen}",
+    tz_hibernate:           "com.travelzen.commons:tz-hibernate:${versions.travelzen}",
+    hotel_common:           'com.travelzen.product.hotel:product-hotel-project:2.14.0-SNAPSHOT',
+    hotel_common_1:         'com.travelzen.product.hotel:product-hotel-project:2.14.1-SNAPSHOT',
+    inventory_api:          'com.travelzen.inventory:inventory-project:0.12.0-SNAPSHOT',
+
+    /* U */
+    unicompayment:          'unicompayment.unicompayment_decoder:1.0.0.1',
+    /* V */
+
+    // validation
+    validation:             'javax.validation:validation-api:1.0.0.GA',
+
+    /* W */
+
+    // webdriver
+    webdriver:              'net.sourceforge.htmlunit:webdriver:2.6',
+
+    /* X */
+
+    // xstream
+    xstream:                'com.thoughtworks.xstream:xstream:1.4.4',
+
+    /* Y */
+
+    /* Z */
+
+    // zookeeper
+    zookeeper:              'org.apache.zookeeper:zookeeper:3.4.5',
+
+    ibeplus:                                'com.travelzen:tops-flight-ibeplus-server:0.0.4-SNAPSHOT',
+
+    // maria jdbc
+    maria_jdbc:             'org.jumpmind.symmetric.jdbc:mariadb-java-client:1.1.1'
+
+    ]
+}

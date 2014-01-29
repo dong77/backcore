@@ -1,0 +1,269 @@
+apply from: 'libraries.gradle'
+group = 'com.coinport'
+version = '1.0'
+
+class EmmaPluginConvention {
+    def verbosityLevel = "info";
+    def reportPath;
+    def coverageFileName;
+    def tmpDir;
+    def instrDir;
+    def metaDataFilePath;
+
+    def emma(Closure close) {
+        close.delegate = this;
+        close.run()
+    }
+
+    EmmaPluginConvention(Project project) {
+        reportPath          = "${project.reporting.baseDir.absolutePath}/emma"
+        coverageFileName    = "coverage"
+        tmpDir              = "${project.buildDir}/tmp/emma"
+        instrDir            = "${tmpDir}/instr"
+        metaDataFilePath    = "${tmpDir}/metadata.emma"
+    }
+}
+
+buildscript {
+    repositories { jcenter() }
+    dependencies { classpath 'com.github.goldin.plugins.gradle:about:0.3.1' }
+}
+
+allprojects {
+    buildDir = 'target'
+
+    apply plugin: 'about'
+    apply plugin: 'eclipse-wtp'
+    apply plugin: 'idea'
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'project-report'
+
+    sourceCompatibility = '1.7'
+    targetCompatibility = '1.7'
+
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        // maven { url 'http://192.168.160.187:8081/nexus/content/groups/public' }
+        maven { url 'https://maven.alfresco.com/nexus/content/groups/public' }
+    }
+
+    eclipse {
+        classpath {
+            downloadSources=true
+        }
+    }
+
+    configurations {
+        emma
+        provided {
+            // todo : need to make sure these are non-exported
+            description = 'Non-exported compile-time dependencies.'
+        }
+        configurations {
+            all*.exclude group: 'commons-logging', module: 'commons-logging'
+        }
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDirs "${projectDir}/src/main/gen-java"
+            }
+        }
+    }
+
+    about {
+        includeDependencies = [ 'compile', 'runtime' ]
+        prefix = '/'
+        fileName = 'build_info'
+        failIfNotFound = false
+        failOnError = false
+    }
+
+    build.dependsOn 'about'
+
+    sourceSets.main.compileClasspath += configurations.provided
+    eclipse.classpath.plusConfigurations += configurations.provided
+
+    dependencies {
+        testCompile libraries.junit
+        emma "emma:emma:2.1.5320"
+        emma "emma:emma_ant:2.1.5320"
+    }
+
+    sourceSets.main.resources {
+        if (project.hasProperty('profile')) {
+            srcDir 'src/main/resources-' + project.profile
+            srcDir 'src/test/resources-' + project.profile
+        }
+    }
+
+    tasks.withType(Compile) { options.encoding = 'UTF-8' }
+
+    eclipseProject.doLast {
+        if (!new File("$projectDir/src").exists() && !new File("$projectDir/gen-java").exists()) {
+            ant.delete dir: '.settings'
+            ant.delete file: '.project'
+            ant.delete file: '.classpath'
+        }
+    }
+
+    task zip(type: Zip) {
+        from ('script') { into('bin') }
+        from ('src/main/resources') { into('conf') }
+        if (project.hasProperty('profile'))
+            from ('src/main/resources-' + project.profile) { into('conf') }
+        into('lib') {
+            from ('lib')
+            from (jar.outputs.files)
+            from (configurations.compile)
+        }
+    }
+    zip.doFirst {
+        if (new File("$projectDir/script").exists()) {
+            classpath = new File("$projectDir/script/.classpath")
+            if (!classpath.exists()) classpath.createNewFile()
+            cp = 'CLASSPATH='
+            for(file in new File("$projectDir/lib").listFiles()) cp += '../lib/' + file.name + ';'
+            for(file in configurations.compile) cp += '../lib/' + file.name + ';'
+            for(file in jar.outputs.files) cp += '../lib/' + file.name + ';'
+            classpath.text = cp.substring(0, cp.length() - 1)
+        }
+    }
+
+    task sourcesJar(type: Jar, dependsOn:classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn:javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    artifacts {
+        archives sourcesJar
+        archives javadocJar
+    }
+
+    // 编译groovy代码时采用 MacRoman
+    tasks.withType(GroovyCompile) {
+        groovyOptions.encoding = 'MacRoman'
+    }
+
+    // 编译JAVADOC文件时采用 UTF-8
+    tasks.withType(Javadoc) {
+        options.encoding = 'UTF-8'
+    }
+
+    // 编译JAVA文件时采用 UTF-8
+    tasks.withType(Compile) {
+        options.encoding = 'UTF-8'
+    }
+
+/*
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                repository(url: 'http://192.168.160.187:8081/nexus/content/repositories/releases') {
+                    authentication(userName: mavenUser, password: mavenPassword)
+                }
+                snapshotRepository(url: 'http://192.168.160.187:8081/nexus/content/repositories/snapshots') {
+                    authentication(userName: mavenUser, password: mavenPassword)
+                }
+            }
+        }
+    }
+*/
+
+    [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+    def emmaConvention = new EmmaPluginConvention(project)
+    project.convention.plugins.emma = emmaConvention
+
+    task generateThrift(dependsOn: clean) << {
+        ext {
+            thriftFiles = fileTree(dir: 'src/main/thrift').matching { include '**/*.thrift' }
+        }
+        thriftFiles.collect{ it }.each {
+            def fpath = it.toString()
+            exec {
+                executable = 'thrift'
+                args = ['--gen', 'java:hashcode', '-o', "$projectDir/src/main", fpath]
+            }
+        }
+    }
+
+    // delete src/main/gen-java when exec clean task:
+    clean.doLast {
+        ant.delete(dir: "$projectDir/src/main/gen-java")
+        ant.delete(dir: "$projectDir/tracelogs")
+    }
+
+    task "cdirs" << {
+        sourceSets*.java.srcDirs*.each {
+            if (!it.toString().contains("gen-java")) {
+                file("${it}/${project.group.replace('.', '/')}").mkdirs()
+            }
+        }
+    }
+
+    tasks.withType(Compile) {
+        if (project.hasProperty("xlint")) {
+            options.compilerArgs << "-Xlint:unchecked"
+            options.compilerArgs << "-Xlint:deprecation"
+        }
+    }
+
+    test {
+        testLogging.showStandardStreams = true
+
+        // add EMMA related JVM args to our tests
+        jvmArgs "-XX:-UseSplitVerifier", "-Demma.coverage.out.file=$buildDir/tmp/emma/metadata.emma", "-Demma.coverage.out.merge=true"
+
+        doFirst {
+            println "Instrumenting the classes at " + sourceSets.main.output.classesDir.absolutePath
+            // define the custom EMMA ant tasks
+            ant.taskdef( resource:"emma_ant.properties", classpath: configurations.emma.asPath)
+
+            ant.path(id:"run.classpath") {
+                pathelement(location:sourceSets.main.output.classesDir.absolutePath)
+            }
+            def emmaInstDir = new File(sourceSets.main.output.classesDir.parentFile.parentFile, "tmp/emma/instr")
+            emmaInstDir.mkdirs()
+            println "Creating $emmaInstDir to instrument from " + sourceSets.main.output.classesDir.absolutePath
+            // instruct our compiled classes and store them at $buildDir/tmp/emma/instr
+            ant.emma(enabled: 'true', verbosity:'info'){
+                instr(merge:"true", destdir: emmaInstDir.absolutePath, instrpathref:"run.classpath",
+                    metadatafile: new File(emmaInstDir, '/metadata.emma').absolutePath) {
+                    instrpath {
+                        fileset(dir:sourceSets.main.output.classesDir.absolutePath, includes:"**/*.class")
+                    }
+                }
+            }
+            setClasspath(files("$buildDir/tmp/emma/instr") + configurations.emma + getClasspath())
+        }
+
+        // The report should be generated directly after the tests are done.
+        // We create three types (txt, html, xml) of reports here. Running your build script now should
+        // result in output like that:
+        doLast {
+            def srcDir = sourceSets.main.java.srcDirs.toArray()[0]
+            println "Creating test coverage reports for classes " + srcDir
+            def emmaInstDir = new File(sourceSets.main.output.classesDir.parentFile.parentFile, "tmp/emma")
+            ant.emma(enabled: "true") {
+                new File("$buildDir/reports/emma").mkdirs()
+                report(sourcepath: srcDir) {
+                    fileset(dir: emmaInstDir.absolutePath){
+                        include(name:"**/*.emma")
+                    }
+                    html(outfile:"$buildDir/reports/emma/coverage.html")
+                }
+            }
+            println "Test coverage reports available at $buildDir/reports/emma."
+            println "Report: \033[32m$buildDir/reports/emma/coverage.html\033[0m"
+        }
+    }
+}
