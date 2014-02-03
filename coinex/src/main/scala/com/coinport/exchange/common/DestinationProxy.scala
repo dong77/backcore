@@ -7,7 +7,6 @@ class DestinationProxy(destinationPath: String) extends Actor {
 
   def receive = {
     case msg =>
-      println("-------proxy: " + msg)
       destinationSelection tell (msg, sender) // forward
   }
 }
