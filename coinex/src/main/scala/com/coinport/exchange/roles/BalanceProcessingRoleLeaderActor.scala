@@ -14,7 +14,7 @@ import com.coinport.exchange.common._
 class BalanceProcessingRoleLeaderActor extends Actor with ActorLogging {
   val processor = context.actorOf(Props(classOf[BalanceProcessor]), "balance_processor")
 
-  //context.system.scheduler.scheduleOnce(5 seconds, processor, Persistent("FOO" + System.currentTimeMillis))(context.dispatcher)
+  context.system.scheduler.scheduleOnce(5 seconds, processor, Persistent("FOO" + System.currentTimeMillis))(context.dispatcher)
   // context.system.scheduler.scheduleOnce(10 seconds, processor, Persistent("BAR" + System.currentTimeMillis))(context.dispatcher)
 
   def receive = {
@@ -25,9 +25,9 @@ class BalanceProcessingRoleLeaderActor extends Actor with ActorLogging {
 class BalanceProcessor extends Processor with ActorLogging {
   override def processorId = "balance_processor"
 
-  val channel = context.actorOf(PersistentChannel.props(
+  val channel = context.actorOf(PersistentChannel.props("balance_to_market1_channel",
     PersistentChannelSettings(redeliverInterval = 3 seconds, redeliverMax = 15)),
-    name = "balance_output_channel")
+    name = "balance_to_market1_channel")
 
   var destProxy: Option[ActorRef] = None
 
@@ -35,6 +35,7 @@ class BalanceProcessor extends Processor with ActorLogging {
     case e: RoleLeaderChanged if e.role == "market_1" =>
       destProxy foreach context.stop
       destProxy = e.leader.map { addr =>
+        //TODO: construct path in a bettr way?
         val path = addr.toString + "/user/director/market_1"
         context.actorOf(Props(new DestinationProxy(path)))
       }
