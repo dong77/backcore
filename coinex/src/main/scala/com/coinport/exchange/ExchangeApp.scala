@@ -16,6 +16,10 @@ object ExchangeApp extends App {
   val system = ActorSystem("ClusterSystem", config)
 
   val settings = new RolePlaySettings()
+    .support("command_dispatcher",
+      RoleSetting(Props(classOf[CommandDispatchingRoleActor])))
+    .support("deposit_withdrawal",
+      RoleSetting(Props(classOf[DepositWithdrawalProcessingRoleActor]), Some(Props(classOf[DepositWithdrawalProcessingRoleLeaderActor]))))
     .support("balance",
       RoleSetting(Props(classOf[BalanceProcessingRoleActor]), Some(Props(classOf[BalanceProcessingRoleLeaderActor]))))
     .support("market_1",
