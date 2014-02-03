@@ -16,8 +16,10 @@ object ExchangeApp extends App {
   val system = ActorSystem("ClusterSystem", config)
 
   val settings = new RolePlaySettings()
-    .support("balance", RoleSetting(Props(classOf[BalanceProcessingRoleActor]), Some(Props(classOf[BalanceProcessingRoleLeaderActor]))))
-    .support("market_1", RoleSetting(Props(classOf[MarketProcessingRoleActor]), Some(Props(classOf[MarketProcessingRoleLeaderActor]))))
+    .support("balance",
+      RoleSetting(Props(classOf[BalanceProcessingRoleActor]), Some(Props(classOf[BalanceProcessingRoleLeaderActor]))))
+    .support("market_1",
+      RoleSetting(Props(classOf[MarketProcessingRoleActor]), Some(Props(classOf[MarketProcessingRoleLeaderActor], "1"))))
 
   val clusterListener = system.actorOf(Props(new RolePlay(settings)), "director")
 

@@ -1,20 +1,19 @@
 package com.coinport.exchange.roles
 
 import com.typesafe.config.ConfigFactory
-import akka.actor._
 import akka.util.Timeout
 import scala.concurrent.duration._
-import akka.actor.ActorRef
+import akka.actor._
 import akka.persistence._
-import akka.actor.ActorLogging
 import akka.cluster.ClusterEvent.RoleLeaderChanged
 
 import com.coinport.exchange.common._
+import Ids._
 
 class BalanceProcessingRoleLeaderActor extends Actor with ActorLogging {
-  val processor = context.actorOf(Props(classOf[BalanceProcessor]), "balance_processor")
+  val processor = context.actorOf(Props(classOf[BalanceProcessor]), BALANCE_PROCESSOR)
 
-  context.system.scheduler.scheduleOnce(5 seconds, processor, Persistent("FOO" + System.currentTimeMillis))(context.dispatcher)
+  context.system.scheduler.scheduleOnce(10 seconds, processor, Persistent("FOO" + System.currentTimeMillis))(context.dispatcher)
   // context.system.scheduler.scheduleOnce(10 seconds, processor, Persistent("BAR" + System.currentTimeMillis))(context.dispatcher)
 
   def receive = {
@@ -23,11 +22,9 @@ class BalanceProcessingRoleLeaderActor extends Actor with ActorLogging {
 }
 
 class BalanceProcessor extends Processor with ActorLogging {
-  override def processorId = "balance_processor"
+  override def processorId = BALANCE_PROCESSOR
 
-  val channel = context.actorOf(PersistentChannel.props("balance_to_market1_channel",
-    PersistentChannelSettings(redeliverInterval = 3 seconds, redeliverMax = 15)),
-    name = "balance_to_market1_channel")
+  val channel = createMarketChannel("1")
 
   var destProxy: Option[ActorRef] = None
 
@@ -47,14 +44,12 @@ class BalanceProcessor extends Processor with ActorLogging {
         channel ! Deliver(p.withPayload(s"processed ${payload}"), actor.path)
       }
   }
-}
 
-class MyDestination extends Actor with ActorLogging {
-  def receive = {
-    case p @ ConfirmablePersistent(payload, sequenceNr, redeliveries) =>
-      log.info("dest: " + payload.toString)
-      p.confirm()
+  private def createMarketChannel(market: String): ActorRef = {
+    val channelId = BALANCE_TO_MARKET_CHANNEL(market)
 
-    case x => println("othe r" + x)
+    context.actorOf(PersistentChannel.props(channelId,
+      PersistentChannelSettings(redeliverInterval = 3 seconds, redeliverMax = 15)),
+      name = channelId)
   }
 }
