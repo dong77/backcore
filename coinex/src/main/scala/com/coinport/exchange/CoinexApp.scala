@@ -23,7 +23,7 @@ object CoinexApp extends App {
   // balance processor
   actors += system.actorOf(ClusterSingletonManager.props(
     singletonProps = Props(classOf[BalanceProcessor]),
-    singletonName = "singletoni",
+    singletonName = "singleton",
     terminationMessage = PoisonPill,
     role = Some("bp")),
     name = "balanceProcessor")

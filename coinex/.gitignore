@@ -6,4 +6,5 @@
 /journal/
 /target/
 .cache
+nohup.out
 
