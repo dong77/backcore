@@ -72,8 +72,10 @@ object NewApp extends App {
     markethubProcessorRouter,
     markethubViewRouter)
 
+  println("local actors: " + actors)
+  println("cluster routers: " + routers)
   actors foreach { actor =>
-    println("local actor deployed: " + actor)
+
     actor ! routers
   }
 }
