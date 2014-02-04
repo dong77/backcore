@@ -8,6 +8,7 @@ import akka.routing.FromConfig
 import actors._
 import processors._
 import views._
+import akka.contrib.pattern.ClusterSingletonManager
 
 object NewApp extends App {
   val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0)).
@@ -18,29 +19,38 @@ object NewApp extends App {
   val cluster = Cluster(system)
   var actors = Set.empty[ActorRef]
 
-  if (cluster.getSelfRoles.contains("bp" /* balance processor */ )) {
-    //TODO: make singleton
-    actors += system.actorOf(Props(classOf[BalanceProcessor]), "balanceProcessor")
-  }
-  // TODO: check if `bp` is on this node
+  // balance processor
+  actors += system.actorOf(ClusterSingletonManager.props(
+    singletonProps = Props(classOf[BalanceProcessor]),
+    singletonName = "singleton",
+    terminationMessage = PoisonPill,
+    role = Some("bp")),
+    name = "balanceProcessor")
+
+  // transfer processor
+  actors += system.actorOf(ClusterSingletonManager.props(
+    singletonProps = Props(classOf[TransferProcessor]),
+    singletonName = "singleton",
+    terminationMessage = PoisonPill,
+    role = Some("tp")),
+    name = "transferProcessor")
+
+  // markethub processor
+  actors += system.actorOf(ClusterSingletonManager.props(
+    singletonProps = Props(classOf[MarkethubProcessor]),
+    singletonName = "singleton",
+    terminationMessage = PoisonPill,
+    role = Some("tp")),
+    name = "markethubProcessor")
+
   if (cluster.getSelfRoles.contains("bv" /* balance view */ )) {
     actors += system.actorOf(Props(classOf[BalanceView]), "balanceView")
     actors += system.actorOf(Props(classOf[AdminBalanceView]), "adminBalanceView")
   }
 
-  if (cluster.getSelfRoles.contains("tp" /* transfer processor */ )) {
-    //TODO: make singleton
-    actors += system.actorOf(Props(classOf[TransferProcessor]), "transferProcessor")
-  }
-
   if (cluster.getSelfRoles.contains("tv" /* transfer view */ )) {
     actors += system.actorOf(Props(classOf[TransferView]), "transferView")
     actors += system.actorOf(Props(classOf[AdminTransferView]), "adminTransferView")
-  }
-
-  if (cluster.getSelfRoles.contains("mhp" /* markethub processor */ )) {
-    //TODO: make singleton
-    actors += system.actorOf(Props(classOf[MarkethubProcessor]), "markethubProcessor")
   }
 
   if (cluster.getSelfRoles.contains("mhv" /* markethub view */ )) {
@@ -75,7 +85,9 @@ object NewApp extends App {
   println("local actors: " + actors)
   println("cluster routers: " + routers)
   actors foreach { actor =>
-
     actor ! routers
   }
+
+  Thread.sleep(60000)
+
 }
