@@ -22,11 +22,20 @@ class Frontdesk extends Actor with ActorLogging {
     case msg: LocalRouters =>
       routers = msg
       context become ready
+      log.warning("Frontdesk became ready")
     case msg =>
       log.warning("Frontdesk not ready yet")
   }
 
   def ready: Receive = {
+    case "Start" =>
+      context become active
+      log.warning("Frontdesk became active")
+    case msg =>
+      log.warning("Frontdesk not active yet")
+  }
+
+  def active: Receive = {
     case cmd @ (
       DoCreateWithdrawal |
       DoCreateOrder

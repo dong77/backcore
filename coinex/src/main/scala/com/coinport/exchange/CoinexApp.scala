@@ -10,7 +10,7 @@ import processors._
 import views._
 import akka.contrib.pattern.ClusterSingletonManager
 
-object NewApp extends App {
+object CoinexApp extends App {
   val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0)).
     withFallback(ConfigFactory.parseString("akka.cluster.roles = [" + args(1) + "]")).
     withFallback(ConfigFactory.load("coinex"))
@@ -18,11 +18,12 @@ object NewApp extends App {
   val system = ActorSystem("ClusterSystem", config)
   val cluster = Cluster(system)
   var actors = Set.empty[ActorRef]
+  // TODO: kill all other actors if this JVM hosts even one processor.
 
   // balance processor
   actors += system.actorOf(ClusterSingletonManager.props(
     singletonProps = Props(classOf[BalanceProcessor]),
-    singletonName = "singleton",
+    singletonName = "singletoni",
     terminationMessage = PoisonPill,
     role = Some("bp")),
     name = "balanceProcessor")
@@ -43,21 +44,21 @@ object NewApp extends App {
     role = Some("tp")),
     name = "markethubProcessor")
 
-  if (cluster.getSelfRoles.contains("bv" /* balance view */ )) {
+  if (cluster.selfRoles.contains("bv" /* balance view */ )) {
     actors += system.actorOf(Props(classOf[BalanceView]), "balanceView")
     actors += system.actorOf(Props(classOf[AdminBalanceView]), "adminBalanceView")
   }
 
-  if (cluster.getSelfRoles.contains("tv" /* transfer view */ )) {
+  if (cluster.selfRoles.contains("tv" /* transfer view */ )) {
     actors += system.actorOf(Props(classOf[TransferView]), "transferView")
     actors += system.actorOf(Props(classOf[AdminTransferView]), "adminTransferView")
   }
 
-  if (cluster.getSelfRoles.contains("mhv" /* markethub view */ )) {
+  if (cluster.selfRoles.contains("mhv" /* markethub view */ )) {
     actors += system.actorOf(Props(classOf[MarkethubView]), "markethubView")
   }
 
-  if (cluster.getSelfRoles.contains("f")) {
+  if (cluster.selfRoles.contains("f")) {
     actors += system.actorOf(Props(classOf[Frontdesk]), "frontdesk")
   }
 
@@ -82,12 +83,15 @@ object NewApp extends App {
     markethubProcessorRouter,
     markethubViewRouter)
 
-  println("local actors: " + actors)
-  println("cluster routers: " + routers)
   actors foreach { actor =>
     actor ! routers
   }
+  println("local actors: " + actors)
+  println("cluster routers: " + routers)
 
-  Thread.sleep(60000)
+  Thread.sleep(5000)
+  val delayFactor = cluster.state.members.size + 1
+  Thread.sleep(5000 / delayFactor)
 
+  system.actorSelection("/user/frontdesk") ! "Start"
 }
