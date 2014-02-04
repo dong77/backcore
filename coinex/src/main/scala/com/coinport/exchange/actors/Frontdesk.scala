@@ -8,12 +8,13 @@ import scala.concurrent.duration._
 case class LocalRouters(
   balanceProcessor: ActorRef,
   balanceView: ActorRef,
-  adminBalanceView: ActorRef,
+  balanceAdminView: ActorRef,
   transferProcessor: ActorRef,
   transferView: ActorRef,
-  adminTransferView: ActorRef,
+  transferAdminView: ActorRef,
   markethubProcessor: ActorRef,
-  markethubView: ActorRef)
+  markethubView: ActorRef,
+  markethubAdminView: ActorRef)
 
 class Frontdesk extends Actor with ActorLogging {
   var routers: LocalRouters = null

@@ -46,16 +46,17 @@ object CoinexApp extends App {
 
   if (cluster.selfRoles.contains("bv" /* balance view */ )) {
     actors += system.actorOf(Props(classOf[BalanceView]), "balanceView")
-    actors += system.actorOf(Props(classOf[AdminBalanceView]), "adminBalanceView")
+    actors += system.actorOf(Props(classOf[BalanceAdminView]), "adminBalanceView")
   }
 
   if (cluster.selfRoles.contains("tv" /* transfer view */ )) {
     actors += system.actorOf(Props(classOf[TransferView]), "transferView")
-    actors += system.actorOf(Props(classOf[AdminTransferView]), "adminTransferView")
+    actors += system.actorOf(Props(classOf[TransferAdminView]), "adminTransferView")
   }
 
   if (cluster.selfRoles.contains("mhv" /* markethub view */ )) {
     actors += system.actorOf(Props(classOf[MarkethubView]), "markethubView")
+    actors += system.actorOf(Props(classOf[MarkethubAdminView]), "markethubView")
   }
 
   if (cluster.selfRoles.contains("f")) {
@@ -64,24 +65,26 @@ object CoinexApp extends App {
 
   val balanceProcessorRouter = system.actorOf(FromConfig.props(Props.empty), name = "balanceProcessorRouter")
   val balanceViewRouter = system.actorOf(FromConfig.props(Props.empty), name = "balanceViewRouter")
-  val adminBalanceViewRouter = system.actorOf(FromConfig.props(Props.empty), name = "adminBalanceViewRouter")
+  val balanceAdminViewRouter = system.actorOf(FromConfig.props(Props.empty), name = "balanceAdminViewRouter")
 
   val transferProcessorRouter = system.actorOf(FromConfig.props(Props.empty), name = "transferProcessorRouter")
   val transferViewRouter = system.actorOf(FromConfig.props(Props.empty), name = "transferViewRouter")
-  val adminTransferViewRouter = system.actorOf(FromConfig.props(Props.empty), name = "adminTransferViewRouter")
+  val transferAdminViewRouter = system.actorOf(FromConfig.props(Props.empty), name = "transferAdminViewRouter")
 
   val markethubProcessorRouter = system.actorOf(FromConfig.props(Props.empty), name = "markethubProcessorRouter")
   val markethubViewRouter = system.actorOf(FromConfig.props(Props.empty), name = "markethubViewRouter")
+  val markethubAdminViewRouter = system.actorOf(FromConfig.props(Props.empty), name = "markethubAdminViewRouter")
 
   val routers = new LocalRouters(
     balanceProcessorRouter,
     balanceViewRouter,
-    adminBalanceViewRouter,
+    balanceAdminViewRouter,
     transferProcessorRouter,
     transferViewRouter,
-    adminTransferViewRouter,
+    transferAdminViewRouter,
     markethubProcessorRouter,
-    markethubViewRouter)
+    markethubViewRouter,
+    markethubAdminViewRouter)
 
   actors foreach { actor =>
     actor ! routers
