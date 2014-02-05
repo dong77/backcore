@@ -5,6 +5,9 @@ import com.coinport.exchange.domain._
 import com.coinport.exchange.domain.Commands._
 import scala.concurrent.duration._
 
+/**
+ * Holding all cluster-aware routers for easy access.
+ */
 case class LocalRouters(
   balanceProcessor: ActorRef,
   balanceView: ActorRef,
@@ -16,6 +19,10 @@ case class LocalRouters(
   markethubView: ActorRef,
   markethubAdminView: ActorRef)
 
+/**
+ * This is the world-facing actor that takes care of all commands and responses.
+ * It routes the command into the right processor for processing.
+ */
 class Frontdesk(routers: LocalRouters) extends Actor with ActorLogging {
 
   def receive = {

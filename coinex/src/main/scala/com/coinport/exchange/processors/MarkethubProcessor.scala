@@ -5,6 +5,7 @@ import akka.actor._
 import akka.persistence._
 import com.coinport.exchange.actors.LocalRouters
 
+// NOT USED YET
 class MarkethubProcessor(routers: LocalRouters) extends Processor with ActorLogging {
   override def processorId = "markethub_processor"
 
@@ -21,5 +22,9 @@ class MarkethubProcessor(routers: LocalRouters) extends Processor with ActorLogg
 
   def receive = {
     case p @ Persistent(payload, _) =>
+    // case "snapshot" => this.saveSnapshot(state)
+    // case SaveSnapshotSuccess(metadata) => log.info("snapshot saved: " + metadata)
+    // case SaveSnapshotFailure(metadata, reason) => log.info("snapshot failed: " + metadata + " failure: " + reason)
+    // case SnapshotOffer(metadata, offeredSnapshot) => state = offeredSnapshot.asInstanceOf[mutable.HashMap[String, String]]
   }
 }

@@ -12,6 +12,10 @@ import com.coinport.exchange.domain.Transfer
 import com.coinport.exchange.domain.Events._
 import com.coinport.exchange.domain.Commands._
 
+/**
+ * Holes each user's balance (amount of money). Currently it only takes care of `DepositConfirmed`
+ * events and persistence them.
+ */
 class BalanceProcessor(routers: LocalRouters) extends EventsourcedProcessor with ActorLogging {
   override def processorId = "balance_processor"
   var lastProcessedSeqNr = -1L
@@ -25,6 +29,7 @@ class BalanceProcessor(routers: LocalRouters) extends EventsourcedProcessor with
     name = "balance_2_transfer_channel")
   */
 
+  // This is the memory state
   val balances = mutable.HashMap[Long, Double]()
 
   override val receiveRecover: Receive = {
@@ -35,7 +40,7 @@ class BalanceProcessor(routers: LocalRouters) extends EventsourcedProcessor with
   override val receiveCommand: Receive = {
     case c @ ConfirmablePersistent(event, _, _) =>
       persist(event)(updateState)
-      c.confirm()
+      c.confirm() // confirm so that the channel won't try to re-deliver the same event.
     case _ =>
   }
 
@@ -46,14 +51,12 @@ class BalanceProcessor(routers: LocalRouters) extends EventsourcedProcessor with
           lastProcessedSeqNr = t.id
           val amount = balances.getOrElse(t.uid, 0.0) + t.amount
           balances += t.uid -> amount
-          println("------bp: processed  " + event)
+          log.info("processed  " + event + ", balances: " + balances.mkString("\n"))
         } else {
-          println("------bp: skipped  " + event)
+          log.debug("skipped  " + event)
         }
 
       case _ =>
     }
-
-    println("====== balances: " + balances.mkString("\n"))
   }
 }

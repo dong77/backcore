@@ -5,6 +5,7 @@ import akka.persistence._
 import com.coinport.exchange.common._
 import com.coinport.exchange.actors.LocalRouters
 
+// NOT USED YET
 class MarketProcessor(market: String, routers: LocalRouters) extends Processor with ActorLogging {
   override def processorId = market + "_market_processor"
 
