@@ -23,3 +23,9 @@ In the first terminal, you will see something like this `====== balances: 2 -> 4
 ## what I did in this app?
 It's very simple actually, please read the code.
 
+
+##possible future todos
+
+- local deployment working using Chef and Vagrant
+- cluster integration tests using the Multi Node Test utilities
+- continuous integration with Cloudbees/Jenkins attached to Github repo
