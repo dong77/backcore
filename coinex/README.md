@@ -5,8 +5,21 @@ The point of this prototype project is to learn if Akka cluster solution is bett
 
 ##compile and run
 
-In 3 terminals, run each of the following commands:
+you need to run mongodb first as all events are logged into mongodb, be sure to use the default port:
 
-`./activator 'run 2551  "balance"'`
-`./activator 'run 2552  "balance,market_1"'`
-`./activator 'run 2553  "market_2,market_1"'`
+`./mongod`
+
+
+In 2 terminals, run each of the following commands:
+
+`./activator 'run 2551  "f,bp,tp"'`
+
+`./activator 'run 2552  "f,bp,tp"'`
+
+
+
+In the first terminal, you will see something like this `====== balances: 2 -> 40.0`, then if you kill the app in the first terminal, you will see the something in the second terminal. 
+
+## what I did in this app?
+It's very simple actually, please read the code.
+

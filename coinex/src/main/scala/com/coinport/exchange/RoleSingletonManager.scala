@@ -23,6 +23,9 @@ class RoleSingletonManager(role: String, props: Props) extends Actor with ActorL
     case e: RoleLeaderChanged =>
       if (e.role == role) {
         val isLeader = e.leader == Some(cluster.selfAddress)
+        if (isLeader) {
+          println("="*60 + "\n I'm role leader for `" + role + "`\n" + "="*60)
+        }
         if (isLeader && actor == null) {
           actor = context.actorOf(props, "singleton")
         } else if (!isLeader && actor != null) {
