@@ -16,41 +16,23 @@ case class LocalRouters(
   markethubView: ActorRef,
   markethubAdminView: ActorRef)
 
-class Frontdesk extends Actor with ActorLogging {
-  var routers: LocalRouters = null
+class Frontdesk(routers: LocalRouters) extends Actor with ActorLogging {
 
   def receive = {
-    case msg: LocalRouters =>
-      routers = msg
-      context become ready
-      log.warning("Frontdesk became ready")
-    case msg =>
-      log.warning("Frontdesk not ready yet")
-  }
-
-  def ready: Receive = {
-    case "Start" =>
-      context become active
-      log.warning("Frontdesk became active")
-    case msg =>
-      log.warning("Frontdesk not active yet")
-  }
-
-  def active: Receive = {
     case cmd @ (
       DoCreateWithdrawal |
       DoCreateOrder
       ) => routers.balanceProcessor forward cmd
 
+    case cmd: DoCreatePendingDeposit =>
+      routers.transferProcessor forward cmd
+
     case cmd @ (
-      DoCreatePendingVirtualDeposit |
-      DoCreatePendingFaitDeposit |
-      DoConfirmFaitDeposit |
+      DoConfirmDeposit |
       DoCancelWithdrawal |
       DoConfirmWithdrawal |
-      // DoCreateAdminDeposit |
       DoFailWithdrawal
-      ) => routers.markethubProcessor forward cmd
+      ) =>
+      routers.transferProcessor forward cmd
   }
-
 }

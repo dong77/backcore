@@ -7,10 +7,15 @@ import akka.actor._
 import akka.persistence._
 import com.coinport.exchange.common._
 import com.coinport.exchange.actors.LocalRouters
+import scala.collection.mutable
+import com.coinport.exchange.domain.Transfer
+import com.coinport.exchange.domain.Events._
+import com.coinport.exchange.domain.Commands._
 
-class BalanceProcessor extends Processor with ActorLogging {
+class BalanceProcessor(routers: LocalRouters) extends EventsourcedProcessor with ActorLogging {
   override def processorId = "balance_processor"
-
+  var lastProcessedSeqNr = -1L
+  /*
   val markethubChannel = context.actorOf(PersistentChannel.props("balance_2_markethub_channel",
     PersistentChannelSettings(redeliverInterval = 3 seconds, redeliverMax = 15)),
     name = "balance_2_markethub_channel")
@@ -18,18 +23,37 @@ class BalanceProcessor extends Processor with ActorLogging {
   val transferChannel = context.actorOf(PersistentChannel.props("balance_2_transfer_channel",
     PersistentChannelSettings(redeliverInterval = 3 seconds, redeliverMax = 15)),
     name = "balance_2_transfer_channel")
+  */
 
-  var routers: LocalRouters = null
+  val balances = mutable.HashMap[Long, Double]()
 
-  def receive = {
-    case routers: LocalRouters =>
-      this.routers = routers
+  override val receiveRecover: Receive = {
+    case e: Event => updateState(e)
+    case _ =>
+  }
 
-    case p @ Persistent(payload, _) =>
-      log.info("payload: " + payload.toString)
-    // refs.markethubProcessor foreach { actor =>
-    // Question: what if the host inside actor.path is down, is there a way for this Persistent to be recovered anyway?
-    //  channel ! Deliver(p.withPayload(s"processed ${payload}"), actor.path)
-    // }
+  override val receiveCommand: Receive = {
+    case c @ ConfirmablePersistent(event, _, _) =>
+      persist(event)(updateState)
+      c.confirm()
+    case _ =>
+  }
+
+  def updateState(event: Any) = {
+    event match {
+      case DepositConfirmed(t) =>
+        if (lastProcessedSeqNr < t.id) {
+          lastProcessedSeqNr = t.id
+          val amount = balances.getOrElse(t.uid, 0.0) + t.amount
+          balances += t.uid -> amount
+          println("------bp: processed  " + event)
+        } else {
+          println("------bp: skipped  " + event)
+        }
+
+      case _ =>
+    }
+
+    println("====== balances: " + balances.mkString("\n"))
   }
 }

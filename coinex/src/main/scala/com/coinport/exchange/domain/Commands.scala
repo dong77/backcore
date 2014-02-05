@@ -1,20 +1,21 @@
 package com.coinport.exchange.domain
 
+case class Transfer(id: Long, uid: Long, amount: Double, status: String = "pending")
+
 object Commands {
   sealed trait Command
 
   // Deposit -----------
-  case class DoCreatePendingVirtualDeposit(deposit: Deposit) extends Command
-  case class DoCreatePendingFaitDeposit(deposit: Deposit) extends Command
-  case class DoConfirmFaitDeposit(depositId: Long) extends Command
-  case class DoFailFaitDeposit(depositId: Long) extends Command
-  //case class DoCreateAdminDeposit extends Command
+  case class DoCreatePendingDeposit(t: Transfer) extends Command
+  case class DoCancelDeposit(id: Long) extends Command
+  case class DoConfirmDeposit(id: Long) extends Command
+  case class DoFailDeposit(id: Long) extends Command
 
   // Withdrawal --------
-  case class DoCreateWithdrawal(withdrawal: Withdrawal) extends Command
-  case class DoCancelWithdrawal(withdrawalId: Long) extends Command
-  case class DoConfirmWithdrawal(withdrawalId: Long) extends Command
-  case class DoFailWithdrawal(withdrawalId: Long) extends Command
+  case class DoCreateWithdrawal(t: Transfer) extends Command
+  case class DoCancelWithdrawal(id: Long) extends Command
+  case class DoConfirmWithdrawal(id: Long) extends Command
+  case class DoFailWithdrawal(id: Long) extends Command
 
   // Orders ------------
   case class DoCreateOrder extends Command
@@ -35,17 +36,16 @@ object Events {
   sealed trait Event
 
   // Deposit -----------
-  case class PendingVirtualDepositCreated(deposit: Deposit) extends Event
-  case class PendingFaitDepositCreated(deposit: Deposit) extends Event
-  case class AdminDepositCreated(deposit: Deposit) extends Event
-  case class DepositConfirmed(deposit: Deposit) extends Event
-  case class DepositFailed(deposit: Deposit) extends Event
+  case class PendingDepositCreated(t: Transfer) extends Event
+  case class DepositConcelled(t: Transfer) extends Event
+  case class DepositConfirmed(t: Transfer) extends Event
+  case class DepositFailed(t: Transfer, reason: String) extends Event
 
   // Withdrawal --------
-  case class WithdrawalRequestCreated(withdrawal: Withdrawal) extends Event
-  case class WithdrawalCancelled(withdrawal: Withdrawal) extends Event
-  case class WithdrawalConfirmed(withdrawal: Withdrawal) extends Event
-  case class WithdrawalFailed(withdrawal: Withdrawal) extends Event
+  case class WithdrawalRequestCreated(t: Transfer) extends Event
+  case class WithdrawalCancelled(t: Transfer) extends Event
+  case class WithdrawalConfirmed(t: Transfer) extends Event
+  case class WithdrawalFailed(t: Transfer, reason: String) extends Event
 
   // Orders ------------
   case class OrderCreated extends Event
