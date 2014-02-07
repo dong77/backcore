@@ -87,7 +87,8 @@ public final class BP {
     private final RingBuffer<CommandEvent> ringBuffer =
         createSingleProducer(CommandEvent.EVENT_FACTORY, BUFFER_SIZE, new YieldingWaitStrategy());
     private final SequenceBarrier logicBarrier = ringBuffer.newBarrier();
-    private final CommandEventProcessHandler logicHandler = new CommandEventProcessHandler(new BusinessContext());
+    private final BusinessContext bc = new BusinessContext();
+    private final CommandEventProcessHandler logicHandler = new CommandEventProcessHandler(bc);
     private final BatchEventProcessor<CommandEvent> logicProcessor =
         new BatchEventProcessor<CommandEvent>(ringBuffer, logicBarrier, logicHandler);
 
@@ -142,6 +143,10 @@ public final class BP {
 
     public void setParamsForPerfTest(final CountDownLatch latch, final long expectedCount) {
         replicateHandler.reset(latch, replicateProcessor.getSequence().get() + expectedCount);
+    }
+
+    public void displayBC() {
+        bc.display();
     }
 
     public int forTest() {

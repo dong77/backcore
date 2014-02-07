@@ -9,18 +9,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BusinessContext {
-    // TODO(c): change this
-    private long nextUserId = 0;
-
     private Map<Long, UserInfo> users;
 
     public BusinessContext() {
         users = new HashMap<Long, UserInfo>();
     }
 
+    public void display() {
+        for (Map.Entry<Long, UserInfo> entry : users.entrySet()) {
+            System.out.println(entry.getKey() + "-->" + entry.getValue().toString());
+        }
+    }
+
     public void register(UserInfo ui) {
-        long id = nextUserId++;
-        ui.setId(id);
-        users.put(id, ui);
+        users.put(ui.getId(), ui);
     }
 }

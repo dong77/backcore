@@ -35,11 +35,10 @@ public class Main {
     public static void smokeTest() throws Exception {
         BP bp = new BP();
         CountDownLatch latch = new CountDownLatch(1);
-        bp.setParamsForPerfTest(latch, 1);
+        bp.setParamsForPerfTest(latch, 3);
         bp.start();
 
         CommandEvent event = bp.nextCommand();
-
         BPCommand bpc = new BPCommand();
         bpc.setType(BPCommandType.REGISTER_USER);
         UserInfo ui = new UserInfo();
@@ -48,11 +47,33 @@ public class Main {
         ui.setPassword("0101");
         bpc.setUserInfo(ui);
         event.setCommand(bpc);
+        bp.execute();
 
+        event = bp.nextCommand();
+        bpc = new BPCommand();
+        bpc.setType(BPCommandType.REGISTER_USER);
+        ui = new UserInfo();
+        ui.setId(5678);
+        ui.setNickname("chao");
+        ui.setPassword("0202");
+        bpc.setUserInfo(ui);
+        event.setCommand(bpc);
+        bp.execute();
+
+        event = bp.nextCommand();
+        bpc = new BPCommand();
+        bpc.setType(BPCommandType.REGISTER_USER);
+        ui = new UserInfo();
+        ui.setId(9101);
+        ui.setNickname("super");
+        ui.setPassword("0303");
+        bpc.setUserInfo(ui);
+        event.setCommand(bpc);
         bp.execute();
 
         latch.await();
         bp.terminate();
+        // bp.displayBC();
     }
 
     public static void main(String[] args) throws Exception {
