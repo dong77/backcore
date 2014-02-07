@@ -10,13 +10,13 @@ import com.coinport.f1.BPCommand;
 import com.coinport.f1.BusinessContext;
 import com.coinport.f1.OrderInfo;
 
-public class PlaceOrderHandler extends CommandHandler {
+public class CancelOrderHandler extends CommandHandler {
     @Override
     public void exec(final BPCommand command, BusinessContext bc) {
         if (command.isSetOrderInfo()) {
-            bc.placeOrder(command.getOrderInfo());
+            bc.cancelOrder(command.getOrderInfo());
         } else {
-            System.out.println("no orderInfo found in place order command");
+            System.out.println("no orderInfo found in cancel order command");
         }
     }
 }

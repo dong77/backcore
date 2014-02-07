@@ -10,6 +10,7 @@ enum BPCommandType {
     REGISTER_USER = 1,
     DW = 2,
     PLACE_ORDER = 3,
+    CANCEL_ORDER = 4,
 }
 
 enum BOS {
@@ -58,7 +59,7 @@ struct OrderTypes {
 }
 
 struct Wallet {
-    1: optional CoinType coinType,
+    1: required CoinType coinType,
     2: optional i64 valid,
     3: optional i64 frozen,
 }
@@ -72,9 +73,9 @@ struct UserInfo {
 
 struct DWInfo {
     1: required i64 uid,
-    2: optional CoinType coinType,
-    3: optional DOW dwtype,
-    4: optional i64 amount,
+    2: required DOW dwtype,
+    3: required CoinType coinType,
+    4: required i64 amount,
 }
 
 struct OrderInfo {
@@ -97,4 +98,5 @@ struct BPCommand {
     3: optional DWInfo dwInfo,
     4: optional OrderInfo orderInfo,
     5: optional i64 timestamp,
+    6: optional i64 index,  // used for ordering the order
 }

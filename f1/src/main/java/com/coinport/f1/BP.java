@@ -149,7 +149,7 @@ public final class BP {
         bc.display();
     }
 
-    public int forTest() {
-        return 0;
+    public BusinessContext getContext() {
+        return bc;
     }
 }

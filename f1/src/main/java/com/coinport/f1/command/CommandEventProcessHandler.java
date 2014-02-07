@@ -23,6 +23,7 @@ public final class CommandEventProcessHandler implements EventHandler<CommandEve
         handlers.put(BPCommandType.REGISTER_USER, new RegisterUserHandler());
         handlers.put(BPCommandType.DW, new DWHandler());
         handlers.put(BPCommandType.PLACE_ORDER, new PlaceOrderHandler());
+        handlers.put(BPCommandType.CANCEL_ORDER, new CancelOrderHandler());
     }
 
     public CommandEventProcessHandler(BusinessContext bc) {
