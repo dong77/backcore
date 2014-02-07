@@ -14,7 +14,7 @@ public class PerfTestMain {
         BP bp = new BP();
         CountDownLatch latch = new CountDownLatch(1);
         long eventNum = 1000L * 1000L * 100L;
-        bp.setParamsForPerfTest(latch, eventNum);
+        bp.setStopParams(latch, eventNum);
         bp.start();
         long start = System.currentTimeMillis();
         for (long i = 0; i < eventNum; ++i) {
@@ -26,6 +26,7 @@ public class PerfTestMain {
         }
         latch.await();
         bp.terminate();
+        bp.shutdown();
         long opsPerSecond = (eventNum * 1000L) / (System.currentTimeMillis() - start);
 
         System.out.format("The ops is %,d ops/sec\n",Long.valueOf(opsPerSecond));

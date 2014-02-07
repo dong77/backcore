@@ -11,8 +11,9 @@ import java.util.Map;
 public class BusinessContext {
     private Map<Long, UserInfo> users;
 
+    // Don't use this method in inner function for the performance concern.
     public UserInfo getUser(long uid) {
-        return users.get(uid);
+        return users.get(uid).deepCopy();
     }
 
     public long userNum() {
