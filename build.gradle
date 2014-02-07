@@ -26,7 +26,10 @@ class EmmaPluginConvention {
 
 buildscript {
     repositories { jcenter() }
-    dependencies { classpath 'com.github.goldin.plugins.gradle:about:0.3.1' }
+    dependencies {
+        classpath 'com.github.goldin.plugins.gradle:about:0.3.1'
+        classpath 'eu.appsatori:gradle-fatjar-plugin:0.2'
+    }
 }
 
 allprojects {
@@ -38,6 +41,7 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
     apply plugin: 'project-report'
+    apply plugin: 'fatjar'
 
     sourceCompatibility = '1.7'
     targetCompatibility = '1.7'
@@ -83,6 +87,10 @@ allprojects {
     }
 
     build.dependsOn 'about'
+
+    fatJar {
+        exclude 'META-INF/*.DSA'
+    }
 
     sourceSets.main.compileClasspath += configurations.provided
     eclipse.classpath.plusConfigurations += configurations.provided
@@ -183,9 +191,9 @@ allprojects {
     def emmaConvention = new EmmaPluginConvention(project)
     project.convention.plugins.emma = emmaConvention
 
-    task generateThrift(dependsOn: clean) << {
+    task generateThrift << {
         ext {
-            thriftFiles = fileTree(dir: 'src/main/thrift').matching { include '**/*.thrift' }
+            thriftFiles = fileTree(dir: 'src/main/proto').matching { include '**/*.thrift' }
         }
         thriftFiles.collect{ it }.each {
             def fpath = it.toString()

@@ -10,6 +10,8 @@ dependencies {
     compile 'com.lmax:disruptor:3.2.0'
 }
 
+compileJava.dependsOn(generateThrift)
+
 run {
     args "Hello world"
 }

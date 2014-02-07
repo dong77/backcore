@@ -11,10 +11,10 @@ import org.junit.runners.JUnit4;
 import org.junit.Test;
 
 @RunWith(JUnit4.class)
-public class BLPTest {
+public class BPTest {
     @Test
     public void testNormal() {
-        BLP blp = new BLP();
-        assertEquals(0, blp.forTest());
+        BP bp = new BP();
+        assertEquals(0, bp.forTest());
     }
 }
