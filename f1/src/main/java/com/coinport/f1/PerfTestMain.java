@@ -26,7 +26,6 @@ public class PerfTestMain {
         }
         latch.await();
         bp.terminate();
-        bp.shutdown();
         long opsPerSecond = (eventNum * 1000L) / (System.currentTimeMillis() - start);
 
         System.out.format("The ops is %,d ops/sec\n",Long.valueOf(opsPerSecond));

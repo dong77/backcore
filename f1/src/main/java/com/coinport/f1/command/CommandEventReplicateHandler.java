@@ -19,13 +19,13 @@ public final class CommandEventReplicateHandler implements EventHandler<CommandE
         count = expectedCount;
     }
 
-    public void setMore(final CountDownLatch latch, final long expectedCount) {
-        this.latch = latch;
-        count += expectedCount;
+    public void resetMore(final CountDownLatch latch, final long moreCount) {
+        reset(latch, count + moreCount);
     }
 
     @Override
     public void onEvent(final CommandEvent event, final long sequence, final boolean endOfBatch) throws Exception {
+        // System.out.println("replicate");
         if (latch != null && count == sequence) {
             latch.countDown();
         }

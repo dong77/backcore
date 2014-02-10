@@ -30,7 +30,6 @@ public class BPTest {
 
         latch.await();
         bp.terminate();
-        bp.shutdown();
         // bp.displayBC();
 
         BusinessContext bc = bp.getContext();
@@ -45,8 +44,8 @@ public class BPTest {
     public void testDWCommand() throws Exception {
         BP bp = new BP();
         CountDownLatch latch = new CountDownLatch(1);
-        bp.setStopParams(latch, 4);
         bp.start();
+        bp.setStopParams(latch, 4);
 
         addUser(bp, 1234, "hoss", "0101");
         addUser(bp, 56, "chao", "0202");
@@ -55,7 +54,6 @@ public class BPTest {
         depositWithdrawal(bp, 1234, DOW.DEPOSIT, CoinType.CNY, 10000000);
 
         latch.await();
-        bp.terminate();
 
         UserInfo ui = bp.getContext().getUser(1234);
         assertEquals(1, ui.getWallets().size());
@@ -65,8 +63,7 @@ public class BPTest {
         assertFalse(wallet.isSetFrozen());
 
         latch = new CountDownLatch(1);
-        bp.setStopParams(latch, 1);
-        bp.start();
+        bp.setMore(latch, 1);
 
         depositWithdrawal(bp, 1234, DOW.WITHDRAWAL, CoinType.CNY, 10000);
 
@@ -76,9 +73,6 @@ public class BPTest {
         bp.displayBC();
         System.out.println(bp.getContext().getUser(1234).getWallets().get(CoinType.CNY).getValid());
         assertEquals(9990000, bp.getContext().getUser(1234).getWallets().get(CoinType.CNY).getValid());
-
-
-        bp.shutdown();
     }
 
     private void depositWithdrawal(

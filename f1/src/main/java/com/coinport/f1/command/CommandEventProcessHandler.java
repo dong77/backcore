@@ -32,6 +32,7 @@ public final class CommandEventProcessHandler implements EventHandler<CommandEve
 
     @Override
     public void onEvent(final CommandEvent event, final long sequence, final boolean endOfBatch) throws Exception {
+        // System.out.println("process");
         BPCommand command = event.getCommand();
         handlers.get(command.getType()).exec(command, bc);
     }

@@ -82,7 +82,7 @@ public final class BP {
     // Tips: lscpu to show the L3 cache size in Ubuntu.
     private static final int BUFFER_SIZE =  1 << 20;
 
-    private ExecutorService executor;
+    private final ExecutorService executor = Executors.newFixedThreadPool(NUM_EVENT_PROCESSORS);
 
     private final RingBuffer<CommandEvent> ringBuffer =
         createSingleProducer(CommandEvent.EVENT_FACTORY, BUFFER_SIZE, new YieldingWaitStrategy());
@@ -120,7 +120,6 @@ public final class BP {
     }
 
     public void start() {
-        executor = Executors.newFixedThreadPool(NUM_EVENT_PROCESSORS);
         executor.submit(logicProcessor);
         executor.submit(journalProcessor);
         executor.submit(replicateProcessor);
@@ -130,9 +129,6 @@ public final class BP {
         logicProcessor.halt();
         journalProcessor.halt();
         replicateProcessor.halt();
-    }
-
-    public void shutdown() {
         executor.shutdown();
     }
 
@@ -149,8 +145,8 @@ public final class BP {
         replicateHandler.reset(latch, replicateProcessor.getSequence().get() + expectedCount);
     }
 
-    public void setMoreStopParams(final CountDownLatch latch, final long expectedCount) {
-        replicateHandler.setMore(latch, expectedCount);
+    public void setMore(final CountDownLatch latch, final long expectedCount) {
+        replicateHandler.resetMore(latch, expectedCount);
     }
 
     public void displayBC() {
