@@ -6,7 +6,7 @@ version := "1.0"
 
 fork := true
 
-scalaVersion := "2.10.2"
+scalaVersion := "2.10.3"
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
