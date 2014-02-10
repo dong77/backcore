@@ -5,6 +5,12 @@ The point of this prototype project is to learn if Akka cluster solution is bett
 
 ##compile and run
 
+First you need to build another project:
+
+`git clone https://github.com/ddevore/akka-persistence-mongo.git`
+`cd akka-persistence-mongo`
+`sbt publish-local`
+
 you need to run mongodb first as all events are logged into mongodb, be sure to use the default port:
 
 `./mongod`
