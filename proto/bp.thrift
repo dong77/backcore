@@ -71,22 +71,26 @@ struct DWInfo {
     4: required i64 amount,
 }
 
+struct TradePair {
+    1: required CoinType from = CoinType.CNY,
+    2: required CoinType to = CoinType.BTC,
+}
+
 struct OrderInfo {
-    10: required i64 id,
-    20: required i64 uid,
-    30: required i32 quantity,
-    40: optional i64 timestamp,
-    50: optional BOS bos = BOS.BUY,
-    60: optional MOL mol = MOL.LIMIT,
-    70: optional SOM som = SOM.MORE,
-    80: optional Strategy strategy = Strategy.NORMAL,
-    90: optional CoinType from = CoinType.CNY,
-    100: optional CoinType to = CoinType.BTC,
-    110: optional i64 price,  // 单位为(1/100000000)
-    120: optional double percentage,
-    130: optional i64 actPrice,
-    140: optional i64 expired = -1, // TODO(c): is this good enough?
-    150: optional string routing,  // choose a exchange or auto
+    1: required i64 id,
+    2: required i64 uid,
+    3: required TradePair tradePair;
+    4: required i32 quantity,
+    5: optional i64 timestamp,
+    6: optional BOS bos = BOS.BUY,
+    7: optional MOL mol = MOL.LIMIT,
+    8: optional SOM som = SOM.MORE,
+    9: optional Strategy strategy = Strategy.NORMAL,
+    10: optional i64 price,  // 单位为(1/100000000)
+    11: optional double percentage,
+    12: optional i64 actPrice,
+    13: optional i64 expired = -1, // TODO(c): is this good enough?
+    14: optional string routing,  // choose a exchange or auto
 }
 
 struct BPCommand {

@@ -86,8 +86,8 @@ public class PerfTestMain {
     }
 
     public static void main(String[] args) throws Exception {
-        // perfTest();
-        treeSetTest();
+        perfTest();
+        // treeSetTest();
     }
 
     private static void showTreeSet(final Set<OrderInfo> ts) {

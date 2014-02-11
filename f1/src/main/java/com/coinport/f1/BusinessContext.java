@@ -1,6 +1,7 @@
 /**
  * Copyright 2014 Coinport Inc. All Rights Reserved.
  * Author: c@coinport.com (Chao Ma)
+ * TODO(c): 目前这种bc调bb然后bb又回调bc的方法很不好，耦合太强，而且后期很难做到事务。需要尽快重构。
  */
 
 package com.coinport.f1;
@@ -10,6 +11,7 @@ import java.util.Map;
 
 public class BusinessContext {
     private Map<Long, UserInfo> users;
+    private Map<TradePair, BlackBoard> blackBoards;
 
     // Don't use this method in inner function for the performance concern.
     public UserInfo getUser(long uid) {
@@ -22,6 +24,7 @@ public class BusinessContext {
 
     public BusinessContext() {
         users = new HashMap<Long, UserInfo>();
+        blackBoards = new HashMap<TradePair, BlackBoard>();
     }
 
     public void display() {
@@ -122,11 +125,79 @@ public class BusinessContext {
         return withdrawal(uid, coinType, amount, false) && deposit(uid, coinType, amount, true);
     }
 
-    public boolean placeOrder(OrderInfo oi) {
-        return true;
+    public void placeOrder(OrderInfo oi) {
+        TradePair tradePair = oi.getTradePair();
+        BlackBoard blackBoard = null;
+        if (!blackBoards.containsKey(tradePair)) {
+            blackBoard = new BlackBoard(tradePair);
+            blackBoards.put(tradePair, blackBoard);
+        } else {
+            blackBoard = blackBoards.get(tradePair);
+        }
+        placeOrderInner(blackBoard, oi);
     }
 
     public boolean cancelOrder(OrderInfo oi) {
         return true;
+    }
+
+    public boolean finishOrder(OrderInfo oi) {
+        return true;
+    }
+
+    private void placeOrderInner(BlackBoard board, OrderInfo oi) {
+        // TODO(c): to be finish
+        switch (oi.getStrategy()) {
+            case NORMAL:
+                placeNormalOrder(board, oi);
+            case STOP:
+                break;
+            case TRAILING_STOP:
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void placeNormalOrder(BlackBoard board, OrderInfo oi) {
+        switch (oi.getBos()) {
+            case BUY:
+                normalBuy(board, oi);
+            case SELL:
+                normalSell(board, oi);
+            default:
+                break;
+        }
+    }
+
+    private void normalBuy(BlackBoard board, OrderInfo oi) {
+        /*
+        OrderInfo soi = sell.first();
+        // TODO(c): optimize this logic
+        while (oi.getPrice() >= soi.getPrice() && oi.getQuantity() > 0) {
+            int tradeQuantity = java.lang.Math.min(oi.getQuantity(), soi.getQuantity());
+
+            bc.deposit(soi.getUid(), soi.getTo(), tradeQuantity * soi.getPrice(), true);
+            bc.withdrawal(soi.getUid(), soi.getFrom(), tradeQuantity, false);
+            soi.setQuantity(soi.getQuantity() - tradeQuantity);
+            bc.deposit(oi.getUid(), oi.getTo(), tradeQuantity, true);
+            bc.withdrawal(oi.getUid(), oi.getFrom(), tradeQuantity * soi.getPrice(), true);
+            oi.setQuantity(oi.getQuantity() - tradeQuantity);
+            currentPrice = soi.getPrice();
+
+            if (soi.getQuantity() == 0) {
+                bc.finishOrder(soi);
+                soi = sell.first();
+            }
+        }
+        if (oi.getQuantity() > 0) {
+            buy.add(oi);
+        } else {
+            bc.finishOrder(oi);
+        }
+        */
+    }
+
+    private void normalSell(BlackBoard board, OrderInfo oi) {
     }
 }
