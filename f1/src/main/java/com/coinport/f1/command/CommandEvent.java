@@ -10,11 +10,7 @@ import com.lmax.disruptor.EventFactory;
 import com.coinport.f1.BPCommand;
 
 public final class CommandEvent {
-    private BPCommand command;
-
-    public void setCommand(final BPCommand command) {
-        this.command = command;
-    }
+    private final BPCommand command = new BPCommand();
 
     public BPCommand getCommand() {
         return command;

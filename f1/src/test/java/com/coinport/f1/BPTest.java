@@ -63,22 +63,31 @@ public class BPTest {
         assertFalse(wallet.isSetFrozen());
 
         latch = new CountDownLatch(1);
-        bp.setMore(latch, 1);
+        bp.setMore(latch, 3);
 
         depositWithdrawal(bp, 1234, DOW.WITHDRAWAL, CoinType.CNY, 10000);
+        depositWithdrawal(bp, 56, DOW.DEPOSIT, CoinType.BTC, 20);
+        depositWithdrawal(bp, 56, DOW.WITHDRAWAL, CoinType.BTC, 4);
 
         latch.await();
         bp.terminate();
 
-        bp.displayBC();
-        System.out.println(bp.getContext().getUser(1234).getWallets().get(CoinType.CNY).getValid());
+        // bp.displayBC();
+        // System.out.println(bp.getContext().getUser(1234).getWallets().get(CoinType.CNY).getValid());
         assertEquals(9990000, bp.getContext().getUser(1234).getWallets().get(CoinType.CNY).getValid());
+        assertEquals(16, bp.getContext().getUser(56).getWallets().get(CoinType.BTC).getValid());
+    }
+
+    public void testPlaceOrder() throws Exception {
+    }
+
+    public void testCancelOrder() throws Exception {
     }
 
     private void depositWithdrawal(
         BP bp, final long uid, final DOW dwtype, final CoinType coinType, final long amount) {
         CommandEvent event = bp.nextCommand();
-        BPCommand bpc = new BPCommand();
+        BPCommand bpc = event.getCommand();
         bpc.setType(BPCommandType.DW);
         DWInfo dwi = new DWInfo();
         dwi.setUid(uid);
@@ -86,20 +95,18 @@ public class BPTest {
         dwi.setCoinType(coinType);
         dwi.setAmount(amount);
         bpc.setDwInfo(dwi);
-        event.setCommand(bpc);
         bp.execute();
     }
 
     private void addUser(BP bp, final long uid, final String name, final String pw) {
         CommandEvent event = bp.nextCommand();
-        BPCommand bpc = new BPCommand();
+        BPCommand bpc = event.getCommand();
         bpc.setType(BPCommandType.REGISTER_USER);
         UserInfo ui = new UserInfo();
         ui.setId(uid);
         ui.setNickname(name);
         ui.setPassword(pw);
         bpc.setUserInfo(ui);
-        event.setCommand(bpc);
         bp.execute();
     }
 

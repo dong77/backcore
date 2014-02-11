@@ -51,13 +51,6 @@ enum DOW {
     WITHDRAWAL = 2,
 }
 
-struct OrderTypes {
-    1: optional BOS bos,
-    2: optional MOL mol,
-    3: optional SOM som,
-    4: optional Strategy strategy,
-}
-
 struct Wallet {
     1: required CoinType coinType,
     2: optional i64 valid,
@@ -79,17 +72,21 @@ struct DWInfo {
 }
 
 struct OrderInfo {
-    1: required i32 id,
-    2: optional string uid,
-    3: optional OrderTypes orderTypes,
-    4: optional CoinType from,
-    5: optional CoinType to,
-    6: optional i64 price,  // 单位为(1/100000000)
-    7: optional double percentage,
-    8: optional i64 actPrice,
-    9: optional i32 quantity,
-    10: optional i64 expired, // TODO(c): is this good enough?
-    11: optional string routing,
+    10: required i64 id,
+    20: required i64 uid,
+    30: required i32 quantity,
+    40: optional i64 timestamp,
+    50: optional BOS bos = BOS.BUY,
+    60: optional MOL mol = MOL.LIMIT,
+    70: optional SOM som = SOM.MORE,
+    80: optional Strategy strategy = Strategy.NORMAL,
+    90: optional CoinType from = CoinType.CNY,
+    100: optional CoinType to = CoinType.BTC,
+    110: optional i64 price,  // 单位为(1/100000000)
+    120: optional double percentage,
+    130: optional i64 actPrice,
+    140: optional i64 expired = -1, // TODO(c): is this good enough?
+    150: optional string routing,  // choose a exchange or auto
 }
 
 struct BPCommand {
