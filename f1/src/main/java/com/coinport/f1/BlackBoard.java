@@ -20,27 +20,27 @@ public class BlackBoard {
         tradePair = tp;
     }
 
-    public OrderInfo getFirstBuyer() {
+    public OrderInfo getFirstBuyOrder() {
         return buyList.first();
     }
 
-    public OrderInfo getFirstSeller() {
+    public OrderInfo getFirstSellOrder() {
         return sellList.first();
     }
 
-    public void putToBuyList(OrderInfo oi) {
+    public void putToBuyOrderList(OrderInfo oi) {
         buyList.add(oi);
     }
 
-    public void putToSellList(OrderInfo oi) {
+    public void putToSellOrderList(OrderInfo oi) {
         sellList.add(oi);
     }
 
-    public void eraseFromBuyList(OrderInfo oi) {
+    public void eraseFromBuyOrderList(OrderInfo oi) {
         buyList.remove(oi);
     }
 
-    public void eraseFromSellList(OrderInfo oi) {
+    public void eraseFromSellOrderList(OrderInfo oi) {
         sellList.remove(oi);
     }
 

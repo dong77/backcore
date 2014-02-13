@@ -43,7 +43,52 @@ public class BusinessContext {
             System.out.println("can't find user to deposit");
             return false;
         }
-        UserInfo ui = users.get(uid);
+        return deposit(users.get(uid), coinType, amount, fromValid);
+    }
+
+    public boolean withdrawal(final long uid, final CoinType coinType, final long amount, final boolean fromValid) {
+        if (!users.containsKey(uid)) {
+            System.out.println("can't find user to withdrawal");
+            return false;
+        }
+        return withdrawal(users.get(uid), coinType, amount, fromValid);
+    }
+
+    public boolean frozen(final long uid, final CoinType coinType, final long amount) {
+        return withdrawal(uid, coinType, amount, true) && deposit(uid, coinType, amount, false);
+    }
+
+    public boolean unfreeze(final long uid, final CoinType coinType, final long amount) {
+        return withdrawal(uid, coinType, amount, false) && deposit(uid, coinType, amount, true);
+    }
+
+    private boolean frozen(UserInfo ui, final CoinType coinType, final long amount) {
+        return withdrawal(ui, coinType, amount, true) && deposit(ui, coinType, amount, false);
+    }
+
+    private boolean unfrozen(UserInfo ui, final CoinType coinType, final long amount) {
+        return withdrawal(ui, coinType, amount, false) && deposit(ui, coinType, amount, true);
+    }
+
+    public void placeOrder(OrderInfo oi) {
+        TradePair tradePair = oi.getTradePair();
+        BlackBoard blackBoard = null;
+        if (!blackBoards.containsKey(tradePair)) {
+            blackBoard = new BlackBoard(tradePair);
+            blackBoards.put(tradePair, blackBoard);
+        } else {
+            blackBoard = blackBoards.get(tradePair);
+        }
+        placeOrderInner(blackBoard, oi);
+    }
+
+    public boolean cancelOrder(OrderInfo oi) {
+        return true;
+    }
+
+    private boolean deposit(UserInfo ui, final CoinType coinType, final long amount, final boolean fromValid) {
+        if (ui == null) return false;
+
         if (!ui.isSetWallets()) {
             Map<CoinType, Wallet> wallets = new HashMap<CoinType, Wallet>();
             Wallet wallet = new Wallet();
@@ -84,12 +129,9 @@ public class BusinessContext {
         return true;
     }
 
-    public boolean withdrawal(final long uid, final CoinType coinType, final long amount, final boolean fromValid) {
-        if (!users.containsKey(uid)) {
-            System.out.println("can't find user to withdrawal");
-            return false;
-        }
-        UserInfo ui = users.get(uid);
+    private boolean withdrawal(UserInfo ui, final CoinType coinType, final long amount, final boolean fromValid) {
+        if (ui == null) return false;
+
         if (!ui.isSetWallets()) {
             System.out.println("the user has no wallet");
             return false;
@@ -114,34 +156,6 @@ public class BusinessContext {
             wallet.setFrozen(wallet.getFrozen() - amount);
         }
 
-        return true;
-    }
-
-    public boolean frozen(final long uid, final CoinType coinType, final long amount) {
-        return withdrawal(uid, coinType, amount, true) && deposit(uid, coinType, amount, false);
-    }
-
-    public boolean unfreeze(final long uid, final CoinType coinType, final long amount) {
-        return withdrawal(uid, coinType, amount, false) && deposit(uid, coinType, amount, true);
-    }
-
-    public void placeOrder(OrderInfo oi) {
-        TradePair tradePair = oi.getTradePair();
-        BlackBoard blackBoard = null;
-        if (!blackBoards.containsKey(tradePair)) {
-            blackBoard = new BlackBoard(tradePair);
-            blackBoards.put(tradePair, blackBoard);
-        } else {
-            blackBoard = blackBoards.get(tradePair);
-        }
-        placeOrderInner(blackBoard, oi);
-    }
-
-    public boolean cancelOrder(OrderInfo oi) {
-        return true;
-    }
-
-    public boolean finishOrder(OrderInfo oi) {
         return true;
     }
 
@@ -171,31 +185,57 @@ public class BusinessContext {
     }
 
     private void normalBuy(BlackBoard board, OrderInfo oi) {
-        /*
-        OrderInfo soi = sell.first();
-        // TODO(c): optimize this logic
-        while (oi.getPrice() >= soi.getPrice() && oi.getQuantity() > 0) {
-            int tradeQuantity = java.lang.Math.min(oi.getQuantity(), soi.getQuantity());
+        TradePair tp = oi.getTradePair();
+        CoinType from = tp.getFrom();
+        CoinType to = tp.getTo();
+        int buyQuantity = oi.getQuantity();
+        long buyPrice = oi.getPrice();
+        long buyAmount =  buyQuantity * buyPrice;
+        UserInfo buyer = users.get(oi.getUid());
 
-            bc.deposit(soi.getUid(), soi.getTo(), tradeQuantity * soi.getPrice(), true);
-            bc.withdrawal(soi.getUid(), soi.getFrom(), tradeQuantity, false);
-            soi.setQuantity(soi.getQuantity() - tradeQuantity);
-            bc.deposit(oi.getUid(), oi.getTo(), tradeQuantity, true);
-            bc.withdrawal(oi.getUid(), oi.getFrom(), tradeQuantity * soi.getPrice(), true);
-            oi.setQuantity(oi.getQuantity() - tradeQuantity);
-            currentPrice = soi.getPrice();
+        if (buyAmount > buyer.getWallets().get(from).getValid()) {
+            System.out.println("not enough money");
+            return;
+        } else {
+            frozen(buyer, from, buyAmount);
+        }
 
-            if (soi.getQuantity() == 0) {
-                bc.finishOrder(soi);
-                soi = sell.first();
+        OrderInfo soi = board.getFirstSellOrder();
+        long sellPrice = soi.getPrice();
+        while (buyPrice >= sellPrice && buyQuantity > 0) {
+            int sellQuantity = soi.getQuantity();
+            UserInfo seller = users.get(soi.getUid());
+
+            int tradeQuantity = java.lang.Math.min(buyQuantity, sellQuantity);
+            long sellAmount = tradeQuantity * sellPrice;
+
+
+            deposit(seller, from, sellAmount, true);
+            withdrawal(seller, to, tradeQuantity, false);
+            sellQuantity -= tradeQuantity;
+
+            deposit(buyer, to, tradeQuantity, true);
+            withdrawal(buyer, from, sellAmount, false);
+            buyQuantity -= tradeQuantity;
+
+            board.priceChanged(sellPrice);
+
+
+            if (sellQuantity == 0) {
+                board.eraseFromSellOrderList(soi);
+                seller.getOrderIds().remove(soi.getId());
+
+                soi = board.getFirstSellOrder();
+                sellPrice = soi.getPrice();
+            } else {
+                soi.setQuantity(sellQuantity);
             }
         }
-        if (oi.getQuantity() > 0) {
-            buy.add(oi);
-        } else {
-            bc.finishOrder(oi);
+        if (buyQuantity > 0) {
+            oi.setQuantity(buyQuantity);
+            board.putToBuyOrderList(oi);
+            buyer.getOrderIds().put(oi.getId(), 1);
         }
-        */
     }
 
     private void normalSell(BlackBoard board, OrderInfo oi) {
