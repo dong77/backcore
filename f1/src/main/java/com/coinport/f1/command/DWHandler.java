@@ -29,7 +29,7 @@ public class DWHandler extends CommandHandler {
                     break;
             }
         } else {
-            // System.out.println("no dwinfo found in dw command");
+            logger.error("no dwinfo found in dw command");
         }
     }
 }

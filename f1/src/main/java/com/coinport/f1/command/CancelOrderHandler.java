@@ -16,7 +16,7 @@ public class CancelOrderHandler extends CommandHandler {
         if (command.isSetOrderInfo()) {
             bc.cancelOrder(command.getOrderInfo());
         } else {
-            System.out.println("no orderInfo found in cancel order command");
+            logger.error("no orderInfo found in cancel order command");
         }
     }
 }

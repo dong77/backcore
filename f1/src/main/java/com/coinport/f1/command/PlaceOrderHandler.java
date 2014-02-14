@@ -16,7 +16,7 @@ public class PlaceOrderHandler extends CommandHandler {
         if (command.isSetOrderInfo()) {
             bc.placeOrder(command.getOrderInfo());
         } else {
-            System.out.println("no orderInfo found in place order command");
+            logger.error("no orderInfo found in place order command");
         }
     }
 }

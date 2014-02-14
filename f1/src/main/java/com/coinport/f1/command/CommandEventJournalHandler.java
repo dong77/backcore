@@ -12,7 +12,5 @@ import java.util.concurrent.CountDownLatch;
 public final class CommandEventJournalHandler implements EventHandler<CommandEvent> {
     @Override
     public void onEvent(final CommandEvent event, final long sequence, final boolean endOfBatch) throws Exception {
-        // TODO(c) remove this line
-        // System.out.println("save to the levelDB");
     }
 }

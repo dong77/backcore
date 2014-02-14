@@ -8,6 +8,10 @@ package com.coinport.f1.command;
 import com.coinport.f1.BPCommand;
 import com.coinport.f1.BusinessContext;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public abstract class CommandHandler {
+    protected final static Logger logger = LoggerFactory.getLogger(CommandHandler.class);
     public abstract void exec(final BPCommand command, BusinessContext bc);
 }

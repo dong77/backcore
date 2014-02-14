@@ -72,16 +72,57 @@ public class BPTest {
         latch.await();
         bp.terminate();
 
-        // bp.displayBC();
-        // System.out.println(bp.getContext().getUser(1234).getWallets().get(CoinType.CNY).getValid());
         assertEquals(9990000, bp.getContext().getUser(1234).getWallets().get(CoinType.CNY).getValid());
         assertEquals(16, bp.getContext().getUser(56).getWallets().get(CoinType.BTC).getValid());
     }
 
+    @Test
     public void testPlaceOrder() throws Exception {
+        BP bp = new BP();
+        CountDownLatch latch = new CountDownLatch(1);
+        bp.start();
+        bp.setStopParams(latch, 12);
+
+        addUser(bp, 1234, "hoss", "0101");
+        addUser(bp, 56, "chao", "0202");
+        addUser(bp, 78, "ma", "0303");
+
+        depositWithdrawal(bp, 1234, DOW.DEPOSIT, CoinType.CNY, 10000000);
+        depositWithdrawal(bp, 56, DOW.DEPOSIT, CoinType.CNY, 10000000);
+        depositWithdrawal(bp, 78, DOW.DEPOSIT, CoinType.CNY, 10000000);
+
+        depositWithdrawal(bp, 1234, DOW.DEPOSIT, CoinType.BTC, 100);
+        depositWithdrawal(bp, 56, DOW.DEPOSIT, CoinType.BTC, 100);
+        depositWithdrawal(bp, 78, DOW.DEPOSIT, CoinType.BTC, 100);
+
+        placeOrder(bp, 1, 1234, new TradePair(CoinType.CNY, CoinType.BTC), 9, 100001, BOS.BUY, 4001);
+        placeOrder(bp, 2, 56, new TradePair(CoinType.CNY, CoinType.BTC), 2, 100002, BOS.SELL, 5001);
+        placeOrder(bp, 3, 56, new TradePair(CoinType.CNY, CoinType.BTC), 2, 100003, BOS.SELL, 4001);
+
+        latch.await();
+        bp.terminate();
+        bp.displayBC();
     }
 
+    @Test
     public void testCancelOrder() throws Exception {
+    }
+
+    private void placeOrder(BP bp, final long id, final long uid, final TradePair tp,
+        final int quantity, final long timestamp, final BOS bos, final long price) {
+        CommandEvent event = bp.nextCommand();
+        BPCommand bpc = event.getCommand();
+        bpc.setType(BPCommandType.PLACE_ORDER);
+        OrderInfo oi = new OrderInfo();
+        oi.setId(id);
+        oi.setUid(uid);
+        oi.setTradePair(tp);
+        oi.setQuantity(quantity);
+        oi.setTimestamp(timestamp);
+        oi.setBos(bos);
+        oi.setPrice(price);
+        bpc.setOrderInfo(oi);
+        bp.execute();
     }
 
     private void depositWithdrawal(

@@ -62,7 +62,6 @@ struct UserInfo {
     2: optional string nickname,
     3: optional string password,
     4: optional map<CoinType, Wallet> wallets,
-    5: optional map<i64, i32> orderIds,  // use map for performance concern
 }
 
 struct DWInfo {

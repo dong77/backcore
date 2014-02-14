@@ -25,7 +25,6 @@ public final class CommandEventReplicateHandler implements EventHandler<CommandE
 
     @Override
     public void onEvent(final CommandEvent event, final long sequence, final boolean endOfBatch) throws Exception {
-        // System.out.println("replicate");
         if (latch != null && count == sequence) {
             latch.countDown();
         }

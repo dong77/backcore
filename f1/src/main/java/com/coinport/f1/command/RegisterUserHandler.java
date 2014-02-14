@@ -15,7 +15,7 @@ public class RegisterUserHandler extends CommandHandler {
         if (command.isSetUserInfo()) {
             bc.register(command.getUserInfo());
         } else {
-            System.out.println("no userinfo found in register command");
+            logger.error("no userinfo found in register command");
         }
     }
 }

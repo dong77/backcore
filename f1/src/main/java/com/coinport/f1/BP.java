@@ -11,6 +11,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.lmax.disruptor.BatchEventProcessor;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.SequenceBarrier;
@@ -75,6 +78,8 @@ import com.coinport.f1.command.CommandEventReplicateHandler;
  * </pre>
  */
 public final class BP {
+    private final static Logger logger = LoggerFactory.getLogger(BP.class);
+
     private static final int NUM_EVENT_PROCESSORS = 3;
     private static final int NUM_NEEDED_PROCESSORS = NUM_EVENT_PROCESSORS + 1;  // adds publisher
 
@@ -112,9 +117,9 @@ public final class BP {
         if (NUM_NEEDED_PROCESSORS > availableProcessors)
         {
             // TODO(c) use logback
-            System.out.print(
+            logger.warn(
                 "*** Warning ***: your system has insufficient processors to execute the test efficiently. ");
-            System.out.println(
+            logger.warn(
                 "Processors required = " + NUM_NEEDED_PROCESSORS + " available = " + availableProcessors);
         }
     }

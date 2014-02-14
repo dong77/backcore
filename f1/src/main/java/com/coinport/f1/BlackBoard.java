@@ -8,7 +8,11 @@ package com.coinport.f1;
 import java.util.HashSet;
 import java.util.TreeSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class BlackBoard {
+    private final static Logger logger = LoggerFactory.getLogger(BlackBoard.class);
 
     private TradePair tradePair;
     private long currentPrice = -1;
@@ -21,10 +25,14 @@ public class BlackBoard {
     }
 
     public OrderInfo getFirstBuyOrder() {
+        if (buyList.isEmpty())
+            return null;
         return buyList.first();
     }
 
     public OrderInfo getFirstSellOrder() {
+        if (sellList.isEmpty())
+            return null;
         return sellList.first();
     }
 
@@ -46,5 +54,20 @@ public class BlackBoard {
 
     public void priceChanged(final long price) {
         currentPrice = price;
+    }
+
+    public void display() {
+        logger.debug("Trade pair: " + tradePair.toString());
+        logger.debug("Current price: " + currentPrice);
+        logger.debug("Buy list:");
+        displaySet(buyList);
+        logger.debug("Sell list:");
+        displaySet(sellList);
+    }
+
+    private void displaySet(final TreeSet<OrderInfo> orderInfos) {
+        for (OrderInfo oi : orderInfos) {
+            logger.debug(oi.toString());
+        }
     }
 }

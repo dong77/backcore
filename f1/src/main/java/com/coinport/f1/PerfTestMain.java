@@ -11,7 +11,13 @@ import java.util.concurrent.CountDownLatch;
 
 import com.coinport.f1.command.CommandEvent;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ch.qos.logback.classic.LoggerContext;
+
 public class PerfTestMain {
+    final static Logger logger = LoggerFactory.getLogger(PerfTestMain.class);
+
     public static void perfTest() throws Exception {
         BP bp = new BP();
         CountDownLatch latch = new CountDownLatch(1);
@@ -56,9 +62,18 @@ public class PerfTestMain {
         bp.terminate();
         long opsPerSecond = (eventNum * 1000L) / (System.currentTimeMillis() - start);
 
-        System.out.format("The ops is %,d ops/sec\n",Long.valueOf(opsPerSecond));
-        System.out.println("finish");
+        String res = String.format("The ops is %,d ops/sec\n",Long.valueOf(opsPerSecond));
+        logger.debug(res);
         bp.displayBC();
+    }
+
+    public static void testLog() {
+        logger.debug("this is a log test");
+
+        // important!
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+        loggerContext.stop();
+
     }
 
     public static void treeSetTest() {
@@ -77,22 +92,20 @@ public class PerfTestMain {
         ts.add(addOrderInfo(1, 1001, 4, 1000009, 100));
         showTreeSet(ts);
 
-        System.out.println("~~~~~~~~~~~");
         OrderInfo oi = ts.first();
-        System.out.println(oi);
-        System.out.println("~~~~~~~~~~~");
         ts.remove(oi);
         showTreeSet(ts);
     }
 
     public static void main(String[] args) throws Exception {
+        // testLog();
         perfTest();
         // treeSetTest();
     }
 
     private static void showTreeSet(final Set<OrderInfo> ts) {
         for (OrderInfo entry : ts) {
-            System.out.println(entry.toString());
+            logger.debug(entry.toString());
         }
     }
 

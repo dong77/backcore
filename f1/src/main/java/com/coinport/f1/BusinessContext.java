@@ -1,7 +1,6 @@
 /**
  * Copyright 2014 Coinport Inc. All Rights Reserved.
  * Author: c@coinport.com (Chao Ma)
- * TODO(c): 目前这种bc调bb然后bb又回调bc的方法很不好，耦合太强，而且后期很难做到事务。需要尽快重构。
  */
 
 package com.coinport.f1;
@@ -9,7 +8,11 @@ package com.coinport.f1;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class BusinessContext {
+    private final static Logger logger = LoggerFactory.getLogger(BusinessContext.class);
     private Map<Long, UserInfo> users;
     private Map<TradePair, BlackBoard> blackBoards;
 
@@ -28,8 +31,17 @@ public class BusinessContext {
     }
 
     public void display() {
+        logger.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        logger.debug("The users' info:");
         for (Map.Entry<Long, UserInfo> entry : users.entrySet()) {
-            System.out.println(entry.getKey() + "-->" + entry.getValue().toString());
+            logger.debug(entry.getKey() + "-->" + entry.getValue().toString());
+        }
+
+        logger.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        logger.debug("Blackboards' info:");
+        for (BlackBoard bb: blackBoards.values()) {
+            logger.debug("~~~~~~~~~~~~~");
+            bb.display();
         }
     }
 
@@ -40,7 +52,7 @@ public class BusinessContext {
 
     public boolean deposit(final long uid, final CoinType coinType, final long amount, final boolean fromValid) {
         if (!users.containsKey(uid)) {
-            System.out.println("can't find user to deposit");
+            logger.error("can't find user to deposit");
             return false;
         }
         return deposit(users.get(uid), coinType, amount, fromValid);
@@ -48,7 +60,7 @@ public class BusinessContext {
 
     public boolean withdrawal(final long uid, final CoinType coinType, final long amount, final boolean fromValid) {
         if (!users.containsKey(uid)) {
-            System.out.println("can't find user to withdrawal");
+            logger.error("can't find user to withdrawal");
             return false;
         }
         return withdrawal(users.get(uid), coinType, amount, fromValid);
@@ -133,24 +145,24 @@ public class BusinessContext {
         if (ui == null) return false;
 
         if (!ui.isSetWallets()) {
-            System.out.println("the user has no wallet");
+            logger.error("the user has no wallet");
             return false;
         }
         Map<CoinType, Wallet> wallets = ui.getWallets();
         if (!wallets.containsKey(coinType)) {
-            System.out.println("the use has no wallet with type " + coinType.toString());
+            logger.error("the use has no wallet with type " + coinType.toString());
             return false;
         }
         Wallet wallet = wallets.get(coinType);
         if (fromValid) {
             if (!wallet.isSetValid() || wallet.getValid() < amount) {
-                System.out.println("not enough valid coin");
+                logger.error("not enough valid coin");
                 return false;
             }
             wallet.setValid(wallet.getValid() - amount);
         } else {
             if (!wallet.isSetFrozen() || wallet.getFrozen() < amount) {
-                System.out.println("not enough frozen coin");
+                logger.error("not enough frozen coin");
                 return false;
             }
             wallet.setFrozen(wallet.getFrozen() - amount);
@@ -164,6 +176,7 @@ public class BusinessContext {
         switch (oi.getStrategy()) {
             case NORMAL:
                 placeNormalOrder(board, oi);
+                break;
             case STOP:
                 break;
             case TRAILING_STOP:
@@ -177,8 +190,10 @@ public class BusinessContext {
         switch (oi.getBos()) {
             case BUY:
                 normalBuy(board, oi);
+                break;
             case SELL:
                 normalSell(board, oi);
+                break;
             default:
                 break;
         }
@@ -194,13 +209,17 @@ public class BusinessContext {
         UserInfo buyer = users.get(oi.getUid());
 
         if (buyAmount > buyer.getWallets().get(from).getValid()) {
-            System.out.println("not enough money");
+            logger.info("not enough money");
             return;
         } else {
             frozen(buyer, from, buyAmount);
         }
 
         OrderInfo soi = board.getFirstSellOrder();
+        if (soi == null) {
+            board.putToBuyOrderList(oi);
+            return;
+        }
         long sellPrice = soi.getPrice();
         while (buyPrice >= sellPrice && buyQuantity > 0) {
             int sellQuantity = soi.getQuantity();
@@ -223,9 +242,10 @@ public class BusinessContext {
 
             if (sellQuantity == 0) {
                 board.eraseFromSellOrderList(soi);
-                seller.getOrderIds().remove(soi.getId());
 
                 soi = board.getFirstSellOrder();
+                if (soi == null)
+                    break;
                 sellPrice = soi.getPrice();
             } else {
                 soi.setQuantity(sellQuantity);
@@ -234,10 +254,64 @@ public class BusinessContext {
         if (buyQuantity > 0) {
             oi.setQuantity(buyQuantity);
             board.putToBuyOrderList(oi);
-            buyer.getOrderIds().put(oi.getId(), 1);
         }
     }
 
+    // TODO(c): Merge this logical with normalBuy function.
     private void normalSell(BlackBoard board, OrderInfo oi) {
+        TradePair tp = oi.getTradePair();
+        CoinType from = tp.getFrom();
+        CoinType to = tp.getTo();
+        int sellQuantity = oi.getQuantity();
+        long sellPrice = oi.getPrice();
+        UserInfo seller = users.get(oi.getUid());
+
+        if (sellQuantity > seller.getWallets().get(from).getValid()) {
+            logger.info("not enough money");
+            return;
+        } else {
+            frozen(seller, to, sellQuantity);
+        }
+
+        OrderInfo boi = board.getFirstBuyOrder();
+        if (boi == null) {
+            board.putToSellOrderList(oi);
+            return;
+        }
+        long buyPrice = boi.getPrice();
+        while (sellPrice <= buyPrice && sellQuantity > 0) {
+            int buyQuantity = boi.getQuantity();
+            UserInfo buyer = users.get(boi.getUid());
+
+            int tradeQuantity = java.lang.Math.min(sellQuantity, buyQuantity);
+            long buyCost = tradeQuantity * buyPrice;
+
+
+            deposit(buyer, to, tradeQuantity, true);
+            withdrawal(buyer, from, buyCost, false);
+            buyQuantity -= tradeQuantity;
+
+            deposit(seller, from, buyCost, true);
+            withdrawal(seller, to, tradeQuantity, false);
+            sellQuantity -= tradeQuantity;
+
+            board.priceChanged(buyPrice);
+
+
+            if (buyQuantity == 0) {
+                board.eraseFromBuyOrderList(boi);
+
+                boi = board.getFirstBuyOrder();
+                if (boi == null)
+                    break;
+                buyPrice = boi.getPrice();
+            } else {
+                boi.setQuantity(buyQuantity);
+            }
+        }
+        if (sellQuantity > 0) {
+            oi.setQuantity(sellQuantity);
+            board.putToSellOrderList(oi);
+        }
     }
 }
