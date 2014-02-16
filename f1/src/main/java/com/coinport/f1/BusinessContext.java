@@ -16,6 +16,11 @@ public class BusinessContext {
     private Map<Long, UserInfo> users;
     private Map<TradePair, BlackBoard> blackBoards;
 
+    // Unit test only
+    BlackBoard getBlackBoard(final TradePair tp) {
+        return blackBoards.get(tp);
+    }
+
     // Don't use this method in inner function for the performance concern.
     public UserInfo getUser(long uid) {
         return users.get(uid).deepCopy();
@@ -46,7 +51,7 @@ public class BusinessContext {
     }
 
     public boolean register(UserInfo ui) {
-        users.put(ui.getId(), ui);
+        users.put(ui.getId(), ui.deepCopy());
         return true;
     }
 
@@ -95,7 +100,26 @@ public class BusinessContext {
     }
 
     public boolean cancelOrder(OrderInfo oi) {
-        return true;
+        TradePair tradePair = oi.getTradePair();
+        if (!blackBoards.containsKey(tradePair)) {
+            return false;
+        }
+        BlackBoard bb = blackBoards.get(tradePair);
+        UserInfo ui = users.get(oi.getUid());
+        OrderInfo innerOi = bb.getOrder(oi.getId());
+        if (innerOi == null) return false;
+        switch (innerOi.getBos()) {
+            case BUY:
+                bb.eraseFromBuyOrderList(innerOi);
+                unfrozen(ui, tradePair.getFrom(), innerOi.getQuantity() * innerOi.getPrice());
+                return true;
+            case SELL:
+                bb.eraseFromSellOrderList(innerOi);
+                unfrozen(ui, tradePair.getTo(), innerOi.getQuantity());
+                return true;
+            default:
+                return false;
+        }
     }
 
     private boolean deposit(UserInfo ui, final CoinType coinType, final long amount, final boolean fromValid) {

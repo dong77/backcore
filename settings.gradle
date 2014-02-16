@@ -1,1 +1,2 @@
 apply from: 'f1.settings.gradle'
+apply from: 'common.settings.gradle'

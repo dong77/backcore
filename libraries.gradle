@@ -10,8 +10,7 @@ ext {
     poi:                    '3.9',
     slf4j:                  '1.7.5',
     spring:                 '3.1.3.RELEASE',
-    spring_security:        '3.1.3.RELEASE',
-    travelzen:              '4.25.0-SNAPSHOT'
+    spring_security:        '3.1.3.RELEASE'
     ]
 
     libraries = [
@@ -88,6 +87,9 @@ ext {
     cxf:                    'org.apache.cxf:cxf-bundle:2.7.5',
 
     /* D */
+
+    // disruptor
+    disruptor:              'com.lmax:disruptor:3.2.0',
 
     // dnsjava
     dnsjava:                'dnsjava:dnsjava:2.1.1',
@@ -291,9 +293,6 @@ ext {
     mybatis_spring:         'org.mybatis:mybatis-spring:1.2.0',
     mybatis_generator:      'org.mybatis.generator:mybatis-generator-core:1.3.2',
 
-    // htmlcleaner
-    myhtmlcleaner:          'com.travelzen.tops.myhtmlcleaner:htmlcleaner:2.1',
-
     // mysql connector
     mysql_connector:        'mysql:mysql-connector-java:5.1.24',
 
@@ -405,15 +404,6 @@ ext {
     // thrift
     thrift:                 'org.apache.thrift:libthrift:0.9.0',
 
-    // tz
-    tz_core:                "com.travelzen.commons:tz-core:${versions.travelzen}",
-    tz_common_utilities:    "com.travelzen.commons:tz-common-utilities:${versions.travelzen}",
-    tz_db:                  "com.travelzen.commons:tz-db:${versions.travelzen}",
-    tz_hibernate:           "com.travelzen.commons:tz-hibernate:${versions.travelzen}",
-    hotel_common:           'com.travelzen.product.hotel:product-hotel-project:2.14.0-SNAPSHOT',
-    hotel_common_1:         'com.travelzen.product.hotel:product-hotel-project:2.14.1-SNAPSHOT',
-    inventory_api:          'com.travelzen.inventory:inventory-project:0.12.0-SNAPSHOT',
-
     /* U */
     unicompayment:          'unicompayment.unicompayment_decoder:1.0.0.1',
     /* V */
@@ -437,8 +427,6 @@ ext {
 
     // zookeeper
     zookeeper:              'org.apache.zookeeper:zookeeper:3.4.5',
-
-    ibeplus:                                'com.travelzen:tops-flight-ibeplus-server:0.0.4-SNAPSHOT',
 
     // maria jdbc
     maria_jdbc:             'org.jumpmind.symmetric.jdbc:mariadb-java-client:1.1.1'

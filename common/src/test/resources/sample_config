@@ -1,0 +1,11 @@
+# the json file for config: SampleConfig
+{
+    # the field inherited from Config class
+    serviceName : "test",
+    ip : "192.168.1.1",
+    students : [
+        {name : "Lucy", age : 21},
+        {name : "Hanmeimei", age : 30}
+    ],
+    mentors : {"bob":"tBob", "lucy":"tLucy"}
+}

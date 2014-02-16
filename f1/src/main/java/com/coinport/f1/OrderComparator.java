@@ -16,30 +16,21 @@ public class OrderComparator implements Comparator<OrderInfo> {
 
     @Override
     public int compare(final OrderInfo lhs, final OrderInfo rhs) {
-        if (isAscend) {
-            return (int)compareInner(lhs, rhs);
-        } else {
-            return -(int)compareInner(lhs, rhs);
-        }
-    }
-
-    private long compareInner(final OrderInfo lhs, final OrderInfo rhs) {
         if (lhs.isSetPrice() && rhs.isSetPrice()) {
-            long priceDiff = lhs.getPrice() - rhs.getPrice();
+            int priceDiff = (int)(lhs.getPrice() - rhs.getPrice());
             if (priceDiff != 0) {
-                return priceDiff;
+                return isAscend ? priceDiff : -priceDiff;
             }
         }
+
+        // late order will put to the behind of the earlier order.
         if (lhs.isSetTimestamp() && rhs.isSetTimestamp()) {
-            long tsDiff = lhs.getTimestamp() - rhs.getTimestamp();
+            int tsDiff = (int)(lhs.getTimestamp() - rhs.getTimestamp());
             if (tsDiff != 0) {
                 return tsDiff;
             }
         }
-        long idDiff = lhs.getId() - rhs.getId();
-        if (idDiff != 0) return idDiff;
 
-        // adds these code for save. in fact, these code should never be ran
         return lhs.compareTo(rhs);
     }
 }

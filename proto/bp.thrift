@@ -53,8 +53,8 @@ enum DOW {
 
 struct Wallet {
     1: required CoinType coinType,
-    2: optional i64 valid,
-    3: optional i64 frozen,
+    2: optional i64 valid = 0,
+    3: optional i64 frozen = 0,
 }
 
 struct UserInfo {
@@ -80,7 +80,7 @@ struct OrderInfo {
     1: required i64 id,
     2: required i64 uid,
     3: required TradePair tradePair;
-    4: required i32 quantity,
+    4: optional i32 quantity = 1,
     5: optional i64 timestamp,
     6: optional BOS bos = BOS.BUY,
     7: optional MOL mol = MOL.LIMIT,

@@ -1,0 +1,7 @@
+apply from: '../libraries.gradle'
+
+dependencies {
+  compile libraries.gson
+  compile libraries.commons_io
+  compile libraries.logback
+}

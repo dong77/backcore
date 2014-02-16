@@ -24,6 +24,8 @@ import com.coinport.f1.command.CommandEventJournalHandler;
 import com.coinport.f1.command.CommandEventProcessHandler;
 import com.coinport.f1.command.CommandEventReplicateHandler;
 
+import com.coinport.f1.config.ConfigLoader;
+
 /**
  * <pre>
  *
@@ -83,9 +85,7 @@ public final class BP {
     private static final int NUM_EVENT_PROCESSORS = 3;
     private static final int NUM_NEEDED_PROCESSORS = NUM_EVENT_PROCESSORS + 1;  // adds publisher
 
-    // The size of the ring buffer. Best practice is 2^x and meet the size of CPU's L3 cache.
-    // Tips: lscpu to show the L3 cache size in Ubuntu.
-    private static final int BUFFER_SIZE =  1 << 20;
+    private static final int BUFFER_SIZE = ConfigLoader.getConfig().bufferSize;
 
     private final ExecutorService executor = Executors.newFixedThreadPool(NUM_EVENT_PROCESSORS);
 
