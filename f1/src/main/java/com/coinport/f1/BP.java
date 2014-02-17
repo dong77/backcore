@@ -137,9 +137,68 @@ public final class BP {
         executor.shutdown();
     }
 
-    public CommandEvent nextCommand() {
-        sequence = ringBuffer.next();
-        return ringBuffer.get(sequence);
+    public OrderInfo nextPlaceOrder() {
+        BPCommand bpc = nextCommand();
+
+        bpc.setType(BPCommandType.PLACE_ORDER);
+
+        OrderInfo oi = null;
+        if (!bpc.isSetOrderInfo()) {
+            oi = new OrderInfo();
+            bpc.setOrderInfo(oi);
+        } else {
+            oi = bpc.getOrderInfo();
+            oi.clear();
+        }
+        return oi;
+    }
+
+    public OrderInfo nextCancelOrder() {
+        BPCommand bpc = nextCommand();
+
+        bpc.setType(BPCommandType.CANCEL_ORDER);
+
+        OrderInfo oi = null;
+        if (!bpc.isSetOrderInfo()) {
+            oi = new OrderInfo();
+            bpc.setOrderInfo(oi);
+        } else {
+            oi = bpc.getOrderInfo();
+            oi.clear();
+        }
+        return oi;
+    }
+
+    public DWInfo nextDepositWithdrawal() {
+        BPCommand bpc = nextCommand();
+
+        bpc.setType(BPCommandType.DW);
+
+        DWInfo dwi = null;
+        if (!bpc.isSetDwInfo()) {
+            dwi = new DWInfo();
+            bpc.setDwInfo(dwi);
+        } else {
+            dwi = bpc.getDwInfo();
+            dwi.clear();
+        }
+        return dwi;
+    }
+
+    public UserInfo nextRegisterUser() {
+        BPCommand bpc = nextCommand();
+
+        bpc.setType(BPCommandType.REGISTER_USER);
+
+        UserInfo ui = null;
+        if (!bpc.isSetUserInfo()) {
+            ui = new UserInfo();
+            bpc.setUserInfo(ui);
+        } else {
+            ui = bpc.getUserInfo();
+            ui.clear();
+        }
+        return ui;
     }
 
     public void execute() {
@@ -160,5 +219,16 @@ public final class BP {
 
     public BusinessContext getContext() {
         return bc;
+    }
+
+    private BPCommand nextCommand() {
+        sequence = ringBuffer.next();
+        BPCommand bpc = ringBuffer.get(sequence).getCommand();
+
+        // TODO(c): sets these fields outter of BP for performance concern.
+        bpc.setIndex(sequence);
+        bpc.setTimestamp(System.currentTimeMillis());
+
+        return bpc;
     }
 }

@@ -1,7 +1,6 @@
 /**
- * Author: Ma Chao(c@coinport.com)
- * 2014-02-04
- * Copyright 2014 Coinport All Rights Reserved.
+ * Copyright 2014 Coinport Inc. All Rights Reserved.
+ * Author: c@coinport.com (Chao Ma)
  */
 
 namespace java com.coinport.f1
@@ -79,7 +78,7 @@ struct TradePair {
 struct OrderInfo {
     1: required i64 id,
     2: required i64 uid,
-    3: required TradePair tradePair;
+    3: required TradePair tradePair;  // TODO(c) How to give a default value?
     4: optional i32 quantity = 1,
     5: optional i64 timestamp,
     6: optional BOS bos = BOS.BUY,

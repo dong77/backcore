@@ -242,18 +242,7 @@ public class BPTest {
     }
 
     private void cancelOrder(BP bp, final long id, final long uid, final TradePair tp) {
-        CommandEvent event = bp.nextCommand();
-        BPCommand bpc = event.getCommand();
-        bpc.setType(BPCommandType.CANCEL_ORDER);
-
-        OrderInfo oi = null;
-        if (!bpc.isSetOrderInfo()) {
-            oi = new OrderInfo();
-            bpc.setOrderInfo(oi);
-        } else {
-            oi = bpc.getOrderInfo();
-            oi.clear();
-        }
+        OrderInfo oi = bp.nextCancelOrder();
         oi.setId(id);
         oi.setUid(uid);
         oi.setTradePair(tp);
@@ -262,18 +251,7 @@ public class BPTest {
 
     private void placeOrder(BP bp, final long id, final long uid, final TradePair tp,
         final int quantity, final long timestamp, final BOS bos, final long price) {
-        CommandEvent event = bp.nextCommand();
-        BPCommand bpc = event.getCommand();
-        bpc.setType(BPCommandType.PLACE_ORDER);
-
-        OrderInfo oi = null;
-        if (!bpc.isSetOrderInfo()) {
-            oi = new OrderInfo();
-            bpc.setOrderInfo(oi);
-        } else {
-            oi = bpc.getOrderInfo();
-            oi.clear();
-        }
+        OrderInfo oi = bp.nextPlaceOrder();
         oi.setId(id);
         oi.setUid(uid);
         oi.setTradePair(tp);
@@ -286,18 +264,8 @@ public class BPTest {
 
     private void depositWithdrawal(
         BP bp, final long uid, final DOW dwtype, final CoinType coinType, final long amount) {
-        CommandEvent event = bp.nextCommand();
-        BPCommand bpc = event.getCommand();
-        bpc.setType(BPCommandType.DW);
 
-        DWInfo dwi = null;
-        if (!bpc.isSetDwInfo()) {
-            dwi = new DWInfo();
-            bpc.setDwInfo(dwi);
-        } else {
-            dwi = bpc.getDwInfo();
-            dwi.clear();
-        }
+        DWInfo dwi = bp.nextDepositWithdrawal();
         dwi.setUid(uid);
         dwi.setDwtype(dwtype);
         dwi.setCoinType(coinType);
@@ -306,18 +274,7 @@ public class BPTest {
     }
 
     private void addUser(BP bp, final long uid, final String name, final String pw) {
-        CommandEvent event = bp.nextCommand();
-        BPCommand bpc = event.getCommand();
-        bpc.setType(BPCommandType.REGISTER_USER);
-
-        UserInfo ui = null;
-        if (!bpc.isSetUserInfo()) {
-            ui = new UserInfo();
-            bpc.setUserInfo(ui);
-        } else {
-            ui = bpc.getUserInfo();
-            ui.clear();
-        }
+        UserInfo ui = bp.nextRegisterUser();
         ui.setId(uid);
         ui.setNickname(name);
         ui.setPassword(pw);

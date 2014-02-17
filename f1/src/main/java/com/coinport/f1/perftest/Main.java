@@ -3,59 +3,54 @@
  * Author: c@coinport.com (Chao Ma)
  */
 
-package com.coinport.f1;
+package com.coinport.f1.perftest;
 
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 
-import com.coinport.f1.command.CommandEvent;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.LoggerContext;
 
-public class PerfTestMain {
-    final static Logger logger = LoggerFactory.getLogger(PerfTestMain.class);
+import com.coinport.f1.*;
+
+public class Main {
+    final static Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void perfTest() throws Exception {
+        long userNum = 1000L * 200L;
+        // long userNum = 4;
+
+        PerfTest pt = new PerfTest();
+
+        pt.test(0, userNum);
+        pt.test(1, userNum * 100L);
+        pt.test(2, userNum * 100L);
+
+        // pt.display();
+        pt.terminate();
+
+        /*
         BP bp = new BP();
         CountDownLatch latch = new CountDownLatch(1);
         long eventNum = 1024L * 1024L * 100L;
         bp.setStopParams(latch, eventNum);
         bp.start();
 
-        CommandEvent event = bp.nextCommand();
-        BPCommand bpc = event.getCommand();
-        bpc.setType(BPCommandType.REGISTER_USER);
-        UserInfo ui = new UserInfo();
+        UserInfo ui = bp.nextRegisterUser();
         ui.setId(1234);
         ui.setNickname("hoss");
         ui.setPassword("1111");
-        bpc.setUserInfo(ui);
-        bpc.setIndex(0);
         bp.execute();
 
         long start = System.currentTimeMillis();
         for (long i = 0; i < eventNum; ++i) {
-            event = bp.nextCommand();
-
-            bpc = event.getCommand();
-            bpc.setType(BPCommandType.DW);
-            if (bpc.isSetDwInfo()) {
-                DWInfo dwi = bpc.getDwInfo();
-                dwi.setUid(1234);
-                dwi.setDwtype(DOW.DEPOSIT);
-                dwi.setCoinType(CoinType.CNY);
-                dwi.setAmount(1);
-            } else {
-                DWInfo dwi = new DWInfo();
-                dwi.setUid(1234);
-                dwi.setDwtype(DOW.DEPOSIT);
-                dwi.setCoinType(CoinType.CNY);
-                dwi.setAmount(1);
-                bpc.setDwInfo(dwi);
-            }
+            DWInfo dwi = bp.nextDepositWithdrawal();
+            dwi.setUid(1234);
+            dwi.setDwtype(DOW.DEPOSIT);
+            dwi.setCoinType(CoinType.CNY);
+            dwi.setAmount(1);
             bp.execute();
         }
         latch.await();
@@ -65,6 +60,7 @@ public class PerfTestMain {
         String res = String.format("The ops is %,d ops/sec\n",Long.valueOf(opsPerSecond));
         logger.debug(res);
         bp.displayBC();
+        */
     }
 
     public static void testLog() {

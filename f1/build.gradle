@@ -1,6 +1,8 @@
 apply plugin: 'application'
 
-mainClassName = 'com.coinport.f1.PerfTestMain'
+applicationDefaultJvmArgs = ["-Xmx4096M", "-Xms4096M", "-Dfile.encoding=UTF-8"]
+
+mainClassName = 'com.coinport.f1.perftest.Main'
 
 group = 'com.coinport.f1'
 version = '1.0-SNAPSHOT'
