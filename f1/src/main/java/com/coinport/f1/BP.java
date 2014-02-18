@@ -134,6 +134,8 @@ public final class BP {
         logicProcessor.halt();
         journalProcessor.halt();
         replicateProcessor.halt();
+        // TODO(c): put db in this class and pass to journalProcessor from cons
+        journalHandler.closeDb();
         executor.shutdown();
     }
 

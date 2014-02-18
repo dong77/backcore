@@ -30,4 +30,5 @@ tags
 *.iws
 build/
 tracelogs/
+example/
 gen-java/

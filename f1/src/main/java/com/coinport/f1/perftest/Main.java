@@ -5,66 +5,68 @@
 
 package com.coinport.f1.perftest;
 
+import static org.fusesource.leveldbjni.JniDBFactory.*;
+
+import java.io.*;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 
+import ch.qos.logback.classic.LoggerContext;
+import com.google.common.primitives.Longs;
+import org.iq80.leveldb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ch.qos.logback.classic.LoggerContext;
+import com.esotericsoftware.kryo.*;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.serializers.FieldSerializer;
 
 import com.coinport.f1.*;
 
 public class Main {
     final static Logger logger = LoggerFactory.getLogger(Main.class);
 
-    public static void perfTest() throws Exception {
+    public static void main(String[] args) throws Exception {
+        perfTest();
+        // treeSetTest();
+        // leveldbjniTest();
+        // testLog();
+    }
+
+    private static void showTreeSet(final Set<OrderInfo> ts) {
+        for (OrderInfo entry : ts) {
+            logger.debug(entry.toString());
+        }
+    }
+
+    private static OrderInfo addOrderInfo(
+        final long id, final long uid, final int quantity, final long ts, final long price) {
+        OrderInfo oi = new OrderInfo();
+        oi.setId(id);
+        oi.setUid(uid);
+        oi.setQuantity(quantity);
+        oi.setTimestamp(ts);
+        oi.setPrice(price);
+        return oi;
+    }
+
+    private static void perfTest() throws Exception {
         long userNum = 1000L * 200L;
         // long userNum = 4;
 
         PerfTest pt = new PerfTest();
 
         pt.test(0, userNum);
-        pt.test(1, userNum * 100L);
-        pt.test(2, userNum * 100L);
+        pt.test(1, userNum * 10L);
+        pt.test(2, userNum * 10L);
 
         // pt.display();
         pt.terminate();
-
-        /*
-        BP bp = new BP();
-        CountDownLatch latch = new CountDownLatch(1);
-        long eventNum = 1024L * 1024L * 100L;
-        bp.setStopParams(latch, eventNum);
-        bp.start();
-
-        UserInfo ui = bp.nextRegisterUser();
-        ui.setId(1234);
-        ui.setNickname("hoss");
-        ui.setPassword("1111");
-        bp.execute();
-
-        long start = System.currentTimeMillis();
-        for (long i = 0; i < eventNum; ++i) {
-            DWInfo dwi = bp.nextDepositWithdrawal();
-            dwi.setUid(1234);
-            dwi.setDwtype(DOW.DEPOSIT);
-            dwi.setCoinType(CoinType.CNY);
-            dwi.setAmount(1);
-            bp.execute();
-        }
-        latch.await();
-        bp.terminate();
-        long opsPerSecond = (eventNum * 1000L) / (System.currentTimeMillis() - start);
-
-        String res = String.format("The ops is %,d ops/sec\n",Long.valueOf(opsPerSecond));
-        logger.debug(res);
-        bp.displayBC();
-        */
     }
 
-    public static void testLog() {
-        logger.debug("this is a log test");
+    private static void testLog() {
+        logger.debug("this is a debug log test");
+        logger.error("this is a error log test");
 
         // important!
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -72,7 +74,7 @@ public class Main {
 
     }
 
-    public static void treeSetTest() {
+    private static void treeSetTest() {
         TreeSet<OrderInfo> ts = new TreeSet<OrderInfo>(new OrderComparator(false));
         ts.add(addOrderInfo(2, 1001, 3, 1000001, 90));
         ts.add(addOrderInfo(3, 1001, 3, 1000003, 90));
@@ -93,26 +95,27 @@ public class Main {
         showTreeSet(ts);
     }
 
-    public static void main(String[] args) throws Exception {
-        // testLog();
-        perfTest();
-        // treeSetTest();
-    }
+    private static void leveldbjniTest() throws Exception {
+        Kryo kryo = new Kryo();
+        FieldSerializer<?> serializer = new FieldSerializer<BPCommand>(kryo, BPCommand.class);
+        kryo.register(BPCommand.class, serializer);
 
-    private static void showTreeSet(final Set<OrderInfo> ts) {
-        for (OrderInfo entry : ts) {
-            logger.debug(entry.toString());
+        DB db = null;
+        try {
+            Options options = new Options();
+            options.createIfMissing(true);
+            db = factory.open(new File("example"), options);
+            // db.put(bytes("Tampa"), bytes("rocks"));
+            byte[] content = db.get(Longs.toByteArray(2200000L));
+            BPCommand command = kryo.readObject(new Input(content), BPCommand.class);
+            logger.info(command.toString());
+            // Use the db in here....
+        } catch (Exception e) {
+            logger.error("error!");
+        } finally {
+            // Make sure you close the db to shutdown the
+            // database and avoid resource leaks.
+            db.close();
         }
-    }
-
-    private static OrderInfo addOrderInfo(
-        final long id, final long uid, final int quantity, final long ts, final long price) {
-        OrderInfo oi = new OrderInfo();
-        oi.setId(id);
-        oi.setUid(uid);
-        oi.setQuantity(quantity);
-        oi.setTimestamp(ts);
-        oi.setPrice(price);
-        return oi;
     }
 }

@@ -131,7 +131,7 @@ ext {
     gson:                   'com.google.code.gson:gson:2.2.4',
 
     // guava
-    guava:                  'com.google.guava:guava:14.0.1',
+    guava:                  'com.google.guava:guava:16.0.1',
 
     /* H */
 
@@ -254,7 +254,12 @@ ext {
     /* K */
     kaptcha:                'com.github.axet:kaptcha:0.0.7',
 
+    kryo:                   'com.esotericsoftware.kryo:kryo:2.22',
+
     /* L */
+
+    // levelDB
+    leveldbjni:             'org.fusesource.leveldbjni:leveldbjni-all:1.7',
 
     // log4j
     log4j:                  'log4j:log4j:1.2.17',

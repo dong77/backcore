@@ -1,1 +1,2 @@
 - try to use objectpool to improve the performance
+- using kryo for deepCopy to improve the performance
