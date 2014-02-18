@@ -24,3 +24,7 @@ compileJava.dependsOn(generateThrift)
 run {
     args "Hello world"
 }
+
+clean.doLast {
+    ant.delete(dir: "$projectDir/example")
+}
