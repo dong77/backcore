@@ -50,6 +50,12 @@ enum DOW {
     WITHDRAWAL = 2,
 }
 
+enum CommandStats {
+    SUCCESS = 1,
+    FAIL = 2,
+    TBR = 3,
+}
+
 struct Wallet {
     1: required CoinType coinType,
     2: optional i64 valid = 0,
@@ -93,10 +99,12 @@ struct OrderInfo {
 }
 
 struct BPCommand {
-    1: required BPCommandType type,
-    2: optional UserInfo userInfo,
-    3: optional DWInfo dwInfo,
-    4: optional OrderInfo orderInfo,
-    5: optional i64 timestamp,
-    6: optional i64 index,  // used for ordering the order
+    1: required i64 id,
+    2: optional BPCommandType type,
+    3: optional UserInfo userInfo,
+    4: optional DWInfo dwInfo,
+    5: optional OrderInfo orderInfo,
+    6: optional i64 timestamp,
+    7: optional i64 index,  // used for ordering the order
+    8: optional CommandStats stats = CommandStats.TBR,
 }

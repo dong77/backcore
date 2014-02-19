@@ -259,7 +259,7 @@ ext {
     /* L */
 
     // levelDB
-    leveldbjni:             'org.fusesource.leveldbjni:leveldbjni-all:1.7',
+    leveldbjni:             'org.fusesource.leveldbjni:leveldbjni-all:1.8',
 
     // log4j
     log4j:                  'log4j:log4j:1.2.17',

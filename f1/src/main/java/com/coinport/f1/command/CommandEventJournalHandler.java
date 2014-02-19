@@ -55,36 +55,17 @@ public final class CommandEventJournalHandler implements EventHandler<CommandEve
 
     @Override
     public void onEvent(final CommandEvent event, final long sequence, final boolean endOfBatch) throws Exception {
-        command.clear();
         final BPCommand comingCommand = event.getCommand();
-        command.setType(comingCommand.getType());
-        command.setTimestamp(comingCommand.getTimestamp());
-        command.setIndex(comingCommand.getIndex());
-        switch (command.getType()) {
-            case REGISTER_USER:
-                command.setUserInfo(comingCommand.getUserInfo());
-                break;
-            case DW:
-                command.setDwInfo(comingCommand.getDwInfo());
-                break;
-            case PLACE_ORDER:
-            case CANCEL_ORDER:
-                command.setOrderInfo(comingCommand.getOrderInfo());
-                break;
-            default:
-                break;
-        }
-        // command.toString();
+        command.setId(comingCommand.getId());
+        command.setStats(comingCommand.getStats());
+
         kryo.writeObject(output, command);
-        output.flush();
-        // db.put(Longs.toByteArray(command.getIndex()), output.getBuffer());
-        batch.put(Longs.toByteArray(command.getIndex()), output.getBuffer());
+        batch.put(Longs.toByteArray(comingCommand.getIndex()), output.getBuffer());
         output.clear();
         if (endOfBatch) {
             db.write(batch);
             // TODO(c): find a method like clear instead of create a new one
             batch = db.createWriteBatch();
-            // batch.clear();
         }
     }
 

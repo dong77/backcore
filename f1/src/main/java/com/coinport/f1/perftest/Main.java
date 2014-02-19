@@ -111,7 +111,7 @@ public class Main {
             logger.info(command.toString());
             // Use the db in here....
         } catch (Exception e) {
-            logger.error("error!");
+            logger.error("error!", e);
         } finally {
             // Make sure you close the db to shutdown the
             // database and avoid resource leaks.
