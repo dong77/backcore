@@ -35,15 +35,16 @@ object CoinexApp extends App {
     system.actorOf(Props(classOf[AccountView]), "accountView")
   }
 
+  val market = Market("BTC", "RMB")
   system.actorOf(ClusterSingletonManager.props(
-    singletonProps = Props(new MarketProcessor(Market("BTC", "RMB"), accountProcessorRouter.path)),
+    singletonProps = Props(new MarketProcessor(market, accountProcessorRouter.path)),
     singletonName = "singleton",
     terminationMessage = PoisonPill,
     role = Some("market_processor")),
     name = "marketProcessor")
 
   if (cluster.selfRoles.contains("market_view")) {
-    system.actorOf(Props(classOf[MarketView]), "marketView")
+    system.actorOf(Props(new MarketView(market)), "marketView")
   }
 
   Thread.sleep(10000)

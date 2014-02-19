@@ -19,6 +19,7 @@ object AccountView {
 class AccountView extends View with ActorLogging {
   import AccountView._
   override def processorId = "coinex_account_processor"
+  override def viewId = "coinex_account_view"
   println("--------------account view created:" + self.path)
   var state = new State()
 

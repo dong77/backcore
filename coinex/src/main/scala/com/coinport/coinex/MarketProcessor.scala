@@ -118,22 +118,22 @@ class MarketProcessor(market: Market, accountProcessorPath: ActorPath) extends E
         val result =
           if (o.price.isDefined) state.addLimitPriceBuyOrder(o)
           else state.addMarketBuyOrder(o)
-        channel forward Deliver(getCurrentPersistentMessage.withPayload(result), accountProcessorPath)
+        channel forward Deliver(Persistent(result), accountProcessorPath)
 
       case OrderSubmitted(o: SellOrder) =>
         println("---sell order submitted" + o)
         val result =
           if (o.price.isDefined) state.addLimitPriceSellOrder(o)
           else state.addMarketSellOrder(o)
-        channel forward Deliver(getCurrentPersistentMessage.withPayload(result), accountProcessorPath)
+        channel forward Deliver(Persistent(result), accountProcessorPath)
 
       case evt @ OrderCancelled(o: BuyOrder) =>
         //updateSpendable(o.uid, o.market.out, a => a.copy(spendable = a.spendable - o.outAmount, locked = a.locked + o.outAmount))
-        channel forward Deliver(getCurrentPersistentMessage.withPayload(evt), accountProcessorPath)
+        channel forward Deliver(Persistent(evt), accountProcessorPath)
 
       case evt @ OrderCancelled(o: SellOrder) =>
         //updateSpendable(o.uid, o.market.out, a => a.copy(spendable = a.spendable - o.outAmount, locked = a.locked + o.outAmount))
-        channel forward Deliver(getCurrentPersistentMessage.withPayload(evt), accountProcessorPath)
+        channel forward Deliver(Persistent(evt), accountProcessorPath)
 
       case msg =>
         log.error("updateState not supported: {}", msg)

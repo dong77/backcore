@@ -148,12 +148,12 @@ class AccountProcessor(marketProcessorPath: ActorPath) extends EventsourcedProce
       case evt @ OrderSubmitted(o: BuyOrder) =>
         println("ap: order submitted" + o)
         updateSpendable(o.uid, o.market.out, a => a.copy(spendable = a.spendable - o.payAmount, locked = a.locked + o.payAmount))
-        channel forward Deliver(getCurrentPersistentMessage.withPayload(evt), marketProcessorPath)
+        channel forward Deliver(Persistent(evt), marketProcessorPath)
 
       case evt @ OrderSubmitted(o: SellOrder) =>
         println("ap: order submitted" + o)
         updateSpendable(o.uid, o.market.in, a => a.copy(spendable = a.spendable - o.payAmount, locked = a.locked + o.payAmount))
-        channel forward Deliver(getCurrentPersistentMessage.withPayload(evt), marketProcessorPath)
+        channel forward Deliver(Persistent(evt), marketProcessorPath)
 
       case OrderCancelled(o: BuyOrder) =>
         updateSpendable(o.uid, o.market.out, a => a.copy(spendable = a.spendable + o.payAmount, locked = a.locked - o.payAmount))

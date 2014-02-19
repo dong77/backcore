@@ -9,9 +9,10 @@ object MarketView {
   private[MarketView] case class State(x: String = "")
 }
 
-class MarketView extends View with ActorLogging {
+class MarketView(market: Market) extends View with ActorLogging {
   import MarketView._
-  override def processorId = "coinex_market_processor"
+  override def processorId = "coinex_market_processor_" + market
+  override def viewId = "coinex_account_view_" + market
   println("--------------market view created:" + self.path)
 
   var state = State()
