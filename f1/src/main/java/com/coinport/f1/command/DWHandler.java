@@ -14,7 +14,7 @@ import com.coinport.f1.BusinessContext;
 
 public class DWHandler extends CommandHandler {
     @Override
-    public void exec(final BPCommand command, BusinessContext bc) {
+    public boolean exec(final BPCommand command, BusinessContext bc) {
         if (command.isSetDwInfo()) {
             DWInfo dwi = command.getDwInfo();
             long uid = dwi.getUid();
@@ -22,14 +22,15 @@ public class DWHandler extends CommandHandler {
             CoinType coinType = dwi.getCoinType();
             switch (dwi.getDwtype())  {
                 case DEPOSIT:
-                    bc.deposit(uid, coinType, amount, true);
-                    break;
+                    return bc.deposit(uid, coinType, amount, true);
                 case WITHDRAWAL:
-                    bc.withdrawal(uid, coinType, amount, true);
-                    break;
+                    return bc.withdrawal(uid, coinType, amount, true);
+                default:
+                    return false;
             }
         } else {
             logger.error("no dwinfo found in dw command");
+            return false;
         }
     }
 }

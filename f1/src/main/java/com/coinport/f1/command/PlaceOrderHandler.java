@@ -12,11 +12,12 @@ import com.coinport.f1.OrderInfo;
 
 public class PlaceOrderHandler extends CommandHandler {
     @Override
-    public void exec(final BPCommand command, BusinessContext bc) {
+    public boolean exec(final BPCommand command, BusinessContext bc) {
         if (command.isSetOrderInfo()) {
-            bc.placeOrder(command.getOrderInfo());
+            return bc.placeOrder(command.getOrderInfo());
         } else {
             logger.error("no orderInfo found in place order command");
+            return false;
         }
     }
 }

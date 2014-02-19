@@ -14,6 +14,7 @@ import com.lmax.disruptor.EventHandler;
 import com.coinport.f1.BPCommand;
 import com.coinport.f1.BPCommandType;
 import com.coinport.f1.BusinessContext;
+import com.coinport.f1.CommandStats;
 
 public final class CommandEventProcessHandler implements EventHandler<CommandEvent> {
     private BusinessContext bc;
@@ -33,6 +34,10 @@ public final class CommandEventProcessHandler implements EventHandler<CommandEve
     @Override
     public void onEvent(final CommandEvent event, final long sequence, final boolean endOfBatch) throws Exception {
         BPCommand command = event.getCommand();
-        handlers.get(command.getType()).exec(command, bc);
+        if (handlers.get(command.getType()).exec(command, bc)) {
+            command.setStats(CommandStats.SUCCESS);
+        } else {
+            command.setStats(CommandStats.FAIL);
+        }
     }
 }

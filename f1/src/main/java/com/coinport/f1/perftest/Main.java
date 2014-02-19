@@ -29,7 +29,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         perfTest();
         // treeSetTest();
-        // leveldbjniTest();
+        leveldbjniTest();
         // testLog();
     }
 
@@ -106,7 +106,7 @@ public class Main {
             options.createIfMissing(true);
             db = factory.open(new File("example"), options);
             // db.put(bytes("Tampa"), bytes("rocks"));
-            byte[] content = db.get(Longs.toByteArray(2200000L));
+            byte[] content = db.get(Longs.toByteArray(220000L));
             BPCommand command = kryo.readObject(new Input(content), BPCommand.class);
             logger.info(command.toString());
             // Use the db in here....
