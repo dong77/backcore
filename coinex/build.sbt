@@ -4,17 +4,19 @@ name := "coinex"
 
 version := "1.0"
 
-fork := true
+//fork := true
 
 scalaVersion := "2.10.3"
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= {
-  val akkaVersion = "2.3.0-RC1"
+  val akkaVersion = "2.3.0-RC3"
   val akkaModules = Seq("contrib", "cluster", "agent", "remote", "persistence-experimental")
   Seq(
+    //"org.slf4j" % "slf4j-jdk14" % "1.6.4",
     "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.7",
+    "org.scala-stm" %% "scala-stm" % "0.7",
     "com.github.ddevore" %% "akka-persistence-mongo-casbah" % "0.3-SNAPSHOT",
     // "com.google.protobuf" % "protobuf-java" % "2.5.0",
     // "org.scala-lang" %% "scala-pickling" % "0.8.0-SNAPSHOT",

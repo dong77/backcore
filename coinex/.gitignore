@@ -1,10 +1,7 @@
-/RUNNING_PID
-/logs/
-/project/*-shim.sbt
-/project/project/
-/project/target/
-/journal/
-/target/
 .cache
+.classpath
+.project
 nohup.out
-
+project/project/
+project/target/
+target/
