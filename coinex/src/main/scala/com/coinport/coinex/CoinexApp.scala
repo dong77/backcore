@@ -59,8 +59,8 @@ object CoinexApp extends App {
           ap ! DoDeposit(Deposit(456L, "BTC", 1))
           ap ! DebugDump
 
-          ap ! SubmitOrder(Order(4, 123L, Market("BTC", "RMB"), 666, None))
-          ap ! SubmitOrder(Order(6, 456L, Market("RMB", "BTC"), 1, Some(333.0)))
+          ap ! SubmitOrder(SellOrder(4, 123L, Market("BTC", "RMB"), 666, None))
+          ap ! SubmitOrder(BuyOrder(6, 456L, Market("RMB", "BTC"), 1, Some(333.0)))
         }
         ap ! DebugDump
         mp ! DebugDump

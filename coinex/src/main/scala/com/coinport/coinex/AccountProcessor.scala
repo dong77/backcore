@@ -69,7 +69,7 @@ class AccountProcessor(marketProcessorPath: ActorPath) extends EventsourcedProce
   import AccountProcessor._
   override def processorId = "coinex_account_processor"
   println("============account processor created: " + self.path)
-  val channel = context.actorOf(Channel.props("coinex-ap2mp"), name = "ap2mp")
+  val channel = context.actorOf(PersistentChannel.props("coinex-ap2mp"), name = "ap2mp")
 
   var state = new State()
 
