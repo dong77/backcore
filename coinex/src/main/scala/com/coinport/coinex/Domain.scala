@@ -26,29 +26,18 @@ object Domain {
   case class BuyTx(id: TxId, market: Market, price: Amount, amountBought: Amount, orderId: OrderId, partial: Boolean) { def outAmount = amountBought * price }
 
   //------------commands
-  sealed trait Cmd
-  case class DebugDump extends Cmd
-  case class DebugResetState extends Cmd
+  case class DebugDump 
+  case class DebugResetState 
 
-  case class DoDeposit(deposit: Deposit) extends Cmd
-  case class DoWithdrawal(withdrawal: Withdrawal) extends Cmd
+  case class DoDeposit(deposit: Deposit) 
+  case class DoWithdrawal(withdrawal: Withdrawal) 
 
-  case class SubmitOrder(order: AnyRef) extends Cmd
-  case class CancelOrder(order: AnyRef) extends Cmd
+  case class SubmitOrder(order: AnyRef) 
+  case class CancelOrder(order: AnyRef) 
 
   //------------command responses
   case class DoDepositResult(deposit: Deposit)
   case class DoWithdrawalResult(withdrawal: Withdrawal)
   case class SubmitOrderResult(order: AnyRef)
   case class CancelOrderResult(order: AnyRef)
-
-  //------------events
-  sealed trait Evt
-  case class DepositConfirmed(deposit: Deposit) extends Evt
-  case class WithdrawalConfirmed(withdrawal: Withdrawal) extends Evt
-
-  case class OrderSubmitted(order: AnyRef) extends Evt
-  case class OrderCancelled(order: AnyRef) extends Evt
-  case class OrderCancellationFailed(order: AnyRef, reason: String) extends Evt
-  case class TxConfirmed(sellTx: SellTx, buyTx: BuyTx, sellTransfer: Transfer, buyTransfer: Transfer) extends Evt
 }

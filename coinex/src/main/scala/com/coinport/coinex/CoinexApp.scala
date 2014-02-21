@@ -22,18 +22,13 @@ object CoinexApp extends App {
   val marketProcessorRouter = system.actorOf(FromConfig.props(Props.empty), name = "marketProcessorRouter")
   val marketViewRouter = system.actorOf(FromConfig.props(Props.empty), name = "marketViewRouter")
 
-  // actors
-
+  // processors
   system.actorOf(ClusterSingletonManager.props(
     singletonProps = Props(new AccountProcessor(marketProcessorRouter.path)),
     singletonName = "singleton",
     terminationMessage = PoisonPill,
     role = Some("account_processor")),
     name = "accountProcessor")
-
-  if (cluster.selfRoles.contains("account_view")) {
-    system.actorOf(Props(classOf[AccountView]), "accountView")
-  }
 
   val market = Market("BTC", "RMB")
   system.actorOf(ClusterSingletonManager.props(
@@ -43,11 +38,17 @@ object CoinexApp extends App {
     role = Some("market_processor")),
     name = "marketProcessor")
 
+  // views
+  if (cluster.selfRoles.contains("account_view")) {
+    system.actorOf(Props(classOf[AccountView]), "accountView")
+  }
+
   if (cluster.selfRoles.contains("market_view")) {
     system.actorOf(Props(new MarketView(market)), "marketView")
   }
 
-  Thread.sleep(10000)
+  Thread.sleep(5000)
+  // Testing code
   import system.dispatcher
   val test = system.actorOf(Props(new Test(accountProcessorRouter, marketProcessorRouter)))
 
