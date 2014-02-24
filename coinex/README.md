@@ -2,10 +2,20 @@
 
 这个小程序demo了Akka的Persistence模块是如何做到EventSourcing的。
 
-首先，你必须编译一个依赖包，这个依赖包把所有event持久化到本地mongodb中。
+首先，你必须编译2个依赖包，一个是spray.io 1.3版本，用来构建RESTful API:
 
 ```
-git clone git@github.com:dong77/akka-persistence-mongo.git
+git clone https://github.com/spray/spray.git
+cd spray
+git checkout release/1.3
+sbt publishLocal
+```
+
+
+然后是第二个依赖包，它把所有event持久化到本地mongodb中。
+
+```
+git clone https://github.com/akka-persistence-mongo.git
 cd akka-persistence-mongo
 sbt publishLocal
 cd ..
@@ -15,29 +25,13 @@ cd ..
 
 `./mongod`
 
-然后，安装bitcoinj 0.11
-
-```
-git clone https://code.google.com/p/bitcoinj/ bitcoinj
-cd bitcoinj
-git fetch --all
-git checkout 410d4547a7dd20745f637313ed54d04d08d28687
-mvn install
-cd ..
-```
-
 然后checkout这个repo：
 
 ```
-git clone https://github.com/dong77/coinex
-cd coinex
-git checkout eventsourcing-demo
+git clone https://github.com/backcore.git
+cd backcore/coinex
+git checkout coinex-impl
 ```
-
-在src/main/resources/coinex.conf中，配置了mongodb的数据库和collection名称，默认是：
-
-`casbah-journal.mongo-url = "mongodb://127.0.0.1:27017/coinex.journals"`
-
 
 然后你可以运行app：
 
