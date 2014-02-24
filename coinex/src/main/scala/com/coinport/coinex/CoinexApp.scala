@@ -8,12 +8,15 @@ import akka.routing.FromConfig
 import scala.concurrent.duration._
 import akka.contrib.pattern.ClusterSingletonManager
 import Domain._
+import com.coinport.coinex.rest.DemoServiceActor
+import akka.io.IO
+import spray.can.Http
 
 object CoinexApp extends App {
   val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0)).
-    withFallback(ConfigFactory.load("application"))
+    withFallback(ConfigFactory.load())
 
-  val system = ActorSystem("coinex", config)
+  implicit val system = ActorSystem("coinex", config)
   val cluster = Cluster(system)
 
   // cluster aware routers
@@ -48,34 +51,7 @@ object CoinexApp extends App {
   }
 
   Thread.sleep(5000)
-  // Testing code
-  import system.dispatcher
-  val test = system.actorOf(Props(new Test(accountProcessorRouter, marketProcessorRouter)))
 
-  class Test(ap: ActorRef, mp: ActorRef) extends Actor {
-    override def preStart = {
-      // context.system.scheduler.scheduleOnce(1 second, 10 second) {
-      context.system.scheduler.scheduleOnce(1 second) {
-        if (args.length > 1) {
-          ap ! DoDeposit(Deposit(123L, "RMB", 1000))
-          ap ! DoDeposit(Deposit(456L, "BTC", 1))
-          ap ! DebugDump
-
-          ap ! SubmitOrder(SellOrder(4, 123L, Market("BTC", "RMB"), 666, None))
-          ap ! SubmitOrder(BuyOrder(6, 456L, Market("RMB", "BTC"), 1, Some(333.0)))
-        }
-        ap ! DebugDump
-        mp ! DebugDump
-      }
-
-      context.system.scheduler.schedule(10 seconds, 10 second) {
-        ap ! DebugDump
-        mp ! DebugDump
-      }
-    }
-
-    def receive = {
-      case a: Deposit => println("~~~~~~~~~~~~~~~~~~~~ deposit processed: " + a)
-    }
-  }
+  val service = system.actorOf(Props[DemoServiceActor], "rest")
+  IO(Http) ! Http.Bind(service, "localhost", port = config.getInt("coinex.rest-http-port"))
 }

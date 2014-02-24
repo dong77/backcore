@@ -1,27 +1,43 @@
 // import sbtprotobuf.{ProtobufPlugin=>PB}
+import spray.revolver.RevolverPlugin.Revolver
 
 name := "coinex"
 
 version := "1.0"
 
-//fork := true
-
 scalaVersion := "2.10.3"
 
-resolvers += Resolver.sonatypeRepo("snapshots")
+resolvers ++= Seq(
+    Resolver.sonatypeRepo("snapshots"),
+    "spray repo" at "http://repo.spray.io",
+    "spray nightlies repo" at "http://nightlies.spray.io"
+)
 
 libraryDependencies ++= {
-  val akkaVersion = "2.3.0-RC3"
-  val akkaModules = Seq("contrib", "cluster", "agent", "remote", "persistence-experimental")
+  val akkaVersion = "2.3.0-RC1"
+  val sprayVersion = "1.3-RC1"
   Seq(
-    //"org.slf4j" % "slf4j-jdk14" % "1.6.4",
-    "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.7",
-    "org.scala-stm" %% "scala-stm" % "0.7",
-    "com.github.ddevore" %% "akka-persistence-mongo-casbah" % "0.3-SNAPSHOT",
-    // "com.google.protobuf" % "protobuf-java" % "2.5.0",
-    // "org.scala-lang" %% "scala-pickling" % "0.8.0-SNAPSHOT",
-    "org.scalatest" % "scalatest_2.10" % "1.9.1" % "test"
-  ) ++ akkaModules.map{m => "com.typesafe.akka" %% ("akka-" + m) % akkaVersion}
+    "org.scalatest"            %  "scalatest_2.10"                   % "1.9.1" % "test",
+    "com.typesafe.akka"        %% "akka-remote"                      % akkaVersion,
+    "com.typesafe.akka"        %% "akka-cluster"                     % akkaVersion,
+    "com.typesafe.akka"        %% "akka-slf4j"                       % akkaVersion,
+    "com.typesafe.akka"        %% "akka-remote"                      % akkaVersion,
+    "com.typesafe.akka"        %% "akka-contrib"                     % akkaVersion,
+    "com.typesafe.akka"        %% "akka-persistence-experimental"    % akkaVersion,
+    "com.github.ddevore"       %% "akka-persistence-mongo-casbah"    % "0.3-SNAPSHOT",
+    "io.spray"                 %  "spray-io"                         % sprayVersion,
+    "io.spray"                 %  "spray-can"                        % sprayVersion,
+    "io.spray"                 %  "spray-routing"                    % sprayVersion,
+    "io.spray"                 %  "spray-http"                       % sprayVersion,
+    "io.spray"                 %  "spray-httpx"                      % sprayVersion,
+    "io.spray"                 %  "spray-client"                     % sprayVersion,
+    "io.spray"                 %  "spray-caching"                    % sprayVersion,
+    "io.spray"                 %  "spray-servlet"                    % sprayVersion,
+    "io.spray"                 %  "spray-util"                       % sprayVersion,
+    "io.spray"                 %% "spray-json"                       % "1.2.5",
+    "org.fusesource.leveldbjni"  %  "leveldbjni-all"                 % "1.7"
+    // "com.google.protobuf"     %  "protobuf-java"                  % "2.5.0"
+  )
 }
 
 // seq(PB.protobufSettings: _*)
