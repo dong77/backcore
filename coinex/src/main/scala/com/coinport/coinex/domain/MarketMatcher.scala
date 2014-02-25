@@ -3,9 +3,11 @@ package com.coinport.coinex.domain
 /**
  * MarketMatcher's job is to update an in-memory state of type `Market`
  * by matching new orders before they are ever added into the Market.
- * 
- * MarketMatcher can be used by an Akka persistent processor or a prsistent
- * view to reflect pending orders and market depth. 
+ *
+ * When orders match, transactions will be returned.
+ *
+ * MarketMatcher can be used by an Akka persistent processor or a view
+ * to reflect pending orders and market depth.
  */
 class MarketMatcher(outCurrency: Currency, inCurrency: Currency) {
   private var market = Market(outCurrency, inCurrency)
