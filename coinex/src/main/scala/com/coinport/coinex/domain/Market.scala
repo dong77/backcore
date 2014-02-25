@@ -1,4 +1,5 @@
-package com.coinport.coinex.domain.models
+package com.coinport.coinex.domain
+
 import scala.collection.immutable.SortedSet
 
 // Currency ------------------------
@@ -14,16 +15,9 @@ case object LTC extends EncryptedCurrency
 case object PTS extends EncryptedCurrency
 case object BTS extends EncryptedCurrency
 
-// Market Side ----------------------
-
-case class MarketSide(out: Currency, in: Currency) {
-  lazy val reverse = MarketSide(in, out)
-  override def toString = "(%s/%s)".format(out, in)
-}
-
 // Order --------------------------
 case class OrderData(id: Long, amount: Double, price: Double = 0)
-case class Order(side: MarketSide, data: OrderData, created: Long = System.currentTimeMillis)
+case class Order(side: MarketSide, data: OrderData)
 
 sealed trait OrderCondition {
   def eval: Boolean
@@ -31,7 +25,13 @@ sealed trait OrderCondition {
 
 case class ConditionalOrder(condition: OrderCondition, order: Order)
 
-// Market Side ----------------------
+// Market -------------------------
+
+case class MarketSide(out: Currency, in: Currency) {
+  def reverse = MarketSide(in, out)
+  override def toString = "(%s/%s)".format(out, in)
+}
+
 object Market {
   implicit val ordering = new Ordering[OrderData] {
     def compare(a: OrderData, b: OrderData) = {
@@ -51,35 +51,38 @@ object Market {
 }
 
 import Market._
-case class Market(currency1: Currency, currency2: Currency,
+case class Market(
+  outCurrency: Currency,
+  inCurrency: Currency,
   marketPriceOrderPools: Market.OrderPools = Market.EmptyOrderPools,
   limitPriceOrderPools: Market.OrderPools = Market.EmptyOrderPools,
   orderMap: Map[Long, OrderData] = Map.empty) {
 
-  val side1 = MarketSide(currency1, currency2)
-  val side2 = side1.reverse
-  val sides = Seq(side1, side2)
+  val sellSide = MarketSide(outCurrency, inCurrency)
+  val buySide = sellSide.reverse
+  val bothSides = Seq(sellSide, buySide)
 
-  def getMarketPriceOrderPool(side: MarketSide): OrderPool = try {
+  def getMarketPriceOrderPool(side: MarketSide): OrderPool = {
     marketPriceOrderPools.getOrElse(side, Market.EmptyOrderPool)
   }
 
-  def getLimitPriceOrderPool(side: MarketSide): OrderPool = try {
+  def getLimitPriceOrderPool(side: MarketSide): OrderPool = {
     limitPriceOrderPools.getOrElse(side, Market.EmptyOrderPool)
   }
 
   def addOrder(order: Order): Market = {
-    val o = validateOrder(order)
-    val data = o.data
+    val validated = validateOrder(order)
+    val data = validated.data
+    val side = validated.side
     val market = removeOrder(data.id)
 
-    val side = o.side
     var mpos = market.marketPriceOrderPools
     var lpos = market.limitPriceOrderPools
+
     if (data.price <= 0) {
-      mpos = mpos + (side -> (market.getMarketPriceOrderPool(side) + data))
+      mpos += (side -> (market.getMarketPriceOrderPool(side) + data))
     } else {
-      lpos = lpos + (side -> (market.getLimitPriceOrderPool(side) + data))
+      lpos += (side -> (market.getLimitPriceOrderPool(side) + data))
     }
     val orders = market.orderMap + (data.id -> data)
 
@@ -92,17 +95,18 @@ case class Market(currency1: Currency, currency2: Currency,
         var mpos = marketPriceOrderPools
         var lpos = limitPriceOrderPools
 
-        sides.foreach { side =>
+        bothSides.foreach { side =>
           var pool = getMarketPriceOrderPool(side) - old
-          if (pool.isEmpty) mpos = mpos - side
-          else mpos = mpos + (side -> pool)
+          if (pool.isEmpty) mpos -= side
+          else mpos += (side -> pool)
 
           pool = getLimitPriceOrderPool(side) - old
-          if (pool.isEmpty) lpos = lpos - side
-          else lpos = lpos + (side -> pool)
+          if (pool.isEmpty) lpos -= side
+          else lpos += (side -> pool)
         }
         val orders = orderMap - id
         copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
+
       case None =>
         this
     }

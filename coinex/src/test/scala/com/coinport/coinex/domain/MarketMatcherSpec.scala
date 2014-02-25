@@ -1,10 +1,11 @@
-package com.coinport.coinex.domain.models
+package com.coinport.coinex.domain
 
 import org.specs2.mutable._
 import scala.collection.immutable.SortedSet
+import Market._
 
 class MarketMatcherSpec extends Specification {
-  import Market._
+
   val sellSide = MarketSide(BTC, RMB)
   val buySide = sellSide.reverse
 

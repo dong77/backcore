@@ -1,11 +1,15 @@
-package com.coinport.coinex.domain.models
+package com.coinport.coinex.domain
 
 import org.specs2.mutable._
+import Market._
+
 class ModelsSpec extends Specification {
-  import Market._
+  val rand = new scala.util.Random
+  def newMarket = if (rand.nextBoolean) Market(BTC, RMB) else Market(RMB, BTC)
+
   "Market" should {
     "add new orders into pending order pool and replace existing ones" in {
-      var m = Market(BTC, RMB)
+      var m = newMarket
       val side = MarketSide(BTC, RMB)
       val order1 = Order(side, OrderData(1L, 100, 1000.0))
       val order2 = Order(side, OrderData(1L, 101, 1000.0))
@@ -35,7 +39,7 @@ class ModelsSpec extends Specification {
     }
 
     "sort limit-price orders correctly" in {
-      var m = Market(BTC, RMB)
+      var m = newMarket
       val side = MarketSide(BTC, RMB)
       val order1 = Order(side, OrderData(1L, 100, 1000.0))
       val order2 = Order(side, OrderData(2L, 100, 999.99))
@@ -51,7 +55,7 @@ class ModelsSpec extends Specification {
     }
 
     "sort market-price orders correctly and correct minor price" in {
-      var m = Market(BTC, RMB)
+      var m = newMarket
       val side = MarketSide(BTC, RMB)
       val order1 = Order(side, OrderData(1L, 100, 0))
       val order2 = Order(side, OrderData(2L, 100, 0))
@@ -67,7 +71,7 @@ class ModelsSpec extends Specification {
     }
 
     "keep unchanged after removing non-existing orders" in {
-      val market = Market(BTC, RMB)
+      val market = newMarket
       val side = MarketSide(BTC, RMB)
       val order1 = Order(side, OrderData(1L, 100, 1000.0))
       var m = market.addOrder(order1)
@@ -76,11 +80,11 @@ class ModelsSpec extends Specification {
     }
 
     "remove existing orders if id matches" in {
-      val market = Market(BTC, RMB)
+      val market = newMarket
       val side = MarketSide(BTC, RMB)
       val order1 = Order(side, OrderData(1L, 100, 1000.0))
       val order2 = Order(side, OrderData(2L, 100))
-      
+
       market.addOrder(order1).addOrder(order2).removeOrder(1).removeOrder(2) mustEqual market
     }
   }
