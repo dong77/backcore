@@ -1,7 +1,16 @@
 package com.coinport.coinex.domain
 
-// Currency ------------------------
+/**
+ * ATTENTION PLEASE:
+ *
+ * All classes here are case-classes or case-objects. This is required since we are
+ * maintaining an in-memory state that's immutable, so that we snapshot is taken and 
+ * persistent, the program can still update the live state.
+ * 
+ */
+
 sealed trait Currency
+
 sealed trait FiatCurrency extends Currency
 sealed trait EncryptedCurrency extends Currency
 
