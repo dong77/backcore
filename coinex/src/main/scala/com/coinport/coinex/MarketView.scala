@@ -11,7 +11,6 @@ class MarketView(market: Market) extends common.ExtendedView[MarketViewState] {
     case p @ Persistent(payload, _) => println("view catch up event: " + payload)
     case _ =>
   }
-
 }
 
 case class MarketViewState 
