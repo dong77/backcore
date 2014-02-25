@@ -1,75 +1,84 @@
 package com.coinport.coinex.domain.models
 
-class MarketMatcher(m: Market) {
-  private var market = m
-/*
+class MarketMatcher(currency1: Currency, currency2: Currency) {
+  private var market = Market(currency1, currency2)
+
+  def apply() = market
+
   def addOrder(order: Order) = {
     checkOrder(order)
     val side = order.side
     val data = order.data
-    val price = data.getPrice
     var sellAmount = data.amount
 
-    var reverseSideHasMoreOrderToMatch = true
+    def mpos = market.getMarketPriceOrderPool(order.side)
+    def lpos = market.getLimitPriceOrderPool(order.side)
+    def reverseMpos = market.getMarketPriceOrderPool(order.side.reverse)
+    def reverseLpos = market.getLimitPriceOrderPool(order.side.reverse)
+
+    var continue = true
 
     // if the top order on the same side is a market price order, it means
     // the reverse side has no limit-price-order to match at all, we stop.
-    market.getPendingOrders(side).headOption match {
-      case Some(d) if d.price.isEmpty =>
-        reverseSideHasMoreOrderToMatch = false
-      case _ =>
+    if (mpos.nonEmpty) {
+      continue = false // we have already a pending market-price order
     }
 
-    val reverseOrders = market.getPendingOrders(order.side.reverse)
+    while (continue && sellAmount > 0) {
+      if (data.price > 0) {
+        reverseMpos.headOption match {
+          case Some(reverse) =>
+            // new LPO to match existing MPOs
+            if (data.price * sellAmount >= reverse.amount) {
+              // new order is not fully executed but reverse order is.
+              market = market.removeOrder(reverse.id)
+              val sold = reverse.amount / data.price
+              sellAmount -= sold
+            } else {
+              // new order is fully executed but reverse is not.
+              val newReverse = reverse.copy(amount = reverse.amount - data.price * sellAmount)
+              market = market.addOrder(Order(side.reverse, newReverse))
+              sellAmount = 0
+            }
 
-    while (reverseSideHasMoreOrderToMatch && sellAmount > 0) {
-      reverseOrders.headOption match {
-        case Some(d) =>
-          data.price match {
-            case Some(p0) if p0 > 0 =>
-              // new order is a limit price order
-              d.price match {
-                case Some(p1) if p1 > 0 =>
-                  // reverse order is a limit price order
-                  if (p0 * p1 <= 1) { // we have a match and we use p1 as the deal price
-                    if (p1 * d.amount >= sellAmount) {
-                      market = market.addOrder(Order(side.reverse, d.copy(amount = d.amount - sellAmount / p1)))
-                      sellAmount = 0
-                    } else {
-                      market = market.removeOrder(d.id)
-                      sellAmount -= p1 * d.amount
-                    }
-                  }
-                case _ =>
-                  // reverse order is a market price order, so we have a match, we use p0 as deal price
-                  if (sellAmount * p0 < d.amount) {
-                    market = market.addOrder(Order(side.reverse, d.copy(amount = d.amount - sellAmount * p0)))
-                    sellAmount = 0
-                  } else {
-                    market = market.removeOrder(d.id)
-                    sellAmount -= d.amount / p0
-                  }
-              }
-            case _ =>
-              // new order is a market price order
-              d.price match {
-                case Some(p1) if p1 > 0 =>
-                  // reverse order is a limit price order, we use p1 as deal price
-                  if (p1 * d.amount >= sellAmount) {
-                    market = market.addOrder(Order(side.reverse, d.copy(amount = d.amount - sellAmount / p1)))
-                    sellAmount = 0
-                  } else {
-                    market = market.removeOrder(d.id)
-                    sellAmount -= p1 * d.amount
-                  }
+          case None =>
+            reverseLpos.headOption match {
+              case Some(reverse) if reverse.price * data.price <= 1 =>
+                // new LPO to match existing LPOs, using reverse price as deal price
+                if (sellAmount >= reverse.amount * reverse.price) {
+                  // new order is not fully executed but reverse order is.
+                  market = market.removeOrder(reverse.id)
+                  sellAmount -= reverse.amount * reverse.price
+                } else {
+                  // new order is fully executed but reverse order is not.
+                  val newReverse = reverse.copy(amount = reverse.amount - sellAmount / reverse.price)
+                  market = market.addOrder(Order(side.reverse, newReverse))
+                  sellAmount = 0
+                }
 
-                case _ =>
-                // reverse order is a market price order, so we have a match, we use p0 as deal price
-              }
-          }
-
-        case _ =>
-          reverseSideHasMoreOrderToMatch = false
+              case _ =>
+                // new LPO to match nothing (empty reverse)
+                continue = false
+            }
+        }
+      } else {
+        reverseLpos.headOption match {
+          case Some(reverse) =>
+            // new MPO to match existing LPOs
+            if (sellAmount >= reverse.price * reverse.amount) {
+              // reverse order will be fully executed, but new order is not.
+              market = market.removeOrder(reverse.id)
+              sellAmount -= reverse.amount * reverse.price
+            } else {
+              // new order will be fully executed, but reverse is not.
+              val newReverse = reverse.copy(amount = reverse.amount - sellAmount / reverse.price)
+              market = market.addOrder(Order(side.reverse, newReverse))
+              sellAmount = 0
+            }
+          case None =>
+            // new MPO to match nothing (empty reverse)
+            continue = false
+        }
       }
     }
 
@@ -79,6 +88,6 @@ class MarketMatcher(m: Market) {
   }
 
   def checkOrder(order: Order) {
-    assert(order.side == m.side1 || order.side == m.side2)
-  }*/
+    assert(order.side == market.side1 || order.side == market.side2)
+  }
 }
