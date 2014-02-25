@@ -22,7 +22,7 @@ class MarketMatcherSpec extends Specification {
         val buy2 = Order(buySide, buyData2)
         mm.addOrder(buy2)
 
-        mm().orderMap mustEqual Map(1L -> buyData1, 2 -> buyData2)
+        mm().orderMap mustEqual Map(1L -> buy1, 2 -> buy2)
         mm().getLimitPriceOrderPool(buySide) mustEqual EmptyOrderPool
         mm().getLimitPriceOrderPool(sellSide) mustEqual EmptyOrderPool
 
@@ -40,7 +40,7 @@ class MarketMatcherSpec extends Specification {
         val sell = Order(sellSide, sellData)
         mm.addOrder(sell)
 
-        mm().orderMap mustEqual Map(1L -> buyData, 2 -> sellData)
+        mm().orderMap mustEqual Map(1L -> buy, 2 -> sell)
         mm().getLimitPriceOrderPool(buySide) mustEqual EmptyOrderPool
         mm().getLimitPriceOrderPool(sellSide) mustEqual EmptyOrderPool
 
@@ -79,7 +79,7 @@ class MarketMatcherSpec extends Specification {
           val sell = Order(sellSide, sellData)
           mm.addOrder(sell)
 
-          mm().orderMap mustEqual Map(1 -> buyData.copy(amount = 90))
+          mm().orderMap mustEqual Map(1 -> buy.copy(data = buyData.copy(amount = 90)))
           mm().getLimitPriceOrderPool(buySide) mustEqual SortedSet(buyData.copy(amount = 90))
           mm().getLimitPriceOrderPool(sellSide) mustEqual EmptyOrderPool
 
@@ -98,7 +98,7 @@ class MarketMatcherSpec extends Specification {
           val sell = Order(sellSide, sellData)
           mm.addOrder(sell)
 
-          mm().orderMap mustEqual Map(2 -> sellData.copy(amount = 90))
+          mm().orderMap mustEqual Map(2 -> sell.copy(data = sellData.copy(amount = 90)))
 
           mm().getMarketPriceOrderPool(buySide) mustEqual EmptyOrderPool
           mm().getMarketPriceOrderPool(sellSide) mustEqual SortedSet(sellData.copy(amount = 90))
@@ -122,7 +122,7 @@ class MarketMatcherSpec extends Specification {
           val sell = Order(sellSide, sellData)
           mm.addOrder(sell)
 
-          mm().orderMap mustEqual Map(1 -> buyData1.copy(amount = 30)) //  100 x 0.5 + 100 x 1 - 120 = 30
+          mm().orderMap mustEqual Map(1 -> buy1.copy(data = buyData1.copy(amount = 30))) //  100 x 0.5 + 100 x 1 - 120 = 30
           mm().getLimitPriceOrderPool(buySide) mustEqual SortedSet(buyData1.copy(amount = 30))
           mm().getLimitPriceOrderPool(sellSide) mustEqual EmptyOrderPool
 
@@ -145,7 +145,7 @@ class MarketMatcherSpec extends Specification {
           val sell = Order(sellSide, sellData)
           mm.addOrder(sell)
 
-          mm().orderMap mustEqual Map(10 -> sellData.copy(amount = 50)) //  120 - 100 x 0.5 + 20 x 1 - 120 = 50
+          mm().orderMap mustEqual Map(10 -> sell.copy(data = sellData.copy(amount = 50))) //  120 - 100 x 0.5 + 20 x 1 - 120 = 50
           mm().getMarketPriceOrderPool(sellSide) mustEqual SortedSet(sellData.copy(amount = 50))
           mm().getMarketPriceOrderPool(buySide) mustEqual EmptyOrderPool
 
@@ -160,7 +160,7 @@ class MarketMatcherSpec extends Specification {
         (1 to roof) foreach { i => mm.addOrder(Order(buySide, OrderData(id = i, price = 1.0 / i, amount = i))) }
         mm.addOrder(Order(sellSide, OrderData(id = roof + 1, price = 0, amount = roof + 1)))
 
-        mm().orderMap mustEqual Map(roof + 1 -> OrderData(id = roof + 1, price = 0, amount = 1))
+        mm().orderMap mustEqual Map(roof + 1 -> Order(sellSide, OrderData(id = roof + 1, price = 0, amount = 1)))
       }
     }
 
@@ -180,7 +180,7 @@ class MarketMatcherSpec extends Specification {
       val sell = Order(sellSide, sellData)
       mm.addOrder(sell)
 
-      mm().orderMap mustEqual Map(1 -> buyData1, 2 -> buyData2.copy(amount = 80))
+      mm().orderMap mustEqual Map(1 -> buy1, 2 -> buy2.copy(data = buyData2.copy(amount = 80)))
       mm().getMarketPriceOrderPool(sellSide) mustEqual EmptyOrderPool
       mm().getMarketPriceOrderPool(buySide) mustEqual EmptyOrderPool
 
@@ -203,7 +203,7 @@ class MarketMatcherSpec extends Specification {
       val sell = Order(sellSide, sellData)
       mm.addOrder(sell)
 
-      mm().orderMap mustEqual Map(1 -> buyData1.copy(amount = 10))
+      mm().orderMap mustEqual Map(1 -> buy1.copy(data = buyData1.copy(amount = 10)))
       mm().getMarketPriceOrderPool(sellSide) mustEqual EmptyOrderPool
       mm().getMarketPriceOrderPool(buySide) mustEqual EmptyOrderPool
 
@@ -226,7 +226,7 @@ class MarketMatcherSpec extends Specification {
       val sell = Order(sellSide, sellData)
       mm.addOrder(sell)
 
-      mm().orderMap mustEqual Map(10 -> sellData.copy(amount = 40)) // 90 - 100x0.4 - 20x0.5
+      mm().orderMap mustEqual Map(10 -> sell.copy(data = sellData.copy(amount = 40))) // 90 - 100x0.4 - 20x0.5
       mm().getMarketPriceOrderPool(sellSide) mustEqual EmptyOrderPool
       mm().getMarketPriceOrderPool(buySide) mustEqual EmptyOrderPool
 
@@ -249,7 +249,7 @@ class MarketMatcherSpec extends Specification {
       val sell = Order(sellSide, sellData)
       mm.addOrder(sell)
 
-      mm().orderMap mustEqual Map(1 -> buyData1.copy(amount = 10), 2 -> buyData2)
+      mm().orderMap mustEqual Map(1 -> buy1.copy(data = buyData1.copy(amount = 10)), 2 -> buy2)
       mm().getMarketPriceOrderPool(sellSide) mustEqual EmptyOrderPool
       mm().getMarketPriceOrderPool(buySide) mustEqual SortedSet(buyData1.copy(amount = 10), buyData2)
 
@@ -272,7 +272,7 @@ class MarketMatcherSpec extends Specification {
       val sell = Order(sellSide, sellData)
       mm.addOrder(sell)
 
-      mm().orderMap mustEqual Map(2 -> buyData2.copy(amount = 60))
+      mm().orderMap mustEqual Map(2 -> buy2.copy(data = buyData2.copy(amount = 60)))
       mm().getMarketPriceOrderPool(sellSide) mustEqual EmptyOrderPool
       mm().getMarketPriceOrderPool(buySide) mustEqual SortedSet(buyData2.copy(amount = 60))
 
@@ -295,7 +295,7 @@ class MarketMatcherSpec extends Specification {
       val sell = Order(sellSide, sellData)
       mm.addOrder(sell)
 
-      mm().orderMap mustEqual Map(10 -> sellData.copy(amount = 240))
+      mm().orderMap mustEqual Map(10 -> sell.copy(data = sellData.copy(amount = 240)))
       mm().getMarketPriceOrderPool(sellSide) mustEqual EmptyOrderPool
       mm().getMarketPriceOrderPool(buySide) mustEqual EmptyOrderPool
 
@@ -310,7 +310,7 @@ class MarketMatcherSpec extends Specification {
       (1 to roof) foreach { i => mm.addOrder(Order(buySide, OrderData(id = i, price = 1.0 / i, amount = i))) }
       mm.addOrder(Order(sellSide, OrderData(id = roof + 1, price = 1, amount = roof + 1)))
 
-      mm().orderMap mustEqual Map(roof + 1 -> OrderData(id = roof + 1, price = 1, amount = 1))
+      mm().orderMap mustEqual Map(roof + 1 -> Order(sellSide, OrderData(id = roof + 1, price = 1, amount = 1)))
     }
   }
 }

@@ -18,7 +18,7 @@ class ModelsSpec extends Specification {
       m = m.addOrder(order2)
 
       m.orderMap.size mustEqual 1
-      m.orderMap(1L) mustEqual OrderData(1L, 101, 1000.0)
+      m.orderMap(1L) mustEqual order2
       m.marketPriceOrderPools mustEqual EmptyOrderPools
       m.getLimitPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
       m.getLimitPriceOrderPool(side).size mustEqual 1
@@ -31,7 +31,7 @@ class ModelsSpec extends Specification {
       m = m.addOrder(order4)
 
       m.orderMap.size mustEqual 1
-      m.orderMap(1L) mustEqual OrderData(1L, 104)
+      m.orderMap(1L) mustEqual order4
       m.limitPriceOrderPools mustEqual EmptyOrderPools
       m.getMarketPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
       m.getMarketPriceOrderPool(side).size mustEqual 1
@@ -51,7 +51,7 @@ class ModelsSpec extends Specification {
       m.marketPriceOrderPools mustEqual EmptyOrderPools
       m.getLimitPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
       m.getLimitPriceOrderPool(side).toList mustEqual order2.data :: order1.data :: order3.data :: Nil
-      m.orderMap mustEqual Map(order1.data.id -> order1.data, order2.data.id -> order2.data, order3.data.id -> order3.data)
+      m.orderMap mustEqual Map(order1.data.id -> order1, order2.data.id -> order2, order3.data.id -> order3)
     }
 
     "sort market-price orders correctly and correct minor price" in {
@@ -67,7 +67,7 @@ class ModelsSpec extends Specification {
       m.limitPriceOrderPools mustEqual EmptyOrderPools
       m.getMarketPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
       m.getMarketPriceOrderPool(side).toList mustEqual order1.data :: order2.data :: OrderData(3L, 100, 0) :: Nil
-      m.orderMap mustEqual Map(order1.data.id -> order1.data, order2.data.id -> order2.data, order3.data.id -> OrderData(3L, 100, 0))
+      m.orderMap mustEqual Map(order1.data.id -> order1, order2.data.id -> order2, order3.data.id -> order3.copy(data = OrderData(3L, 100, 0)))
     }
 
     "keep unchanged after removing non-existing orders" in {

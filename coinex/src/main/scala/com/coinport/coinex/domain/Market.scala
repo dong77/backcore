@@ -56,7 +56,7 @@ case class Market(
   inCurrency: Currency,
   marketPriceOrderPools: Market.OrderPools = Market.EmptyOrderPools,
   limitPriceOrderPools: Market.OrderPools = Market.EmptyOrderPools,
-  orderMap: Map[Long, OrderData] = Map.empty) {
+  orderMap: Map[Long, Order] = Map.empty) {
 
   val sellSide = MarketSide(outCurrency, inCurrency)
   val buySide = sellSide.reverse
@@ -84,7 +84,7 @@ case class Market(
     } else {
       lpos += (side -> (market.getLimitPriceOrderPool(side) + data))
     }
-    val orders = market.orderMap + (data.id -> data)
+    val orders = market.orderMap + (data.id -> validated)
 
     market.copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
   }
@@ -96,11 +96,11 @@ case class Market(
         var lpos = limitPriceOrderPools
 
         bothSides.foreach { side =>
-          var pool = getMarketPriceOrderPool(side) - old
+          var pool = getMarketPriceOrderPool(side) - old.data
           if (pool.isEmpty) mpos -= side
           else mpos += (side -> pool)
 
-          pool = getLimitPriceOrderPool(side) - old
+          pool = getLimitPriceOrderPool(side) - old.data
           if (pool.isEmpty) lpos -= side
           else lpos += (side -> pool)
         }
