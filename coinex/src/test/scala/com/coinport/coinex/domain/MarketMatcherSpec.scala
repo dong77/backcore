@@ -20,7 +20,7 @@ class MarketMatcherSpec extends Specification {
 
         val buyData2 = OrderData(id = 2, price = 0, amount = 500)
         val buy2 = Order(buySide, buyData2)
-        mm.addOrder(buy2)
+        val txs = mm.addOrder(buy2)
 
         mm().orderMap mustEqual Map(1L -> buy1, 2 -> buy2)
         mm().getLimitPriceOrderPool(buySide) mustEqual EmptyOrderPool
@@ -28,6 +28,8 @@ class MarketMatcherSpec extends Specification {
 
         mm().getMarketPriceOrderPool(buySide) mustEqual SortedSet(buyData1, buyData2)
         mm().getMarketPriceOrderPool(sellSide) mustEqual EmptyOrderPool
+
+        txs mustEqual Nil
       }
 
       "NOT match new market-price sell order with existing market-price buy oders" in {
@@ -48,7 +50,6 @@ class MarketMatcherSpec extends Specification {
         mm().getMarketPriceOrderPool(sellSide) mustEqual SortedSet(sellData)
 
         txs mustEqual Nil
-
       }
 
       "match new market-price sell order against existing limit-price buy orders and fully execute both orders " +
@@ -69,7 +70,9 @@ class MarketMatcherSpec extends Specification {
           mm().getMarketPriceOrderPool(buySide) mustEqual EmptyOrderPool
           mm().getMarketPriceOrderPool(sellSide) mustEqual EmptyOrderPool
 
-          txs mustEqual Transaction(Transfer(2, BTC, 100), Transfer(1, RMB, 100)) :: Nil
+          txs mustEqual
+            Transaction(Transfer(2, BTC, 100, true), Transfer(1, RMB, 100, true)) ::
+            Nil
         }
 
       "match new market-price sell order against existing limit-price buy orders and fully execute sell orders " +
@@ -90,7 +93,9 @@ class MarketMatcherSpec extends Specification {
           mm().getMarketPriceOrderPool(buySide) mustEqual EmptyOrderPool
           mm().getMarketPriceOrderPool(sellSide) mustEqual EmptyOrderPool
 
-          txs mustEqual Transaction(Transfer(2, BTC, 10), Transfer(1, RMB, 10)) :: Nil
+          txs mustEqual
+            Transaction(Transfer(2, BTC, 10, true), Transfer(1, RMB, 10, false)) ::
+            Nil
         }
 
       "match new market-price sell order against existing limit-price buy orders and fully execute buy orders " +
@@ -112,7 +117,9 @@ class MarketMatcherSpec extends Specification {
           mm().getLimitPriceOrderPool(buySide) mustEqual EmptyOrderPool
           mm().getLimitPriceOrderPool(sellSide) mustEqual EmptyOrderPool
 
-          txs mustEqual Transaction(Transfer(2, BTC, 10), Transfer(1, RMB, 10)) :: Nil
+          txs mustEqual
+            Transaction(Transfer(2, BTC, 10, false), Transfer(1, RMB, 10, true)) ::
+            Nil
         }
 
       "match new market-price sell order against multiple existing limit-price buy orders and fully execute " +
@@ -138,8 +145,8 @@ class MarketMatcherSpec extends Specification {
           mm().getMarketPriceOrderPool(sellSide) mustEqual EmptyOrderPool
 
           txs mustEqual
-            Transaction(Transfer(10, BTC, 70), Transfer(1, RMB, 70)) ::
-            Transaction(Transfer(10, BTC, 50), Transfer(2, RMB, 100)) ::
+            Transaction(Transfer(10, BTC, 70, true), Transfer(1, RMB, 70, false)) ::
+            Transaction(Transfer(10, BTC, 50, false), Transfer(2, RMB, 100, true)) ::
             Nil
         }
 
@@ -166,8 +173,8 @@ class MarketMatcherSpec extends Specification {
           mm().getLimitPriceOrderPool(sellSide) mustEqual EmptyOrderPool
 
           txs mustEqual
-            Transaction(Transfer(10, BTC, 20), Transfer(1, RMB, 20)) ::
-            Transaction(Transfer(10, BTC, 50), Transfer(2, RMB, 100)) ::
+            Transaction(Transfer(10, BTC, 20, false), Transfer(1, RMB, 20, true)) ::
+            Transaction(Transfer(10, BTC, 50, false), Transfer(2, RMB, 100, true)) ::
             Nil
         }
 
@@ -209,7 +216,7 @@ class MarketMatcherSpec extends Specification {
       mm().getLimitPriceOrderPool(sellSide) mustEqual EmptyOrderPool
 
       txs mustEqual
-        Transaction(Transfer(10, BTC, 10), Transfer(2, RMB, 20)) ::
+        Transaction(Transfer(10, BTC, 10, true), Transfer(2, RMB, 20, false)) ::
         Nil
     }
 
@@ -236,8 +243,8 @@ class MarketMatcherSpec extends Specification {
       mm().getLimitPriceOrderPool(sellSide) mustEqual EmptyOrderPool
 
       txs mustEqual
-        Transaction(Transfer(10, BTC, 10), Transfer(1, RMB, 10)) ::
-        Transaction(Transfer(10, BTC, 50), Transfer(2, RMB, 100)) ::
+        Transaction(Transfer(10, BTC, 10, true), Transfer(1, RMB, 10, false)) ::
+        Transaction(Transfer(10, BTC, 50, false), Transfer(2, RMB, 100, true)) ::
         Nil
     }
 
@@ -264,8 +271,8 @@ class MarketMatcherSpec extends Specification {
       mm().getLimitPriceOrderPool(sellSide) mustEqual SortedSet(sellData.copy(amount = 40))
 
       txs mustEqual
-        Transaction(Transfer(10, BTC, 10), Transfer(1, RMB, 20)) ::
-        Transaction(Transfer(10, BTC, 40), Transfer(2, RMB, 100)) ::
+        Transaction(Transfer(10, BTC, 10, false), Transfer(1, RMB, 20, true)) ::
+        Transaction(Transfer(10, BTC, 40, false), Transfer(2, RMB, 100, true)) ::
         Nil
     }
 
@@ -292,7 +299,7 @@ class MarketMatcherSpec extends Specification {
       mm().getLimitPriceOrderPool(sellSide) mustEqual EmptyOrderPool
 
       txs mustEqual
-        Transaction(Transfer(10, BTC, 5), Transfer(1, RMB, 10)) ::
+        Transaction(Transfer(10, BTC, 5, true), Transfer(1, RMB, 10, false)) ::
         Nil
     }
 
@@ -319,8 +326,8 @@ class MarketMatcherSpec extends Specification {
       mm().getLimitPriceOrderPool(sellSide) mustEqual EmptyOrderPool
 
       txs mustEqual
-        Transaction(Transfer(10, BTC, 20), Transfer(2, RMB, 40)) ::
-        Transaction(Transfer(10, BTC, 10), Transfer(1, RMB, 20)) ::
+        Transaction(Transfer(10, BTC, 20, true), Transfer(2, RMB, 40, false)) ::
+        Transaction(Transfer(10, BTC, 10, false), Transfer(1, RMB, 20, true)) ::
         Nil
     }
 
@@ -347,8 +354,8 @@ class MarketMatcherSpec extends Specification {
       mm().getLimitPriceOrderPool(sellSide) mustEqual SortedSet(sellData.copy(amount = 240))
 
       txs mustEqual
-        Transaction(Transfer(10, BTC, 50), Transfer(2, RMB, 100)) ::
-        Transaction(Transfer(10, BTC, 10), Transfer(1, RMB, 20)) ::
+        Transaction(Transfer(10, BTC, 50, false), Transfer(2, RMB, 100, true)) ::
+        Transaction(Transfer(10, BTC, 10, false), Transfer(1, RMB, 20, true)) ::
         Nil
     }
 

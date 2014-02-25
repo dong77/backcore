@@ -39,17 +39,18 @@ class MarketMatcher(outCurrency: Currency, inCurrency: Currency) {
       if (sellAmount >= buyOrder.amount * actualBuyPrice) {
         // new sell order is not fully executed but buy order is.
         market = market.removeOrder(buyOrder.id)
-        txs ::= Transaction(
-          Transfer(sellOrder.id, sellSide.outCurrency, buyOrder.amount * actualBuyPrice),
-          Transfer(buyOrder.id, buySide.outCurrency, buyOrder.amount))
         sellAmount -= buyOrder.amount * actualBuyPrice
+        txs ::= Transaction(
+          Transfer(sellOrder.id, sellSide.outCurrency, buyOrder.amount * actualBuyPrice, sellAmount == 0),
+          Transfer(buyOrder.id, buySide.outCurrency, buyOrder.amount, true))
+
       } else {
         // new sell order is fully executed but buy order is not.
         val updatedBuyOrder = Order(buySide, buyOrder.copy(amount = buyOrder.amount - sellAmount * actualSellPrice))
         market = market.addOrder(updatedBuyOrder)
         txs ::= Transaction(
-          Transfer(sellOrder.id, sellSide.outCurrency, sellAmount),
-          Transfer(buyOrder.id, buySide.outCurrency, sellAmount * actualSellPrice))
+          Transfer(sellOrder.id, sellSide.outCurrency, sellAmount, true),
+          Transfer(buyOrder.id, buySide.outCurrency, sellAmount * actualSellPrice, false))
         sellAmount = 0
       }
     }
