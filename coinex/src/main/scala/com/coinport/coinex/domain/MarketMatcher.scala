@@ -9,11 +9,11 @@ class MarketMatcher(outCurrency: Currency, inCurrency: Currency) {
     checkOrder(order)
     val (sellSide, buySide) = (order.side, order.side.reverse)
     val sellOrder = order.data
-
-    def sellMpos = market.getMarketPriceOrderPool(order.side)
-    def sellLpos = market.getLimitPriceOrderPool(order.side)
-    def buyMpos = market.getMarketPriceOrderPool(order.side.reverse)
-    def buyLpos = market.getLimitPriceOrderPool(order.side.reverse)
+    
+    def sellMpos = market.getMarketPriceOrderPool(sellSide)
+    def sellLpos = market.getLimitPriceOrderPool(sellSide)
+    def buyMpos = market.getMarketPriceOrderPool(buySide)
+    def buyLpos = market.getLimitPriceOrderPool(buySide)
 
     var (sellAmount, continue) = (sellOrder.amount, true)
 

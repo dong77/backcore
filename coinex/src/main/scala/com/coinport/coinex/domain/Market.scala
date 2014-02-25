@@ -2,34 +2,9 @@ package com.coinport.coinex.domain
 
 import scala.collection.immutable.SortedSet
 
-// Currency ------------------------
-sealed trait Currency
-sealed trait FiatCurrency extends Currency
-sealed trait EncryptedCurrency extends Currency
-
-case object RMB extends FiatCurrency
-case object USD extends FiatCurrency
-
-case object BTC extends EncryptedCurrency
-case object LTC extends EncryptedCurrency
-case object PTS extends EncryptedCurrency
-case object BTS extends EncryptedCurrency
-
-// Order --------------------------
-case class OrderData(id: Long, amount: Double, price: Double = 0)
-case class Order(side: MarketSide, data: OrderData)
-
-sealed trait OrderCondition {
-  def eval: Boolean
-}
-
-case class ConditionalOrder(condition: OrderCondition, order: Order)
-
-// Market -------------------------
-
-case class MarketSide(out: Currency, in: Currency) {
-  def reverse = MarketSide(in, out)
-  override def toString = "(%s/%s)".format(out, in)
+case class MarketSide(outCurrency: Currency, inCurrency: Currency) {
+  def reverse = MarketSide(inCurrency, outCurrency)
+  override def toString = "(%s/%s)".format(outCurrency, inCurrency)
 }
 
 object Market {
