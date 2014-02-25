@@ -35,8 +35,9 @@ libraryDependencies ++= {
     "io.spray"                 %  "spray-servlet"                    % sprayVersion,
     "io.spray"                 %  "spray-util"                       % sprayVersion,
     "io.spray"                 %% "spray-json"                       % "1.2.5",
-    "org.fusesource.leveldbjni"  %  "leveldbjni-all"                 % "1.7"
-    // "com.google.protobuf"     %  "protobuf-java"                  % "2.5.0"
+    "org.fusesource.leveldbjni"  %  "leveldbjni-all"                 % "1.7",
+    // "com.google.protobuf"     %  "protobuf-java"                  % "2.5.0",
+    "org.specs2"                 %% "specs2"                         % "2.3.8" % "test"
   )
 }
 
