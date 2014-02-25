@@ -233,7 +233,7 @@ class MarketMatcherSpec extends Specification {
       mm().getLimitPriceOrderPool(sellSide) mustEqual SortedSet(sellData.copy(amount = 40))
     }
 
-    "match new limit-price order fully against existing market-price buy order 1" in {
+    "match new limit-price sell order fully against existing market-price buy order 1" in {
       val mm = new MarketMatcher(BTC, RMB)
 
       val buyData1 = OrderData(id = 1, price = 0, amount = 20) // lower price
@@ -256,7 +256,7 @@ class MarketMatcherSpec extends Specification {
       mm().getLimitPriceOrderPool(sellSide) mustEqual EmptyOrderPool
     }
 
-    "match new limit-price order fully against existing market-price buy order 2" in {
+    "match new limit-price sell order fully against existing market-price buy order 2" in {
       val mm = new MarketMatcher(BTC, RMB)
 
       val buyData1 = OrderData(id = 1, price = 0, amount = 20) // higher priority
@@ -279,7 +279,7 @@ class MarketMatcherSpec extends Specification {
       mm().getLimitPriceOrderPool(sellSide) mustEqual EmptyOrderPool
     }
 
-    "match new limit-price order partially against existing market-price buy order" in {
+    "match new limit-price sell order partially against existing market-price buy order" in {
       val mm = new MarketMatcher(BTC, RMB)
 
       val buyData1 = OrderData(id = 1, price = 0, amount = 20) // lower price

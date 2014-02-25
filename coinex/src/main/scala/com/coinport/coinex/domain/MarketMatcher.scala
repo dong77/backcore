@@ -25,60 +25,35 @@ class MarketMatcher(currency1: Currency, currency2: Currency) {
     }
 
     while (continue && sellAmount > 0) {
-      if (data.price > 0) {
-        reverseMpos.headOption match {
-          case Some(reverse) =>
-            // new LPO to match existing MPOs
-            if (data.price * sellAmount >= reverse.amount) {
-              // new order is not fully executed but reverse order is.
-              market = market.removeOrder(reverse.id)
-              val sold = reverse.amount / data.price
-              sellAmount -= sold
-            } else {
-              // new order is fully executed but reverse is not.
-              val newReverse = reverse.copy(amount = reverse.amount - data.price * sellAmount)
-              market = market.addOrder(Order(side.reverse, newReverse))
-              sellAmount = 0
-            }
+      reverseMpos.headOption match {
+        case Some(reverse) if data.price > 0 =>
+          // new LPO to match existing MPOs
+          val dealAmount = reverse.amount / data.price
+          sellAmount -= dealAmount
+          if (sellAmount >= 0) {
+            // new order is not fully executed but reverse order is.
+            market = market.removeOrder(reverse.id)
+          } else {
+            // new order is fully executed but reverse is not.
+            market = market.addOrder(Order(side.reverse, reverse.copy(amount = -sellAmount * data.price)))
+          }
 
-          case None =>
-            reverseLpos.headOption match {
-              case Some(reverse) if reverse.price * data.price <= 1 =>
-                // new LPO to match existing LPOs, using reverse price as deal price
-                if (sellAmount >= reverse.amount * reverse.price) {
-                  // new order is not fully executed but reverse order is.
-                  market = market.removeOrder(reverse.id)
-                  sellAmount -= reverse.amount * reverse.price
-                } else {
-                  // new order is fully executed but reverse order is not.
-                  val newReverse = reverse.copy(amount = reverse.amount - sellAmount / reverse.price)
-                  market = market.addOrder(Order(side.reverse, newReverse))
-                  sellAmount = 0
-                }
+        case _ =>
+          reverseLpos.headOption match {
+            case Some(reverse) if reverse.price * data.price <= 1 =>
+              // new LPO or MPO to match existing LPOs, using reverse price as deal price
+              val dealAmount = reverse.amount * reverse.price
+              sellAmount -= dealAmount
+              if (sellAmount >= 0) {
+                // new order is not fully executed but reverse order is.
+                market = market.removeOrder(reverse.id)
+              } else {
+                // new order is fully executed but reverse order is not.
+                market = market.addOrder(Order(side.reverse, reverse.copy(amount = -sellAmount / reverse.price)))
+              }
 
-              case _ =>
-                // new LPO to match nothing (empty reverse)
-                continue = false
-            }
-        }
-      } else {
-        reverseLpos.headOption match {
-          case Some(reverse) =>
-            // new MPO to match existing LPOs
-            if (sellAmount >= reverse.price * reverse.amount) {
-              // reverse order will be fully executed, but new order is not.
-              market = market.removeOrder(reverse.id)
-              sellAmount -= reverse.amount * reverse.price
-            } else {
-              // new order will be fully executed, but reverse is not.
-              val newReverse = reverse.copy(amount = reverse.amount - sellAmount / reverse.price)
-              market = market.addOrder(Order(side.reverse, newReverse))
-              sellAmount = 0
-            }
-          case None =>
-            // new MPO to match nothing (empty reverse)
-            continue = false
-        }
+            case _ => continue = false
+          }
       }
     }
 
