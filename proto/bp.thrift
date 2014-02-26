@@ -99,7 +99,7 @@ struct OrderInfo {
 }
 
 struct BPCommand {
-    1: required i64 id,
+    1: optional i64 id,  // TBU
     2: optional BPCommandType type,
     3: optional UserInfo userInfo,
     4: optional DWInfo dwInfo,

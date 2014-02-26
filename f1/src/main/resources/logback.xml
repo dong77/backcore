@@ -43,7 +43,7 @@
             <appender-ref  ref="FILE"  />
     </appender>
 
-    <root  level="DEBUG">
+    <root level="DEBUG">
         <!--  remove  this  appender  in  prod-->
         <appender-ref  ref="stdout"/>
         <appender-ref  ref="ASYNC"  />

@@ -223,7 +223,7 @@ public final class BP {
         return bc;
     }
 
-    private BPCommand nextCommand() {
+    public BPCommand nextCommand() {
         sequence = ringBuffer.next();
         BPCommand bpc = ringBuffer.get(sequence).getCommand();
 

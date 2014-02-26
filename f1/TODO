@@ -1,2 +1,3 @@
 - try to use objectpool to improve the performance
 - using kryo for deepCopy to improve the performance
+- nodejs(hood) publish binary and java(f1) de-serialize to thrift object

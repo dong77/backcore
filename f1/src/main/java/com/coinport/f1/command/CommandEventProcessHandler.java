@@ -39,5 +39,7 @@ public final class CommandEventProcessHandler implements EventHandler<CommandEve
         } else {
             command.setStats(CommandStats.FAIL);
         }
+        // TODO(c): remove this
+        bc.display();
     }
 }

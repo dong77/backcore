@@ -230,6 +230,12 @@ public class BusinessContext {
         long buyAmount =  buyQuantity * buyPrice;
         UserInfo buyer = users.get(oi.getUid());
 
+        // TODO(c): make here more effective
+        if (buyer == null || buyer.getWallets() == null || !buyer.getWallets().containsKey(from)) {
+            logger.info("null in get path");
+            return true;
+        }
+
         if (buyAmount > buyer.getWallets().get(from).getValid()) {
             logger.info("not enough money");
             return true;
