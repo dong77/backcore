@@ -3,14 +3,12 @@ package com.coinport.coinex.common
 import akka.persistence._
 import akka.actor._
 
-case class AdminCommand(cmd: Any)
-trait ExtendedProcessor[T] extends Processor with ActorLogging {
-  var state: T
+trait ExtendedProcessor extends Processor with ActorLogging {
   lazy val channel = context.actorOf(PersistentChannel.props(processorId + "_c"), "channel")
   var autoConfirmChannelMessage = true
 
   override def preStart() = {
-    log.info("=== processorId: {}, channel: {}", processorId, channel.path)
+    log.info("============ processorId: {}, channel: {}", processorId, channel.path)
     super.preStart
   }
 
@@ -23,27 +21,13 @@ trait ExtendedProcessor[T] extends Processor with ActorLogging {
     case p: Persistent =>
       if (receiveMessage.isDefinedAt(p)) receiveMessage(p)
 
-    case AdminCommand(cmd) =>
-      if (receiveMessage.isDefinedAt(cmd)) receiveMessage(cmd)
-
     case msg =>
-      if (receiveMessage.isDefinedAt(msg)) preserveState(receiveMessage(msg))
+      if (receiveMessage.isDefinedAt(msg)) receiveMessage(msg)
   }
 
   def keepWhen(conditionEval: => Boolean)(updateState: => Any) = {
-    val condition = preserveState(conditionEval)
-    if (condition) updateState
+    if (conditionEval) updateState
     else currentPersistentMessage.foreach(m => deleteMessage(m.sequenceNr))
-  }
-
-  private def preserveState[T](op: => T): T = {
-    val currentState = state
-    val result = op
-    if (state != currentState) {
-      log.error("Attempted to modified state in `prserveState` with message: {}", currentPersistentMessage)
-    }
-    state = currentState
-    result
   }
 
   def deliver(msg: Any, dest: ActorPath) = msg match {

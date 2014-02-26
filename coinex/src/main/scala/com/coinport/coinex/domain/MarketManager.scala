@@ -9,10 +9,17 @@ package com.coinport.coinex.domain
  * MarketManager can be used by an Akka persistent processor or a view
  * to reflect pending orders and market depth.
  */
-class MarketManager(outCurrency: Currency, inCurrency: Currency) {
-  private var market = Market(outCurrency, inCurrency)
+
+class MarketManager(headSide: MarketSide) {
+
+  private var market = Market(headSide)
 
   def apply() = market
+
+  def reset(market: Option[Market] = None) = market match {
+    case Some(m) => this.market = m
+    case None => this.market = Market(headSide)
+  }
 
   def addOrder(order: Order): List[Transaction] = {
     checkOrder(order)

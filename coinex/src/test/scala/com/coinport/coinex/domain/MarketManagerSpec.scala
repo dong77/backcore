@@ -6,13 +6,13 @@ import Market._
 
 class MarketManagerSpec extends Specification {
 
-  val takerSide = MarketSide(BTC, RMB)
+  val takerSide = BTC ~ RMB
   val makerSide = takerSide.reverse
 
   val market =
     "MarketManager" should {
       "allow multiple market-price orders to co-exist" in {
-        val mm = new MarketManager(BTC, RMB)
+        val mm = new MarketManager(BTC ~ RMB)
 
         val makerData1 = OrderData(id = 1, price = 0, quantity = 100)
         val maker1 = Order(makerSide, makerData1)
@@ -33,7 +33,7 @@ class MarketManagerSpec extends Specification {
       }
 
       "NOT match new market-price taker order with existing market-price maker oders" in {
-        val mm = new MarketManager(BTC, RMB)
+        val mm = new MarketManager(BTC ~ RMB)
         val makerData = OrderData(id = 1, price = 0, quantity = 100)
         val maker = Order(makerSide, makerData)
         mm.addOrder(maker)
@@ -54,7 +54,7 @@ class MarketManagerSpec extends Specification {
 
       "match new market-price taker order against existing limit-price maker orders and fully execute both orders " +
         "if quantity equals" in {
-          val mm = new MarketManager(BTC, RMB)
+          val mm = new MarketManager(BTC ~ RMB)
           val makerData = OrderData(id = 1, price = 1, quantity = 100)
           val maker = Order(makerSide, makerData)
           mm.addOrder(maker)
@@ -77,7 +77,7 @@ class MarketManagerSpec extends Specification {
 
       "match new market-price taker order against existing limit-price maker orders and fully execute taker orders " +
         "if its quantity is smaller" in {
-          val mm = new MarketManager(BTC, RMB)
+          val mm = new MarketManager(BTC ~ RMB)
           val makerData = OrderData(id = 1, price = 1, quantity = 100)
           val maker = Order(makerSide, makerData)
           mm.addOrder(maker)
@@ -100,7 +100,7 @@ class MarketManagerSpec extends Specification {
 
       "match new market-price taker order against existing limit-price maker orders and fully execute maker orders " +
         "if its quantity is smaller" in {
-          val mm = new MarketManager(BTC, RMB)
+          val mm = new MarketManager(BTC ~ RMB)
           val makerData = OrderData(id = 1, price = 1, quantity = 10)
           val maker = Order(makerSide, makerData)
           mm.addOrder(maker)
@@ -124,7 +124,7 @@ class MarketManagerSpec extends Specification {
 
       "match new market-price taker order against multiple existing limit-price maker orders and fully execute " +
         "taker order if its quantity is smaller" in {
-          val mm = new MarketManager(BTC, RMB)
+          val mm = new MarketManager(BTC ~ RMB)
           val makerData1 = OrderData(id = 1, price = 1, quantity = 100) // lower price
           val maker1 = Order(makerSide, makerData1)
           mm.addOrder(maker1)
@@ -152,7 +152,7 @@ class MarketManagerSpec extends Specification {
 
       "match new market-price taker order against multiple existing limit-price maker orders and fully execute " +
         "all maker orders if their combined quantity is smaller" in {
-          val mm = new MarketManager(BTC, RMB)
+          val mm = new MarketManager(BTC ~ RMB)
           val makerData1 = OrderData(id = 1, price = 1, quantity = 20) // lower price
           val maker1 = Order(makerSide, makerData1)
           mm.addOrder(maker1)
@@ -179,7 +179,7 @@ class MarketManagerSpec extends Specification {
         }
 
       "match new market-price taker order against as many existing limit-price by order as necessary" in {
-        val mm = new MarketManager(BTC, RMB)
+        val mm = new MarketManager(BTC ~ RMB)
 
         val roof = 1000 * 10
         (1 to roof) foreach { i => mm.addOrder(Order(makerSide, OrderData(id = i, price = 1.0 / i, quantity = i))) }
@@ -194,7 +194,7 @@ class MarketManagerSpec extends Specification {
 
   "MarketManager" should {
     "match new limit-price taker order against the highest limit-price maker order" in {
-      val mm = new MarketManager(BTC, RMB)
+      val mm = new MarketManager(BTC ~ RMB)
 
       val makerData1 = OrderData(id = 1, price = 1, quantity = 20) // lower price
       val maker1 = Order(makerSide, makerData1)
@@ -221,7 +221,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "match new limit-price taker order fully against multiple limit-price maker orders" in {
-      val mm = new MarketManager(BTC, RMB)
+      val mm = new MarketManager(BTC ~ RMB)
 
       val makerData1 = OrderData(id = 1, price = 1, quantity = 20) // lower price
       val maker1 = Order(makerSide, makerData1)
@@ -249,7 +249,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "match new limit-price taker order partially against multiple limit-price maker orders" in {
-      val mm = new MarketManager(BTC, RMB)
+      val mm = new MarketManager(BTC ~ RMB)
 
       val makerData1 = OrderData(id = 1, price = 0.5, quantity = 20) // lower price
       val maker1 = Order(makerSide, makerData1)
@@ -277,7 +277,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "match new limit-price taker order fully against existing market-price maker order 1" in {
-      val mm = new MarketManager(BTC, RMB)
+      val mm = new MarketManager(BTC ~ RMB)
 
       val makerData1 = OrderData(id = 1, price = 0, quantity = 20) // high priority
       val maker1 = Order(makerSide, makerData1)
@@ -304,7 +304,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "match new limit-price taker order fully against existing market-price maker order 2" in {
-      val mm = new MarketManager(BTC, RMB)
+      val mm = new MarketManager(BTC ~ RMB)
 
       val makerData1 = OrderData(id = 1, price = 0, quantity = 20) // higher priority
       val maker1 = Order(makerSide, makerData1)
@@ -332,7 +332,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "match new limit-price taker order partially against existing market-price maker order" in {
-      val mm = new MarketManager(BTC, RMB)
+      val mm = new MarketManager(BTC ~ RMB)
 
       val makerData1 = OrderData(id = 1, price = 0, quantity = 20) // lower price
       val maker1 = Order(makerSide, makerData1)
@@ -360,7 +360,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "match new limit-price taker order against as many existing limit-price by order as necessary" in {
-      val mm = new MarketManager(BTC, RMB)
+      val mm = new MarketManager(BTC ~ RMB)
 
       val roof = 1000 * 10
       (1 to roof) foreach { i => mm.addOrder(Order(makerSide, OrderData(id = i, price = 1.0 / i, quantity = i))) }

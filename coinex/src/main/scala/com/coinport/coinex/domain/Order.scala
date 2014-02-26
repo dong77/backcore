@@ -9,10 +9,7 @@ package com.coinport.coinex.domain
  *
  */
 
-case class Trailing(highestTxPrice: Double, param: Either[ /*percentage*/ Double, /*absolute*/ Double])
-
-case class OrderData(id: Long, quantity: Double, price: Double = 0, trailing: Option[Trailing] = None)
+case class OrderData(id: Long, quantity: Double, price: Double = 0)
 
 case class Order(side: MarketSide, data: OrderData)
 
-case class StopOrder(stopPrice: Double, order: Order)

@@ -7,10 +7,10 @@ import akka.cluster.ClusterEvent._
 import akka.routing.FromConfig
 import scala.concurrent.duration._
 import akka.contrib.pattern.ClusterSingletonManager
-import Domain._
 import com.coinport.coinex.rest.DemoServiceActor
 import akka.io.IO
 import spray.can.Http
+import com.coinport.coinex.domain._
 
 object CoinexApp extends App {
   val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0)).
@@ -27,13 +27,13 @@ object CoinexApp extends App {
 
   // processors
   system.actorOf(ClusterSingletonManager.props(
-    singletonProps = Props(new AccountProcessor(marketProcessorRouter.path)),
+    singletonProps = Props(new AccountProcessor()),
     singletonName = "singleton",
     terminationMessage = PoisonPill,
     role = Some("account_processor")),
     name = "accountProcessor")
 
-  val market = Market("BTC", "RMB")
+  val market = BTC ~ RMB
   system.actorOf(ClusterSingletonManager.props(
     singletonProps = Props(new MarketProcessor(market, accountProcessorRouter.path)),
     singletonName = "singleton",

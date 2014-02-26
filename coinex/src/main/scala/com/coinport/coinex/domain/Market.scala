@@ -10,9 +10,10 @@ import scala.collection.immutable.SortedSet
  * persistent, the program can still update the live state.
  *
  */
+
 case class MarketSide(outCurrency: Currency, inCurrency: Currency) {
-  def reverse = MarketSide(inCurrency, outCurrency)
-  override def toString = "(%s/%s)".format(outCurrency, inCurrency)
+  def reverse = inCurrency ~ outCurrency
+  override def toString = "%s_%s".format(outCurrency, inCurrency).toLowerCase
 }
 
 object Market {
@@ -35,19 +36,16 @@ object Market {
 
 import Market._
 case class Market(
-  outCurrency: Currency,
-  inCurrency: Currency,
+  headSide: MarketSide,
   marketPriceOrderPools: Market.OrderPools = Market.EmptyOrderPools,
   limitPriceOrderPools: Market.OrderPools = Market.EmptyOrderPools,
-  orderMap: Map[Long, Order] = Map.empty,
-  stopOrders: Map[Long, StopOrder] = Map.empty) {
+  orderMap: Map[Long, Order] = Map.empty) {
 
-  val takerSide = MarketSide(outCurrency, inCurrency)
-  val makerSide = takerSide.reverse
-  val bothSides = Seq(takerSide, makerSide)
+  val tailSide = headSide.reverse
+  val bothSides = Seq(headSide, tailSide)
 
-  def bestTakerSidePrice = limitPriceOrderPool(takerSide).headOption.map(_.price)
-  def bestMakerSidePrice = limitPriceOrderPool(makerSide).headOption.map(_.price)
+  def bestHeadSidePrice = limitPriceOrderPool(headSide).headOption.map(_.price)
+  def bestTailSidePrice = limitPriceOrderPool(tailSide).headOption.map(_.price)
 
   def marketPriceOrderPool(side: MarketSide): OrderPool = {
     marketPriceOrderPools.getOrElse(side, Market.EmptyOrderPool)
