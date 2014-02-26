@@ -5,13 +5,13 @@
 package com.coinport.coinex.domain
 
 import org.specs2.mutable._
-import Market._
+import MarketState._
 
-class ModelsSpec extends Specification {
+class MarketStateSpec extends Specification {
   val rand = new scala.util.Random
-  def newMarket = if (rand.nextBoolean) Market(BTC ~> RMB) else Market(BTC <~ RMB)
+  def newMarket = if (rand.nextBoolean) MarketState(BTC ~> RMB) else MarketState(BTC <~ RMB)
 
-  "Market" should {
+  "MarketState" should {
     "add new orders into pending order pool and replace existing ones" in {
       var m = newMarket
       val side = BTC ~> RMB

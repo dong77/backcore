@@ -6,7 +6,7 @@ package com.coinport.coinex.domain
 
 import org.specs2.mutable._
 import scala.collection.immutable.SortedSet
-import Market._
+import MarketState._
 
 class MarketManagerSpec extends Specification {
 

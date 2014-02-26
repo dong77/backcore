@@ -11,11 +11,15 @@ class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) e
 
   override val receiveMessage: Receive = {
     case SnapshotOffer(_, snapshot) =>
-      manager.reset(Some(snapshot.asInstanceOf[Market]))
+      manager.reset(snapshot.asInstanceOf[MarketState])
 
     case SubmitOrder(order: Order) =>
       val txs = manager.addOrder(order)
       if (txs.nonEmpty) deliver(TransactionsCreated(txs), accountProcessorPath)
+
+    case OrdersTriggered(orders) =>
+      val txs = orders map (order => manager.addOrder(order))
+      if (txs.nonEmpty) deliver(TransactionsCreated(txs.flatten), accountProcessorPath)
 
     case CancelOrder(orderId) =>
       manager.removeOrder(orderId) foreach { order =>

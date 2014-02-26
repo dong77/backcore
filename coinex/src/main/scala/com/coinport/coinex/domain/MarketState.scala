@@ -15,7 +15,7 @@ case class MarketSide(outCurrency: Currency, inCurrency: Currency) {
   override def toString = "%s_%s".format(outCurrency, inCurrency).toLowerCase
 }
 
-object Market {
+object MarketState {
   implicit val ordering = new Ordering[OrderData] {
     def compare(a: OrderData, b: OrderData) = {
       if (a.price < b.price) -1
@@ -27,22 +27,22 @@ object Market {
   }
 
   type OrderPool = SortedSet[OrderData]
-  type OrderPools = Map[MarketSide, Market.OrderPool]
+  type OrderPools = Map[MarketSide, MarketState.OrderPool]
 
   val EmptyOrderPool = SortedSet.empty[OrderData]
-  val EmptyOrderPools = Map.empty[MarketSide, Market.OrderPool]
+  val EmptyOrderPools = Map.empty[MarketSide, MarketState.OrderPool]
 }
 
-import Market._
+import MarketState._
 
 /**
  * This class is the real in-memory state (data model) for a event-sourcing market processor.
  * It should be kept as a case class with immutable collections.
  */
-case class Market(
-  headSide: MarketSide,
-  marketPriceOrderPools: Market.OrderPools = Market.EmptyOrderPools,
-  limitPriceOrderPools: Market.OrderPools = Market.EmptyOrderPools,
+case class MarketState(
+  headSide: MarketSide, 
+  marketPriceOrderPools: MarketState.OrderPools = MarketState.EmptyOrderPools, 
+  limitPriceOrderPools: MarketState.OrderPools = MarketState.EmptyOrderPools, 
   orderMap: Map[Long, Order] = Map.empty) {
 
   val tailSide = headSide.reverse
@@ -52,14 +52,14 @@ case class Market(
   def bestTailSidePrice = limitPriceOrderPool(tailSide).headOption.map(_.price)
 
   def marketPriceOrderPool(side: MarketSide): OrderPool = {
-    marketPriceOrderPools.getOrElse(side, Market.EmptyOrderPool)
+    marketPriceOrderPools.getOrElse(side, MarketState.EmptyOrderPool)
   }
 
   def limitPriceOrderPool(side: MarketSide): OrderPool = {
-    limitPriceOrderPools.getOrElse(side, Market.EmptyOrderPool)
+    limitPriceOrderPools.getOrElse(side, MarketState.EmptyOrderPool)
   }
 
-  def addOrder(order: Order): Market = {
+  def addOrder(order: Order): MarketState = {
     val validated = validateOrder(order)
     val data = validated.data
     val side = validated.side
@@ -78,7 +78,7 @@ case class Market(
     market.copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
   }
 
-  def removeOrder(id: Long): Market = {
+  def removeOrder(id: Long): MarketState = {
     orderMap.get(id) match {
       case Some(old) =>
         var mpos = marketPriceOrderPools
@@ -97,7 +97,7 @@ case class Market(
         copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
 
       case None =>
-        this
+        MarketState.this
     }
   }
 

@@ -8,13 +8,5 @@
 
 package com.coinport.coinex.domain
 
-// Commands
-case class SubmitOrder(order: Order)
-case class CancelOrder(id: Long)
-
-// Events
-case class TransactionsCreated(txs: Seq[Transaction])
-case class OrderCancelled(order: Order)
-case class OrdersTriggered(orders: Seq[Order]) // from coditional orders
-
-case class NewTxPrice(marketSide: MarketSide, price: Double)
+case class ConditionalOrdersState(
+  val todo: String)
