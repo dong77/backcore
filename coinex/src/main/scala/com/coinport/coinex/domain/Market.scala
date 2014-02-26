@@ -6,9 +6,9 @@ import scala.collection.immutable.SortedSet
  * ATTENTION PLEASE:
  *
  * All classes here are case-classes or case-objects. This is required since we are
- * maintaining an in-memory state that's immutable, so that we snapshot is taken and 
+ * maintaining an in-memory state that's immutable, so that we snapshot is taken and
  * persistent, the program can still update the live state.
- * 
+ *
  */
 case class MarketSide(outCurrency: Currency, inCurrency: Currency) {
   def reverse = MarketSide(inCurrency, outCurrency)
@@ -39,11 +39,15 @@ case class Market(
   inCurrency: Currency,
   marketPriceOrderPools: Market.OrderPools = Market.EmptyOrderPools,
   limitPriceOrderPools: Market.OrderPools = Market.EmptyOrderPools,
-  orderMap: Map[Long, Order] = Map.empty) {
+  orderMap: Map[Long, Order] = Map.empty,
+  stopOrders: Map[Long, StopOrder] = Map.empty) {
 
-  val sellSide = MarketSide(outCurrency, inCurrency)
-  val buySide = sellSide.reverse
-  val bothSides = Seq(sellSide, buySide)
+  val takerSide = MarketSide(outCurrency, inCurrency)
+  val makerSide = takerSide.reverse
+  val bothSides = Seq(takerSide, makerSide)
+
+  def bestTakerSidePrice = getLimitPriceOrderPool(takerSide).headOption.map(_.price)
+  def bestMakerSidePrice = getLimitPriceOrderPool(makerSide).headOption.map(_.price)
 
   def getMarketPriceOrderPool(side: MarketSide): OrderPool = {
     marketPriceOrderPools.getOrElse(side, Market.EmptyOrderPool)
@@ -53,6 +57,9 @@ case class Market(
     limitPriceOrderPools.getOrElse(side, Market.EmptyOrderPool)
   }
 
+  def addStopOrder(stopOrder: StopOrder) = {
+    
+  }
   def addOrder(order: Order): Market = {
     val validated = validateOrder(order)
     val data = validated.data

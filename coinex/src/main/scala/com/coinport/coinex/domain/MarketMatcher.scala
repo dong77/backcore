@@ -16,56 +16,56 @@ class MarketMatcher(outCurrency: Currency, inCurrency: Currency) {
 
   def addOrder(order: Order): List[Transaction] = {
     checkOrder(order)
-    val (sellSide, buySide) = (order.side, order.side.reverse)
-    val sellOrder = order.data
+    val (takerSide, makerSide) = (order.side, order.side.reverse)
+    val takerOrder = order.data
 
-    def sellMpos = market.getMarketPriceOrderPool(sellSide)
-    def sellLpos = market.getLimitPriceOrderPool(sellSide)
-    def buyMpos = market.getMarketPriceOrderPool(buySide)
-    def buyLpos = market.getLimitPriceOrderPool(buySide)
+    def takerMpos = market.getMarketPriceOrderPool(takerSide)
+    def takerLpos = market.getLimitPriceOrderPool(takerSide)
+    def makerMpos = market.getMarketPriceOrderPool(makerSide)
+    def makerLpos = market.getLimitPriceOrderPool(makerSide)
 
-    var (sellAmount, continue) = (sellOrder.amount, true)
+    var (takerQuantity, continue) = (takerOrder.quantity, true)
     var txs = List.empty[Transaction]
 
-    // if the top order on the same side is a market price order, it means
-    // the reverse side has no limit-price-order to match at all, we stop.
-    if (sellMpos.nonEmpty) {
+    // if the top order on the taker side is a market price order, it means
+    // the maker side has no limit-price-order to match at all, we stop.
+    if (takerMpos.nonEmpty) {
       continue = false // we have already a pending market-price order
     }
 
     // a common internal method to deal with repeated actions.
-    def matchOrder(buyOrder: OrderData, actualSellPrice: Double) {
-      val actualBuyPrice = 1 / actualSellPrice
-      if (sellAmount >= buyOrder.amount * actualBuyPrice) {
-        // new sell order is not fully executed but buy order is.
-        market = market.removeOrder(buyOrder.id)
-        sellAmount -= buyOrder.amount * actualBuyPrice
+    def matchOrder(makerOrder: OrderData, actualTakerPrice: Double) {
+      val actualMakerPrice = 1 / actualTakerPrice
+      if (takerQuantity >= makerOrder.quantity * actualMakerPrice) {
+        // new taker order is not fully executed but maker order is.
+        market = market.removeOrder(makerOrder.id)
+        takerQuantity -= makerOrder.quantity * actualMakerPrice
         txs ::= Transaction(
-          Transfer(sellOrder.id, sellSide.outCurrency, buyOrder.amount * actualBuyPrice, sellAmount == 0),
-          Transfer(buyOrder.id, buySide.outCurrency, buyOrder.amount, true))
+          Transfer(takerOrder.id, takerSide.outCurrency, makerOrder.quantity * actualMakerPrice, takerQuantity == 0),
+          Transfer(makerOrder.id, makerSide.outCurrency, makerOrder.quantity, true))
 
       } else {
-        // new sell order is fully executed but buy order is not.
-        val updatedBuyOrder = Order(buySide, buyOrder.copy(amount = buyOrder.amount - sellAmount * actualSellPrice))
-        market = market.addOrder(updatedBuyOrder)
+        // new taker order is fully executed but maker order is not.
+        val updatedMakerOrder = Order(makerSide, makerOrder.copy(quantity = makerOrder.quantity - takerQuantity * actualTakerPrice))
+        market = market.addOrder(updatedMakerOrder)
         txs ::= Transaction(
-          Transfer(sellOrder.id, sellSide.outCurrency, sellAmount, true),
-          Transfer(buyOrder.id, buySide.outCurrency, sellAmount * actualSellPrice, false))
-        sellAmount = 0
+          Transfer(takerOrder.id, takerSide.outCurrency, takerQuantity, true),
+          Transfer(makerOrder.id, makerSide.outCurrency, takerQuantity * actualTakerPrice, false))
+        takerQuantity = 0
       }
     }
 
-    while (continue && sellAmount > 0) {
-      buyMpos.headOption match {
+    while (continue && takerQuantity > 0) {
+      makerMpos.headOption match {
         // new LPO to match existing MPOs
-        case Some(buyOrder) if sellOrder.price > 0 =>
-          matchOrder(buyOrder, actualSellPrice = sellOrder.price)
+        case Some(makerOrder) if takerOrder.price > 0 =>
+          matchOrder(makerOrder, actualTakerPrice = takerOrder.price)
 
         case _ =>
-          buyLpos.headOption match {
+          makerLpos.headOption match {
             // new LPO or MPO to match existing LPOs
-            case Some(buyOrder) if buyOrder.price * sellOrder.price <= 1 =>
-              matchOrder(buyOrder, actualSellPrice = 1 / buyOrder.price)
+            case Some(makerOrder) if makerOrder.price * takerOrder.price <= 1 =>
+              matchOrder(makerOrder, actualTakerPrice = 1 / makerOrder.price)
 
             case _ =>
               continue = false
@@ -73,8 +73,8 @@ class MarketMatcher(outCurrency: Currency, inCurrency: Currency) {
       }
     }
 
-    if (sellAmount > 0) {
-      market = market.addOrder(Order(sellSide, sellOrder.copy(amount = sellAmount)))
+    if (takerQuantity > 0) {
+      market = market.addOrder(order.copy(data = takerOrder.copy(quantity = takerQuantity)))
     }
 
     txs
