@@ -46,20 +46,17 @@ case class Market(
   val makerSide = takerSide.reverse
   val bothSides = Seq(takerSide, makerSide)
 
-  def bestTakerSidePrice = getLimitPriceOrderPool(takerSide).headOption.map(_.price)
-  def bestMakerSidePrice = getLimitPriceOrderPool(makerSide).headOption.map(_.price)
+  def bestTakerSidePrice = limitPriceOrderPool(takerSide).headOption.map(_.price)
+  def bestMakerSidePrice = limitPriceOrderPool(makerSide).headOption.map(_.price)
 
-  def getMarketPriceOrderPool(side: MarketSide): OrderPool = {
+  def marketPriceOrderPool(side: MarketSide): OrderPool = {
     marketPriceOrderPools.getOrElse(side, Market.EmptyOrderPool)
   }
 
-  def getLimitPriceOrderPool(side: MarketSide): OrderPool = {
+  def limitPriceOrderPool(side: MarketSide): OrderPool = {
     limitPriceOrderPools.getOrElse(side, Market.EmptyOrderPool)
   }
 
-  def addStopOrder(stopOrder: StopOrder) = {
-    
-  }
   def addOrder(order: Order): Market = {
     val validated = validateOrder(order)
     val data = validated.data
@@ -70,9 +67,9 @@ case class Market(
     var lpos = market.limitPriceOrderPools
 
     if (data.price <= 0) {
-      mpos += (side -> (market.getMarketPriceOrderPool(side) + data))
+      mpos += (side -> (market.marketPriceOrderPool(side) + data))
     } else {
-      lpos += (side -> (market.getLimitPriceOrderPool(side) + data))
+      lpos += (side -> (market.limitPriceOrderPool(side) + data))
     }
     val orders = market.orderMap + (data.id -> validated)
 
@@ -86,11 +83,11 @@ case class Market(
         var lpos = limitPriceOrderPools
 
         bothSides.foreach { side =>
-          var pool = getMarketPriceOrderPool(side) - old.data
+          var pool = marketPriceOrderPool(side) - old.data
           if (pool.isEmpty) mpos -= side
           else mpos += (side -> pool)
 
-          pool = getLimitPriceOrderPool(side) - old.data
+          pool = limitPriceOrderPool(side) - old.data
           if (pool.isEmpty) lpos -= side
           else lpos += (side -> pool)
         }

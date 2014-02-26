@@ -20,9 +20,9 @@ class ModelsSpec extends Specification {
       m.orderMap.size mustEqual 1
       m.orderMap(1L) mustEqual order2
       m.marketPriceOrderPools mustEqual EmptyOrderPools
-      m.getLimitPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
-      m.getLimitPriceOrderPool(side).size mustEqual 1
-      m.getLimitPriceOrderPool(side).head mustEqual order2.data
+      m.limitPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
+      m.limitPriceOrderPool(side).size mustEqual 1
+      m.limitPriceOrderPool(side).head mustEqual order2.data
 
       val order3 = Order(side, OrderData(1L, 103))
       val order4 = Order(side, OrderData(1L, 104))
@@ -33,9 +33,9 @@ class ModelsSpec extends Specification {
       m.orderMap.size mustEqual 1
       m.orderMap(1L) mustEqual order4
       m.limitPriceOrderPools mustEqual EmptyOrderPools
-      m.getMarketPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
-      m.getMarketPriceOrderPool(side).size mustEqual 1
-      m.getMarketPriceOrderPool(side).head mustEqual order4.data
+      m.marketPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
+      m.marketPriceOrderPool(side).size mustEqual 1
+      m.marketPriceOrderPool(side).head mustEqual order4.data
     }
 
     "sort limit-price orders correctly" in {
@@ -49,8 +49,8 @@ class ModelsSpec extends Specification {
       m = m.addOrder(order3)
 
       m.marketPriceOrderPools mustEqual EmptyOrderPools
-      m.getLimitPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
-      m.getLimitPriceOrderPool(side).toList mustEqual order2.data :: order1.data :: order3.data :: Nil
+      m.limitPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
+      m.limitPriceOrderPool(side).toList mustEqual order2.data :: order1.data :: order3.data :: Nil
       m.orderMap mustEqual Map(order1.data.id -> order1, order2.data.id -> order2, order3.data.id -> order3)
     }
 
@@ -65,8 +65,8 @@ class ModelsSpec extends Specification {
       m = m.addOrder(order3)
 
       m.limitPriceOrderPools mustEqual EmptyOrderPools
-      m.getMarketPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
-      m.getMarketPriceOrderPool(side).toList mustEqual order1.data :: order2.data :: OrderData(3L, 100, 0) :: Nil
+      m.marketPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
+      m.marketPriceOrderPool(side).toList mustEqual order1.data :: order2.data :: OrderData(3L, 100, 0) :: Nil
       m.orderMap mustEqual Map(order1.data.id -> order1, order2.data.id -> order2, order3.data.id -> order3.copy(data = OrderData(3L, 100, 0)))
     }
 

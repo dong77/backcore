@@ -1,15 +1,15 @@
 package com.coinport.coinex.domain
 
 /**
- * MarketMatcher's job is to update an in-memory state of type `Market`
+ * MarketManager's job is to update an in-memory state of type `Market`
  * by matching new orders before they are ever added into the Market.
  *
  * When orders match, transactions will be returned.
  *
- * MarketMatcher can be used by an Akka persistent processor or a view
+ * MarketManager can be used by an Akka persistent processor or a view
  * to reflect pending orders and market depth.
  */
-class MarketMatcher(outCurrency: Currency, inCurrency: Currency) {
+class MarketManager(outCurrency: Currency, inCurrency: Currency) {
   private var market = Market(outCurrency, inCurrency)
 
   def apply() = market
@@ -19,10 +19,10 @@ class MarketMatcher(outCurrency: Currency, inCurrency: Currency) {
     val (takerSide, makerSide) = (order.side, order.side.reverse)
     val takerOrder = order.data
 
-    def takerMpos = market.getMarketPriceOrderPool(takerSide)
-    def takerLpos = market.getLimitPriceOrderPool(takerSide)
-    def makerMpos = market.getMarketPriceOrderPool(makerSide)
-    def makerLpos = market.getLimitPriceOrderPool(makerSide)
+    def takerMpos = market.marketPriceOrderPool(takerSide)
+    def takerLpos = market.limitPriceOrderPool(takerSide)
+    def makerMpos = market.marketPriceOrderPool(makerSide)
+    def makerLpos = market.limitPriceOrderPool(makerSide)
 
     var (takerQuantity, continue) = (takerOrder.quantity, true)
     var txs = List.empty[Transaction]
