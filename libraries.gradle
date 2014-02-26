@@ -407,7 +407,7 @@ ext {
     /* T */
 
     // thrift
-    thrift:                 'org.apache.thrift:libthrift:0.9.0',
+    thrift:                 'org.apache.thrift:libthrift:0.9.1',
 
     /* U */
     unicompayment:          'unicompayment.unicompayment_decoder:1.0.0.1',
