@@ -1,15 +1,14 @@
+/**
+ * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
+ *
+ * All classes here are case-classes or case-objects. This is required since we are
+ * maintaining an in-memory state that's immutable, so that while snapshot is taken,
+ * the in-memory state can still be updated.
+ */
+
 package com.coinport.coinex.domain
 
 import scala.collection.immutable.SortedSet
-
-/**
- * ATTENTION PLEASE:
- *
- * All classes here are case-classes or case-objects. This is required since we are
- * maintaining an in-memory state that's immutable, so that we snapshot is taken and
- * persistent, the program can still update the live state.
- *
- */
 
 case class MarketSide(outCurrency: Currency, inCurrency: Currency) {
   def reverse = inCurrency ~ outCurrency
@@ -35,6 +34,11 @@ object Market {
 }
 
 import Market._
+
+/**
+ * This class is the real in-memory state (data model) for a event-sourcing market processor.
+ * It should be kept as a case class with immutable collections.
+ */
 case class Market(
   headSide: MarketSide,
   marketPriceOrderPools: Market.OrderPools = Market.EmptyOrderPools,
