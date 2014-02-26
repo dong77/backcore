@@ -32,3 +32,4 @@ build/
 tracelogs/
 example/
 gen-java/
+node_modules/
