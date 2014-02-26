@@ -131,7 +131,7 @@ ext {
     gson:                   'com.google.code.gson:gson:2.2.4',
 
     // guava
-    guava:                  'com.google.guava:guava:14.0.1',
+    guava:                  'com.google.guava:guava:16.0.1',
 
     /* H */
 
@@ -197,7 +197,7 @@ ext {
     jdom:                   'org.jdom:jdom:2.0.2',
 
     // jedis
-    jedis:                  'redis.clients:jedis:2.1.0',
+    jedis:                  'redis.clients:jedis:2.4.1',
 
     // jetty
     jetty_servlet:          "org.eclipse.jetty:jetty-servlet:${versions.jetty}",
@@ -254,7 +254,12 @@ ext {
     /* K */
     kaptcha:                'com.github.axet:kaptcha:0.0.7',
 
+    kryo:                   'com.esotericsoftware.kryo:kryo:2.22',
+
     /* L */
+
+    // levelDB
+    leveldbjni:             'org.fusesource.leveldbjni:leveldbjni-all:1.8',
 
     // log4j
     log4j:                  'log4j:log4j:1.2.17',
@@ -402,7 +407,7 @@ ext {
     /* T */
 
     // thrift
-    thrift:                 'org.apache.thrift:libthrift:0.9.0',
+    thrift:                 'org.apache.thrift:libthrift:0.9.1',
 
     /* U */
     unicompayment:          'unicompayment.unicompayment_decoder:1.0.0.1',

@@ -9,6 +9,10 @@ version = '1.0-SNAPSHOT'
 
 dependencies {
     compile libraries.disruptor
+    compile libraries.guava
+    compile libraries.jedis
+    compile libraries.kryo
+    compile libraries.leveldbjni
     compile libraries.logback
     compile libraries.thrift
 
@@ -20,4 +24,8 @@ compileJava.dependsOn(generateThrift)
 
 run {
     args "Hello world"
+}
+
+clean.doLast {
+    ant.delete(dir: "$projectDir/example")
 }

@@ -12,11 +12,12 @@ import com.coinport.f1.OrderInfo;
 
 public class CancelOrderHandler extends CommandHandler {
     @Override
-    public void exec(final BPCommand command, BusinessContext bc) {
+    public boolean exec(final BPCommand command, BusinessContext bc) {
         if (command.isSetOrderInfo()) {
-            bc.cancelOrder(command.getOrderInfo());
+            return bc.cancelOrder(command.getOrderInfo());
         } else {
             logger.error("no orderInfo found in cancel order command");
+            return false;
         }
     }
 }

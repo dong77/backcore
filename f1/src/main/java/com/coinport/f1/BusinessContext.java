@@ -87,7 +87,7 @@ public class BusinessContext {
         return withdrawal(ui, coinType, amount, false) && deposit(ui, coinType, amount, true);
     }
 
-    public void placeOrder(OrderInfo oi) {
+    public boolean placeOrder(OrderInfo oi) {
         TradePair tradePair = oi.getTradePair();
         BlackBoard blackBoard = null;
         if (!blackBoards.containsKey(tradePair)) {
@@ -96,7 +96,7 @@ public class BusinessContext {
         } else {
             blackBoard = blackBoards.get(tradePair);
         }
-        placeOrderInner(blackBoard, oi);
+        return placeOrderInner(blackBoard, oi);
     }
 
     public boolean cancelOrder(OrderInfo oi) {
@@ -195,35 +195,33 @@ public class BusinessContext {
         return true;
     }
 
-    private void placeOrderInner(BlackBoard board, OrderInfo oi) {
+    private boolean placeOrderInner(BlackBoard board, OrderInfo oi) {
         // TODO(c): to be finish
         switch (oi.getStrategy()) {
             case NORMAL:
-                placeNormalOrder(board, oi);
-                break;
+                return placeNormalOrder(board, oi);
             case STOP:
-                break;
+                return false;
             case TRAILING_STOP:
-                break;
+                return false;
             default:
-                break;
+                return false;
         }
     }
 
-    private void placeNormalOrder(BlackBoard board, OrderInfo oi) {
+    private boolean placeNormalOrder(BlackBoard board, OrderInfo oi) {
         switch (oi.getBos()) {
             case BUY:
-                normalBuy(board, oi);
-                break;
+                return normalBuy(board, oi);
             case SELL:
-                normalSell(board, oi);
-                break;
+                return normalSell(board, oi);
             default:
-                break;
+                return false;
         }
     }
 
-    private void normalBuy(BlackBoard board, OrderInfo oi) {
+    // TODO(c): change always return true
+    private boolean normalBuy(BlackBoard board, OrderInfo oi) {
         TradePair tp = oi.getTradePair();
         CoinType from = tp.getFrom();
         CoinType to = tp.getTo();
@@ -234,7 +232,7 @@ public class BusinessContext {
 
         if (buyAmount > buyer.getWallets().get(from).getValid()) {
             logger.info("not enough money");
-            return;
+            return true;
         } else {
             frozen(buyer, from, buyAmount);
         }
@@ -242,7 +240,7 @@ public class BusinessContext {
         OrderInfo soi = board.getFirstSellOrder();
         if (soi == null) {
             board.putToBuyOrderList(oi);
-            return;
+            return true;
         }
         long sellPrice = soi.getPrice();
         while (buyPrice >= sellPrice && buyQuantity > 0) {
@@ -279,10 +277,12 @@ public class BusinessContext {
             oi.setQuantity(buyQuantity);
             board.putToBuyOrderList(oi);
         }
+        return true;
     }
 
     // TODO(c): Merge this logical with normalBuy function.
-    private void normalSell(BlackBoard board, OrderInfo oi) {
+    // TODO(c): change always return true
+    private boolean normalSell(BlackBoard board, OrderInfo oi) {
         TradePair tp = oi.getTradePair();
         CoinType from = tp.getFrom();
         CoinType to = tp.getTo();
@@ -292,7 +292,7 @@ public class BusinessContext {
 
         if (sellQuantity > seller.getWallets().get(from).getValid()) {
             logger.info("not enough money");
-            return;
+            return true;
         } else {
             frozen(seller, to, sellQuantity);
         }
@@ -300,7 +300,7 @@ public class BusinessContext {
         OrderInfo boi = board.getFirstBuyOrder();
         if (boi == null) {
             board.putToSellOrderList(oi);
-            return;
+            return true;
         }
         long buyPrice = boi.getPrice();
         while (sellPrice <= buyPrice && sellQuantity > 0) {
@@ -337,5 +337,6 @@ public class BusinessContext {
             oi.setQuantity(sellQuantity);
             board.putToSellOrderList(oi);
         }
+        return true;
     }
 }

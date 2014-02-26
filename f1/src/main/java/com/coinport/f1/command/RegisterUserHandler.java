@@ -11,11 +11,12 @@ import com.coinport.f1.BusinessContext;
 
 public class RegisterUserHandler extends CommandHandler {
     @Override
-    public void exec(final BPCommand command, BusinessContext bc) {
+    public boolean exec(final BPCommand command, BusinessContext bc) {
         if (command.isSetUserInfo()) {
-            bc.register(command.getUserInfo());
+            return bc.register(command.getUserInfo());
         } else {
             logger.error("no userinfo found in register command");
+            return false;
         }
     }
 }

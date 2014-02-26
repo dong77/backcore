@@ -13,5 +13,5 @@ import org.slf4j.LoggerFactory;
 
 public abstract class CommandHandler {
     protected final static Logger logger = LoggerFactory.getLogger(CommandHandler.class);
-    public abstract void exec(final BPCommand command, BusinessContext bc);
+    public abstract boolean exec(final BPCommand command, BusinessContext bc);
 }
