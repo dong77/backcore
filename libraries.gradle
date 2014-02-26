@@ -197,7 +197,7 @@ ext {
     jdom:                   'org.jdom:jdom:2.0.2',
 
     // jedis
-    jedis:                  'redis.clients:jedis:2.1.0',
+    jedis:                  'redis.clients:jedis:2.4.1',
 
     // jetty
     jetty_servlet:          "org.eclipse.jetty:jetty-servlet:${versions.jetty}",

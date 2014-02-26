@@ -2,7 +2,7 @@ apply plugin: 'application'
 
 applicationDefaultJvmArgs = ["-Xmx4096M", "-Xms4096M", "-Dfile.encoding=UTF-8"]
 
-mainClassName = 'com.coinport.f1.perftest.Main'
+mainClassName = 'com.coinport.f1.Main'
 
 group = 'com.coinport.f1'
 version = '1.0-SNAPSHOT'
@@ -10,6 +10,7 @@ version = '1.0-SNAPSHOT'
 dependencies {
     compile libraries.disruptor
     compile libraries.guava
+    compile libraries.jedis
     compile libraries.kryo
     compile libraries.leveldbjni
     compile libraries.logback
