@@ -11,7 +11,7 @@ package com.coinport.coinex.domain
 import scala.collection.immutable.SortedSet
 
 case class MarketSide(outCurrency: Currency, inCurrency: Currency) {
-  def reverse = inCurrency ~ outCurrency
+  def reverse = inCurrency ~> outCurrency
   override def toString = "%s_%s".format(outCurrency, inCurrency).toLowerCase
 }
 

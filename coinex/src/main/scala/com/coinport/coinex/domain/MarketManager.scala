@@ -89,6 +89,10 @@ class MarketManager(headSide: MarketSide) {
     txs
   }
 
+  def removeOrder(id: Long): Option[Order] = {
+    // TODO
+    null
+  }
   def checkOrder(order: Order) {
     assert(market.bothSides.contains(order.side))
   }

@@ -33,7 +33,7 @@ object CoinexApp extends App {
     role = Some("account_processor")),
     name = "accountProcessor")
 
-  val market = BTC ~ RMB
+  val market = BTC ~> RMB
   system.actorOf(ClusterSingletonManager.props(
     singletonProps = Props(new MarketProcessor(market, accountProcessorRouter.path)),
     singletonName = "singleton",

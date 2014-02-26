@@ -9,7 +9,8 @@
 package com.coinport.coinex.domain
 
 sealed trait Currency {
-  def ~(another: Currency) = MarketSide(this, another)
+  def ~>(another: Currency) = MarketSide(this, another)
+  def <~(another: Currency) = MarketSide(another, this)
 }
 
 sealed trait FiatCurrency extends Currency
