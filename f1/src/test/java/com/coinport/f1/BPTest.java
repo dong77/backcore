@@ -32,12 +32,12 @@ public class BPTest {
         latch.await();
         bp.terminate();
 
-        BusinessContext bc = bp.getContext();
-        assertEquals(3, bc.userNum());
+        Trader trader = bp.getTrader();
+        assertEquals(3, trader.userNum());
 
-        assertUser(bc, 1234, "hoss", "0101");
-        assertUser(bc, 56, "chao", "0202");
-        assertUser(bc, 78, "ma", "0303");
+        assertUser(trader, 1234, "hoss", "0101");
+        assertUser(trader, 56, "chao", "0202");
+        assertUser(trader, 78, "ma", "0303");
     }
 
     @Test
@@ -55,7 +55,7 @@ public class BPTest {
 
         latch.await();
 
-        UserInfo ui = bp.getContext().getUser(1234);
+        UserInfo ui = bp.getTrader().getUser(1234);
         assertEquals(1, ui.getWallets().size());
         Wallet wallet = ui.getWallets().get(CoinType.CNY);
         assertEquals(CoinType.CNY, wallet.getCoinType());
@@ -72,8 +72,8 @@ public class BPTest {
         latch.await();
         bp.terminate();
 
-        assertEquals(9990000, bp.getContext().getUser(1234).getWallets().get(CoinType.CNY).getValid());
-        assertEquals(16, bp.getContext().getUser(56).getWallets().get(CoinType.BTC).getValid());
+        assertEquals(9990000, bp.getTrader().getUser(1234).getWallets().get(CoinType.CNY).getValid());
+        assertEquals(16, bp.getTrader().getUser(56).getWallets().get(CoinType.BTC).getValid());
     }
 
     @Test
@@ -104,7 +104,7 @@ public class BPTest {
 
         latch.await();
 
-        BlackBoard bb = bp.getContext().getBlackBoard(new TradePair(CoinType.CNY, CoinType.BTC));
+        BlackBoard bb = bp.getTrader().getBlackBoard(new TradePair(CoinType.CNY, CoinType.BTC));
         TreeSet buyList = bb.getBuyList();
         TreeSet sellList = bb.getSellList();
         assertEquals(4001, bb.getCurrentPrice());
@@ -116,7 +116,7 @@ public class BPTest {
         assertEquals(12, oi.getQuantity());
         assertEquals(4031, oi.getPrice());
 
-        UserInfo ui = bp.getContext().getUser(1234);
+        UserInfo ui = bp.getTrader().getUser(1234);
         Wallet cnyWallet = ui.getWallets().get(CoinType.CNY);
         Wallet btcWallet = ui.getWallets().get(CoinType.BTC);
         assertEquals(10000000 - 4001 * 9, cnyWallet.getValid());
@@ -124,7 +124,7 @@ public class BPTest {
         assertEquals(102, btcWallet.getValid());
         assertEquals(0, btcWallet.getFrozen());
 
-        ui = bp.getContext().getUser(56);
+        ui = bp.getTrader().getUser(56);
         cnyWallet = ui.getWallets().get(CoinType.CNY);
         btcWallet = ui.getWallets().get(CoinType.BTC);
         assertEquals(96, btcWallet.getValid());
@@ -208,13 +208,13 @@ public class BPTest {
         latch.await();
         bp.displayBC();
 
-        BlackBoard bb = bp.getContext().getBlackBoard(new TradePair(CoinType.CNY, CoinType.BTC));
+        BlackBoard bb = bp.getTrader().getBlackBoard(new TradePair(CoinType.CNY, CoinType.BTC));
         TreeSet buyList = bb.getBuyList();
         TreeSet sellList = bb.getSellList();
         assertEquals(0, buyList.size());
         assertEquals(0, sellList.size());
 
-        UserInfo ui = bp.getContext().getUser(1234);
+        UserInfo ui = bp.getTrader().getUser(1234);
         Wallet cnyWallet = ui.getWallets().get(CoinType.CNY);
         Wallet btcWallet = ui.getWallets().get(CoinType.BTC);
         assertEquals(10000000 - 4001 * 3, cnyWallet.getValid());
@@ -222,7 +222,7 @@ public class BPTest {
         assertEquals(103, btcWallet.getValid());
         assertEquals(0, btcWallet.getFrozen());
 
-        ui = bp.getContext().getUser(56);
+        ui = bp.getTrader().getUser(56);
         cnyWallet = ui.getWallets().get(CoinType.CNY);
         btcWallet = ui.getWallets().get(CoinType.BTC);
         assertEquals(10000000, cnyWallet.getValid());
@@ -230,7 +230,7 @@ public class BPTest {
         assertEquals(100, btcWallet.getValid());
         assertEquals(0, btcWallet.getFrozen());
 
-        ui = bp.getContext().getUser(78);
+        ui = bp.getTrader().getUser(78);
         cnyWallet = ui.getWallets().get(CoinType.CNY);
         btcWallet = ui.getWallets().get(CoinType.BTC);
         assertEquals(10000000 + 4001 * 3, cnyWallet.getValid());
@@ -281,8 +281,8 @@ public class BPTest {
         bp.execute();
     }
 
-    private void assertUser(BusinessContext bc, final long uid, final String name, final String pw) {
-        UserInfo ui = bc.getUser(uid);
+    private void assertUser(Trader trader, final long uid, final String name, final String pw) {
+        UserInfo ui = trader.getUser(uid);
         assertEquals(name, ui.getNickname());
         assertEquals(pw, ui.getPassword());
     }

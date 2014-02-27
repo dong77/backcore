@@ -7,14 +7,14 @@ package com.coinport.f1.command;
 
 import com.coinport.f1.BPCommand;
 
-import com.coinport.f1.BusinessContext;
+import com.coinport.f1.Trader;
 import com.coinport.f1.OrderInfo;
 
 public class CancelOrderHandler extends CommandHandler {
     @Override
-    public boolean exec(final BPCommand command, BusinessContext bc) {
+    public boolean exec(final BPCommand command, Trader trader) {
         if (command.isSetOrderInfo()) {
-            return bc.cancelOrder(command.getOrderInfo());
+            return trader.cancelOrder(command.getOrderInfo());
         } else {
             logger.error("no orderInfo found in cancel order command");
             return false;

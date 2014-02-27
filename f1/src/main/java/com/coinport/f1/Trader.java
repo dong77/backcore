@@ -11,8 +11,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BusinessContext {
-    private final static Logger logger = LoggerFactory.getLogger(BusinessContext.class);
+public class Trader {
+    private final static Logger logger = LoggerFactory.getLogger(Trader.class);
     private Map<Long, UserInfo> users;
     private Map<TradePair, BlackBoard> blackBoards;
 
@@ -30,7 +30,7 @@ public class BusinessContext {
         return users.size();
     }
 
-    public BusinessContext() {
+    public Trader() {
         users = new HashMap<Long, UserInfo>();
         blackBoards = new HashMap<TradePair, BlackBoard>();
     }

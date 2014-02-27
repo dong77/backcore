@@ -7,13 +7,13 @@ package com.coinport.f1.command;
 
 import com.coinport.f1.BPCommand;
 
-import com.coinport.f1.BusinessContext;
+import com.coinport.f1.Trader;
 
 public class RegisterUserHandler extends CommandHandler {
     @Override
-    public boolean exec(final BPCommand command, BusinessContext bc) {
+    public boolean exec(final BPCommand command, Trader trader) {
         if (command.isSetUserInfo()) {
-            return bc.register(command.getUserInfo());
+            return trader.register(command.getUserInfo());
         } else {
             logger.error("no userinfo found in register command");
             return false;

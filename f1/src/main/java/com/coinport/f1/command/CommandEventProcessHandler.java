@@ -13,11 +13,11 @@ import com.lmax.disruptor.EventHandler;
 
 import com.coinport.f1.BPCommand;
 import com.coinport.f1.BPCommandType;
-import com.coinport.f1.BusinessContext;
+import com.coinport.f1.Trader;
 import com.coinport.f1.CommandStats;
 
 public final class CommandEventProcessHandler implements EventHandler<CommandEvent> {
-    private BusinessContext bc;
+    private Trader trader;
 
     private static Map<BPCommandType, CommandHandler> handlers = new HashMap<BPCommandType, CommandHandler>();
     static {
@@ -27,19 +27,19 @@ public final class CommandEventProcessHandler implements EventHandler<CommandEve
         handlers.put(BPCommandType.CANCEL_ORDER, new CancelOrderHandler());
     }
 
-    public CommandEventProcessHandler(BusinessContext bc) {
-        this.bc = bc;
+    public CommandEventProcessHandler(Trader trader) {
+        this.trader = trader;
     }
 
     @Override
     public void onEvent(final CommandEvent event, final long sequence, final boolean endOfBatch) throws Exception {
         BPCommand command = event.getCommand();
-        if (handlers.get(command.getType()).exec(command, bc)) {
+        if (handlers.get(command.getType()).exec(command, trader)) {
             command.setStats(CommandStats.SUCCESS);
         } else {
             command.setStats(CommandStats.FAIL);
         }
         // TODO(c): remove this
-        bc.display();
+        trader.display();
     }
 }

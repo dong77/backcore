@@ -92,8 +92,8 @@ public final class BP {
     private final RingBuffer<CommandEvent> ringBuffer =
         createSingleProducer(CommandEvent.EVENT_FACTORY, BUFFER_SIZE, new YieldingWaitStrategy());
     private final SequenceBarrier logicBarrier = ringBuffer.newBarrier();
-    private final BusinessContext bc = new BusinessContext();
-    private final CommandEventProcessHandler logicHandler = new CommandEventProcessHandler(bc);
+    private final Trader trader = new Trader();
+    private final CommandEventProcessHandler logicHandler = new CommandEventProcessHandler(trader);
     private final BatchEventProcessor<CommandEvent> logicProcessor =
         new BatchEventProcessor<CommandEvent>(ringBuffer, logicBarrier, logicHandler);
 
@@ -216,11 +216,11 @@ public final class BP {
     }
 
     public void displayBC() {
-        bc.display();
+        trader.display();
     }
 
-    public BusinessContext getContext() {
-        return bc;
+    public Trader getTrader() {
+        return trader;
     }
 
     public BPCommand nextCommand() {

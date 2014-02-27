@@ -10,11 +10,11 @@ import com.coinport.f1.CoinType;
 import com.coinport.f1.DOW;
 import com.coinport.f1.DWInfo;
 
-import com.coinport.f1.BusinessContext;
+import com.coinport.f1.Trader;
 
 public class DWHandler extends CommandHandler {
     @Override
-    public boolean exec(final BPCommand command, BusinessContext bc) {
+    public boolean exec(final BPCommand command, Trader trader) {
         if (command.isSetDwInfo()) {
             DWInfo dwi = command.getDwInfo();
             long uid = dwi.getUid();
@@ -22,9 +22,9 @@ public class DWHandler extends CommandHandler {
             CoinType coinType = dwi.getCoinType();
             switch (dwi.getDwtype())  {
                 case DEPOSIT:
-                    return bc.deposit(uid, coinType, amount, true);
+                    return trader.deposit(uid, coinType, amount, true);
                 case WITHDRAWAL:
-                    return bc.withdrawal(uid, coinType, amount, true);
+                    return trader.withdrawal(uid, coinType, amount, true);
                 default:
                     return false;
             }
