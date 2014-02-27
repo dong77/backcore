@@ -5,16 +5,64 @@
 
 package com.coinport.f1;
 
+import static com.lmax.disruptor.RingBuffer.createSingleProducer;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.coinport.f1.config.ConfigLoader;
+
+/**
+ * <pre>
+ * Trader will publish the output event to the ringbuffer and another processor will note the event.
+ *
+ * +----+    +-----+
+ * | P1 |--->| EP1 |
+ * +----+    +-----+
+ *
+ * Disruptor:
+ * ==========
+ *              track to prevent wrap
+ *              +------------------+
+ *              |                  |
+ *              |                  v
+ * +----+    +====+    +====+   +-----+
+ * | P1 |--->| RB |<---| SB |   | EP1 |
+ * +----+    +====+    +====+   +-----+
+ *      claim      get    ^        |
+ *                        |        |
+ *                        +--------+
+ *                          waitFor
+ *
+ * P1  - Publisher 1
+ * RB  - RingBuffer
+ * SB  - SequenceBarrier
+ * EP1 - EventProcessor 1
+ *
+ * </pre>
+ */
 public class Trader {
     private final static Logger logger = LoggerFactory.getLogger(Trader.class);
     private Map<Long, UserInfo> users;
     private Map<TradePair, BlackBoard> blackBoards;
+
+    /*
+    private static final int BUFFER_SIZE = ConfigLoader.getConfig().bufferSize;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
+
+    private final RingBuffer<ValueEvent> ringBuffer =
+        createSingleProducer(ValueEvent.EVENT_FACTORY, BUFFER_SIZE, new YieldingWaitStrategy());
+    private final SequenceBarrier sequenceBarrier = ringBuffer.newBarrier();
+    private final ValueAdditionEventHandler handler = new ValueAdditionEventHandler();
+    private final BatchEventProcessor<ValueEvent> batchEventProcessor = new BatchEventProcessor<ValueEvent>(ringBuffer, sequenceBarrier, handler);
+    {
+        ringBuffer.addGatingSequences(batchEventProcessor.getSequence());
+    }
+    */
 
     // Unit test only
     BlackBoard getBlackBoard(final TradePair tp) {

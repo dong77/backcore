@@ -22,7 +22,7 @@ import com.lmax.disruptor.YieldingWaitStrategy;
 import com.coinport.f1.command.CommandEvent;
 import com.coinport.f1.command.CommandEventJournalHandler;
 import com.coinport.f1.command.CommandEventProcessHandler;
-import com.coinport.f1.command.CommandEventReplicateHandler;
+import com.coinport.f1.command.CommandEventSerializeHandler;
 
 import com.coinport.f1.config.ConfigLoader;
 
@@ -60,10 +60,7 @@ import com.coinport.f1.config.ConfigLoader;
  * SB3 - SequenceBarrier 3
  * EP3 - EventProcessor 3
  *
- * </pre>
- *
- * TODO(c) make journaler and replicator paral to enfast the BP:
- * <pre>
+ * TODO(c) make serializer and journaler paral to enfast the BP:
  *
  *                       +-----+
  *                +----->| EP2 |
@@ -97,17 +94,17 @@ public final class BP {
     private final BatchEventProcessor<CommandEvent> logicProcessor =
         new BatchEventProcessor<CommandEvent>(ringBuffer, logicBarrier, logicHandler);
 
-    private final SequenceBarrier journalBarrier = ringBuffer.newBarrier(logicProcessor.getSequence());
+    private final SequenceBarrier serializeBarrier = ringBuffer.newBarrier(logicProcessor.getSequence());
+    private final CommandEventSerializeHandler serializeHandler = new CommandEventSerializeHandler();
+    private final BatchEventProcessor<CommandEvent> serializeProcessor =
+        new BatchEventProcessor<CommandEvent>(ringBuffer, serializeBarrier, serializeHandler);
+
+    private final SequenceBarrier journalBarrier = ringBuffer.newBarrier(serializeProcessor.getSequence());
     private final CommandEventJournalHandler journalHandler = new CommandEventJournalHandler();
     private final BatchEventProcessor<CommandEvent> journalProcessor =
         new BatchEventProcessor<CommandEvent>(ringBuffer, journalBarrier, journalHandler);
-
-    private final SequenceBarrier replicateBarrier = ringBuffer.newBarrier(journalProcessor.getSequence());
-    private final CommandEventReplicateHandler replicateHandler = new CommandEventReplicateHandler();
-    private final BatchEventProcessor<CommandEvent> replicateProcessor =
-        new BatchEventProcessor<CommandEvent>(ringBuffer, replicateBarrier, replicateHandler);
     {
-        ringBuffer.addGatingSequences(replicateProcessor.getSequence());
+        ringBuffer.addGatingSequences(journalProcessor.getSequence());
     }
 
     private long sequence = 0;
@@ -126,16 +123,16 @@ public final class BP {
 
     public void start() {
         executor.submit(logicProcessor);
+        executor.submit(serializeProcessor);
         executor.submit(journalProcessor);
-        executor.submit(replicateProcessor);
     }
 
     public void terminate() {
         logicProcessor.halt();
+        serializeProcessor.halt();
         journalProcessor.halt();
-        replicateProcessor.halt();
         // TODO(c): put db in this class and pass to journalProcessor from cons
-        replicateHandler.closeDb();
+        journalHandler.closeDb();
         executor.shutdown();
     }
 
@@ -208,11 +205,11 @@ public final class BP {
     }
 
     public void setStopParams(final CountDownLatch latch, final long expectedCount) {
-        replicateHandler.reset(latch, replicateProcessor.getSequence().get() + expectedCount);
+        journalHandler.reset(latch, journalProcessor.getSequence().get() + expectedCount);
     }
 
     public void setMore(final CountDownLatch latch, final long expectedCount) {
-        replicateHandler.resetMore(latch, expectedCount);
+        journalHandler.resetMore(latch, expectedCount);
     }
 
     public void displayBC() {

@@ -5,10 +5,14 @@
 
 package com.coinport.f1.command;
 
-import com.esotericsoftware.kryo.*;
-import com.esotericsoftware.kryo.io.Output;
-import com.esotericsoftware.kryo.serializers.FieldSerializer;
+import static org.fusesource.leveldbjni.JniDBFactory.*;
+
+import java.io.*;
+import java.util.concurrent.CountDownLatch;
+
+import com.google.common.primitives.Longs;
 import com.lmax.disruptor.EventHandler;
+import org.iq80.leveldb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,25 +20,55 @@ import com.coinport.f1.*;
 
 public final class CommandEventJournalHandler implements EventHandler<CommandEvent> {
     private final static Logger logger = LoggerFactory.getLogger(CommandEventJournalHandler.class);
-    private BPCommand command;
-    private Kryo kryo;
+
+    // TODO(c) for test
+    private long count;
+    private CountDownLatch latch = null;
+
+    private DB db;
+    private WriteBatch batch;
 
     public CommandEventJournalHandler() {
-        command = new BPCommand();
+        try {
+            Options options = new Options();
+            options.createIfMissing(true);
+            db = factory.open(new File("example"), options);
+            batch = db.createWriteBatch();
+        } catch (Exception e) {
+            logger.error("leveldb error", e);
+        }
+    }
 
-        kryo = new Kryo();
-        FieldSerializer<?> serializer = new FieldSerializer<BPCommand>(kryo, BPCommand.class);
-        kryo.register(BPCommand.class, serializer);
+    public void reset(final CountDownLatch latch, final long expectedCount) {
+        this.latch = latch;
+        count = expectedCount;
+    }
+
+    public void resetMore(final CountDownLatch latch, final long moreCount) {
+        reset(latch, count + moreCount);
     }
 
     @Override
     public void onEvent(final CommandEvent event, final long sequence, final boolean endOfBatch) throws Exception {
         final BPCommand comingCommand = event.getCommand();
-        command.setId(comingCommand.getId());
-        command.setStats(comingCommand.getStats());
+        batch.put(Longs.toByteArray(comingCommand.getIndex()), event.getOutput().getBuffer());
+        if (endOfBatch) {
+            db.write(batch);
+            // TODO(c): find a method like clear instead of create a new one
+            batch = db.createWriteBatch();
+        }
 
-        Output output = event.getOutput();
-        output.clear();
-        kryo.writeObject(output, command);
+        if (latch != null && count == sequence) {
+            latch.countDown();
+        }
+    }
+
+    // TODO(c): remove this function
+    public void closeDb() {
+        try {
+            db.close();
+        } catch (Exception e) {
+            logger.error("close leveldb error:", e);
+        }
     }
 }
