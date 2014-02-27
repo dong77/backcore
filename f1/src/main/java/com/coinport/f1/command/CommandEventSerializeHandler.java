@@ -29,9 +29,28 @@ public final class CommandEventSerializeHandler implements EventHandler<CommandE
 
     @Override
     public void onEvent(final CommandEvent event, final long sequence, final boolean endOfBatch) throws Exception {
+        command.clear();
         final BPCommand comingCommand = event.getCommand();
         command.setId(comingCommand.getId());
         command.setStats(comingCommand.getStats());
+
+        command.setType(comingCommand.getType());
+        command.setTimestamp(comingCommand.getTimestamp());
+        command.setIndex(comingCommand.getIndex());
+        switch (command.getType()) {
+            case REGISTER_USER:
+                command.setUserInfo(comingCommand.getUserInfo());
+                break;
+            case DW:
+                command.setDwInfo(comingCommand.getDwInfo());
+                break;
+            case PLACE_ORDER:
+            case CANCEL_ORDER:
+                command.setOrderInfo(comingCommand.getOrderInfo());
+                break;
+            default:
+                break;
+        }
 
         Output output = event.getOutput();
         output.clear();

@@ -84,6 +84,9 @@ public class Trader {
     }
 
     public void display() {
+        if (!logger.isDebugEnabled()) {
+            return;
+        }
         logger.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         logger.debug("The users' info:");
         for (Map.Entry<Long, UserInfo> entry : users.entrySet()) {

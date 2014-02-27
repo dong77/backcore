@@ -53,7 +53,7 @@ public class PerfTest {
         long opsPerSecond = (num * 1000L) / (System.currentTimeMillis() - start);
         String res = String.format("The ops of command type %d is %,d ops/sec\n",
             commandType, Long.valueOf(opsPerSecond));
-        logger.debug(res);
+        logger.info(res);
     }
 
     public void addUsers(final long num) {
