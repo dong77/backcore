@@ -1,3 +1,4 @@
 - try to use objectpool to improve the performance
 - using kryo for deepCopy to improve the performance
 - nodejs(hood) publish binary and java(f1) de-serialize to thrift object
+- nodejs send url params to redis directly and parse it in java side (done)

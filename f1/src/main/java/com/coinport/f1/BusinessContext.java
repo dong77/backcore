@@ -225,7 +225,7 @@ public class BusinessContext {
         TradePair tp = oi.getTradePair();
         CoinType from = tp.getFrom();
         CoinType to = tp.getTo();
-        int buyQuantity = oi.getQuantity();
+        long buyQuantity = oi.getQuantity();
         long buyPrice = oi.getPrice();
         long buyAmount =  buyQuantity * buyPrice;
         UserInfo buyer = users.get(oi.getUid());
@@ -250,10 +250,10 @@ public class BusinessContext {
         }
         long sellPrice = soi.getPrice();
         while (buyPrice >= sellPrice && buyQuantity > 0) {
-            int sellQuantity = soi.getQuantity();
+            long sellQuantity = soi.getQuantity();
             UserInfo seller = users.get(soi.getUid());
 
-            int tradeQuantity = java.lang.Math.min(buyQuantity, sellQuantity);
+            long tradeQuantity = java.lang.Math.min(buyQuantity, sellQuantity);
             long sellAmount = tradeQuantity * sellPrice;
 
 
@@ -292,7 +292,7 @@ public class BusinessContext {
         TradePair tp = oi.getTradePair();
         CoinType from = tp.getFrom();
         CoinType to = tp.getTo();
-        int sellQuantity = oi.getQuantity();
+        long sellQuantity = oi.getQuantity();
         long sellPrice = oi.getPrice();
         UserInfo seller = users.get(oi.getUid());
 
@@ -310,10 +310,10 @@ public class BusinessContext {
         }
         long buyPrice = boi.getPrice();
         while (sellPrice <= buyPrice && sellQuantity > 0) {
-            int buyQuantity = boi.getQuantity();
+            long buyQuantity = boi.getQuantity();
             UserInfo buyer = users.get(boi.getUid());
 
-            int tradeQuantity = java.lang.Math.min(sellQuantity, buyQuantity);
+            long tradeQuantity = java.lang.Math.min(sellQuantity, buyQuantity);
             long buyCost = tradeQuantity * buyPrice;
 
 

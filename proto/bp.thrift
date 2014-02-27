@@ -85,7 +85,7 @@ struct OrderInfo {
     1: required i64 id,
     2: required i64 uid,
     3: required TradePair tradePair;  // TODO(c) How to give a default value?
-    4: optional i32 quantity = 1,
+    4: optional i64 quantity = 1,
     5: optional i64 timestamp,
     6: optional BOS bos = BOS.BUY,
     7: optional MOL mol = MOL.LIMIT,

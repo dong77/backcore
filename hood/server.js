@@ -8,9 +8,10 @@ var url = require('url');
 
 function start(route, handle) {
     function onRequest(request, response) {
-        var parser = url.parse(request.url, true);
+        // var parser = url.parse(request.url, true);  \\ will parse query as object
+        var parser = url.parse(request.url);
         var pathname = parser.pathname;
-        console.log('Request for ' + pathname + ' received.');
+        // console.log('Request for ' + pathname + ' received.');
 
         var args = parser.query;
 

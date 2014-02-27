@@ -19,16 +19,16 @@ var BPCommand = bp.BPCommand,
     TradePair = bp.TradePair;
 
 function start(args, response) {
-    console.log('Request handler "start" was called.');
+    // console.log('Request handler "start" was called.');
 
     exec('ls -lah', function (error, stdout, stderr) {
         render(response, stdout);
-        console.log('request handler finished');
+        // console.log('request handler finished');
     });
 }
 
 function upload(args, response) {
-    console.log('Request handler "upload" was called.');
+    // console.log('Request handler "upload" was called.');
     render(response);
 }
 
@@ -48,76 +48,81 @@ function render(response, message, isFail) {
 }
 
 function pub(obj, response) {
-    publisher.publish("command", JSON.stringify(obj));
+    // publisher.publish("command", JSON.stringify(obj));
+    publisher.publish("command", obj);
     render(response);
 }
 
 function registerUser(args, response) {
-    var userinfo = new UserInfo({
-        nickname : args.name,
-        password : args.pw
-    });
+    // var userinfo = new UserInfo({
+        // nickname : args.name,
+        // password : args.pw
+    // });
 
-    var command = new BPCommand({
-        type : BPCommandType.REGISTER_USER,
-        userInfo : userinfo
-    });
+    // var command = new BPCommand({
+        // type : BPCommandType.REGISTER_USER,
+        // userInfo : userinfo
+    // });
 
-    pub(command, response);
+    args += '&ct=1';
+    pub(args, response);
 }
 
 function dw(args, response) {
-    var dwinfo = new DWInfo({
-        uid : args.uid,
-        dwtype : args.dw,
-        coinType : args.coin,
-        amount : args.amount
-    });
+    // var dwinfo = new DWInfo({
+        // uid : args.uid,
+        // dwtype : args.dw,
+        // coinType : args.coin,
+        // amount : args.amount
+    // });
 
-    var command = new BPCommand({
-        type : BPCommandType.DW,
-        dwInfo : dwinfo
-    });
+    // var command = new BPCommand({
+        // type : BPCommandType.DW,
+        // dwInfo : dwinfo
+    // });
 
-    pub(command, response);
+    args += '&ct=2';
+    pub(args, response);
 }
 
 function placeOrder(args, response) {
-    var orderinfo = new OrderInfo({
-        uid : args.uid,
-        tradePair : new TradePair({
-            from : args.f,
-            to : args.t
-        }),
-        quantity : args.q,
-        bos : args.bos,
-        price : args.p
-    });
+    // var orderinfo = new OrderInfo({
+        // uid : args.uid,
+        // tradePair : new TradePair({
+            // from : args.f,
+            // to : args.t
+        // }),
+        // quantity : args.q,
+        // bos : args.bos,
+        // price : args.p
+    // });
 
-    var command = new BPCommand({
-        type : BPCommandType.PLACE_ORDER,
-        orderInfo : orderinfo
-    });
+    // var command = new BPCommand({
+        // type : BPCommandType.PLACE_ORDER,
+        // orderInfo : orderinfo
+    // });
 
-    pub(command, response);
+    args += '&ct=3';
+    pub(args, response);
 }
 
 function cancelOrder(args, response) {
-    var orderinfo = new OrderInfo({
-        id : args.id,
-        uid : args.uid,
-        tradePair : new TradePair({
-            from : args.f,
-            to : args.t
-        })
-    });
+    // var orderinfo = new OrderInfo({
+        // id : args.id,
+        // uid : args.uid,
+        // tradePair : new TradePair({
+            // from : args.f,
+            // to : args.t
+        // })
+    // });
 
-    var command = new BPCommand({
-        type : BPCommandType.CANCEL_ORDER,
-        orderInfo: orderinfo
-    });
+    // var command = new BPCommand({
+        // type : BPCommandType.CANCEL_ORDER,
+        // orderInfo: orderinfo
+    // });
 
-    pub(command, response);
+    args += '&ct=4';
+    pub(args, response);
 }
 
 exports.start = start;
