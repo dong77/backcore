@@ -22,9 +22,9 @@ public class DWHandler extends CommandHandler {
             CoinType coinType = dwi.getCoinType();
             switch (dwi.getDwtype())  {
                 case DEPOSIT:
-                    return trader.deposit(uid, coinType, amount, true);
+                    return trader.deposit(command.getIndex(), uid, coinType, amount, true);
                 case WITHDRAWAL:
-                    return trader.withdrawal(uid, coinType, amount, true);
+                    return trader.withdrawal(command.getIndex(), uid, coinType, amount, true);
                 default:
                     return false;
             }

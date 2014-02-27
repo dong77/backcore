@@ -10,11 +10,18 @@ import static com.lmax.disruptor.RingBuffer.createSingleProducer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import com.lmax.disruptor.BatchEventProcessor;
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.SequenceBarrier;
+import com.lmax.disruptor.YieldingWaitStrategy;
+import com.lmax.disruptor.util.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.coinport.f1.config.ConfigLoader;
+import com.coinport.f1.output_event.*;
 
 /**
  * <pre>
@@ -50,19 +57,28 @@ public class Trader {
     private Map<Long, UserInfo> users;
     private Map<TradePair, BlackBoard> blackBoards;
 
-    /*
+
     private static final int BUFFER_SIZE = ConfigLoader.getConfig().bufferSize;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
 
-    private final RingBuffer<ValueEvent> ringBuffer =
-        createSingleProducer(ValueEvent.EVENT_FACTORY, BUFFER_SIZE, new YieldingWaitStrategy());
+    private final RingBuffer<OutputEvent> ringBuffer =
+        createSingleProducer(OutputEvent.EVENT_FACTORY, BUFFER_SIZE, new YieldingWaitStrategy());
     private final SequenceBarrier sequenceBarrier = ringBuffer.newBarrier();
-    private final ValueAdditionEventHandler handler = new ValueAdditionEventHandler();
-    private final BatchEventProcessor<ValueEvent> batchEventProcessor = new BatchEventProcessor<ValueEvent>(ringBuffer, sequenceBarrier, handler);
+    private final OutputEventHandler handler = new OutputEventHandler();
+    private final BatchEventProcessor<OutputEvent> batchEventProcessor =
+        new BatchEventProcessor<OutputEvent>(ringBuffer, sequenceBarrier, handler);
     {
         ringBuffer.addGatingSequences(batchEventProcessor.getSequence());
     }
-    */
+
+    private long sequence = 0;
+    private long commandIndex = -1;
+    private long eventIndex = -1;
+
+    public Trader() {
+        users = new HashMap<Long, UserInfo>();
+        blackBoards = new HashMap<TradePair, BlackBoard>();
+    }
 
     // Unit test only
     BlackBoard getBlackBoard(final TradePair tp) {
@@ -76,11 +92,6 @@ public class Trader {
 
     public long userNum() {
         return users.size();
-    }
-
-    public Trader() {
-        users = new HashMap<Long, UserInfo>();
-        blackBoards = new HashMap<TradePair, BlackBoard>();
     }
 
     public void display() {
@@ -101,12 +112,26 @@ public class Trader {
         }
     }
 
-    public boolean register(UserInfo ui) {
+    public void start() {
+        executor.submit(batchEventProcessor);
+    }
+
+    public void terminate() {
+        batchEventProcessor.halt();
+        handler.closeDb();
+        executor.shutdown();
+    }
+
+    public boolean register(final long index, UserInfo ui) {
         users.put(ui.getId(), ui.deepCopy());
+        OutputEventImpl event = nextEvent(index);
+        event.setType(OutputEventType.USER_REGISTED);
+        event.setUserInfo(ui.deepCopy());
+        execute();
         return true;
     }
 
-    public boolean deposit(final long uid, final CoinType coinType, final long amount, final boolean fromValid) {
+    public boolean deposit(final long index, final long uid, final CoinType coinType, final long amount, final boolean fromValid) {
         if (!users.containsKey(uid)) {
             logger.error("can't find user to deposit");
             return false;
@@ -114,7 +139,7 @@ public class Trader {
         return deposit(users.get(uid), coinType, amount, fromValid);
     }
 
-    public boolean withdrawal(final long uid, final CoinType coinType, final long amount, final boolean fromValid) {
+    public boolean withdrawal(final long index, final long uid, final CoinType coinType, final long amount, final boolean fromValid) {
         if (!users.containsKey(uid)) {
             logger.error("can't find user to withdrawal");
             return false;
@@ -122,12 +147,20 @@ public class Trader {
         return withdrawal(users.get(uid), coinType, amount, fromValid);
     }
 
-    public boolean frozen(final long uid, final CoinType coinType, final long amount) {
-        return withdrawal(uid, coinType, amount, true) && deposit(uid, coinType, amount, false);
+    private boolean frozen(final long uid, final CoinType coinType, final long amount) {
+        if (!users.containsKey(uid)) {
+            logger.error("can't find user to deposit");
+            return false;
+        }
+        return frozen(users.get(uid), coinType, amount);
     }
 
-    public boolean unfreeze(final long uid, final CoinType coinType, final long amount) {
-        return withdrawal(uid, coinType, amount, false) && deposit(uid, coinType, amount, true);
+    private boolean unfreeze(final long uid, final CoinType coinType, final long amount) {
+        if (!users.containsKey(uid)) {
+            logger.error("can't find user to deposit");
+            return false;
+        }
+        return unfrozen(users.get(uid), coinType, amount);
     }
 
     private boolean frozen(UserInfo ui, final CoinType coinType, final long amount) {
@@ -138,7 +171,7 @@ public class Trader {
         return withdrawal(ui, coinType, amount, false) && deposit(ui, coinType, amount, true);
     }
 
-    public boolean placeOrder(OrderInfo oi) {
+    public boolean placeOrder(final long index, OrderInfo oi) {
         TradePair tradePair = oi.getTradePair();
         BlackBoard blackBoard = null;
         if (!blackBoards.containsKey(tradePair)) {
@@ -150,7 +183,7 @@ public class Trader {
         return placeOrderInner(blackBoard, oi);
     }
 
-    public boolean cancelOrder(OrderInfo oi) {
+    public boolean cancelOrder(final long index, OrderInfo oi) {
         TradePair tradePair = oi.getTradePair();
         if (!blackBoards.containsKey(tradePair)) {
             return false;
@@ -395,5 +428,20 @@ public class Trader {
             board.putToSellOrderList(oi);
         }
         return true;
+    }
+
+    private OutputEventImpl nextEvent(final long cindex) {
+        sequence = ringBuffer.next();
+        OutputEventImpl oe = ringBuffer.get(sequence).getOutputEventImpl();
+        if (commandIndex != cindex) {
+            commandIndex = cindex;
+            eventIndex = 0;
+        }
+        oe.setIndex(cindex << 10 + eventIndex++);
+        return oe;
+    }
+
+    private void execute() {
+        ringBuffer.publish(sequence);
     }
 }

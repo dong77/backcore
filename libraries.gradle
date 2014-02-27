@@ -261,6 +261,9 @@ ext {
     // levelDB
     leveldbjni:             'org.fusesource.leveldbjni:leveldbjni-all:1.8',
 
+    // LMDB
+    lmdbjni:                'org.fusesource.lmdbjni:lmdbjni-all:99-master-SNAPSHOT',
+
     // log4j
     log4j:                  'log4j:log4j:1.2.17',
 
@@ -288,7 +291,7 @@ ext {
     mockito:                'org.mockito:mockito-all:1.8.4',
 
     // mongodb
-    mongo_java_driver:      'org.mongodb:mongo-java-driver:2.11.1',
+    mongo_java_driver:      'org.mongodb:mongo-java-driver:2.12.0-rc0',
     morphia:                "com.github.jmkgreen.morphia:morphia:${versions.morphia}",
     morphia_validation:     "com.github.jmkgreen.morphia:morphia-validation:${versions.morphia}",
     // mx4j

@@ -14,7 +14,7 @@ public class CancelOrderHandler extends CommandHandler {
     @Override
     public boolean exec(final BPCommand command, Trader trader) {
         if (command.isSetOrderInfo()) {
-            return trader.cancelOrder(command.getOrderInfo());
+            return trader.cancelOrder(command.getIndex(), command.getOrderInfo());
         } else {
             logger.error("no orderInfo found in cancel order command");
             return false;

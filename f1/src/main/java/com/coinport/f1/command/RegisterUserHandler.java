@@ -13,7 +13,7 @@ public class RegisterUserHandler extends CommandHandler {
     @Override
     public boolean exec(final BPCommand command, Trader trader) {
         if (command.isSetUserInfo()) {
-            return trader.register(command.getUserInfo());
+            return trader.register(command.getIndex(), command.getUserInfo());
         } else {
             logger.error("no userinfo found in register command");
             return false;

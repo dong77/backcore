@@ -30,7 +30,7 @@ tags
 *.iws
 build/
 tracelogs/
-example/
+leveldb/
 gen-java/
 node_modules/
 gen-nodejs/

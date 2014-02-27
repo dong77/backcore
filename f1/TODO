@@ -1,4 +1,6 @@
 - try to use objectpool to improve the performance
 - using kryo for deepCopy to improve the performance
 - nodejs(hood) publish binary and java(f1) de-serialize to thrift object
-- nodejs send url params to redis directly and parse it in java side (done)
+- pipline the output event handler like command event pipline
+- change redis to mongodb for input queue
+- use leveldb in output instead of redis

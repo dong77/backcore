@@ -14,7 +14,7 @@ public class PlaceOrderHandler extends CommandHandler {
     @Override
     public boolean exec(final BPCommand command, Trader trader) {
         if (command.isSetOrderInfo()) {
-            return trader.placeOrder(command.getOrderInfo());
+            return trader.placeOrder(command.getIndex(), command.getOrderInfo());
         } else {
             logger.error("no orderInfo found in place order command");
             return false;

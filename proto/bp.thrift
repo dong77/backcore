@@ -12,6 +12,15 @@ enum BPCommandType {
     CANCEL_ORDER = 4,
 }
 
+enum OutputEventType {
+    USER_REGISTED = 1,
+    DEPOSIT = 2,
+    WITHDRAWAL = 3,
+    EXCHANGE = 4,
+    ORDER_PLACED = 5,
+    ORDER_CANCELED = 6,
+}
+
 enum BOS {
     BUY = 1,
     SELL = 2,
@@ -107,4 +116,23 @@ struct BPCommand {
     6: optional i64 timestamp,
     7: optional i64 index,  // used for ordering the order
     8: optional CommandStats stats = CommandStats.TBR,
+}
+
+struct ExchangeInfo {
+    1: optional i64 fromUid,
+    2: optional i64 toUid,
+    3: optional CoinType from,
+    4: optional CoinType to,
+    5: optional i64 price,
+    6: optional i64 quantity,
+}
+
+struct OutputEventImpl {
+    1: optional i64 index,  // BPCommand index << 10 + event index
+    2: optional OutputEventType type,
+    3: optional UserInfo userInfo,
+    4: optional DWInfo dwInfo,
+    5: optional OrderInfo orderInfo,
+    6: optional ExchangeInfo exchangeInfo,
+    9: optional CommandStats stats = CommandStats.TBR,
 }

@@ -32,7 +32,12 @@ public final class CommandEventJournalHandler implements EventHandler<CommandEve
         try {
             Options options = new Options();
             options.createIfMissing(true);
-            db = factory.open(new File("example"), options);
+            File dbdir = new File("leveldb/command");
+            File parent = dbdir.getParentFile();
+            if (parent != null && !parent.exists()) {
+                parent.mkdirs();
+            }
+            db = factory.open(dbdir, options);
             batch = db.createWriteBatch();
         } catch (Exception e) {
             logger.error("leveldb error", e);
