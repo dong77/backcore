@@ -104,7 +104,7 @@ public class Main {
         try {
             Options options = new Options();
             options.createIfMissing(true);
-            db = factory.open(new File("example"), options);
+            db = factory.open(new File("leveldb/command"), options);
             // db.put(bytes("Tampa"), bytes("rocks"));
             byte[] content = db.get(Longs.toByteArray(220000L));
             BPCommand command = kryo.readObject(new Input(content), BPCommand.class);

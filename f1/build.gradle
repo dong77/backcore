@@ -2,7 +2,11 @@ apply plugin: 'application'
 
 applicationDefaultJvmArgs = ["-Xmx4096M", "-Xms4096M", "-Dfile.encoding=UTF-8"]
 
-mainClassName = 'com.coinport.f1.perftest.Main'
+project.ext {
+    mainList = ['com.coinport.f1.perftest.Main', 'com.coinport.f1.Main']
+}
+
+mainClassName = mainList[0]
 
 group = 'com.coinport.f1'
 version = '1.0-SNAPSHOT'
@@ -24,6 +28,9 @@ dependencies {
 compileJava.dependsOn(generateThrift)
 
 run {
+    if (project.hasProperty('main')) {
+        project.mainClassName = project.mainList[project.main.toInteger()]
+    }
     args "Hello world"
 }
 
