@@ -18,9 +18,9 @@ dependencies {
     compile libraries.jetty_util
     compile libraries.kryo
     compile libraries.leveldbjni
-    // compile libraries.lmdbjni
+    compile libraries.lmdbjni
     compile libraries.logback
-    compile libraries.mongo_java_driver
+    // compile libraries.mongo_java_driver
     compile libraries.thrift
 
     // TODO(c): use jar(nexus) instead of project dep

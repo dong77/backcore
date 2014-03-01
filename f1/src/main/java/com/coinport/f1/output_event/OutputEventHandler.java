@@ -5,12 +5,17 @@
 
 package com.coinport.f1.output_event;
 
+import static org.fusesource.lmdbjni.Constants.*;
+
 import java.io.*;
 import java.util.concurrent.CountDownLatch;
 
+import com.esotericsoftware.kryo.*;
+import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.google.common.primitives.Longs;
 import com.lmax.disruptor.EventHandler;
-import com.mongodb.*;
+import org.fusesource.lmdbjni.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,33 +25,53 @@ public final class OutputEventHandler implements EventHandler<OutputEvent> {
     private final static Logger logger = LoggerFactory.getLogger(OutputEventHandler.class);
 
     private long calledNum = 0;
-    DBCollection coll = null;
+    private Env env = new Env();
+    private Database db = null;
+
+    private OutputEventImpl eventImpl;
+    private Kryo kryo;
+    private Output output = new Output(128, 1024);
 
     public OutputEventHandler() {
+        eventImpl = new OutputEventImpl();
+
+        kryo = new Kryo();
+        FieldSerializer<?> serializer = new FieldSerializer<OutputEventImpl>(kryo, OutputEventImpl.class);
+        kryo.register(OutputEventImpl.class, serializer);
+
         try {
-            MongoClient mongoClient = new MongoClient("localhost", 27017);
-            DB db = mongoClient.getDB("output");
-            coll = db.getCollection("event");
+            File dbdir = new File("lmdb/output");
+            File parent = dbdir.getParentFile();
+            if (parent != null && !parent.exists()) {
+                parent.mkdirs();
+            }
+            env.open("lmdb");
+            db = env.openDatabase("output");
         } catch (Exception e) {
-            logger.error("can't get mongodb instance", e);
+            logger.error("can't get lmdb instance", e);
+            db.close();
+            env.close();
         }
     }
 
     @Override
     public void onEvent(final OutputEvent event, final long sequence, final boolean endOfBatch) throws Exception {
         ++calledNum;
-        if (coll == null) return;
-
+        eventImpl.clear();
         final OutputEventImpl outputEvent = event.getOutputEventImpl();
-        BasicDBObject obj = new BasicDBObject("_id", outputEvent.getIndex());
+        eventImpl.setIndex(outputEvent.getIndex());
+        eventImpl.setType(outputEvent.getType());
 
-        OutputEventType type = outputEvent.getType();
-        obj.append("t", type.getValue());
-        coll.save(obj);
+        output.clear();
+        kryo.writeObject(output, eventImpl);
+
+        db.put(Longs.toByteArray(eventImpl.getIndex()), output.getBuffer());
     }
 
     // TODO(c): remove this function
     public void closeDb() {
         logger.info("called times: " + calledNum);
+        // db.close();
+        // env.close();
     }
 }

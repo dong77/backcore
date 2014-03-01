@@ -31,6 +31,7 @@ tags
 build/
 tracelogs/
 leveldb/
+lmdb/
 gen-java/
 node_modules/
 gen-nodejs/
