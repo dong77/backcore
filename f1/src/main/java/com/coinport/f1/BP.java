@@ -207,10 +207,12 @@ public final class BP {
 
     public void setStopParams(final CountDownLatch latch, final long expectedCount) {
         journalHandler.reset(latch, journalProcessor.getSequence().get() + expectedCount);
+        trader.setStopParams(latch, expectedCount);
     }
 
     public void setMore(final CountDownLatch latch, final long expectedCount) {
         journalHandler.resetMore(latch, expectedCount);
+        trader.setMore(latch, expectedCount);
     }
 
     public void displayBC() {

@@ -9,6 +9,7 @@ import static com.lmax.disruptor.RingBuffer.createSingleProducer;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -132,6 +133,9 @@ public class Trader {
     }
 
     public boolean deposit(final long index, final long uid, final CoinType coinType, final long amount, final boolean fromValid) {
+        OutputEventImpl event = nextEvent(index);
+        event.setType(OutputEventType.DEPOSIT);
+        execute();
         if (!users.containsKey(uid)) {
             logger.error("can't find user to deposit");
             return false;
@@ -140,6 +144,9 @@ public class Trader {
     }
 
     public boolean withdrawal(final long index, final long uid, final CoinType coinType, final long amount, final boolean fromValid) {
+        OutputEventImpl event = nextEvent(index);
+        event.setType(OutputEventType.WITHDRAWAL);
+        execute();
         if (!users.containsKey(uid)) {
             logger.error("can't find user to withdrawal");
             return false;
@@ -172,6 +179,9 @@ public class Trader {
     }
 
     public boolean placeOrder(final long index, OrderInfo oi) {
+        OutputEventImpl event = nextEvent(index);
+        event.setType(OutputEventType.ORDER_PLACED);
+        execute();
         TradePair tradePair = oi.getTradePair();
         BlackBoard blackBoard = null;
         if (!blackBoards.containsKey(tradePair)) {
@@ -184,6 +194,9 @@ public class Trader {
     }
 
     public boolean cancelOrder(final long index, OrderInfo oi) {
+        OutputEventImpl event = nextEvent(index);
+        event.setType(OutputEventType.ORDER_CANCELED);
+        execute();
         TradePair tradePair = oi.getTradePair();
         if (!blackBoards.containsKey(tradePair)) {
             return false;
@@ -204,6 +217,14 @@ public class Trader {
             default:
                 return false;
         }
+    }
+
+    public void setStopParams(final CountDownLatch latch, final long expectedCount) {
+        handler.reset(latch, batchEventProcessor.getSequence().get() + expectedCount);
+    }
+
+    public void setMore(final CountDownLatch latch, final long expectedCount) {
+        handler.resetMore(latch, expectedCount);
     }
 
     private boolean deposit(UserInfo ui, final CoinType coinType, final long amount, final boolean fromValid) {

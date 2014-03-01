@@ -21,7 +21,7 @@ public class BPTest {
     @Test
     public void testRegisterUserCommand() throws Exception {
         BP bp = new BP();
-        CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(2);
         bp.setStopParams(latch, 3);
         bp.start();
 
@@ -43,7 +43,7 @@ public class BPTest {
     @Test
     public void testDWCommand() throws Exception {
         BP bp = new BP();
-        CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(2);
         bp.start();
         bp.setStopParams(latch, 4);
 
@@ -62,7 +62,7 @@ public class BPTest {
         assertEquals(10000000, wallet.getValid());
         assertFalse(wallet.isSetFrozen());
 
-        latch = new CountDownLatch(1);
+        latch = new CountDownLatch(2);
         bp.setMore(latch, 3);
 
         depositWithdrawal(bp, 1234, DOW.WITHDRAWAL, CoinType.CNY, 10000);
@@ -79,7 +79,7 @@ public class BPTest {
     @Test
     public void testPlaceOrder() throws Exception {
         BP bp = new BP();
-        CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(2);
         bp.start();
         bp.setStopParams(latch, 15);
 
@@ -132,7 +132,7 @@ public class BPTest {
         assertEquals(10000000 + 4001 * 2, cnyWallet.getValid());
         assertEquals(0, cnyWallet.getFrozen());
 
-        latch = new CountDownLatch(1);
+        latch = new CountDownLatch(2);
         bp.setMore(latch, 3);
 
         placeOrder(bp, 7, 56, new TradePair(CoinType.CNY, CoinType.BTC), 34, 100035, BOS.SELL, 3001);
@@ -147,7 +147,7 @@ public class BPTest {
         assertEquals(4, oi.getQuantity());
         assertEquals(5, oi.getId());
 
-        latch = new CountDownLatch(1);
+        latch = new CountDownLatch(2);
         bp.setMore(latch, 1);
 
         placeOrder(bp, 10, 78, new TradePair(CoinType.CNY, CoinType.BTC), 13, 100075, BOS.BUY, 4032);
@@ -159,7 +159,7 @@ public class BPTest {
         oi = bb.getFirstBuyOrder();
         assertEquals(1, oi.getQuantity());
 
-        latch = new CountDownLatch(1);
+        latch = new CountDownLatch(2);
         bp.setMore(latch, 1);
 
         placeOrder(bp, 11, 78, new TradePair(CoinType.CNY, CoinType.BTC), 50, 100076, BOS.SELL , 102);
@@ -177,7 +177,7 @@ public class BPTest {
     @Test
     public void testCancelOrder() throws Exception {
         BP bp = new BP();
-        CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(2);
         bp.start();
         bp.setStopParams(latch, 12);
 
@@ -199,7 +199,7 @@ public class BPTest {
 
         latch.await();
 
-        latch = new CountDownLatch(1);
+        latch = new CountDownLatch(2);
         bp.setMore(latch, 2);
 
         cancelOrder(bp, 1, 1234, new TradePair(CoinType.CNY, CoinType.BTC));

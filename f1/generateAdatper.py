@@ -11,7 +11,7 @@ import os
 # enum_types = ['BPCommandType', 'BOS', 'MOL', 'SOM', 'Strategy', 'CoinType',
     # 'DOW', 'CommandStats']
 enum_types = ['BOS', 'MOL', 'SOM', 'Strategy', 'CoinType', 'DOW',
-    'CommandStats']
+    'CommandStats', 'OutputEventType']
 
 template = """
 /**

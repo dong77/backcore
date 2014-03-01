@@ -38,4 +38,5 @@ run {
 
 clean.doLast {
     ant.delete(dir: "$projectDir/leveldb")
+    ant.delete(dir: "$projectDir/lmdb")
 }

@@ -32,7 +32,7 @@ public class PerfTest {
                 prices[i] = (long)gauseRandom(500.0, 100.0);
             }
         }
-        CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(2);
         bp.setMore(latch, num);
 
         long start = System.currentTimeMillis();

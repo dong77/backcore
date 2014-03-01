@@ -5,6 +5,7 @@
 
 package com.coinport.f1.output_event;
 
+import static org.fusesource.leveldbjni.JniDBFactory.*;
 import static org.fusesource.lmdbjni.Constants.*;
 
 import java.io.*;
@@ -16,6 +17,7 @@ import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.google.common.primitives.Longs;
 import com.lmax.disruptor.EventHandler;
 import org.fusesource.lmdbjni.*;
+import org.iq80.leveldb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,9 +26,14 @@ import com.coinport.f1.*;
 public final class OutputEventHandler implements EventHandler<OutputEvent> {
     private final static Logger logger = LoggerFactory.getLogger(OutputEventHandler.class);
 
+    // TODO(c) for test
+    private long count;
+    private CountDownLatch latch = null;
+
+    private DB db;
+    private WriteBatch batch;
+
     private long calledNum = 0;
-    private Env env = new Env();
-    private Database db = null;
 
     private OutputEventImpl eventImpl;
     private Kryo kryo;
@@ -40,18 +47,27 @@ public final class OutputEventHandler implements EventHandler<OutputEvent> {
         kryo.register(OutputEventImpl.class, serializer);
 
         try {
-            File dbdir = new File("lmdb/output");
+            Options options = new Options();
+            options.createIfMissing(true);
+            File dbdir = new File("leveldb/output");
             File parent = dbdir.getParentFile();
             if (parent != null && !parent.exists()) {
                 parent.mkdirs();
             }
-            env.open("lmdb");
-            db = env.openDatabase("output");
+            db = factory.open(dbdir, options);
+            batch = db.createWriteBatch();
         } catch (Exception e) {
-            logger.error("can't get lmdb instance", e);
-            db.close();
-            env.close();
+            logger.error("leveldb error", e);
         }
+    }
+
+    public void reset(final CountDownLatch latch, final long expectedCount) {
+        this.latch = latch;
+        count = expectedCount;
+    }
+
+    public void resetMore(final CountDownLatch latch, final long moreCount) {
+        reset(latch, count + moreCount);
     }
 
     @Override
@@ -65,13 +81,25 @@ public final class OutputEventHandler implements EventHandler<OutputEvent> {
         output.clear();
         kryo.writeObject(output, eventImpl);
 
-        db.put(Longs.toByteArray(eventImpl.getIndex()), output.getBuffer());
+        batch.put(Longs.toByteArray(eventImpl.getIndex()), output.getBuffer());
+        if (endOfBatch) {
+            db.write(batch);
+            // TODO(c): find a method like clear instead of create a new one
+            batch = db.createWriteBatch();
+        }
+
+        if (latch != null && count == sequence) {
+            latch.countDown();
+        }
     }
 
     // TODO(c): remove this function
     public void closeDb() {
         logger.info("called times: " + calledNum);
-        // db.close();
-        // env.close();
+        try {
+            db.close();
+        } catch (Exception e) {
+            logger.error("close leveldb error:", e);
+        }
     }
 }
