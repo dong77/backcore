@@ -6,7 +6,7 @@
 package com.coinport.f1.output_event;
 
 import static org.fusesource.leveldbjni.JniDBFactory.*;
-import static org.fusesource.lmdbjni.Constants.*;
+// import static org.fusesource.lmdbjni.Constants.*;
 
 import java.io.*;
 import java.util.concurrent.CountDownLatch;
@@ -16,7 +16,7 @@ import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.google.common.primitives.Longs;
 import com.lmax.disruptor.EventHandler;
-import org.fusesource.lmdbjni.*;
+// import org.fusesource.lmdbjni.*;
 import org.iq80.leveldb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

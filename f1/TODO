@@ -3,4 +3,4 @@
 - nodejs(hood) publish binary and java(f1) de-serialize to thrift object
 - pipline the output event handler like command event pipline
 - change redis to mongodb for input queue
-- use leveldb in output instead of redis
+- try RockDB instead of leveldb
