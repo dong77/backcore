@@ -39,26 +39,15 @@ public final class OutputEventHandler implements EventHandler<OutputEvent> {
     private Kryo kryo;
     private Output output = new Output(128, 1024);
 
-    public OutputEventHandler() {
+    public OutputEventHandler(DB db) {
+        this.db = db;
+        batch = db.createWriteBatch();
+
         eventImpl = new OutputEventImpl();
 
         kryo = new Kryo();
         FieldSerializer<?> serializer = new FieldSerializer<OutputEventImpl>(kryo, OutputEventImpl.class);
         kryo.register(OutputEventImpl.class, serializer);
-
-        try {
-            Options options = new Options();
-            options.createIfMissing(true);
-            File dbdir = new File("leveldb/output");
-            File parent = dbdir.getParentFile();
-            if (parent != null && !parent.exists()) {
-                parent.mkdirs();
-            }
-            db = factory.open(dbdir, options);
-            batch = db.createWriteBatch();
-        } catch (Exception e) {
-            logger.error("leveldb error", e);
-        }
     }
 
     public void reset(final CountDownLatch latch, final long expectedCount) {
@@ -90,16 +79,6 @@ public final class OutputEventHandler implements EventHandler<OutputEvent> {
 
         if (latch != null && count == sequence) {
             latch.countDown();
-        }
-    }
-
-    // TODO(c): remove this function
-    public void closeDb() {
-        logger.info("called times: " + calledNum);
-        try {
-            db.close();
-        } catch (Exception e) {
-            logger.error("close leveldb error:", e);
         }
     }
 }

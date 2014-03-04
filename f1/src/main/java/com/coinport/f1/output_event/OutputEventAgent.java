@@ -9,15 +9,19 @@ import static org.fusesource.leveldbjni.JniDBFactory.*;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.iq80.leveldb.*;
 import com.esotericsoftware.kryo.*;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
+import org.iq80.leveldb.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.coinport.f1.*;
 
 public final class OutputEventAgent implements Runnable {
+    private final static Logger logger = LoggerFactory.getLogger(OutputEventAgent.class);
     private final AtomicBoolean running = new AtomicBoolean(false);
+    private volatile boolean alert = false;
 
     DB db = null;
     Kryo kryo = null;
@@ -30,7 +34,8 @@ public final class OutputEventAgent implements Runnable {
         kryo.register(OutputEventImpl.class, serializer);
     }
 
-    void halt() {
+    public void halt() {
+        alert = true;
         running.set(false);
     }
 
@@ -45,6 +50,11 @@ public final class OutputEventAgent implements Runnable {
         }
         try {
             while (true) {
+                if (alert)
+                    break;
+                else {
+                    Thread.yield();
+                }
             }
         } finally {
             running.set(false);

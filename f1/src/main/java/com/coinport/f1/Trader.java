@@ -6,6 +6,7 @@
 package com.coinport.f1;
 
 import static com.lmax.disruptor.RingBuffer.createSingleProducer;
+import static org.fusesource.leveldbjni.JniDBFactory.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +19,7 @@ import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.SequenceBarrier;
 import com.lmax.disruptor.YieldingWaitStrategy;
 import com.lmax.disruptor.util.DaemonThreadFactory;
+import org.iq80.leveldb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,19 +60,23 @@ public class Trader {
     private Map<Long, UserInfo> users;
     private Map<TradePair, BlackBoard> blackBoards;
 
+    private final DB db = LevelDbHelper.getOrCreateLevelDbInstance("leveldb/output");
 
     private static final int BUFFER_SIZE = ConfigLoader.getConfig().bufferSize;
-    private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
+    // private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
+    private final ExecutorService executor = Executors.newFixedThreadPool(2);
 
     private final RingBuffer<OutputEvent> ringBuffer =
         createSingleProducer(OutputEvent.EVENT_FACTORY, BUFFER_SIZE, new YieldingWaitStrategy());
     private final SequenceBarrier sequenceBarrier = ringBuffer.newBarrier();
-    private final OutputEventHandler handler = new OutputEventHandler();
+    private final OutputEventHandler handler = new OutputEventHandler(db);
     private final BatchEventProcessor<OutputEvent> batchEventProcessor =
         new BatchEventProcessor<OutputEvent>(ringBuffer, sequenceBarrier, handler);
     {
         ringBuffer.addGatingSequences(batchEventProcessor.getSequence());
     }
+
+    private final OutputEventAgent agent = new OutputEventAgent(db);
 
     private long sequence = 0;
     private long commandIndex = -1;
@@ -115,12 +121,19 @@ public class Trader {
 
     public void start() {
         executor.submit(batchEventProcessor);
+        executor.submit(agent);
     }
 
     public void terminate() {
         batchEventProcessor.halt();
-        handler.closeDb();
+        agent.halt();
         executor.shutdown();
+
+        try {
+            db.close();
+        } catch (Exception e) {
+            logger.error("close leveldb error:", e);
+        }
     }
 
     public boolean register(final long index, UserInfo ui) {

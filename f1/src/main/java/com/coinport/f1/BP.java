@@ -78,7 +78,7 @@ import com.coinport.f1.config.ConfigLoader;
 public final class BP {
     private final static Logger logger = LoggerFactory.getLogger(BP.class);
 
-    private static final int NUM_EVENT_PROCESSORS = 3;
+    private static final int NUM_EVENT_PROCESSORS = 5;
     private static final int NUM_NEEDED_PROCESSORS = NUM_EVENT_PROCESSORS + 1;  // adds publisher
 
     private static final int BUFFER_SIZE = ConfigLoader.getConfig().bufferSize;
@@ -108,7 +108,7 @@ public final class BP {
 
     private long sequence = 0;
 
-    public void BP() {
+    public BP() {
         final int availableProcessors = Runtime.getRuntime().availableProcessors();
         if (NUM_NEEDED_PROCESSORS > availableProcessors)
         {
