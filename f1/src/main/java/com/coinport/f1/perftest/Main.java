@@ -101,11 +101,16 @@ public class Main {
         kryo.register(BPCommand.class, serializer);
 
         DB db = null;
+        DBIterator iterator = null;
         try {
             Options options = new Options();
             options.createIfMissing(true);
             db = factory.open(new File("leveldb/command"), options);
             // db.put(bytes("Tampa"), bytes("rocks"));
+            // iterator = db.iterator();
+            // for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
+                // System.out.println(Longs.fromByteArray(iterator.peekNext().getKey()));
+            // }
             byte[] content = db.get(Longs.toByteArray(220000L));
             BPCommand command = kryo.readObject(new Input(content), BPCommand.class);
             logger.info(command.toString());

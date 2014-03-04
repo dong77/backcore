@@ -31,6 +31,7 @@ public final class CommandEventJournalHandler implements EventHandler<CommandEve
     public CommandEventJournalHandler() {
         try {
             Options options = new Options();
+            // options.comparator(new LevelDbComparator());
             options.createIfMissing(true);
             File dbdir = new File("leveldb/command");
             File parent = dbdir.getParentFile();
