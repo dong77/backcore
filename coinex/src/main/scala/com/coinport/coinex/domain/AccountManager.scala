@@ -15,18 +15,6 @@
 
 package com.coinport.coinex.domain
 
-/**
- * available: the amount the user can spend or withdraw.
- * locked: the amount that has been put on lock for pending orders.
- */
-case class CashAccount(currency: Currency, available: BigDecimal, locked: BigDecimal) {
-  def balance: BigDecimal = available + locked
+class AccountStateManager extends StateManager[AccountState] {
+  initWithDefaultState(AccountState())
 }
-
-object UserAccounts {
-  type CashAccounts = Map[Currency, CashAccount]
-  val EmptyCashAccounts = Map.empty[Currency, CashAccount]
-}
-
-case class UserAccounts(userId: Long,
-  cashAccounts: UserAccounts.CashAccounts = UserAccounts.EmptyCashAccounts)
