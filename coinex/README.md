@@ -8,7 +8,7 @@
 git clone https://github.com/spray/spray.git
 cd spray
 git checkout release/1.3
-sbt publishLocal
+sbt publish-local
 ```
 
 
@@ -17,7 +17,7 @@ sbt publishLocal
 ```
 git clone https://github.com/akka-persistence-mongo.git
 cd akka-persistence-mongo
-sbt publishLocal
+sbt publish-local
 cd ..
 ```
 
