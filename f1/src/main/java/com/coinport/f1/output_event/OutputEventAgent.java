@@ -13,6 +13,7 @@ import com.esotericsoftware.kryo.*;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import org.iq80.leveldb.*;
+import com.google.common.primitives.Longs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +40,7 @@ public final class OutputEventAgent implements Runnable {
         running.set(false);
     }
 
-    boolean isRunning() {
+    public boolean isRunning() {
         return running.get();
     }
 
@@ -50,10 +51,30 @@ public final class OutputEventAgent implements Runnable {
         }
         try {
             while (true) {
-                if (alert)
-                    break;
-                else {
-                    Thread.yield();
+                ReadOptions ro = new ReadOptions();
+                ro.snapshot(db.getSnapshot());
+                DBIterator iterator = db.iterator(ro);
+                iterator.seekToFirst();
+                try {
+                    // if (iterator.hasNext())
+                        // System.out.println(Longs.fromByteArray(iterator.peekNext().getKey()));
+                    // has issues:
+                    // for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
+                    //     System.out.println(Longs.fromByteArray(iterator.peekNext().getKey()));
+                    // }
+                    if (alert)
+                        break;
+                    else {
+                        Thread.yield();
+                    }
+                } catch (Exception e) {
+                    logger.error("error occur while reading iterator", e);
+                } finally {
+                    try {
+                        // iterator.close();
+                    } catch (Exception e) {
+                        logger.error("error occur while closing iterator", e);
+                    }
                 }
             }
         } finally {
