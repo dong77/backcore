@@ -185,7 +185,7 @@ class MarketManagerSpec extends Specification {
       "match new market-price taker order against as many existing limit-price by order as necessary" in {
         val mm = new MarketManager(BTC ~> RMB)
 
-        val roof = 1000 * 10
+        val roof = 1000 * 1000
         (1 to roof) foreach { i => mm.addOrder(Order(makerSide, OrderData(id = i, price = 1.0 / i, quantity = i))) }
 
         val txs = mm.addOrder(Order(takerSide, OrderData(id = roof + 1, price = 0, quantity = roof + 1)))
@@ -362,18 +362,23 @@ class MarketManagerSpec extends Specification {
         Transaction(Transfer(10, BTC, 10, false), Transfer(1, RMB, 20, true)) ::
         Nil
     }
-    
+
     "match new limit-price taker order against as many existing limit-price by order as necessary" in {
       val mm = new MarketManager(BTC ~> RMB)
+      mm.disableCollectingTransactions()
 
-      val roof = 1000 * 10
+      val roof = 1000
+      val s = System.currentTimeMillis()
       (1 to roof) foreach { i => mm.addOrder(Order(makerSide, OrderData(id = i, price = 1.0 / BigDecimal(i), quantity = i))) }
+      val s2 = System.currentTimeMillis()
+      println("submit " + roof + " orders took " + (s2 - s) + " ms")
 
-      val txs = mm.addOrder(Order(takerSide, OrderData(id = roof + 1, price = 1, quantity = roof + 1)))
+      mm.addOrder(Order(takerSide, OrderData(id = roof + 1, price = 1, quantity = roof + 1))).size
+
+      println("maching orders took " + (System.currentTimeMillis() - s2) + " ms")
 
       mm().orderMap mustEqual Map(roof + 1 -> Order(takerSide, OrderData(id = roof + 1, price = 1, quantity = 1)))
 
-      txs.size mustEqual roof
     }
   }
 }

@@ -17,11 +17,15 @@ package com.coinport.coinex.domain
 
 class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   initWithDefaultState(MarketState(headSide))
+  private var collectTxs = true
 
-  private val bigDecimalScale = 8
+  //This is for testing only
+  private[domain] def disableCollectingTransactions() = this.collectTxs = false
+
+  private val bigDecimalScale = 10
   private val bigDecimalRoundingMode = scala.math.BigDecimal.RoundingMode.HALF_EVEN
 
-  private def scale(v: BigDecimal) = v.setScale(bigDecimalScale, bigDecimalRoundingMode)
+  def scale(v: BigDecimal) = v.setScale(bigDecimalScale, bigDecimalRoundingMode)
 
   def addOrder(order: Order): List[Transaction] = {
     checkOrder(order)
@@ -40,23 +44,27 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
 
     // We extract common logics into an inner method for better readability.
     def foundMatching(makerOrder: OrderData, actualTakerPrice: BigDecimal) {
-      val actualMakerPrice = 1 / actualTakerPrice
-      if (remainingTakerQuantity >= makerOrder.quantity * actualMakerPrice) {
+      //the actual maker price is: 1 / actualTakerPrice
+      if (remainingTakerQuantity >= makerOrder.quantity / actualTakerPrice) {
         // new taker order is not fully executed but maker order is.
-        remainingTakerQuantity = scale(remainingTakerQuantity - makerOrder.quantity * actualMakerPrice)
+        remainingTakerQuantity = scale(remainingTakerQuantity - makerOrder.quantity / actualTakerPrice)
 
         state = state.removeOrder(makerOrder.id)
-        txs ::= Transaction(
-          Transfer(takerOrder.id, takerSide.outCurrency, scale(makerOrder.quantity * actualMakerPrice), remainingTakerQuantity == 0),
-          Transfer(makerOrder.id, makerSide.outCurrency, makerOrder.quantity, true))
+        if (collectTxs) {
+          txs ::= Transaction(
+            Transfer(takerOrder.id, takerSide.outCurrency, scale(makerOrder.quantity / actualTakerPrice), remainingTakerQuantity == 0),
+            Transfer(makerOrder.id, makerSide.outCurrency, makerOrder.quantity, true))
+        }
 
       } else {
         // new taker order is fully executed but maker order is not.
         val updatedMakerOrder = Order(makerSide, makerOrder.copy(quantity = scale(makerOrder.quantity - remainingTakerQuantity * actualTakerPrice)))
         state = state.addOrder(updatedMakerOrder)
-        txs ::= Transaction(
-          Transfer(takerOrder.id, takerSide.outCurrency, remainingTakerQuantity, true),
-          Transfer(makerOrder.id, makerSide.outCurrency, scale(remainingTakerQuantity * actualTakerPrice), false))
+        if (collectTxs) {
+          txs ::= Transaction(
+            Transfer(takerOrder.id, takerSide.outCurrency, remainingTakerQuantity, true),
+            Transfer(makerOrder.id, makerSide.outCurrency, scale(remainingTakerQuantity * actualTakerPrice), false))
+        }
         remainingTakerQuantity = 0
       }
     }

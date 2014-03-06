@@ -40,9 +40,9 @@ import MarketState._
  * It should be kept as a case class with immutable collections.
  */
 case class MarketState(
-  headSide: MarketSide, 
-  marketPriceOrderPools: MarketState.OrderPools = MarketState.EmptyOrderPools, 
-  limitPriceOrderPools: MarketState.OrderPools = MarketState.EmptyOrderPools, 
+  headSide: MarketSide,
+  marketPriceOrderPools: MarketState.OrderPools = MarketState.EmptyOrderPools,
+  limitPriceOrderPools: MarketState.OrderPools = MarketState.EmptyOrderPools,
   orderMap: Map[Long, Order] = Map.empty) {
 
   val tailSide = headSide.reverse
@@ -84,20 +84,19 @@ case class MarketState(
         var mpos = marketPriceOrderPools
         var lpos = limitPriceOrderPools
 
-        bothSides.foreach { side =>
-          var pool = marketPriceOrderPool(side) - old.data
-          if (pool.isEmpty) mpos -= side
-          else mpos += (side -> pool)
+        var pool = marketPriceOrderPool(old.side) - old.data
+        if (pool.isEmpty) mpos -= old.side
+        else mpos += (old.side -> pool)
 
-          pool = limitPriceOrderPool(side) - old.data
-          if (pool.isEmpty) lpos -= side
-          else lpos += (side -> pool)
-        }
+        pool = limitPriceOrderPool(old.side) - old.data
+        if (pool.isEmpty) lpos -= old.side
+        else lpos += (old.side -> pool)
+
         val orders = orderMap - id
         copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
 
       case None =>
-        MarketState.this
+        this
     }
   }
 
