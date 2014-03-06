@@ -18,8 +18,10 @@ package com.coinport.coinex.domain
 class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   initWithDefaultState(MarketState(headSide))
 
-  private val bigDecimalScale = 10
+  private val bigDecimalScale = 8
   private val bigDecimalRoundingMode = scala.math.BigDecimal.RoundingMode.HALF_EVEN
+
+  private def scale(v: BigDecimal) = v.setScale(bigDecimalScale, bigDecimalRoundingMode)
 
   def addOrder(order: Order): List[Transaction] = {
     checkOrder(order)
@@ -41,19 +43,20 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
       val actualMakerPrice = 1 / actualTakerPrice
       if (remainingTakerQuantity >= makerOrder.quantity * actualMakerPrice) {
         // new taker order is not fully executed but maker order is.
-        remainingTakerQuantity -= makerOrder.quantity * actualMakerPrice
+        remainingTakerQuantity = scale(remainingTakerQuantity - makerOrder.quantity * actualMakerPrice)
+
         state = state.removeOrder(makerOrder.id)
         txs ::= Transaction(
-          Transfer(takerOrder.id, takerSide.outCurrency, makerOrder.quantity * actualMakerPrice, remainingTakerQuantity == 0),
+          Transfer(takerOrder.id, takerSide.outCurrency, scale(makerOrder.quantity * actualMakerPrice), remainingTakerQuantity == 0),
           Transfer(makerOrder.id, makerSide.outCurrency, makerOrder.quantity, true))
 
       } else {
         // new taker order is fully executed but maker order is not.
-        val updatedMakerOrder = Order(makerSide, makerOrder.copy(quantity = makerOrder.quantity - remainingTakerQuantity * actualTakerPrice))
+        val updatedMakerOrder = Order(makerSide, makerOrder.copy(quantity = scale(makerOrder.quantity - remainingTakerQuantity * actualTakerPrice)))
         state = state.addOrder(updatedMakerOrder)
         txs ::= Transaction(
           Transfer(takerOrder.id, takerSide.outCurrency, remainingTakerQuantity, true),
-          Transfer(makerOrder.id, makerSide.outCurrency, remainingTakerQuantity * actualTakerPrice, false))
+          Transfer(makerOrder.id, makerSide.outCurrency, scale(remainingTakerQuantity * actualTakerPrice), false))
         remainingTakerQuantity = 0
       }
     }
@@ -78,8 +81,6 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
 
     // The new order is not fully executed, so we add a pending order into the pool
     if (remainingTakerQuantity > 0) {
-      // Here we round up the remaining quantity so we don't have misterious tails such as: 54.0000000000000082074899999999999974
-      remainingTakerQuantity = remainingTakerQuantity.setScale(bigDecimalScale, bigDecimalRoundingMode)
       state = state.addOrder(order.copy(data = takerOrder.copy(quantity = remainingTakerQuantity)))
     }
 
