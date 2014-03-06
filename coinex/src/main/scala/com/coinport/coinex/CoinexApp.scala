@@ -16,7 +16,8 @@ object CoinexApp extends App {
   implicit val system = ActorSystem("coinex", config)
   val cluster = Cluster(system)
 
-  // cluster-aware routers
+  // ------------------------------------------------------------------------------------------------
+  // Cluster-aware Routers Deployment
   val accountProcessorRouter = system.actorOf(FromConfig.props(Props.empty), name = "ap_router")
   val accountViewRouter = system.actorOf(FromConfig.props(Props.empty), name = "av_router")
 
@@ -45,7 +46,10 @@ object CoinexApp extends App {
           useRole = None)).props, "mv_" + market + "_router")
   }
 
-  //deploy account processor
+  // ------------------------------------------------------------------------------------------------
+  // Processors and Views Deployment
+
+  // Account Processor
   system.actorOf(ClusterSingletonManager.props(
     singletonProps = Props(new AccountProcessor(marketProcessors)),
     singletonName = "singleton",
@@ -53,12 +57,12 @@ object CoinexApp extends App {
     role = Some("ap")),
     name = "ap")
 
-  // deploy account view
+  // Account View
   if (cluster.selfRoles.contains("av")) {
     system.actorOf(Props(classOf[AccountView]), "av")
   }
 
-  // deploy market processors and views
+  // Market Processors and Views
   markets foreach { market =>
     system.actorOf(ClusterSingletonManager.props(
       singletonProps = Props(new MarketProcessor(market, accountProcessorRouter.path)),
@@ -72,9 +76,9 @@ object CoinexApp extends App {
     }
   }
 
-  Thread.sleep(10000)
-  println("============= Akka Node Ready =============\n\n")
+  Thread.sleep(10000) // give time for event replay
+  // ------------------------------------------------------------------------------------------------
+  // Front-end Deployment
 
-  accountProcessorRouter ! Persistent(DoDepositCash(12L, RMB, 10000))
-  accountProcessorRouter ! "save"
+  println("============= Akka Node Ready =============\n\n")
 }

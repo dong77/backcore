@@ -14,15 +14,14 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends comm
   override val receiveMessage: Receive = {
     // ------------------------------------------------------------------------------------------------
     // Snapshots
-    case SaveSnapshotNow =>
-      saveSnapshot(manager())
+    case SaveSnapshotNow => saveSnapshot(manager())
 
     case SaveSnapshotSuccess(metadata) =>
 
     case SaveSnapshotFailure(metadata, reason) =>
 
     case SnapshotOffer(meta, snapshot) =>
-      println("SnapshotOffer: " + meta)
+      log.info("Loaded snapshot {}", meta)
       manager.reset(snapshot.asInstanceOf[AccountState])
 
     // ------------------------------------------------------------------------------------------------
