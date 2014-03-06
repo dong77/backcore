@@ -10,8 +10,8 @@ import akka.contrib.pattern._
 import akka.persistence.Persistent
 
 object CoinexApp extends App {
-  val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0)).
-    withFallback(ConfigFactory.load())
+  val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0))
+    .withFallback(ConfigFactory.load())
 
   implicit val system = ActorSystem("coinex", config)
   val cluster = Cluster(system)
@@ -77,6 +77,7 @@ object CoinexApp extends App {
   }
 
   Thread.sleep(10000) // give time for event replay
+
   // ------------------------------------------------------------------------------------------------
   // Front-end Deployment
 

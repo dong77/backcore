@@ -15,20 +15,20 @@ resolvers ++= Seq(
 // 
 
 libraryDependencies ++= {
-  val akkaVersion = "2.3.0-RC1"
-  val sprayVersion = "1.3-RC1"
+  val akkaVersion = "2.3.0"
   Seq(
-    "org.scalatest"            %  "scalatest_2.10"                   % "1.9.1" % "test",
-    "com.typesafe.akka"        %% "akka-remote"                      % akkaVersion,
-    "com.typesafe.akka"        %% "akka-cluster"                     % akkaVersion,
-    "com.typesafe.akka"        %% "akka-slf4j"                       % akkaVersion,
-    "com.typesafe.akka"        %% "akka-remote"                      % akkaVersion,
-    "com.typesafe.akka"        %% "akka-contrib"                     % akkaVersion,
-    "com.typesafe.akka"        %% "akka-persistence-experimental"    % akkaVersion,
-    "io.spray"                 %% "spray-json"                       % "1.2.5",
-    "org.fusesource.leveldbjni"   %  "leveldbjni-all"                % "1.7",
-    "com.github.ddevore" %%       "akka-persistence-mongo-casbah"    % "0.4-SNAPSHOT",
-    "org.specs2"                  %% "specs2"                        % "2.3.8" % "test"
+    "org.scalatest"               %  "scalatest_2.10"                   % "1.9.1" % "test",
+    "com.typesafe.akka"           %% "akka-remote"                      % akkaVersion,
+    "com.typesafe.akka"           %% "akka-cluster"                     % akkaVersion,
+    "com.typesafe.akka"           %% "akka-slf4j"                       % akkaVersion,
+    "com.typesafe.akka"           %% "akka-remote"                      % akkaVersion,
+    "com.typesafe.akka"           %% "akka-contrib"                     % akkaVersion,
+    "com.typesafe.akka"           %% "akka-persistence-experimental"    % akkaVersion,
+		"com.typesafe.akka"           %% "akka-testkit"                     % akkaVersion,
+    "io.spray"                    %% "spray-json"                       % "1.2.5",
+    "org.fusesource.leveldbjni"   %  "leveldbjni-all"                   % "1.7",
+    "com.github.ddevore"          %% "akka-persistence-mongo-casbah"    % "0.4-SNAPSHOT",
+    "org.specs2"                  %% "specs2"                           % "2.3.8" % "test"
   )
 }
 
