@@ -18,6 +18,9 @@ package com.coinport.coinex.domain
 class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   initWithDefaultState(MarketState(headSide))
 
+  private val bigDecimalScale = 10
+  private val bigDecimalRoundingMode = scala.math.BigDecimal.RoundingMode.HALF_EVEN
+
   def addOrder(order: Order): List[Transaction] = {
     checkOrder(order)
     val (takerSide, makerSide) = (order.side, order.side.reverse)
@@ -56,7 +59,6 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
     }
 
     while (continue && remainingTakerQuantity > 0) {
-      println("remaining: " + remainingTakerQuantity)
       makerMpos.headOption match {
         // new LPO to match existing MPOs
         case Some(makerOrder) if takerOrder.price > 0 =>
@@ -76,6 +78,8 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
 
     // The new order is not fully executed, so we add a pending order into the pool
     if (remainingTakerQuantity > 0) {
+      // Here we round up the remaining quantity so we don't have misterious tails such as: 54.0000000000000082074899999999999974
+      remainingTakerQuantity = remainingTakerQuantity.setScale(bigDecimalScale, bigDecimalRoundingMode)
       state = state.addOrder(order.copy(data = takerOrder.copy(quantity = remainingTakerQuantity)))
     }
 

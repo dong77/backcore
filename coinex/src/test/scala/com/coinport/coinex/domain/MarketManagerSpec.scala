@@ -181,7 +181,7 @@ class MarketManagerSpec extends Specification {
             Transaction(Transfer(10, BTC, 50, false), Transfer(2, RMB, 100, true)) ::
             Nil
         }
-      /*
+
       "match new market-price taker order against as many existing limit-price by order as necessary" in {
         val mm = new MarketManager(BTC ~> RMB)
 
@@ -193,7 +193,7 @@ class MarketManagerSpec extends Specification {
         mm().orderMap mustEqual Map(roof + 1 -> Order(takerSide, OrderData(id = roof + 1, price = 0, quantity = 1)))
 
         txs.size mustEqual roof
-      }*/
+      }
     }
 
   "MarketManager" should {
@@ -362,7 +362,7 @@ class MarketManagerSpec extends Specification {
         Transaction(Transfer(10, BTC, 10, false), Transfer(1, RMB, 20, true)) ::
         Nil
     }
-    /*
+    
     "match new limit-price taker order against as many existing limit-price by order as necessary" in {
       val mm = new MarketManager(BTC ~> RMB)
 
@@ -374,6 +374,6 @@ class MarketManagerSpec extends Specification {
       mm().orderMap mustEqual Map(roof + 1 -> Order(takerSide, OrderData(id = roof + 1, price = 1, quantity = 1)))
 
       txs.size mustEqual roof
-    }*/
+    }
   }
 }

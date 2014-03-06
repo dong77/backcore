@@ -27,7 +27,6 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends comm
     // ------------------------------------------------------------------------------------------------
     // Commands
     case cmd @ DoDepositCash(userId, currency, amount) =>
-      println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ do deposit cash" + cmd)
       manager.depositCash(userId, currency, amount) match {
         case Left(error) => sender ! AccountOperationFailed(error)
         case Right(_) => sender ! AccountOperationOK

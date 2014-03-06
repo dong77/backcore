@@ -18,11 +18,11 @@ object CoinexApp extends App {
 
   // ------------------------------------------------------------------------------------------------
   // Cluster-aware Routers Deployment
-  val accountProcessorRouter = system.actorOf(FromConfig.props(Props.empty), name = "ap_router")
-  val accountViewRouter = system.actorOf(FromConfig.props(Props.empty), name = "av_router")
+  val accountProcessor = system.actorOf(FromConfig.props(Props.empty), name = "ap_router")
+  val accountView = system.actorOf(FromConfig.props(Props.empty), name = "av_router")
 
+  // TODO(d): read supported markets from configuration.
   val markets = Seq(BTC ~> RMB)
-
   val marketProcessors = Map(
     markets map { market =>
       market -> system.actorOf(
@@ -65,7 +65,7 @@ object CoinexApp extends App {
   // Market Processors and Views
   markets foreach { market =>
     system.actorOf(ClusterSingletonManager.props(
-      singletonProps = Props(new MarketProcessor(market, accountProcessorRouter.path)),
+      singletonProps = Props(new MarketProcessor(market, accountProcessor.path)),
       singletonName = "singleton",
       terminationMessage = PoisonPill,
       role = Some("mp_" + market)),
@@ -76,7 +76,9 @@ object CoinexApp extends App {
     }
   }
 
-  Thread.sleep(10000) // give time for event replay
+  val sleep = config.getInt("coinex.app-snap-seconds")
+  println("sleeping for " + sleep + " seconds...")
+  Thread.sleep(sleep * 1000) // give time for event replay
 
   // ------------------------------------------------------------------------------------------------
   // Front-end Deployment
