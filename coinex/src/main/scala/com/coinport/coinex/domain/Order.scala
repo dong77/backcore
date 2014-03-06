@@ -8,7 +8,7 @@
 
 package com.coinport.coinex.domain
 
-case class OrderData(id: Long, quantity: Double, price: Double = 0)
+case class OrderData(id: Long, quantity: BigDecimal, price: BigDecimal = 0, userId: Long = 0)
 
 case class Order(side: MarketSide, data: OrderData)
 

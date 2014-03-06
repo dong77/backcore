@@ -34,7 +34,7 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
     var txs = List.empty[Transaction]
 
     // We extract common logics into an inner method for better readability.
-    def foundMatching(makerOrder: OrderData, actualTakerPrice: Double) {
+    def foundMatching(makerOrder: OrderData, actualTakerPrice: BigDecimal) {
       val actualMakerPrice = 1 / actualTakerPrice
       if (remainingTakerQuantity >= makerOrder.quantity * actualMakerPrice) {
         // new taker order is not fully executed but maker order is.
@@ -56,6 +56,7 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
     }
 
     while (continue && remainingTakerQuantity > 0) {
+      println("remaining: " + remainingTakerQuantity)
       makerMpos.headOption match {
         // new LPO to match existing MPOs
         case Some(makerOrder) if takerOrder.price > 0 =>

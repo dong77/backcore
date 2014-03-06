@@ -7,7 +7,7 @@
  */
 
 package com.coinport.coinex.domain
-case class Transfer(orderId: Long, currency: Currency, quantity: Double, fullyExecuted: Boolean)
+case class Transfer(orderId: Long, currency: Currency, quantity: BigDecimal, fullyExecuted: Boolean)
 
 case class Transaction(taker: Transfer, maker: Transfer) {
   lazy val takerPrice = maker.quantity / taker.quantity

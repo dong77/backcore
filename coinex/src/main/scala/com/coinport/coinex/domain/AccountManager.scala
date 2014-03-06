@@ -15,6 +15,69 @@
 
 package com.coinport.coinex.domain
 
-class AccountStateManager extends StateManager[AccountState] {
+
+
+class AccountManager extends StateManager[AccountState] {
   initWithDefaultState(AccountState())
+
+  def depositCash(userId: Long, currency: Currency, amount: BigDecimal) =
+    updateCashAccount(userId, currency, amount) {
+      ca => None
+    } {
+      ca => ca.copy(available = ca.available + amount)
+    }
+
+  def lockCashForWithdrawal(userId: Long, currency: Currency, amount: BigDecimal) =
+    updateCashAccount(userId, currency, amount) {
+      ca => Some(ca.available)
+    } {
+      ca => ca.copy(available = ca.available - amount, pendingWithdrawal = ca.pendingWithdrawal + amount)
+    }
+
+  def unlockCashForWithdrawal(userId: Long, currency: Currency, amount: BigDecimal) =
+    updateCashAccount(userId, currency, amount) {
+      ca => Some(ca.pendingWithdrawal)
+    } {
+      ca => ca.copy(available = ca.available + amount, pendingWithdrawal = ca.pendingWithdrawal - amount)
+    }
+
+  def confirmCashWithdrawal(userId: Long, currency: Currency, amount: BigDecimal) =
+    updateCashAccount(userId, currency, amount) {
+      ca => None
+    } {
+      ca => ca.copy(pendingWithdrawal = ca.pendingWithdrawal - amount)
+    }
+
+  def lockCash(userId: Long, currency: Currency, amount: BigDecimal) =
+    updateCashAccount(userId, currency, amount) {
+      ca => Some(ca.available)
+    } {
+      ca => ca.copy(available = ca.available - amount, locked = ca.locked + amount)
+    }
+
+  def unlockCash(userId: Long, currency: Currency, amount: BigDecimal) =
+    updateCashAccount(userId, currency, amount) {
+      ca => Some(ca.locked)
+    } {
+      ca => ca.copy(locked = ca.locked - amount, available = ca.available + amount)
+    }
+
+  private def updateCashAccount(
+    userId: Long,
+    currency: Currency,
+    amount: BigDecimal)(source: CashAccount => Option[BigDecimal])(update: CashAccount => CashAccount): Either[AccountOperationError, CashAccount] = {
+    var result: Either[AccountOperationError, CashAccount] = Left(InvalidAmount)
+    if (amount > 0) state = state.adjust(userId, currency) { ca =>
+      source(ca) match {
+        case Some(s) if s < amount =>
+          result = Left(InsuffcientFund)
+          None
+        case _ =>
+          val updated = update(ca)
+          result = Right(updated)
+          Some(updated)
+      }
+    }
+    result
+  }
 }
