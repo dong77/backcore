@@ -25,8 +25,6 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   private val bigDecimalScale = 10
   private val bigDecimalRoundingMode = scala.math.BigDecimal.RoundingMode.HALF_EVEN
 
-  def scale(v: BigDecimal) = v.setScale(bigDecimalScale, bigDecimalRoundingMode)
-
   def addOrder(order: Order): List[Transaction] = {
     checkOrder(order)
     val (takerSide, makerSide) = (order.side, order.side.reverse)
@@ -43,27 +41,36 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
     var txs = List.empty[Transaction]
 
     // We extract common logics into an inner method for better readability.
-    def foundMatching(makerOrder: OrderData, actualTakerPrice: BigDecimal) {
-      //the actual maker price is: 1 / actualTakerPrice
-      if (remainingTakerQuantity >= makerOrder.quantity / actualTakerPrice) {
+    def foundMatching(makerOrder: OrderData, actualTakerPrice: Either[BigDecimal /*multiply*/ , BigDecimal /*divide*/ ]) {
+      def convert(amount: BigDecimal, multiply: Boolean) = {
+        val total = actualTakerPrice match {
+          case Left(v) => if (multiply) amount * v else amount / v
+          case Right(v) => if (multiply) amount / v else amount * v
+        }
+        total.setScale(bigDecimalScale, bigDecimalRoundingMode)
+      }
+
+      val txAmount = convert(makerOrder.quantity, false)
+      if (remainingTakerQuantity >= txAmount) {
         // new taker order is not fully executed but maker order is.
-        remainingTakerQuantity = scale(remainingTakerQuantity - makerOrder.quantity / actualTakerPrice)
+        remainingTakerQuantity -= txAmount
 
         state = state.removeOrder(makerOrder.id)
         if (collectTxs) {
           txs ::= Transaction(
-            Transfer(takerOrder.id, takerSide.outCurrency, scale(makerOrder.quantity / actualTakerPrice), remainingTakerQuantity == 0),
+            Transfer(takerOrder.id, takerSide.outCurrency, txAmount, remainingTakerQuantity == 0),
             Transfer(makerOrder.id, makerSide.outCurrency, makerOrder.quantity, true))
         }
 
       } else {
         // new taker order is fully executed but maker order is not.
-        val updatedMakerOrder = Order(makerSide, makerOrder.copy(quantity = scale(makerOrder.quantity - remainingTakerQuantity * actualTakerPrice)))
+        val txAmount = convert(remainingTakerQuantity, true)
+        val updatedMakerOrder = Order(makerSide, makerOrder.copy(quantity = makerOrder.quantity - txAmount))
         state = state.addOrder(updatedMakerOrder)
         if (collectTxs) {
           txs ::= Transaction(
             Transfer(takerOrder.id, takerSide.outCurrency, remainingTakerQuantity, true),
-            Transfer(makerOrder.id, makerSide.outCurrency, scale(remainingTakerQuantity * actualTakerPrice), false))
+            Transfer(makerOrder.id, makerSide.outCurrency, txAmount, false))
         }
         remainingTakerQuantity = 0
       }
@@ -73,13 +80,13 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
       makerMpos.headOption match {
         // new LPO to match existing MPOs
         case Some(makerOrder) if takerOrder.price > 0 =>
-          foundMatching(makerOrder, actualTakerPrice = takerOrder.price)
+          foundMatching(makerOrder, Left(takerOrder.price))
 
         case _ =>
           makerLpos.headOption match {
             // new LPO or MPO to match existing LPOs
             case Some(makerOrder) if makerOrder.price * takerOrder.price <= 1 =>
-              foundMatching(makerOrder, actualTakerPrice = 1 / makerOrder.price)
+              foundMatching(makerOrder, Right(makerOrder.price))
 
             case _ =>
               continue = false

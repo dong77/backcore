@@ -367,7 +367,7 @@ class MarketManagerSpec extends Specification {
       val mm = new MarketManager(BTC ~> RMB)
       mm.disableCollectingTransactions()
 
-      val roof = 1000
+      val roof = 10000
       val s = System.currentTimeMillis()
       (1 to roof) foreach { i => mm.addOrder(Order(makerSide, OrderData(id = i, price = 1.0 / BigDecimal(i), quantity = i))) }
       val s2 = System.currentTimeMillis()
