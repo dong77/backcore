@@ -10,20 +10,25 @@ class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) e
   val manager = new MarketManager(marketSide)
 
   override val receiveMessage: Receive = {
+    // ------------------------------------------------------------------------------------------------
+    // Snapshots
     case SnapshotOffer(_, snapshot) =>
       manager.reset(snapshot.asInstanceOf[MarketState])
 
-    case SubmitOrder(order: Order) =>
-      val txs = manager.addOrder(order)
-      if (txs.nonEmpty) deliver(TransactionsCreated(txs), accountProcessorPath)
-
-    case OrdersTriggered(orders) =>
-      val txs = orders map (order => manager.addOrder(order))
-      if (txs.nonEmpty) deliver(TransactionsCreated(txs.flatten), accountProcessorPath)
-
-    case CancelOrder(orderId) =>
+    // ------------------------------------------------------------------------------------------------
+    // Commands
+    case DoCancelOrder(orderId) =>
       manager.removeOrder(orderId) foreach { order =>
         deliver(OrderCancelled(order), accountProcessorPath)
       }
+
+    // ------------------------------------------------------------------------------------------------
+    // Events
+    case OrderSubmitted(order: Order) =>
+      val txs = manager.addOrder(order)
+      if (txs.nonEmpty) {
+        deliver(TransactionsCreated(txs), accountProcessorPath)
+      }
+      sender ! OrderSubmissionOK(order, txs)
   }
 }

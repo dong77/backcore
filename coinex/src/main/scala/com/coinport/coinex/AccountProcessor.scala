@@ -11,39 +11,46 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends comm
   val manager = new AccountManager()
 
   override val receiveMessage: Receive = {
+    // ------------------------------------------------------------------------------------------------
+    // Snapshots
     case SnapshotOffer(_, _) =>
 
-    case DepositCash(userId, currency, amount) =>
+    // ------------------------------------------------------------------------------------------------
+    // Commands
+    case DoDepositCash(userId, currency, amount) =>
       manager.depositCash(userId, currency, amount) match {
         case Left(error) => sender ! AccountOperationFailed(error)
         case Right(_) => sender ! AccountOperationOK
       }
 
-    case RequestCashWithdrawal(userId, currency, amount) =>
+    case DoRequestCashWithdrawal(userId, currency, amount) =>
       manager.lockCashForWithdrawal(userId, currency, amount) match {
         case Left(error) => sender ! AccountOperationFailed(error)
         case Right(_) => sender ! AccountOperationOK
       }
 
-    case ConfirmCashWithdrawalSuccess(userId, currency, amount) =>
+    case DoConfirmCashWithdrawalSuccess(userId, currency, amount) =>
       manager.confirmCashWithdrawal(userId, currency, amount) match {
         case Left(error) => sender ! AccountOperationFailed(error)
         case Right(_) => sender ! AccountOperationOK
       }
 
-    case ConfirmCashWithdrawalFailed(userId, currency, amount) =>
+    case DoConfirmCashWithdrawalFailed(userId, currency, amount) =>
       manager.unlockCashForWithdrawal(userId, currency, amount) match {
         case Left(error) => sender ! AccountOperationFailed(error)
         case Right(_) => sender ! AccountOperationOK
       }
 
-    case SubmitOrder(order @ Order(side, data @ OrderData(id, quantity, price, userId))) =>
+    case DoSubmitOrder(order @ Order(side, data @ OrderData(id, quantity, price, userId))) =>
       manager.lockCash(userId, side.outCurrency, quantity) match {
         case Left(error) => sender ! AccountOperationFailed(error)
         case Right(_) =>
-
           deliver(OrderSubmitted(order), getProcessorRef(order.side))
       }
+
+    // ------------------------------------------------------------------------------------------------
+    // Events
+    case OrderCancelled(order: Order) =>
   }
 
   private def getProcessorRef(side: MarketSide): ActorPath = {
