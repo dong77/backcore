@@ -1,18 +1,13 @@
 package com.coinport.coinex
 
-import akka.cluster._
-import akka.actor._
 import com.typesafe.config.ConfigFactory
-import akka.cluster.ClusterEvent._
-import akka.routing.FromConfig
-import scala.concurrent.duration._
-import akka.contrib.pattern.ClusterSingletonManager
-import com.coinport.coinex.rest.DemoServiceActor
-import akka.io.IO
-import spray.can.Http
 import com.coinport.coinex.domain._
+import akka.actor._
+import akka.cluster._
 import akka.cluster.routing._
-import akka.routing.ConsistentHashingGroup
+import akka.routing._
+import akka.contrib.pattern._
+import akka.persistence.Persistent
 
 object CoinexApp extends App {
   val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0)).
@@ -21,7 +16,7 @@ object CoinexApp extends App {
   implicit val system = ActorSystem("coinex", config)
   val cluster = Cluster(system)
 
-  // cluster aware routers
+  // cluster-aware routers
   val accountProcessorRouter = system.actorOf(FromConfig.props(Props.empty), name = "ap_router")
   val accountViewRouter = system.actorOf(FromConfig.props(Props.empty), name = "av_router")
 
@@ -77,8 +72,9 @@ object CoinexApp extends App {
     }
   }
 
-  Thread.sleep(5000)
+  Thread.sleep(10000)
+  println("============= Akka Node Ready =============\n\n")
 
-  val service = system.actorOf(Props[DemoServiceActor], "rest")
-  IO(Http) ! Http.Bind(service, "localhost", port = config.getInt("coinex.rest-http-port"))
+  accountProcessorRouter ! Persistent(DoDepositCash(12L, RMB, 10000))
+  accountProcessorRouter ! "save"
 }

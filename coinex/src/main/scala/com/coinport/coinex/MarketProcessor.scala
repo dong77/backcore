@@ -2,6 +2,7 @@ package com.coinport.coinex
 
 import akka.actor.ActorPath
 import akka.persistence.SnapshotOffer
+import akka.persistence._
 import domain._
 
 class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) extends common.ExtendedProcessor {
@@ -12,7 +13,14 @@ class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) e
   override val receiveMessage: Receive = {
     // ------------------------------------------------------------------------------------------------
     // Snapshots
-    case SnapshotOffer(_, snapshot) =>
+    case SaveSnapshotNow => saveSnapshot(manager())
+
+    case SaveSnapshotSuccess(metadata) =>
+
+    case SaveSnapshotFailure(metadata, reason) =>
+
+    case SnapshotOffer(meta, snapshot) =>
+      log.info("Loaded snapshot {}", meta)
       manager.reset(snapshot.asInstanceOf[MarketState])
 
     // ------------------------------------------------------------------------------------------------

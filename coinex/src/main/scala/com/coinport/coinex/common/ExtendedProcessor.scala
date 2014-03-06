@@ -10,6 +10,7 @@ import akka.actor._
 trait ExtendedProcessor extends Processor with ActorLogging {
   lazy val channel = context.actorOf(PersistentChannel.props(processorId + "_c"), "channel")
   var autoConfirmChannelMessage = true
+  var sequenceNr = -1L
 
   override def preStart() = {
     log.info("============ processorId: {}, channel: {}", processorId, channel.path)
@@ -18,14 +19,17 @@ trait ExtendedProcessor extends Processor with ActorLogging {
 
   def receive = {
     case p @ ConfirmablePersistent(payload, seq, _) =>
+      sequenceNr = seq
       autoConfirmChannelMessage = true
       if (receiveMessage.isDefinedAt(p)) receiveMessage(p)
       if (autoConfirmChannelMessage) p.confirm()
 
-    case p: Persistent =>
-      if (receiveMessage.isDefinedAt(p)) receiveMessage(p)
+    case p @ Persistent(payload, seq) =>
+      sequenceNr = seq
+      if (receiveMessage.isDefinedAt(payload)) receiveMessage(payload)
 
     case msg =>
+      sequenceNr = -1L
       if (receiveMessage.isDefinedAt(msg)) receiveMessage(msg)
   }
 

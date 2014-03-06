@@ -16,7 +16,8 @@ case object InvalidAmount extends AccountOperationError
 
 
 // ------------------------------------------------------------------------------------------------
-// Non-persistent messages
+// Non-persistent message
+case object SaveSnapshotNow
 case class AccountOperationOK
 case class AccountOperationFailed(error: AccountOperationError)
 case class OrderSubmissionOK(order: Order, txs: Seq[Transaction])

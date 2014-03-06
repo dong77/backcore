@@ -17,7 +17,7 @@ package com.coinport.coinex.domain
 
 private[domain] trait StateManager[T] {
   protected var defaultState: T = null.asInstanceOf[T]
-  var state: T = null.asInstanceOf[T]
+  protected var state: T = null.asInstanceOf[T]
 
   def initWithDefaultState(defaultState: T) = {
     this.defaultState = defaultState

@@ -2,20 +2,10 @@
 
 这个小程序demo了Akka的Persistence模块是如何做到EventSourcing的。
 
-首先，你必须编译2个依赖包，一个是spray.io 1.3版本，用来构建RESTful API:
+第一个包，它把所有event持久化到本地mongodb中。
 
 ```
-git clone https://github.com/spray/spray.git
-cd spray
-git checkout release/1.3
-sbt publish-local
-```
-
-
-然后是第二个依赖包，它把所有event持久化到本地mongodb中。
-
-```
-git clone https://github.com/akka-persistence-mongo.git
+git https://github.com/ddevore/akka-persistence-mongo.git
 cd akka-persistence-mongo
 sbt publish-local
 cd ..

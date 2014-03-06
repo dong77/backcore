@@ -8,10 +8,11 @@ version := "1.0"
 scalaVersion := "2.10.3"
 
 resolvers ++= Seq(
-    Resolver.sonatypeRepo("snapshots"),
-    "spray repo" at "http://repo.spray.io",
-    "spray nightlies repo" at "http://nightlies.spray.io"
+    Resolver.sonatypeRepo("snapshots")
 )
+
+// https://github.com/scullxbones/akka-persistence-mongo/
+// 
 
 libraryDependencies ++= {
   val akkaVersion = "2.3.0-RC1"
@@ -24,20 +25,10 @@ libraryDependencies ++= {
     "com.typesafe.akka"        %% "akka-remote"                      % akkaVersion,
     "com.typesafe.akka"        %% "akka-contrib"                     % akkaVersion,
     "com.typesafe.akka"        %% "akka-persistence-experimental"    % akkaVersion,
-    "com.github.ddevore"       %% "akka-persistence-mongo-casbah"    % "0.3-SNAPSHOT",
-    "io.spray"                 %  "spray-io"                         % sprayVersion,
-    "io.spray"                 %  "spray-can"                        % sprayVersion,
-    "io.spray"                 %  "spray-routing"                    % sprayVersion,
-    "io.spray"                 %  "spray-http"                       % sprayVersion,
-    "io.spray"                 %  "spray-httpx"                      % sprayVersion,
-    "io.spray"                 %  "spray-client"                     % sprayVersion,
-    "io.spray"                 %  "spray-caching"                    % sprayVersion,
-    "io.spray"                 %  "spray-servlet"                    % sprayVersion,
-    "io.spray"                 %  "spray-util"                       % sprayVersion,
     "io.spray"                 %% "spray-json"                       % "1.2.5",
-    "org.fusesource.leveldbjni"  %  "leveldbjni-all"                 % "1.7",
-    // "com.google.protobuf"     %  "protobuf-java"                  % "2.5.0",
-    "org.specs2"                 %% "specs2"                         % "2.3.8" % "test"
+    "org.fusesource.leveldbjni"   %  "leveldbjni-all"                % "1.7",
+    "com.github.ddevore" %%       "akka-persistence-mongo-casbah"    % "0.4-SNAPSHOT",
+    "org.specs2"                  %% "specs2"                        % "2.3.8" % "test"
   )
 }
 
