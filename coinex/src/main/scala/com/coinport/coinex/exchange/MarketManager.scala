@@ -21,69 +21,114 @@ import BuyOrSell._
 import MarketOrLimit._
 
 object MarketManager {
-  var matchCondition = Map.empty[BuyOrSell, (OrderData, OrderData) => Boolean]
-  matchCondition += (BUY -> ((taker: OrderData, maker: OrderData) => taker.price >= maker.price))
-  matchCondition += (SELL -> ((taker: OrderData, maker: OrderData) => taker.price <= maker.price))
+    var matchCondition = Map.empty[BuyOrSell, (OrderData, OrderData) => Boolean]
+    matchCondition += (BUY -> ((taker: OrderData, maker: OrderData) => taker.price >= maker.price))
+    matchCondition += (SELL -> ((taker: OrderData, maker: OrderData) => taker.price <= maker.price))
 }
 
 class MarketManager(buySide: MarketSide) extends StateManager[MarketState] {
-  initWithDefaultState(MarketState(buySide))
+    initWithDefaultState(MarketState(buySide))
 
-  // TODO(c) support market order
-  def addOrder(order: Order): List[Transaction] = {
-    checkOrder(order)
-
-    val takerOrder = order.data
-    val marketOrLimit = takerOrder.marketOrLimit
-    val (takerBuyOrSell, makerBuyOrSell) =
-      (takerOrder.buyOrSell, BuyOrSell.reverse(takerOrder.buyOrSell))
-
-    def makerLpos = state.getOrderPool(marketOrLimit, makerBuyOrSell)
-    var (remainingTakerQuantity, continue) = (takerOrder.quantity, true)
-
-    var txs = List.empty[Transaction]
-    val checker = MarketManager.matchCondition.get(takerBuyOrSell).get
-
-    while (remainingTakerQuantity > 0 && continue) {
-      makerLpos.headOption match {
-        case Some(makerOrder) =>
-          if (!checker(takerOrder, makerOrder)) {
-            continue = false
-            if (remainingTakerQuantity > 0)
-              state = state.addOrder(order.copy(data = takerOrder.copy(quantity = remainingTakerQuantity)))
-          } else {
-            val (buyOrder, sellOrder) = (if (takerBuyOrSell == BUY) (takerOrder, makerOrder) else (makerOrder, takerOrder))
-            var remainingMakerQuantity = makerOrder.quantity
-            val tradeQuantity = java.lang.Math.min(remainingTakerQuantity, remainingMakerQuantity)
-            remainingTakerQuantity -= tradeQuantity
-            remainingMakerQuantity -= tradeQuantity
-
-            val tradeAmount = tradeQuantity * makerOrder.price
-
-            txs ::= Transaction.newTransaction(
-              Transfer(sellOrder.uid, buyOrder.uid, order.side.inCurrency, tradeQuantity),
-              Transfer(buyOrder.uid, sellOrder.uid, order.side.outCurrency, tradeAmount),
-              makerOrder.price, buyOrder.id, sellOrder.id)
-            if (remainingMakerQuantity == 0) {
-              state = state.removeOrder(makerOrder.id)
-            } else {
-              state = state.addOrder(Order(order.side, makerOrder.copy(quantity = remainingMakerQuantity)))
-            }
-          }
-        case _ =>
-          if (remainingTakerQuantity > 0)
-            state = state.addOrder(order.copy(data = takerOrder.copy(quantity = remainingTakerQuantity)))
-          continue = false
-      }
+    private def getRemaining(order: OrderData, another: OrderData, price: Long) = {
+        (order.marketOrLimit, order.buyOrSell) match {
+            case (MARKET, BUY) =>
+                order.copy(quantity = order.amount / price)
+            case (_, _) =>
+                order
+        }
     }
-    txs
-  }
 
-  def removeOrder(id: Long): Option[Order] = {
-    // TODO
-    None
-  }
-  def checkOrder(order: Order) {
-    assert(state.marketSide == order.side)
-  }
+    private def trade(order: OrderData, tradeQuantity: Long, price: Long) = {
+        (order.marketOrLimit, order.buyOrSell) match {
+            case (MARKET, BUY) =>
+                order.copy(quantity = order.quantity - tradeQuantity, amount = order.amount - tradeQuantity * price)
+            case (_, _) =>
+                order.copy(quantity = order.quantity - tradeQuantity)
+        }
+    }
+
+    def addOrder(order: Order): List[Transaction] = {
+        checkOrder(order)
+
+        var remainingTakerOrder = modifyIfNeed(order.data)
+        val (takerBuyOrSell, makerBuyOrSell) =
+            (remainingTakerOrder.buyOrSell, BuyOrSell.reverse(remainingTakerOrder.buyOrSell))
+
+        def makerLpos = state.getOrderPool(LIMIT, makerBuyOrSell)
+        def makerMpos = state.getOrderPool(MARKET, makerBuyOrSell)
+        var continue = true
+
+        var txs = List.empty[Transaction]
+        val checker = MarketManager.matchCondition.get(takerBuyOrSell).get
+
+        def matching(makerOrder: OrderData, actualPrice: Long) {
+            var remainingMakerOrder = makerOrder
+            if (!checker(remainingTakerOrder, remainingMakerOrder)) {
+                continue = false
+                if (remainingTakerOrder.quantity > 0)
+                    state = state.addOrder(order.copy(data = remainingTakerOrder))
+            } else {
+                remainingTakerOrder = getRemaining(remainingTakerOrder, remainingMakerOrder, actualPrice)
+                remainingMakerOrder = getRemaining(remainingMakerOrder, remainingTakerOrder, actualPrice)
+                val tradeQuantity = java.lang.Math.min(remainingTakerOrder.quantity, remainingMakerOrder.quantity)
+
+                remainingTakerOrder = trade(remainingTakerOrder, tradeQuantity, actualPrice)
+                remainingMakerOrder = trade(remainingMakerOrder, tradeQuantity, actualPrice)
+
+                val (buyOrder, sellOrder) = (if (takerBuyOrSell == BUY)
+                    (remainingTakerOrder, remainingMakerOrder) else (remainingMakerOrder, remainingTakerOrder))
+
+                val tradeAmount = tradeQuantity * actualPrice
+
+                txs ::= Transaction.newTransaction(
+                    Transfer(sellOrder.uid, buyOrder.uid, order.side.inCurrency, tradeQuantity),
+                    Transfer(buyOrder.uid, sellOrder.uid, order.side.outCurrency, tradeAmount),
+                    actualPrice, buyOrder.id, sellOrder.id)
+                if (remainingMakerOrder.quantity > 0) {
+                    state = state.addOrder(Order(order.side, remainingMakerOrder))
+                } else {
+                    state = state.removeOrder(remainingMakerOrder.id)
+                }
+            }
+        }
+
+        while (remainingTakerOrder.quantity > 0 && continue) {
+            makerLpos.headOption match {
+                case Some(makerOrder) => matching(makerOrder, makerOrder.price)
+                case _ =>
+                    // can't exchange between market buy order and market sell order
+                    if (remainingTakerOrder.marketOrLimit == MARKET) {
+                        if (remainingTakerOrder.quantity > 0)
+                            state = state.addOrder(order.copy(data = remainingTakerOrder))
+                        continue = false
+                    } else {
+                        makerMpos.headOption match {
+                            case Some(makerOrder) => matching(makerOrder, remainingTakerOrder.price)
+                            case _ =>
+                            if (remainingTakerOrder.quantity > 0)
+                                state = state.addOrder(order.copy(data = remainingTakerOrder))
+                            continue = false
+                        }
+                    }
+            }
+        }
+        txs
+    }
+
+    def removeOrder(id: Long): Option[Order] = {
+        // TODO
+        None
+    }
+
+    private def checkOrder(order: Order) {
+        assert(state.marketSide == order.side)
+    }
+
+    private def modifyIfNeed(orderData: OrderData) = {
+        if (orderData.marketOrLimit == MARKET)
+            orderData.copy(price = if (orderData.buyOrSell == BUY) Long.MaxValue else Long.MinValue,
+                quantity = if (orderData.buyOrSell == BUY) Long.MaxValue else orderData.quantity)
+        else
+            orderData
+    }
 }

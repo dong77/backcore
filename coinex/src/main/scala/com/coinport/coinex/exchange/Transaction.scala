@@ -9,15 +9,15 @@
 package com.coinport.coinex.exchange
 
 object Transaction {
-  var index = -1L
-  def newTransaction(inCurrencyTrans: Transfer, outCurrencyTrans: Transfer, price: Long,
-    buyOrderId: Long, sellOrderId: Long) = {
-    index += 1
-    Transaction(index, inCurrencyTrans, outCurrencyTrans, price, buyOrderId, sellOrderId, System.currentTimeMillis)
-  }
+    var index = -1L
+    def newTransaction(inCurrencyTrans: Transfer, outCurrencyTrans: Transfer, price: Long,
+        buyOrderId: Long, sellOrderId: Long) = {
+        index += 1
+        Transaction(index, inCurrencyTrans, outCurrencyTrans, price, buyOrderId, sellOrderId, System.currentTimeMillis)
+    }
 }
 
 case class Transfer(outUid: Long, inUid: Long, currency: Currency, quantity: Long)
 
 case class Transaction(id: Long, inCurrencyTrans: Transfer, outCurrencyTrans: Transfer, price: Long,
-  buyOrderId: Long, sellOrderId: Long, timestamp: Long)
+    buyOrderId: Long, sellOrderId: Long, timestamp: Long)
