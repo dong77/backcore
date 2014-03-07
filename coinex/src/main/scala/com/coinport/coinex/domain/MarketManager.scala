@@ -15,6 +15,8 @@
 
 package com.coinport.coinex.domain
 
+import Implicits._
+
 class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   initWithDefaultState(MarketState(headSide))
   private var collectTxs = true
@@ -41,13 +43,14 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
     var txs = List.empty[Transaction]
 
     // We extract common logics into an inner method for better readability.
-    def foundMatching(makerOrder: OrderData, actualTakerPrice: Either[BigDecimal /*multiply*/ , BigDecimal /*divide*/ ]) {
-      def convert(amount: BigDecimal, multiply: Boolean) = {
-        val total = actualTakerPrice match {
-          case Left(v) => if (multiply) amount * v else amount / v
-          case Right(v) => if (multiply) amount / v else amount * v
+    def foundMatching(makerOrder: OrderData, actualTakerPrice: Either[Double /*multiply*/ , Double /*divide*/ ]) {
+      def convert(amount: Double, multiply: Boolean) = {
+        var total = BigDecimal(amount)
+        total = actualTakerPrice match {
+          case Left(v) => if (multiply) total * v else total / v
+          case Right(v) => if (multiply) total / v else total * v
         }
-        total.setScale(bigDecimalScale, bigDecimalRoundingMode)
+        total.setScale(bigDecimalScale, bigDecimalRoundingMode).toDouble
       }
 
       val txAmount = convert(makerOrder.quantity, false)
