@@ -14,9 +14,13 @@ resolvers ++= Seq(
 // https://github.com/scullxbones/akka-persistence-mongo/
 // 
 
+com.twitter.scrooge.ScroogeSBT.newSettings
+
 libraryDependencies ++= {
   val akkaVersion = "2.3.0"
   Seq(
+    "com.twitter"                 %% "scrooge-core"                     % "3.12.3",
+    "org.apache.thrift"           %  "libthrift"                        % "0.8.0",
     "org.scalatest"               %  "scalatest_2.10"                   % "1.9.1" % "test",
     "com.typesafe.akka"           %% "akka-remote"                      % akkaVersion,
     "com.typesafe.akka"           %% "akka-cluster"                     % akkaVersion,
@@ -31,5 +35,3 @@ libraryDependencies ++= {
     "org.specs2"                  %% "specs2"                           % "2.3.8" % "test"
   )
 }
-
-// seq(PB.protobufSettings: _*)

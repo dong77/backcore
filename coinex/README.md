@@ -15,6 +15,15 @@ cd ..
 
 `./mongod`
 
+然后checkout twitter的scrooge：
+
+
+```
+git https://github.com/twitter/scrooge.git
+cd scrooge
+sbt +publish-local
+```
+
 然后checkout这个repo：
 
 ```

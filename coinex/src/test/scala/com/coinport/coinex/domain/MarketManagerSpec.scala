@@ -13,32 +13,52 @@ class MarketManagerSpec extends Specification {
   val takerSide = BTC ~> RMB
   val makerSide = takerSide.reverse
 
-  val market =
-    "MarketManager" should {
-      "allow multiple market-price orders to co-exist" in {
+  "MarketManager" should {
+    "allow multiple market-price orders to co-exist" in {
+      val mm = new MarketManager(BTC ~> RMB)
+
+      val makerData1 = OrderData(id = 1, price = 0, quantity = 100)
+      val maker1 = Order(makerSide, makerData1)
+      mm.addOrder(maker1)
+
+      val makerData2 = OrderData(id = 2, price = 0, quantity = 500)
+      val maker2 = Order(makerSide, makerData2)
+      val txs = mm.addOrder(maker2)
+
+      mm().orderMap mustEqual Map(1L -> maker1, 2 -> maker2)
+      mm().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
+      mm().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+
+      mm().marketPriceOrderPool(makerSide) mustEqual SortedSet(makerData1, makerData2)
+      mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+
+      txs mustEqual Nil
+    }
+
+    "NOT match new market-price taker order with existing market-price maker oders" in {
+      val mm = new MarketManager(BTC ~> RMB)
+      val makerData = OrderData(id = 1, price = 0, quantity = 100)
+      val maker = Order(makerSide, makerData)
+      mm.addOrder(maker)
+
+      val takerData = OrderData(id = 2, price = 0, quantity = 100)
+      val taker = Order(takerSide, takerData)
+      val txs = mm.addOrder(taker)
+
+      mm().orderMap mustEqual Map(1L -> maker, 2 -> taker)
+      mm().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
+      mm().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+
+      mm().marketPriceOrderPool(makerSide) mustEqual SortedSet(makerData)
+      mm().marketPriceOrderPool(takerSide) mustEqual SortedSet(takerData)
+
+      txs mustEqual Nil
+    }
+
+    "match new market-price taker order against existing limit-price maker orders and fully execute both orders " +
+      "if quantity equals" in {
         val mm = new MarketManager(BTC ~> RMB)
-
-        val makerData1 = OrderData(id = 1, price = 0, quantity = 100)
-        val maker1 = Order(makerSide, makerData1)
-        mm.addOrder(maker1)
-
-        val makerData2 = OrderData(id = 2, price = 0, quantity = 500)
-        val maker2 = Order(makerSide, makerData2)
-        val txs = mm.addOrder(maker2)
-
-        mm().orderMap mustEqual Map(1L -> maker1, 2 -> maker2)
-        mm().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-        mm().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-
-        mm().marketPriceOrderPool(makerSide) mustEqual SortedSet(makerData1, makerData2)
-        mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-
-        txs mustEqual Nil
-      }
-
-      "NOT match new market-price taker order with existing market-price maker oders" in {
-        val mm = new MarketManager(BTC ~> RMB)
-        val makerData = OrderData(id = 1, price = 0, quantity = 100)
+        val makerData = OrderData(id = 1, price = 1, quantity = 100)
         val maker = Order(makerSide, makerData)
         mm.addOrder(maker)
 
@@ -46,155 +66,134 @@ class MarketManagerSpec extends Specification {
         val taker = Order(takerSide, takerData)
         val txs = mm.addOrder(taker)
 
-        mm().orderMap mustEqual Map(1L -> maker, 2 -> taker)
+        mm().orderMap.size mustEqual 0
         mm().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
         mm().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
 
-        mm().marketPriceOrderPool(makerSide) mustEqual SortedSet(makerData)
-        mm().marketPriceOrderPool(takerSide) mustEqual SortedSet(takerData)
+        mm().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
+        mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
 
-        txs mustEqual Nil
+        txs mustEqual
+          Transaction(Transfer(2, BTC, 100, true), Transfer(1, RMB, 100, true)) ::
+          Nil
       }
 
-      "match new market-price taker order against existing limit-price maker orders and fully execute both orders " +
-        "if quantity equals" in {
-          val mm = new MarketManager(BTC ~> RMB)
-          val makerData = OrderData(id = 1, price = 1, quantity = 100)
-          val maker = Order(makerSide, makerData)
-          mm.addOrder(maker)
-
-          val takerData = OrderData(id = 2, price = 0, quantity = 100)
-          val taker = Order(takerSide, takerData)
-          val txs = mm.addOrder(taker)
-
-          mm().orderMap.size mustEqual 0
-          mm().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-          mm().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-
-          mm().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-          mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-
-          txs mustEqual
-            Transaction(Transfer(2, BTC, 100, true), Transfer(1, RMB, 100, true)) ::
-            Nil
-        }
-
-      "match new market-price taker order against existing limit-price maker orders and fully execute taker orders " +
-        "if its quantity is smaller" in {
-          val mm = new MarketManager(BTC ~> RMB)
-          val makerData = OrderData(id = 1, price = 1, quantity = 100)
-          val maker = Order(makerSide, makerData)
-          mm.addOrder(maker)
-
-          val takerData = OrderData(id = 2, price = 0, quantity = 10)
-          val taker = Order(takerSide, takerData)
-          val txs = mm.addOrder(taker)
-
-          mm().orderMap mustEqual Map(1 -> maker.copy(data = makerData.copy(quantity = 90)))
-          mm().limitPriceOrderPool(makerSide) mustEqual SortedSet(makerData.copy(quantity = 90))
-          mm().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-
-          mm().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-          mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-
-          txs mustEqual
-            Transaction(Transfer(2, BTC, 10, true), Transfer(1, RMB, 10, false)) ::
-            Nil
-        }
-
-      "match new market-price taker order against existing limit-price maker orders and fully execute maker orders " +
-        "if its quantity is smaller" in {
-          val mm = new MarketManager(BTC ~> RMB)
-          val makerData = OrderData(id = 1, price = 1, quantity = 10)
-          val maker = Order(makerSide, makerData)
-          mm.addOrder(maker)
-
-          val takerData = OrderData(id = 2, price = 0, quantity = 100)
-          val taker = Order(takerSide, takerData)
-          val txs = mm.addOrder(taker)
-
-          mm().orderMap mustEqual Map(2 -> taker.copy(data = takerData.copy(quantity = 90)))
-
-          mm().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-          mm().marketPriceOrderPool(takerSide) mustEqual SortedSet(takerData.copy(quantity = 90))
-
-          mm().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-          mm().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-
-          txs mustEqual
-            Transaction(Transfer(2, BTC, 10, false), Transfer(1, RMB, 10, true)) ::
-            Nil
-        }
-
-      "match new market-price taker order against multiple existing limit-price maker orders and fully execute " +
-        "taker order if its quantity is smaller" in {
-          val mm = new MarketManager(BTC ~> RMB)
-          val makerData1 = OrderData(id = 1, price = 1, quantity = 100) // lower price
-          val maker1 = Order(makerSide, makerData1)
-          mm.addOrder(maker1)
-
-          val makerData2 = OrderData(id = 2, price = 0.5, quantity = 100) // higher price
-          val maker2 = Order(makerSide, makerData2)
-          mm.addOrder(maker2)
-
-          val takerData = OrderData(id = 10, price = 0, quantity = 120)
-          val taker = Order(takerSide, takerData)
-          val txs = mm.addOrder(taker)
-
-          mm().orderMap mustEqual Map(1 -> maker1.copy(data = makerData1.copy(quantity = 30))) //  100 x 0.5 + 100 x 1 - 120 = 30
-          mm().limitPriceOrderPool(makerSide) mustEqual SortedSet(makerData1.copy(quantity = 30))
-          mm().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-
-          mm().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-          mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-
-          txs mustEqual
-            Transaction(Transfer(10, BTC, 70, true), Transfer(1, RMB, 70, false)) ::
-            Transaction(Transfer(10, BTC, 50, false), Transfer(2, RMB, 100, true)) ::
-            Nil
-        }
-
-      "match new market-price taker order against multiple existing limit-price maker orders and fully execute " +
-        "all maker orders if their combined quantity is smaller" in {
-          val mm = new MarketManager(BTC ~> RMB)
-          val makerData1 = OrderData(id = 1, price = 1, quantity = 20) // lower price
-          val maker1 = Order(makerSide, makerData1)
-          mm.addOrder(maker1)
-
-          val makerData2 = OrderData(id = 2, price = 0.5, quantity = 100) // higher price
-          val maker2 = Order(makerSide, makerData2)
-          mm.addOrder(maker2)
-
-          val takerData = OrderData(id = 10, price = 0, quantity = 120)
-          val taker = Order(takerSide, takerData)
-          val txs = mm.addOrder(taker)
-
-          mm().orderMap mustEqual Map(10 -> taker.copy(data = takerData.copy(quantity = 50))) //  120 - 100 x 0.5 + 20 x 1 - 120 = 50
-          mm().marketPriceOrderPool(takerSide) mustEqual SortedSet(takerData.copy(quantity = 50))
-          mm().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-
-          mm().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-          mm().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-
-          txs mustEqual
-            Transaction(Transfer(10, BTC, 20, false), Transfer(1, RMB, 20, true)) ::
-            Transaction(Transfer(10, BTC, 50, false), Transfer(2, RMB, 100, true)) ::
-            Nil
-        }
-
-      "match new market-price taker order against as many existing limit-price by order as necessary" in {
+    "match new market-price taker order against existing limit-price maker orders and fully execute taker orders " +
+      "if its quantity is smaller" in {
         val mm = new MarketManager(BTC ~> RMB)
+        val makerData = OrderData(id = 1, price = 1, quantity = 100)
+        val maker = Order(makerSide, makerData)
+        mm.addOrder(maker)
 
-        val roof = 1000 * 1000
-        (1 to roof) foreach { i => mm.addOrder(Order(makerSide, OrderData(id = i, price = 1.0 / i, quantity = i))) }
+        val takerData = OrderData(id = 2, price = 0, quantity = 10)
+        val taker = Order(takerSide, takerData)
+        val txs = mm.addOrder(taker)
 
-        val txs = mm.addOrder(Order(takerSide, OrderData(id = roof + 1, price = 0, quantity = roof + 1)))
+        mm().orderMap mustEqual Map(1 -> maker.copy(data = makerData.copy(quantity = 90)))
+        mm().limitPriceOrderPool(makerSide) mustEqual SortedSet(makerData.copy(quantity = 90))
+        mm().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
 
-        mm().orderMap mustEqual Map(roof + 1 -> Order(takerSide, OrderData(id = roof + 1, price = 0, quantity = 1)))
+        mm().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
+        mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
 
-        txs.size mustEqual roof
+        txs mustEqual
+          Transaction(Transfer(2, BTC, 10, true), Transfer(1, RMB, 10, false)) ::
+          Nil
       }
+
+    "match new market-price taker order against existing limit-price maker orders and fully execute maker orders " +
+      "if its quantity is smaller" in {
+        val mm = new MarketManager(BTC ~> RMB)
+        val makerData = OrderData(id = 1, price = 1, quantity = 10)
+        val maker = Order(makerSide, makerData)
+        mm.addOrder(maker)
+
+        val takerData = OrderData(id = 2, price = 0, quantity = 100)
+        val taker = Order(takerSide, takerData)
+        val txs = mm.addOrder(taker)
+
+        mm().orderMap mustEqual Map(2 -> taker.copy(data = takerData.copy(quantity = 90)))
+
+        mm().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
+        mm().marketPriceOrderPool(takerSide) mustEqual SortedSet(takerData.copy(quantity = 90))
+
+        mm().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
+        mm().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+
+        txs mustEqual
+          Transaction(Transfer(2, BTC, 10, false), Transfer(1, RMB, 10, true)) ::
+          Nil
+      }
+
+    "match new market-price taker order against multiple existing limit-price maker orders and fully execute " +
+      "taker order if its quantity is smaller" in {
+        val mm = new MarketManager(BTC ~> RMB)
+        val makerData1 = OrderData(id = 1, price = 1, quantity = 100) // lower price
+        val maker1 = Order(makerSide, makerData1)
+        mm.addOrder(maker1)
+
+        val makerData2 = OrderData(id = 2, price = 0.5, quantity = 100) // higher price
+        val maker2 = Order(makerSide, makerData2)
+        mm.addOrder(maker2)
+
+        val takerData = OrderData(id = 10, price = 0, quantity = 120)
+        val taker = Order(takerSide, takerData)
+        val txs = mm.addOrder(taker)
+
+        mm().orderMap mustEqual Map(1 -> maker1.copy(data = makerData1.copy(quantity = 30))) //  100 x 0.5 + 100 x 1 - 120 = 30
+        mm().limitPriceOrderPool(makerSide) mustEqual SortedSet(makerData1.copy(quantity = 30))
+        mm().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+
+        mm().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
+        mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+
+        txs mustEqual
+          Transaction(Transfer(10, BTC, 70, true), Transfer(1, RMB, 70, false)) ::
+          Transaction(Transfer(10, BTC, 50, false), Transfer(2, RMB, 100, true)) ::
+          Nil
+      }
+
+    "match new market-price taker order against multiple existing limit-price maker orders and fully execute " +
+      "all maker orders if their combined quantity is smaller" in {
+        val mm = new MarketManager(BTC ~> RMB)
+        val makerData1 = OrderData(id = 1, price = 1, quantity = 20) // lower price
+        val maker1 = Order(makerSide, makerData1)
+        mm.addOrder(maker1)
+
+        val makerData2 = OrderData(id = 2, price = 0.5, quantity = 100) // higher price
+        val maker2 = Order(makerSide, makerData2)
+        mm.addOrder(maker2)
+
+        val takerData = OrderData(id = 10, price = 0, quantity = 120)
+        val taker = Order(takerSide, takerData)
+        val txs = mm.addOrder(taker)
+
+        mm().orderMap mustEqual Map(10 -> taker.copy(data = takerData.copy(quantity = 50))) //  120 - 100 x 0.5 + 20 x 1 - 120 = 50
+        mm().marketPriceOrderPool(takerSide) mustEqual SortedSet(takerData.copy(quantity = 50))
+        mm().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
+
+        mm().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
+        mm().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+
+        txs mustEqual
+          Transaction(Transfer(10, BTC, 20, false), Transfer(1, RMB, 20, true)) ::
+          Transaction(Transfer(10, BTC, 50, false), Transfer(2, RMB, 100, true)) ::
+          Nil
+      }
+
+    "match new market-price taker order against as many existing limit-price by order as necessary" in {
+      val mm = new MarketManager(BTC ~> RMB)
+
+      val roof = 1000 * 10
+      (1 to roof) foreach { i => mm.addOrder(Order(makerSide, OrderData(id = i, price = 1.0 / i, quantity = i))) }
+
+      val txs = mm.addOrder(Order(takerSide, OrderData(id = roof + 1, price = 0, quantity = roof + 1)))
+
+      mm().orderMap mustEqual Map(roof + 1 -> Order(takerSide, OrderData(id = roof + 1, price = 0, quantity = 1)))
+
+      txs.size mustEqual roof
     }
+  }
 
   "MarketManager" should {
     "match new limit-price taker order against the highest limit-price maker order" in {
