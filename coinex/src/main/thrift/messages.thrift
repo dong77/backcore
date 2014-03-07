@@ -25,7 +25,7 @@ struct MarketSide {
 
 struct OrderData {
     1: i64 id
-    2: double quantity
+    2: i64 quantity
     3: double price = 0
     4: i64 userId = 0
 }
@@ -35,9 +35,9 @@ struct Order {
     2: OrderData data
 }
 
-struct Transfer{1: i64 orderId, 2: Currency currency, 3: double quantity, 4: bool fullyExecuted}
+struct Transfer{1: i64 orderId, 2: Currency currency, 3: i64 quantity, 4: bool fullyExecuted}
 struct Transaction{1: Transfer taker, 2: Transfer maker}
-struct CashAccount{1: Currency currency, 2: double available, 3: double locked, 4: double pendingWithdrawal}
+struct CashAccount{1: Currency currency, 2: i64 available, 3: i64 locked, 4: i64 pendingWithdrawal}
 
 
 enum AccountOperationCode {

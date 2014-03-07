@@ -19,42 +19,42 @@ import AccountOperationCode._
 class AccountManager extends StateManager[AccountState] {
   initWithDefaultState(AccountState())
 
-  def depositCash(userId: Long, currency: Currency, amount: Double) =
+  def depositCash(userId: Long, currency: Currency, amount: Long) =
     updateCashAccount(userId, currency, amount) {
       ca => None
     } {
       ca => ca.copy(available = ca.available + amount)
     }
 
-  def lockCashForWithdrawal(userId: Long, currency: Currency, amount: Double) =
+  def lockCashForWithdrawal(userId: Long, currency: Currency, amount: Long) =
     updateCashAccount(userId, currency, amount) {
       ca => Some(ca.available)
     } {
       ca => ca.copy(available = ca.available - amount, pendingWithdrawal = ca.pendingWithdrawal + amount)
     }
 
-  def unlockCashForWithdrawal(userId: Long, currency: Currency, amount: Double) =
+  def unlockCashForWithdrawal(userId: Long, currency: Currency, amount: Long) =
     updateCashAccount(userId, currency, amount) {
       ca => Some(ca.pendingWithdrawal)
     } {
       ca => ca.copy(available = ca.available + amount, pendingWithdrawal = ca.pendingWithdrawal - amount)
     }
 
-  def confirmCashWithdrawal(userId: Long, currency: Currency, amount: Double) =
+  def confirmCashWithdrawal(userId: Long, currency: Currency, amount: Long) =
     updateCashAccount(userId, currency, amount) {
       ca => None
     } {
       ca => ca.copy(pendingWithdrawal = ca.pendingWithdrawal - amount)
     }
 
-  def lockCash(userId: Long, currency: Currency, amount: Double) =
+  def lockCash(userId: Long, currency: Currency, amount: Long) =
     updateCashAccount(userId, currency, amount) {
       ca => Some(ca.available)
     } {
       ca => ca.copy(available = ca.available - amount, locked = ca.locked + amount)
     }
 
-  def unlockCash(userId: Long, currency: Currency, amount: Double) =
+  def unlockCash(userId: Long, currency: Currency, amount: Long) =
     updateCashAccount(userId, currency, amount) {
       ca => Some(ca.locked)
     } {
@@ -64,7 +64,7 @@ class AccountManager extends StateManager[AccountState] {
   private def updateCashAccount(
     userId: Long,
     currency: Currency,
-    amount: Double)(source: CashAccount => Option[Double])(update: CashAccount => CashAccount): Either[AccountOperationCode, CashAccount] = {
+    amount: Long)(source: CashAccount => Option[Double])(update: CashAccount => CashAccount): Either[AccountOperationCode, CashAccount] = {
     var result: Either[AccountOperationCode, CashAccount] = Left(InvalidAmount)
     if (amount > 0) state = state.adjust(userId, currency) { ca =>
       source(ca) match {
