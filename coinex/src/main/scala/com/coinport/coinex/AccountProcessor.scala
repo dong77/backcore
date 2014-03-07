@@ -1,3 +1,8 @@
+/**
+ * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
+ *
+ */
+
 package com.coinport.coinex
 
 import akka.persistence.SnapshotOffer
@@ -5,6 +10,8 @@ import com.coinport.coinex.domain._
 import akka.actor.ActorRef
 import akka.actor.ActorPath
 import akka.persistence._
+import Implicits._
+import AccountOperationCode._
 
 class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends common.ExtendedProcessor {
   override val processorId = "coinex_ap"

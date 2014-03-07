@@ -15,15 +15,14 @@
 
 package com.coinport.coinex.domain
 
+import Implicits._
+
 class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   initWithDefaultState(MarketState(headSide))
   private var collectTxs = true
 
   //This is for testing only
   private[domain] def disableCollectingTransactions() = this.collectTxs = false
-
-  private val bigDecimalScale = 10
-  private val bigDecimalRoundingMode = scala.math.BigDecimal.RoundingMode.HALF_EVEN
 
   def addOrder(order: Order): List[Transaction] = {
     checkOrder(order)
@@ -41,16 +40,17 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
     var txs = List.empty[Transaction]
 
     // We extract common logics into an inner method for better readability.
-    def foundMatching(makerOrder: OrderData, actualTakerPrice: Either[BigDecimal /*multiply*/ , BigDecimal /*divide*/ ]) {
-      def convert(amount: BigDecimal, multiply: Boolean) = {
-        val total = actualTakerPrice match {
-          case Left(v) => if (multiply) amount * v else amount / v
-          case Right(v) => if (multiply) amount / v else amount * v
+    def foundMatching(makerOrder: OrderData, actualTakerPrice: Either[Double /*multiply*/ , Double /*divide*/ ]) {
+      def calcTxAmount(amount: Double, multiply: Boolean) = {
+        var total = BigDecimal(amount)
+        total = actualTakerPrice match {
+          case Left(v) => if (multiply) total * v else total / v
+          case Right(v) => if (multiply) total / v else total * v
         }
-        total.setScale(bigDecimalScale, bigDecimalRoundingMode)
+        total.toLong
       }
 
-      val txAmount = convert(makerOrder.quantity, false)
+      val txAmount = calcTxAmount(makerOrder.quantity, false)
       if (remainingTakerQuantity >= txAmount) {
         // new taker order is not fully executed but maker order is.
         remainingTakerQuantity -= txAmount
@@ -64,7 +64,7 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
 
       } else {
         // new taker order is fully executed but maker order is not.
-        val txAmount = convert(remainingTakerQuantity, true)
+        val txAmount = calcTxAmount(remainingTakerQuantity, true)
         val updatedMakerOrder = Order(makerSide, makerOrder.copy(quantity = makerOrder.quantity - txAmount))
         state = state.addOrder(updatedMakerOrder)
         if (collectTxs) {

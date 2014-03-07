@@ -1,3 +1,8 @@
+/**
+ * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
+ *
+ */
+
 package com.coinport.coinex
 
 import akka.persistence.Persistent

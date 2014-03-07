@@ -1,9 +1,15 @@
+/**
+ * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
+ *
+ */
+
 package com.coinport.coinex
 
 import akka.actor.ActorPath
 import akka.persistence.SnapshotOffer
 import akka.persistence._
 import domain._
+import Implicits._
 
 class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) extends common.ExtendedProcessor {
   override val processorId = "coinex_mp_" + marketSide

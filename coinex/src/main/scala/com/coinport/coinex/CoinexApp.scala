@@ -1,3 +1,8 @@
+/**
+ * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
+ *
+ */
+
 package com.coinport.coinex
 
 import com.typesafe.config.ConfigFactory
@@ -8,6 +13,8 @@ import akka.cluster.routing._
 import akka.routing._
 import akka.contrib.pattern._
 import akka.persistence.Persistent
+import Implicits._
+import Currency._
 
 object CoinexApp extends App {
   val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0))
@@ -22,7 +29,8 @@ object CoinexApp extends App {
   val accountView = system.actorOf(FromConfig.props(Props.empty), name = "av_router")
 
   // TODO(d): read supported markets from configuration.
-  val markets = Seq(BTC ~> RMB)
+
+  val markets = Seq(Btc ~> Rmb)
   val marketProcessors = Map(
     markets map { market =>
       market -> system.actorOf(

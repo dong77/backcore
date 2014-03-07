@@ -20,6 +20,7 @@ libraryDependencies ++= {
   val akkaVersion = "2.3.0"
   Seq(
     "com.twitter"                 %% "scrooge-core"                     % "3.12.3",
+    "com.twitter"                 %% "scrooge-serializer"               % "3.12.3",
     "org.apache.thrift"           %  "libthrift"                        % "0.8.0",
     "org.scalatest"               %  "scalatest_2.10"                   % "1.9.1" % "test",
     "com.typesafe.akka"           %% "akka-remote"                      % akkaVersion,
@@ -28,7 +29,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"           %% "akka-remote"                      % akkaVersion,
     "com.typesafe.akka"           %% "akka-contrib"                     % akkaVersion,
     "com.typesafe.akka"           %% "akka-persistence-experimental"    % akkaVersion,
-		"com.typesafe.akka"           %% "akka-testkit"                     % akkaVersion,
+    "com.typesafe.akka"           %% "akka-testkit"                     % akkaVersion,
     "io.spray"                    %% "spray-json"                       % "1.2.5",
     "org.fusesource.leveldbjni"   %  "leveldbjni-all"                   % "1.7",
     "com.github.ddevore"          %% "akka-persistence-mongo-casbah"    % "0.4-SNAPSHOT",
