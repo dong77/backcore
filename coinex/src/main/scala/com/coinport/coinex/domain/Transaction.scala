@@ -13,5 +13,3 @@ case class Transaction(taker: Transfer, maker: Transfer) {
   lazy val takerPrice = maker.quantity / taker.quantity
   lazy val makerPrice = taker.quantity / maker.quantity
 }
-  
-   

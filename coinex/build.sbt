@@ -18,6 +18,7 @@ libraryDependencies ++= {
   val sprayVersion = "1.3-RC1"
   Seq(
     "org.scalatest"            %  "scalatest_2.10"                   % "1.9.1" % "test",
+    "org.apache.commons"       %  "commons-lang3"                    % "3.1",
     "com.typesafe.akka"        %% "akka-remote"                      % akkaVersion,
     "com.typesafe.akka"        %% "akka-cluster"                     % akkaVersion,
     "com.typesafe.akka"        %% "akka-slf4j"                       % akkaVersion,
