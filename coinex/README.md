@@ -68,3 +68,8 @@ git checkout coinex-impl
 - 我们需要弄清楚event写数据库的逻辑
 - 没有尝试过snapshot，也不知道snapshot过程中程序对外是否能保持可用状态
 - 内存状态维护没有经验，不知道怎样尽量降低内存消耗
+
+##For packaging
+将git信息打入jar包中：https://github.com/LeifW/sbt-git-info
+
+需要将sbt-git-info做一个publish-local或者放在私服上

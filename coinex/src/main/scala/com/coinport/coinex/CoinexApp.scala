@@ -7,9 +7,9 @@ import akka.cluster.ClusterEvent._
 import akka.routing.FromConfig
 import scala.concurrent.duration._
 import akka.contrib.pattern.ClusterSingletonManager
-import com.coinport.coinex.rest.DemoServiceActor
+// import com.coinport.coinex.rest.DemoServiceActor
 import akka.io.IO
-import spray.can.Http
+// import spray.can.Http
 import com.coinport.coinex.domain._
 
 object CoinexApp extends App {
@@ -52,6 +52,6 @@ object CoinexApp extends App {
 
   Thread.sleep(5000)
 
-  val service = system.actorOf(Props[DemoServiceActor], "rest")
-  IO(Http) ! Http.Bind(service, "localhost", port = config.getInt("coinex.rest-http-port"))
+  // val service = system.actorOf(Props[DemoServiceActor], "rest")
+  // IO(Http) ! Http.Bind(service, "localhost", port = config.getInt("coinex.rest-http-port"))
 }

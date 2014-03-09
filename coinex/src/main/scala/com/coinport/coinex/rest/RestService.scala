@@ -1,5 +1,6 @@
 package com.coinport.coinex.rest
 
+/*
 import java.io.File
 import org.parboiled.common.FileUtils
 import scala.concurrent.duration._
@@ -15,9 +16,11 @@ import spray.util._
 import spray.http._
 import MediaTypes._
 import CachingDirectives._
+*/
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
+/*
 class DemoServiceActor extends Actor with DemoService {
 
   // the HttpService trait defines only one abstract member, which
@@ -187,3 +190,4 @@ trait DemoService extends HttpService {
   def in[U](duration: FiniteDuration)(body: => U): Unit =
     actorSystem.scheduler.scheduleOnce(duration)(body)
 }
+*/
