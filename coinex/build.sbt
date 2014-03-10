@@ -1,15 +1,17 @@
 import AssemblyKeys._
-import spray.revolver.RevolverPlugin.Revolver
 
 name := "coinex"
 
-version := "1.0"
+organization := "com.coinport"
+
+version := "1.0-SNAPSHOT"
 
 scalaVersion := "2.10.3"
 
 resolvers ++= Seq(
     Resolver.sonatypeRepo("snapshots"),
     "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/repositories/snapshots/"
+    // "scct-github-repository" at "http://mtkopone.github.com/scct/maven-repo"
 )
 
 com.twitter.scrooge.ScroogeSBT.newSettings
@@ -41,8 +43,12 @@ libraryDependencies ++= {
   )
 }
 
-seq(ScctPlugin.instrumentSettings : _*)
+// seq(ScctPlugin.instrumentSettings : _*)
 
 assemblySettings
 
-net.leifwarner.SbtGitInfo.setting
+// net.leifwarner.SbtGitInfo.setting
+
+publishTo := Some("Sonatype Snapshots Nexus" at "http://192.168.0.105:8081/nexus/content/repositories/snapshots")
+
+credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")

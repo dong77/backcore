@@ -2,7 +2,7 @@ resolvers += "spray repo" at "http://repo.spray.io"
 
 resolvers += Classpaths.typesafeResolver
 
-resolvers += "scct-github-repository" at "http://mtkopone.github.com/scct/maven-repo"
+// resolvers += "scct-github-repository" at "http://mtkopone.github.com/scct/maven-repo"
 
 resolvers += "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/repositories/snapshots/"
 
@@ -31,6 +31,6 @@ addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.2.0")
 
 addSbtPlugin("com.twitter" %% "scrooge-sbt-plugin" % "3.12.3")
 
-addSbtPlugin("reaktor" % "sbt-scct" % "0.2-SNAPSHOT")
+// addSbtPlugin("reaktor" % "sbt-scct" % "0.2-SNAPSHOT")
 
-addSbtPlugin("net.leifwarner" % "sbt-git-info" % "0.1-SNAPSHOT")
+// addSbtPlugin("net.leifwarner" % "sbt-git-info" % "0.1-SNAPSHOT")
