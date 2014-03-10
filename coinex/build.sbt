@@ -8,7 +8,8 @@ version := "1.0"
 scalaVersion := "2.10.3"
 
 resolvers ++= Seq(
-    Resolver.sonatypeRepo("snapshots")
+    Resolver.sonatypeRepo("snapshots"),
+    "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/repositories/snapshots/"
 )
 
 com.twitter.scrooge.ScroogeSBT.newSettings
