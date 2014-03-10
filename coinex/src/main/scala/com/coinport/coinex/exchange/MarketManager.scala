@@ -125,10 +125,14 @@ class MarketManager(buySide: MarketSide) extends StateManager[MarketState] {
     }
 
     private def modifyIfNeed(orderData: OrderData) = {
-        if (orderData.marketOrLimit == MARKET)
-            orderData.copy(price = if (orderData.buyOrSell == BUY) Long.MaxValue else Long.MinValue,
-                quantity = if (orderData.buyOrSell == BUY) Long.MaxValue else orderData.quantity)
-        else
+        if (orderData.marketOrLimit == MARKET) {
+            if (orderData.buyOrSell == BUY) {
+                orderData.copy(price = Long.MaxValue, quantity = Long.MaxValue)
+            } else {
+                orderData.copy(price = Long.MinValue)
+            }
+        } else {
             orderData
+        }
     }
 }
