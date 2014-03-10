@@ -4,6 +4,8 @@ resolvers += Classpaths.typesafeResolver
 
 resolvers += "scct-github-repository" at "http://mtkopone.github.com/scct/maven-repo"
 
+resolvers += "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/repositories/snapshots/"
+
 libraryDependencies ++= Seq(
   "com.github.siasia" %% "xsbt-web-plugin" % "0.12.0-0.2.11.1",
   "com.decodified" % "scala-ssh" % "0.6.2",
