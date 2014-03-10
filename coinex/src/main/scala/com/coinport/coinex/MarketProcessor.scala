@@ -10,6 +10,7 @@ import akka.persistence.SnapshotOffer
 import akka.persistence._
 import domain._
 import Implicits._
+import com.twitter.bijection.Injection
 
 class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) extends common.ExtendedProcessor {
   override val processorId = "coinex_mp_" + marketSide
@@ -19,7 +20,7 @@ class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) e
   override val receiveMessage: Receive = {
     // ------------------------------------------------------------------------------------------------
     // Snapshots
-    case SaveSnapshotNow => saveSnapshot(manager())
+    case SaveSnapshotNow => saveSnapshot(manager() )
 
     case SaveSnapshotSuccess(metadata) =>
 
