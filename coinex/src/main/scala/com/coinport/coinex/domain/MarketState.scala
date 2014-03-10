@@ -9,7 +9,11 @@
 package com.coinport.coinex.domain
 
 import scala.collection.immutable.SortedSet
-import Implicits._
+
+case class MarketSide(outCurrency: Currency, inCurrency: Currency) {
+  def reverse = inCurrency ~> outCurrency
+  override def toString = "%s_%s".format(outCurrency, inCurrency).toLowerCase
+}
 
 object MarketState {
   implicit val ordering = new Ordering[OrderData] {
@@ -30,7 +34,6 @@ object MarketState {
 }
 
 import MarketState._
-import Implicits._
 
 /**
  * This class is the real in-memory state (data model) for a event-sourcing market processor.

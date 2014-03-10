@@ -14,7 +14,8 @@
  */
 
 package com.coinport.coinex.domain
-import AccountOperationCode._
+
+
 
 class AccountManager extends StateManager[AccountState] {
   initWithDefaultState(AccountState())
@@ -25,6 +26,7 @@ class AccountManager extends StateManager[AccountState] {
     } {
       ca => ca.copy(available = ca.available + amount)
     }
+
 
   def lockCashForWithdrawal(userId: Long, currency: Currency, amount: Long) =
     updateCashAccount(userId, currency, amount) {
@@ -54,6 +56,7 @@ class AccountManager extends StateManager[AccountState] {
       ca => ca.copy(available = ca.available - amount, locked = ca.locked + amount)
     }
 
+
   def unlockCash(userId: Long, currency: Currency, amount: Long) =
     updateCashAccount(userId, currency, amount) {
       ca => Some(ca.locked)
@@ -69,7 +72,7 @@ class AccountManager extends StateManager[AccountState] {
     if (amount > 0) state = state.adjust(userId, currency) { ca =>
       source(ca) match {
         case Some(s) if s < amount =>
-          result = Left(InsufficientFund)
+          result = Left(InsuffcientFund)
           None
         case _ =>
           val updated = update(ca)

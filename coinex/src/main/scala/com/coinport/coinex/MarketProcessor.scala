@@ -9,8 +9,6 @@ import akka.actor.ActorPath
 import akka.persistence.SnapshotOffer
 import akka.persistence._
 import domain._
-import Implicits._
-import com.twitter.bijection.Injection
 
 class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) extends common.ExtendedProcessor {
   override val processorId = "coinex_mp_" + marketSide

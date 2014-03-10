@@ -15,8 +15,6 @@
 
 package com.coinport.coinex.domain
 
-import Implicits._
-
 class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   initWithDefaultState(MarketState(headSide))
   private var collectTxs = true

@@ -12,8 +12,6 @@ import akka.cluster.routing._
 import akka.routing._
 import akka.contrib.pattern._
 import akka.persistence.Persistent
-import Implicits._
-import Currency._
 import akka.cluster.Cluster
 
 object DemoClient extends App {
@@ -22,7 +20,6 @@ object DemoClient extends App {
   implicit val system = ActorSystem("coinex", config)
   val cluster = Cluster(system)
   // ------------------------------------------------------------------------------------------------
-  // Cluster-aware Routers Deployment
   // Cluster-aware Routers Deployment
   val accountProcessor = system.actorOf(
     ClusterRouterGroup(
@@ -42,7 +39,7 @@ object DemoClient extends App {
         allowLocalRoutees = true,
         useRole = None)).props, "av_router")
 
-  val markets = Seq(Btc ~> Rmb) // TODO(d): read supported markets from configuration.
+  val markets = Seq(BTC ~> RMB) // TODO(d): read supported markets from configuration.
   val marketProcessors = Map(
     markets map { market =>
       market -> system.actorOf(
@@ -50,9 +47,9 @@ object DemoClient extends App {
           RoundRobinGroup(Nil),
           ClusterRouterGroupSettings(
             totalInstances = Int.MaxValue,
-            routeesPaths = List("/user/mp_" + market.asString + "/singleton"),
+            routeesPaths = List("/user/mp_" + market + "/singleton"),
             allowLocalRoutees = true,
-            useRole = None)).props, "mp_" + market.asString + "_router")
+            useRole = None)).props, "mp_" + market + "_router")
     }: _*)
 
   val marketViews = markets map { market =>
@@ -61,8 +58,8 @@ object DemoClient extends App {
         RoundRobinGroup(Nil),
         ClusterRouterGroupSettings(
           totalInstances = Int.MaxValue,
-          routeesPaths = List("/user/mv_" + market.asString),
+          routeesPaths = List("/user/mv_" + market),
           allowLocalRoutees = true,
-          useRole = None)).props, "mv_" + market.asString + "_router")
+          useRole = None)).props, "mv_" + market + "_router")
   }
 }

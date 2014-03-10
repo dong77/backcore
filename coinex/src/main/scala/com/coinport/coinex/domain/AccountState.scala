@@ -10,6 +10,14 @@ package com.coinport.coinex.domain
 
 import scala.collection.immutable.SortedSet
 
+/**
+ * available: the amount the user can spend or withdraw.
+ * locked: the amount that has been put on lock for pending orders.
+ */
+case class CashAccount(currency: Currency, available: Long = 0, locked: Long = 0, pendingWithdrawal: Long = 0) {
+  def total: Long = available + locked + pendingWithdrawal
+}
+
 object UserAccount {
   type CashAccounts = Map[Currency, CashAccount]
   val EmptyCashAccounts = Map.empty[Currency, CashAccount]
@@ -21,6 +29,7 @@ case class UserAccount(
 
 object AccountState {
   type UserAccounts = Map[Long, UserAccount]
+
   val EmptyUserAccounts = Map.empty[Long, UserAccount]
 }
 
@@ -34,7 +43,7 @@ case class AccountState(
 
   def adjust(userId: Long, currency: Currency)(update: CashAccount => Option[CashAccount]): AccountState = {
     var accounts = userAccountsMap.getOrElse(userId, UserAccount(userId))
-    var cashAccount = accounts.cashAccounts.getOrElse(currency, CashAccount(currency, 0, 0, 0))
+    var cashAccount = accounts.cashAccounts.getOrElse(currency, CashAccount(currency))
     update(cashAccount) match {
       case Some(ca) =>
         accounts = accounts.copy(cashAccounts = accounts.cashAccounts + (currency -> ca))

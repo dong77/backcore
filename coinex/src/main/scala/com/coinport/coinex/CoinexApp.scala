@@ -13,8 +13,6 @@ import akka.cluster.routing._
 import akka.routing._
 import akka.contrib.pattern._
 import akka.persistence.Persistent
-import Implicits._
-import Currency._
 
 object CoinexApp extends App {
   val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0))
@@ -43,7 +41,7 @@ object CoinexApp extends App {
         allowLocalRoutees = true,
         useRole = None)).props, "av_router")
 
-  val markets = Seq(Btc ~> Rmb) // TODO(d): read supported markets from configuration.
+  val markets = Seq(BTC ~> RMB) // TODO(d): read supported markets from configuration.
   val marketProcessors = Map(
     markets map { market =>
       market -> system.actorOf(
@@ -51,9 +49,9 @@ object CoinexApp extends App {
           RoundRobinGroup(Nil),
           ClusterRouterGroupSettings(
             totalInstances = Int.MaxValue,
-            routeesPaths = List("/user/mp_" + market.asString + "/singleton"),
+            routeesPaths = List("/user/mp_" + market + "/singleton"),
             allowLocalRoutees = true,
-            useRole = None)).props, "mp_" + market.asString + "_router")
+            useRole = None)).props, "mp_" + market + "_router")
     }: _*)
 
   val marketViews = markets map { market =>
@@ -62,9 +60,9 @@ object CoinexApp extends App {
         RoundRobinGroup(Nil),
         ClusterRouterGroupSettings(
           totalInstances = Int.MaxValue,
-          routeesPaths = List("/user/mv_" + market.asString),
+          routeesPaths = List("/user/mv_" + market),
           allowLocalRoutees = true,
-          useRole = None)).props, "mv_" + market.asString + "_router")
+          useRole = None)).props, "mv_" + market + "_router")
   }
 
   // ------------------------------------------------------------------------------------------------
@@ -89,11 +87,11 @@ object CoinexApp extends App {
       singletonProps = Props(new MarketProcessor(market, accountProcessor.path)),
       singletonName = "singleton",
       terminationMessage = PoisonPill,
-      role = Some("mp_" + market.asString)),
-      name = "mp_" + market.asString)
+      role = Some("mp_" + market)),
+      name = "mp_" + market)
 
-    if (cluster.selfRoles.contains("mv_" + market.asString)) {
-      system.actorOf(Props(new MarketView(market)), "mv_" + market.asString)
+    if (cluster.selfRoles.contains("mv_" + market)) {
+      system.actorOf(Props(new MarketView(market)), "mv_" + market)
     }
   }
 
@@ -102,4 +100,5 @@ object CoinexApp extends App {
   Thread.sleep(sleep * 1000) // give time for event replay
 
   println("============= Akka Node Ready =============\n\n")
+
 }
