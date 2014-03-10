@@ -38,9 +38,9 @@ object CoinexApp extends App {
           ConsistentHashingGroup(Nil),
           ClusterRouterGroupSettings(
             totalInstances = 1,
-            routeesPaths = List("/user/mp_" + market + "/singleton"),
+            routeesPaths = List("/user/mp_" + market.asString + "/singleton"),
             allowLocalRoutees = true,
-            useRole = None)).props, market + "mp_" + market + "_router")
+            useRole = None)).props, "mp_" + market.asString + "_router")
     }: _*)
 
   val marketViews = markets map { market =>
@@ -49,9 +49,9 @@ object CoinexApp extends App {
         ConsistentHashingGroup(Nil),
         ClusterRouterGroupSettings(
           totalInstances = 3,
-          routeesPaths = List("/user/mv_" + market),
+          routeesPaths = List("/user/mv_" + market.asString),
           allowLocalRoutees = true,
-          useRole = None)).props, "mv_" + market + "_router")
+          useRole = None)).props, "mv_" + market.asString + "_router")
   }
 
   // ------------------------------------------------------------------------------------------------
@@ -76,11 +76,11 @@ object CoinexApp extends App {
       singletonProps = Props(new MarketProcessor(market, accountProcessor.path)),
       singletonName = "singleton",
       terminationMessage = PoisonPill,
-      role = Some("mp_" + market)),
-      name = "mp_" + market)
+      role = Some("mp_" + market.asString)),
+      name = "mp_" + market.asString)
 
-    if (cluster.selfRoles.contains("mv_" + market)) {
-      system.actorOf(Props(new MarketView(market)), "mv_" + market)
+    if (cluster.selfRoles.contains("mv_" + market.asString)) {
+      system.actorOf(Props(new MarketView(market)), "mv_" + market.asString)
     }
   }
 

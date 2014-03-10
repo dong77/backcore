@@ -8,6 +8,7 @@ object Implicits {
 
   class RichMarketSide(side: MarketSide) {
     def reverse = MarketSide(side.inCurrency, side.outCurrency)
+    def asString = "%s_%s".format(side.outCurrency.name, side.inCurrency.name).toLowerCase
   }
 
   class RichTransaction(tx: Transaction) {

@@ -45,6 +45,18 @@ enum AccountOperationCode {
     InsufficientFund = 1
     InvalidAmount = 2
 }
+
+// ----------------------------------------------------------------------------
+// Snapshots (Persistent States)
+struct PersistentMarketState{
+  1: MarketSide headSide
+  2: list<OrderData> headSideMpos
+  3: list<OrderData> headSideLpos
+  4: list<OrderData> tailSideMpos
+	5: list<OrderData> tailSideLpos
+  6: map<i64, Order> orderMap
+}
+		
 // ------------------------------------------------------------------------------------------------
 // Non-persistent message.
 struct SaveSnapshotNow{}

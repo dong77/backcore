@@ -2,6 +2,9 @@ package com.coinport.coinex.serializer
 
 import akka.serialization.Serializer
 import com.twitter.scrooge._
+import com.twitter.bijection.scrooge.BinaryScalaCodec
+import com.coinport.coinex.domain._
+import Currency._
 
 // TODO
 abstract class ThriftSerializer extends Serializer {
@@ -16,7 +19,10 @@ abstract class ThriftSerializer extends Serializer {
 
   // "toBinary" serializes the given object to an Array of Bytes
   def toBinary(obj: AnyRef): Array[Byte] = {
-    null
+    val x = MarketSide(Rmb, Btc)
+    val y = BinaryScalaCodec(MarketSide)
+    
+    y(x)
   }
 
   // "fromBinary" deserializes the given array,
