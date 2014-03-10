@@ -15,7 +15,7 @@
 
 package com.coinport.coinex.domain
 
-private[domain] trait StateManager[T] {
+trait StateManager[T] {
   protected var defaultState: T = null.asInstanceOf[T]
   protected var state: T = null.asInstanceOf[T]
 

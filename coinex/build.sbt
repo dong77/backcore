@@ -1,4 +1,4 @@
-// import sbtprotobuf.{ProtobufPlugin=>PB}
+import AssemblyKeys._
 import spray.revolver.RevolverPlugin.Revolver
 
 name := "coinex"
@@ -10,9 +10,6 @@ scalaVersion := "2.10.3"
 resolvers ++= Seq(
     Resolver.sonatypeRepo("snapshots")
 )
-
-// https://github.com/scullxbones/akka-persistence-mongo/
-// 
 
 com.twitter.scrooge.ScroogeSBT.newSettings
 
@@ -38,6 +35,13 @@ libraryDependencies ++= {
     "com.twitter"                 %% "bijection-hbase"                  % bijectionVersion,
     "com.twitter"                 %% "bijection-scrooge"                % bijectionVersion,
     "org.specs2"                  %% "specs2"                           % "2.3.8" % "test",
-    "org.scalatest"               %  "scalatest_2.10"                   % "1.9.1" % "test"
+    "org.scalatest"               %  "scalatest_2.10"                   % "1.9.1" % "test",
+    "org.apache.commons"          %  "commons-lang3"                    % "3.1"
   )
 }
+
+seq(ScctPlugin.instrumentSettings : _*)
+
+assemblySettings
+
+net.leifwarner.SbtGitInfo.setting
