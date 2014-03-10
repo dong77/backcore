@@ -5,3 +5,17 @@ dependencies {
   compile libraries.commons_io
   compile libraries.logback
 }
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: 'http://192.168.0.105:8081/nexus/content/repositories/snapshots') {
+                authentication(userName: mavenUser, password: mavenPassword)
+            }
+            pom.version = '0.0.1-SNAPSHOT'
+            pom.artifactId = 'common'
+            pom.groupId = 'com.coinport'
+        }
+    }
+}
+
