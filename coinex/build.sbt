@@ -25,11 +25,13 @@ libraryDependencies ++= {
     "com.typesafe.akka"           %% "akka-contrib"                     % akkaVersion,
     "com.typesafe.akka"           %% "akka-persistence-experimental"    % akkaVersion,
     "com.typesafe.akka"           %% "akka-testkit"                     % akkaVersion,
+    "com.typesafe.akka"           %% "akka-slf4j"                       % akkaVersion,
     "org.fusesource.leveldbjni"   %  "leveldbjni-all"                   % "1.7",
     "com.github.ddevore"          %% "akka-persistence-mongo-casbah"    % "0.4-SNAPSHOT",
     "org.specs2"                  %% "specs2"                           % "2.3.8" % "test",
     "org.scalatest"               %  "scalatest_2.10"                   % "1.9.1" % "test",
-    "org.apache.commons"          %  "commons-lang3"                    % "3.1"
+    "org.apache.commons"          %  "commons-lang3"                    % "3.1",
+    "ch.qos.logback"              %  "logback-classic"                  % "1.0.13"
   )
 }
 

@@ -6,15 +6,23 @@ package com.coinport.coinex.common
 
 import akka.persistence._
 import akka.actor._
+import akka.util.Timeout
+import scala.concurrent.duration._
+import com.coinport.coinex.data.TakeSnapshotNow
 
 trait ExtendedProcessor extends Processor with ActorLogging {
   lazy val channel = context.actorOf(PersistentChannel.props(processorId + "_c"), "channel")
   var autoConfirmChannelMessage = true
+  val snapshotInterval = 30 minute
   var sequenceNr = -1L
+
+  implicit val ec = context.system.dispatcher
+  var cancellable: Cancellable = null
 
   override def preStart() = {
     log.info("============ processorId: {}, channel: {}", processorId, channel.path)
     super.preStart
+    scheduleSnapshot()
   }
 
   def receive = {
@@ -36,14 +44,22 @@ trait ExtendedProcessor extends Processor with ActorLogging {
       if (receiveMessage.isDefinedAt(msg)) receiveMessage(msg)
   }
 
-  def keepWhen(conditionEval: => Boolean)(updateState: => Any) = {
+  protected def keepWhen(conditionEval: => Boolean)(updateState: => Any) = {
     if (conditionEval) updateState
     else currentPersistentMessage.foreach(m => deleteMessage(m.sequenceNr))
   }
 
-  def deliver(msg: Any, dest: ActorPath) = msg match {
+  protected def deliver(msg: Any, dest: ActorPath) = msg match {
     case p: Persistent => channel ! Deliver(p, dest)
     case _ => channel ! Deliver(Persistent(msg), dest)
+  }
+
+  protected def cancelSnapshotSchedule() = {
+    if (cancellable != null && !cancellable.isCancelled) cancellable.cancel()
+  }
+
+  protected def scheduleSnapshot() = {
+    cancellable = context.system.scheduler.schedule(snapshotInterval, snapshotInterval, self, TakeSnapshotNow)
   }
 
   def receiveMessage: Receive

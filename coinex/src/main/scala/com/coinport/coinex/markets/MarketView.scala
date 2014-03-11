@@ -17,15 +17,13 @@ class MarketView(marketSide: MarketSide) extends ExtendedView {
   def receive = {
     case DebugDump =>
       log.info("state: {}", manager())
+      
     case x =>
       log.info("~~~ saw: " + x)
       if (receiveMessage.isDefinedAt(x)) receiveMessage(x)
   }
 
   def receiveMessage: Receive = {
-    case DebugDump =>
-      log.info("state: {}", manager())
-
     case Persistent(DoCancelOrder(side, orderId), _) =>
       manager.removeOrder(side, orderId)
 
