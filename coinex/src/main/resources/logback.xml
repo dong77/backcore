@@ -3,14 +3,14 @@
 	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
 		<target>System.out</target>
 		<encoder>
-			<pattern>%-5level %X{akkaSource} [%logger{0}] >>> %n%msg%n%n</pattern>
+			<pattern>%-5level %-50X{akkaSource} [%logger{0}] >>>%n%msg%n%n</pattern>
 		</encoder>
 	</appender>
 	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
 		<file>log/coinex.log</file>
 		<append>false</append>
 		<encoder>
-			<pattern>%date{yyyy-MM-dd} %X{akkaTimestamp} %-5level[%thread] %X{akkaSource}[%logger{1}] - %msg%n</pattern>
+			<pattern>%date{yyyy-MM-dd} %X{akkaTimestamp} %-5level[%-45thread] %-60X{akkaSource}[%-45logger{1}] - %msg%n</pattern>
 		</encoder>
 	</appender>
 	<logger name="akka" level="INFO"/>
