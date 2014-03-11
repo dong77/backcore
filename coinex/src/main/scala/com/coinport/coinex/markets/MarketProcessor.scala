@@ -28,28 +28,23 @@ class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) e
     case SnapshotOffer(meta, snapshot) =>
       log.info("Loaded snapshot {}", meta)
       manager.reset(snapshot.asInstanceOf[MarketState])
-
+      
+    case DebugDump =>
+      log.info("state: {}", manager())
     // ------------------------------------------------------------------------------------------------
     // Commands
-    case DoCancelOrder(orderId) =>
-      manager.removeOrder(orderId) foreach { order =>
-        deliver(OrderCancelled(order), accountProcessorPath)
+    case DoCancelOrder(side, orderId) =>
+      manager.removeOrder(side, orderId) foreach { order =>
+        deliver(OrderCancelled(side, order), accountProcessorPath)
       }
 
     // ------------------------------------------------------------------------------------------------
     // Events
-    case BuyOrderSubmitted(market, order: Order) =>
-      val txs = manager.addOrder(market.reverse, order.inversePrice)
+    case OrderSubmitted(side, order: Order) =>
+      val txs = manager.addOrder(side, order)
       if (txs.nonEmpty) {
         deliver(TransactionsCreated(txs), accountProcessorPath)
       }
-      sender ! BuyOrderSubmissionOK(market, order, txs)
-
-    case SellOrderSubmitted(market, order: Order) =>
-      val txs = manager.addOrder(market, order)
-      if (txs.nonEmpty) {
-        deliver(TransactionsCreated(txs), accountProcessorPath)
-      }
-      sender ! SellOrderSubmissionOK(market, order, txs)
+      sender ! BuyOrderSubmissionOK(side, order, txs)
   }
 }

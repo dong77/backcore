@@ -8,16 +8,6 @@
 
 package com.coinport.coinex.data
 
-case class Transfer(
-  userId: Long,
-  orderId: Long,
-  currency: Currency,
-  quantity: Long,
-  fullyExecuted: Boolean)
+import scala.collection.immutable.SortedSet
 
-case class Transaction(taker: Transfer, maker: Transfer) {
-  lazy val takerPrice = maker.quantity.toDouble / taker.quantity
-  lazy val makerPrice = taker.quantity.toDouble / maker.quantity
-}
-  
-   
+case class User()

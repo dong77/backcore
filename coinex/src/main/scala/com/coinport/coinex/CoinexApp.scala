@@ -7,6 +7,7 @@ package com.coinport.coinex
 
 import com.typesafe.config.ConfigFactory
 import akka.actor._
+import akka.pattern.ask
 import akka.cluster._
 import akka.cluster.routing._
 import akka.routing._
@@ -17,6 +18,8 @@ import com.coinport.coinex.common._
 import com.coinport.coinex.users._
 import com.coinport.coinex.accounts._
 import com.coinport.coinex.markets._
+import akka.util.Timeout
+import scala.concurrent.duration._
 
 object CoinexApp extends App {
   val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0))
@@ -41,7 +44,7 @@ object CoinexApp extends App {
     role = Some("up")),
     name = "up")
 
-  // Account View (path: /user/av)
+  // Account View (path: /user/uv)
   if (cluster.selfRoles.contains("uv")) {
     system.actorOf(Props(classOf[UserView]), "uv")
   }
@@ -80,16 +83,32 @@ object CoinexApp extends App {
   Thread.sleep(sleep * 1000) // give time for event replay
 
   println("============= Akka Node Ready =============\n\n")
-  class Test extends Actor {
-    def receive = {
-      case "go" =>
-        (1 to 100) foreach { i =>
-          routers.accountProcessor ! DoDepositCash(1L, RMB, i.toLong)
-          Thread.sleep(2000)
-        }
 
-    }
+  
+  ////////  TO  BE DELETED //////////////////////////////////////////////////
+  routers.accountProcessor ! Persistent(DoDepositCash(123L, RMB, 10000))
+  routers.accountProcessor ! Persistent(DoDepositCash(456, BTC, 2))
+  Thread.sleep(2000)
+  routers.accountProcessor ! Persistent(DoSubmitOrder(BTC ~> RMB, Order(456, 1, 1, Some(4000))))
+  routers.accountProcessor ! Persistent(DoSubmitOrder(RMB ~> BTC, Order(123, 2, 5000, None)))
+  import system.dispatcher
+  Thread.sleep(5000)
+  implicit val timeout = Timeout(5 seconds)
+  
+  
+  routers.accountView ask QueryAccount(123) map {
+    x => println(x)
   }
 
-  system.actorOf(Props(new Test)) ! "go"
+  routers.marketViews(BTC ~> RMB) ask QueryMarket(BTC ~> RMB, 10) map {
+    x => println(x)
+  }
+
+  Thread.sleep(4000)
+  println("------------J")
+  routers.accountProcessor ! DebugDump
+  routers.accountView ! DebugDump
+  routers.marketProcessors(BTC ~> RMB) ! DebugDump
+  routers.marketViews(BTC ~> RMB) ! DebugDump
+
 }

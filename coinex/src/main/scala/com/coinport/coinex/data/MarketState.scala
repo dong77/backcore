@@ -55,7 +55,7 @@ case class MarketState(
   }
 
   def addOrder(side: MarketSide, order: Order): MarketState = {
-    val market = removeOrder(order.id)
+    val market = removeOrder(side, order.id)
 
     var mpos = market.marketPriceOrderPools
     var lpos = market.limitPriceOrderPools
@@ -71,26 +71,33 @@ case class MarketState(
     market.copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
   }
 
-  def removeOrder(id: Long): MarketState = {
+  def getOrder(side: MarketSide, id: Long): Option[Order] = {
     orderMap.get(id) match {
       case Some(order) =>
+        if (marketPriceOrderPool(side).contains(order) || limitPriceOrderPool(side).contains(order)) Some(order)
+        else Some(order)
+      case None => None
+    }
+  }
+
+  def removeOrder(side: MarketSide, id: Long): MarketState = {
+    orderMap.get(id) match {
+      case Some(order) if marketPriceOrderPool(side).contains(order) || limitPriceOrderPool(side).contains(order) =>
         var mpos = marketPriceOrderPools
         var lpos = limitPriceOrderPools
 
-        bothSides foreach { side =>
-          var pool = marketPriceOrderPool(side) - order
-          if (pool.isEmpty) mpos -= side
-          else mpos += (side -> pool)
+        var pool = marketPriceOrderPool(side) - order
+        if (pool.isEmpty) mpos -= side
+        else mpos += (side -> pool)
 
-          pool = limitPriceOrderPool(side) - order
-          if (pool.isEmpty) lpos -= side
-          else lpos += (side -> pool)
-        }
+        pool = limitPriceOrderPool(side) - order
+        if (pool.isEmpty) lpos -= side
+        else lpos += (side -> pool)
 
         val orders = orderMap - id
         copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
 
-      case None =>
+      case _ =>
         this
     }
   }

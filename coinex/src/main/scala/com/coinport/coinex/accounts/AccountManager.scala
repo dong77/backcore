@@ -28,7 +28,6 @@ class AccountManager extends StateManager[AccountState] {
       ca => ca.copy(available = ca.available + amount)
     }
 
-
   def lockCashForWithdrawal(userId: Long, currency: Currency, amount: Long) =
     updateCashAccount(userId, currency, amount) {
       ca => Some(ca.available)
@@ -57,6 +56,12 @@ class AccountManager extends StateManager[AccountState] {
       ca => ca.copy(available = ca.available - amount, locked = ca.locked + amount)
     }
 
+  def cleanLocked(userId: Long, currency: Currency, amount: Long) =
+    updateCashAccount(userId, currency, amount) {
+      ca => Some(ca.locked)
+    } {
+      ca => ca.copy(locked = ca.locked - amount)
+    }
 
   def unlockCash(userId: Long, currency: Currency, amount: Long) =
     updateCashAccount(userId, currency, amount) {

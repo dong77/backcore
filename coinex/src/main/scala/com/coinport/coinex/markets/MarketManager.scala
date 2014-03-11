@@ -54,11 +54,11 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
         // new taker order is not fully executed but maker order is.
         remainingTakerQuantity -= txAmount
 
-        state = state.removeOrder(makerOrder.id)
+        state = state.removeOrder(makerSide, makerOrder.id)
         if (collectTxs) {
           txs ::= Transaction(
-            Transfer(takerOrder.id, takerSide.outCurrency, txAmount, remainingTakerQuantity == 0),
-            Transfer(makerOrder.id, makerSide.outCurrency, makerOrder.quantity, true))
+            Transfer(takerOrder.userId, takerOrder.id, takerSide.outCurrency, txAmount, remainingTakerQuantity == 0),
+            Transfer(makerOrder.userId, makerOrder.id, makerSide.outCurrency, makerOrder.quantity, true))
         }
 
       } else {
@@ -68,8 +68,8 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
         state = state.addOrder(makerSide, updatedMakerOrder)
         if (collectTxs) {
           txs ::= Transaction(
-            Transfer(takerOrder.id, takerSide.outCurrency, remainingTakerQuantity, true),
-            Transfer(makerOrder.id, makerSide.outCurrency, txAmount, false))
+            Transfer(takerOrder.userId, takerOrder.id, takerSide.outCurrency, remainingTakerQuantity, true),
+            Transfer(makerOrder.userId, makerOrder.id, makerSide.outCurrency, txAmount, false))
         }
         remainingTakerQuantity = 0
       }
@@ -101,8 +101,9 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
     txs
   }
 
-  def removeOrder(id: Long): Option[Order] = {
-    // TODO
-    None
+  def removeOrder(side: MarketSide, id: Long): Option[Order] = {
+    val order = state.getOrder(side, id)
+    order foreach { _ => state = state.removeOrder(side, id) }
+    order
   }
 }

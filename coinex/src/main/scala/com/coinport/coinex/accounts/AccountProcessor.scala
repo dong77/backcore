@@ -29,6 +29,9 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
       log.info("Loaded snapshot {}", meta)
       manager.reset(snapshot.asInstanceOf[AccountState])
 
+    case DebugDump =>
+      log.info("state: {}", manager())
+
     // ------------------------------------------------------------------------------------------------
     // Commands
     case DoDepositCash(userId, currency, amount) =>
@@ -55,23 +58,28 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
         case Right(_) => sender ! AccountOperationOK
       }
 
-    case DoSubmitBuyOrder(side: MarketSide, order @ Order(userId, id, quantity, price)) =>
+    case DoSubmitOrder(side: MarketSide, order @ Order(userId, id, quantity, price)) =>
       manager.lockCash(userId, side.outCurrency, quantity) match {
         case Left(error) => sender ! AccountOperationFailed(error)
-        case Right(_) =>
-          deliver(BuyOrderSubmitted(side, order), getProcessorRef(side))
-      }
-
-    case DoSubmitSellOrder(side: MarketSide, order @ Order(userId, id, quantity, price)) =>
-      manager.lockCash(userId, side.outCurrency, quantity) match {
-        case Left(error) => sender ! AccountOperationFailed(error)
-        case Right(_) =>
-          deliver(SellOrderSubmitted(side, order), getProcessorRef(side))
+        case Right(_) => deliver(OrderSubmitted(side, order), getProcessorRef(side))
       }
 
     // ------------------------------------------------------------------------------------------------
     // Events
-    case OrderCancelled(order: Order) =>
+    case e @ OrderCancelled(side, Order(userId, _, quantity, _)) =>
+      manager.unlockCash(userId, side.outCurrency, quantity) match {
+        case Left(error) => sender ! AccountOperationFailed(error)
+        case Right(_) => sender ! e
+      }
+
+    case TransactionsCreated(txs) =>
+      txs foreach { tx =>
+        val (taker, maker) = (tx.taker, tx.maker)
+        manager.cleanLocked(taker.userId, taker.currency, taker.quantity)
+        manager.cleanLocked(maker.userId, maker.currency, maker.quantity)
+        manager.depositCash(taker.userId, maker.currency, maker.quantity)
+        manager.depositCash(maker.userId, taker.currency, taker.quantity)
+      }
   }
 
   private def getProcessorRef(side: MarketSide): ActorPath = {

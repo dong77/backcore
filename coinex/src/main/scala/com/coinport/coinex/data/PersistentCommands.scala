@@ -8,8 +8,7 @@ package com.coinport.coinex.data
 
 // Please name all commands starting with "Do"
 // AccountProcessor commands
-case class DoSubmitBuyOrder(market: MarketSide, order: Order) extends Cmd
-case class DoSubmitSellOrder(market: MarketSide, order: Order) extends Cmd
+case class DoSubmitOrder(market: MarketSide, order: Order) extends Cmd
 
 case class DoDepositCash(userId: Long, currency: Currency, amount: Long) extends Cmd
 case class DoRequestCashWithdrawal(userId: Long, currency: Currency, amount: Long) extends Cmd
@@ -17,4 +16,4 @@ case class DoConfirmCashWithdrawalSuccess(userId: Long, currency: Currency, amou
 case class DoConfirmCashWithdrawalFailed(userId: Long, currency: Currency, amount: Long) extends Cmd
 
 // MarketProcessor commands
-case class DoCancelOrder(id: Long) extends Cmd
+case class DoCancelOrder(market: MarketSide, id: Long) extends Cmd

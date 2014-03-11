@@ -10,10 +10,9 @@ package com.coinport.coinex.data
 // For each event, we'll comment it in the form of "origin -> handler".
 
 // AccountProcessor -> MarketProcessor events
-case class BuyOrderSubmitted(market: MarketSide, order: Order) extends Evt
-case class SellOrderSubmitted(market: MarketSide, order: Order) extends Evt
+case class OrderSubmitted(market: MarketSide, order: Order) extends Evt
 
 // MarketProcessor -> AccountProcessor events
-case class OrderCancelled(order: Order) extends Evt
+case class OrderCancelled(side: MarketSide, order: Order) extends Evt
 case class TransactionsCreated(txs: Seq[Transaction]) extends Evt
-case class NewTxPriceSeen(marketSide: MarketSide, price: Double) extends Evt
+case class NewTxPriceSeen(side: MarketSide, price: Double) extends Evt
