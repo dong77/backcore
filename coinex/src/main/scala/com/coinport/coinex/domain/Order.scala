@@ -8,7 +8,9 @@
 
 package com.coinport.coinex.domain
 
-case class OrderData(id: Long, quantity: Long, price: Double = 0, userId: Long = 0)
-
-case class Order(side: MarketSide, data: OrderData)
-
+case class Order(userId: Long, id: Long, quantity: Long, price: Option[Double]) {
+  def inversePrice = price match {
+    case Some(p) if p > 0 => copy(price = Some(1 / p))
+    case _ => this
+  }
+}

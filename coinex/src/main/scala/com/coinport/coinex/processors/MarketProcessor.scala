@@ -19,7 +19,7 @@ class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) e
   def receiveMessage: Receive = {
     // ------------------------------------------------------------------------------------------------
     // Snapshots
-    case SaveSnapshotNow => saveSnapshot(manager() )
+    case SaveSnapshotNow => saveSnapshot(manager())
 
     case SaveSnapshotSuccess(metadata) =>
 
@@ -38,11 +38,18 @@ class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) e
 
     // ------------------------------------------------------------------------------------------------
     // Events
-    case OrderSubmitted(order: Order) =>
-      val txs = manager.addOrder(order)
+    case BuyOrderSubmitted(market, order: Order) =>
+      val txs = manager.addOrder(market.reverse, order.inversePrice)
       if (txs.nonEmpty) {
         deliver(TransactionsCreated(txs), accountProcessorPath)
       }
-      sender ! OrderSubmissionOK(order, txs)
+      sender ! BuyOrderSubmissionOK(market, order, txs)
+
+    case SellOrderSubmitted(market, order: Order) =>
+      val txs = manager.addOrder(market, order)
+      if (txs.nonEmpty) {
+        deliver(TransactionsCreated(txs), accountProcessorPath)
+      }
+      sender ! SellOrderSubmissionOK(market, order, txs)
   }
 }
