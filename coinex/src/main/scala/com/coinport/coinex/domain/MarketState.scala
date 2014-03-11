@@ -16,10 +16,11 @@ case class MarketSide(outCurrency: Currency, inCurrency: Currency) {
 }
 
 object MarketState {
+  def priceOf(order: Order) = order.price.getOrElse(.0)
   implicit val ordering = new Ordering[Order] {
     def compare(a: Order, b: Order) = {
-      if (a.price < b.price) -1
-      else if (a.price > b.price) 1
+      if (priceOf(a) < priceOf(b)) -1
+      else if (priceOf(a) > priceOf(b)) 1
       else if (a.id < b.id) -1
       else if (a.id > b.id) 1
       else 0
@@ -65,10 +66,11 @@ case class MarketState(
     var mpos = market.marketPriceOrderPools
     var lpos = market.limitPriceOrderPools
 
-    if (order.price <= 0) {
-      mpos += (side -> (market.marketPriceOrderPool(side) + order))
-    } else {
-      lpos += (side -> (market.limitPriceOrderPool(side) + order))
+    order.price match {
+      case Some(p) if p > 0 =>
+        lpos += (side -> (market.limitPriceOrderPool(side) + order))
+      case _ =>
+        mpos += (side -> (market.marketPriceOrderPool(side) + order))
     }
     val orders = market.orderMap + (order.id -> order)
 
@@ -97,9 +99,5 @@ case class MarketState(
       case None =>
         this
     }
-  }
-
-  def validateOrder(order: Order): Order = {
-    if (order.price >= 0) order else order.copy(price = 0)
   }
 }

@@ -17,10 +17,10 @@ class MarketManagerSpec extends Specification {
     "allow multiple market-price orders to co-exist" in {
       val mm = new MarketManager(BTC ~> RMB)
 
-      val maker1 = Order(userId = 888L, id = 1, price = 0, quantity = 100)
+      val maker1 = Order(userId = 888L, id = 1, price = None, quantity = 100)
       mm.addOrder(makerSide, maker1)
 
-      val maker2 = Order(userId = 888L, id = 2, price = 0, quantity = 500)
+      val maker2 = Order(userId = 888L, id = 2, price = None, quantity = 500)
       val txs = mm.addOrder(makerSide, maker2)
 
       mm().orderMap mustEqual Map(1L -> maker1, 2 -> maker2)
@@ -35,10 +35,10 @@ class MarketManagerSpec extends Specification {
 
     "NOT match new market-price taker order with existing market-price maker oders" in {
       val mm = new MarketManager(BTC ~> RMB)
-      val maker = Order(userId = 888L, id = 1, price = 0, quantity = 100)
+      val maker = Order(userId = 888L, id = 1, price = None, quantity = 100)
       mm.addOrder(makerSide, maker)
 
-      val taker = Order(userId = 888L, id = 2, price = 0, quantity = 100)
+      val taker = Order(userId = 888L, id = 2, price = None, quantity = 100)
       val txs = mm.addOrder(takerSide, taker)
 
       mm().orderMap mustEqual Map(1L -> maker, 2 -> taker)
@@ -54,10 +54,10 @@ class MarketManagerSpec extends Specification {
     "match new market-price taker order against existing limit-price maker orders and fully execute both orders " +
       "if quantity equals" in {
         val mm = new MarketManager(BTC ~> RMB)
-        val maker = Order(userId = 888L, id = 1, price = 1, quantity = 100)
+        val maker = Order(userId = 888L, id = 1, price = Some(1), quantity = 100)
         mm.addOrder(makerSide, maker)
 
-        val taker = Order(userId = 888L, id = 2, price = 0, quantity = 100)
+        val taker = Order(userId = 888L, id = 2, price = None, quantity = 100)
         val txs = mm.addOrder(takerSide, taker)
 
         mm().orderMap.size mustEqual 0
@@ -75,10 +75,10 @@ class MarketManagerSpec extends Specification {
     "match new market-price taker order against existing limit-price maker orders and fully execute taker orders " +
       "if its quantity is smaller" in {
         val mm = new MarketManager(BTC ~> RMB)
-        val maker = Order(userId = 888L, id = 1, price = 1, quantity = 100)
+        val maker = Order(userId = 888L, id = 1, price = Some(1), quantity = 100)
         mm.addOrder(makerSide, maker)
 
-        val taker = Order(userId = 888L, id = 2, price = 0, quantity = 10)
+        val taker = Order(userId = 888L, id = 2, price = None, quantity = 10)
         val txs = mm.addOrder(takerSide, taker)
 
         mm().orderMap mustEqual Map(1 -> maker.copy(quantity = 90))
@@ -96,10 +96,10 @@ class MarketManagerSpec extends Specification {
     "match new market-price taker order against existing limit-price maker orders and fully execute maker orders " +
       "if its quantity is smaller" in {
         val mm = new MarketManager(BTC ~> RMB)
-        val maker = Order(userId = 888L, id = 1, price = 1, quantity = 10)
+        val maker = Order(userId = 888L, id = 1, price = Some(1), quantity = 10)
         mm.addOrder(makerSide, maker)
 
-        val taker = Order(userId = 888L, id = 2, price = 0, quantity = 100)
+        val taker = Order(userId = 888L, id = 2, price = None, quantity = 100)
         val txs = mm.addOrder(takerSide, taker)
 
         mm().orderMap mustEqual Map(2 -> taker.copy(quantity = 90))
@@ -118,13 +118,13 @@ class MarketManagerSpec extends Specification {
     "match new market-price taker order against multiple existing limit-price maker orders and fully execute " +
       "taker order if its quantity is smaller" in {
         val mm = new MarketManager(BTC ~> RMB)
-        val maker1 = Order(userId = 888L, id = 1, price = 1, quantity = 100) // lower price
+        val maker1 = Order(userId = 888L, id = 1, price = Some(1), quantity = 100) // lower price
         mm.addOrder(makerSide, maker1)
 
-        val maker2 = Order(userId = 888L, id = 2, price = 0.5, quantity = 100) // higher price
+        val maker2 = Order(userId = 888L, id = 2, price = Some(0.5), quantity = 100) // higher price
         mm.addOrder(makerSide, maker2)
 
-        val taker = Order(userId = 888L, id = 10, price = 0, quantity = 120)
+        val taker = Order(userId = 888L, id = 10, price = None, quantity = 120)
         val txs = mm.addOrder(takerSide, taker)
 
         mm().orderMap mustEqual Map(1 -> maker1.copy(quantity = 30)) //  100 x 0.5 + 100 x 1 - 120 = 30
@@ -143,13 +143,13 @@ class MarketManagerSpec extends Specification {
     "match new market-price taker order against multiple existing limit-price maker orders and fully execute " +
       "all maker orders if their combined quantity is smaller" in {
         val mm = new MarketManager(BTC ~> RMB)
-        val maker1 = Order(userId = 888L, id = 1, price = 1, quantity = 20) // lower price
+        val maker1 = Order(userId = 888L, id = 1, price = Some(1), quantity = 20) // lower price
         mm.addOrder(makerSide, maker1)
 
-        val maker2 = Order(userId = 888L, id = 2, price = 0.5, quantity = 100) // higher price
+        val maker2 = Order(userId = 888L, id = 2, price = Some(0.5), quantity = 100) // higher price
         mm.addOrder(makerSide, maker2)
 
-        val taker = Order(userId = 888L, id = 10, price = 0, quantity = 120)
+        val taker = Order(userId = 888L, id = 10, price = None, quantity = 120)
         val txs = mm.addOrder(takerSide, taker)
 
         mm().orderMap mustEqual Map(10 -> taker.copy(quantity = 50)) //  120 - 100 x 0.5 + 20 x 1 - 120 = 50
@@ -170,13 +170,13 @@ class MarketManagerSpec extends Specification {
     "match new limit-price taker order against the highest limit-price maker order" in {
       val mm = new MarketManager(BTC ~> RMB)
 
-      val maker1 = Order(userId = 888L, id = 1, price = 1, quantity = 20) // lower price
+      val maker1 = Order(userId = 888L, id = 1, price = Some(1), quantity = 20) // lower price
       mm.addOrder(makerSide, maker1)
 
-      val maker2 = Order(userId = 888L, id = 2, price = 0.5, quantity = 100) // higher price
+      val maker2 = Order(userId = 888L, id = 2, price = Some(0.5), quantity = 100) // higher price
       mm.addOrder(makerSide, maker2)
 
-      val taker = Order(userId = 888L, id = 10, price = 1, quantity = 10)
+      val taker = Order(userId = 888L, id = 10, price = Some(1), quantity = 10)
       val txs = mm.addOrder(takerSide, taker)
 
       mm().orderMap mustEqual Map(1 -> maker1, 2 -> maker2.copy(quantity = 80))
@@ -194,13 +194,13 @@ class MarketManagerSpec extends Specification {
     "match new limit-price taker order fully against multiple limit-price maker orders" in {
       val mm = new MarketManager(BTC ~> RMB)
 
-      val maker1 = Order(userId = 888L, id = 1, price = 1, quantity = 20) // lower price
+      val maker1 = Order(userId = 888L, id = 1, price = Some(1), quantity = 20) // lower price
       mm.addOrder(makerSide, maker1)
 
-      val maker2 = Order(userId = 888L, id = 2, price = 0.5, quantity = 100) // higher price
+      val maker2 = Order(userId = 888L, id = 2, price = Some(0.5), quantity = 100) // higher price
       mm.addOrder(makerSide, maker2)
 
-      val taker = Order(userId = 888L, id = 10, price = 1, quantity = 60)
+      val taker = Order(userId = 888L, id = 10, price = Some(1), quantity = 60)
       val txs = mm.addOrder(takerSide, taker)
 
       mm().orderMap mustEqual Map(1 -> maker1.copy(quantity = 10))
@@ -219,13 +219,13 @@ class MarketManagerSpec extends Specification {
     "match new limit-price taker order partially against multiple limit-price maker orders" in {
       val mm = new MarketManager(BTC ~> RMB)
 
-      val maker1 = Order(userId = 888L, id = 1, price = 0.5, quantity = 20) // lower price
+      val maker1 = Order(userId = 888L, id = 1, price = Some(0.5), quantity = 20) // lower price
       mm.addOrder(makerSide, maker1)
 
-      val maker2 = Order(userId = 888L, id = 2, price = 0.4, quantity = 100) // higher price
+      val maker2 = Order(userId = 888L, id = 2, price = Some(0.4), quantity = 100) // higher price
       mm.addOrder(makerSide, maker2)
 
-      val taker = Order(userId = 888L, id = 10, price = 2, quantity = 90)
+      val taker = Order(userId = 888L, id = 10, price = Some(2), quantity = 90)
       val txs = mm.addOrder(takerSide, taker)
 
       mm().orderMap mustEqual Map(10 -> taker.copy(quantity = 40)) // 90 - 100x0.4 - 20x0.5
@@ -244,13 +244,13 @@ class MarketManagerSpec extends Specification {
     "match new limit-price taker order fully against existing market-price maker order 1" in {
       val mm = new MarketManager(BTC ~> RMB)
 
-      val maker1 = Order(userId = 888L, id = 1, price = 0, quantity = 20) // high priority
+      val maker1 = Order(userId = 888L, id = 1, price = None, quantity = 20) // high priority
       mm.addOrder(makerSide, maker1)
 
-      val maker2 = Order(userId = 888L, id = 2, price = 0, quantity = 100) // low priority
+      val maker2 = Order(userId = 888L, id = 2, price = None, quantity = 100) // low priority
       mm.addOrder(makerSide, maker2)
 
-      val taker = Order(userId = 888L, id = 10, price = 2, quantity = 5)
+      val taker = Order(userId = 888L, id = 10, price = Some(2), quantity = 5)
       val txs = mm.addOrder(takerSide, taker)
 
       mm().orderMap mustEqual Map(1 -> maker1.copy(quantity = 10), 2 -> maker2)
@@ -268,13 +268,13 @@ class MarketManagerSpec extends Specification {
     "match new limit-price taker order fully against existing market-price maker order 2" in {
       val mm = new MarketManager(BTC ~> RMB)
 
-      val maker1 = Order(userId = 888L, id = 1, price = 0, quantity = 20) // higher priority
+      val maker1 = Order(userId = 888L, id = 1, price = None, quantity = 20) // higher priority
       mm.addOrder(makerSide, maker1)
 
-      val maker2 = Order(userId = 888L, id = 2, price = 0, quantity = 100) // lower priority
+      val maker2 = Order(userId = 888L, id = 2, price = None, quantity = 100) // lower priority
       mm.addOrder(makerSide, maker2)
 
-      val taker = Order(userId = 888L, id = 10, price = 2, quantity = 30)
+      val taker = Order(userId = 888L, id = 10, price = Some(2), quantity = 30)
       val txs = mm.addOrder(takerSide, taker)
 
       mm().orderMap mustEqual Map(2 -> maker2.copy(quantity = 60))
@@ -293,13 +293,13 @@ class MarketManagerSpec extends Specification {
     "match new limit-price taker order partially against existing market-price maker order" in {
       val mm = new MarketManager(BTC ~> RMB)
 
-      val maker1 = Order(userId = 888L, id = 1, price = 0, quantity = 20) // lower price
+      val maker1 = Order(userId = 888L, id = 1, price = None, quantity = 20) // lower price
       mm.addOrder(makerSide, maker1)
 
-      val maker2 = Order(userId = 888L, id = 2, price = 0, quantity = 100) // higher price
+      val maker2 = Order(userId = 888L, id = 2, price = None, quantity = 100) // higher price
       mm.addOrder(makerSide, maker2)
 
-      val taker = Order(userId = 888L, id = 10, price = 2, quantity = 300)
+      val taker = Order(userId = 888L, id = 10, price = Some(2), quantity = 300)
       val txs = mm.addOrder(takerSide, taker)
 
       mm().orderMap mustEqual Map(10 -> taker.copy(quantity = 240))

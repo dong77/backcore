@@ -15,6 +15,8 @@
 
 package com.coinport.coinex.domain
 
+import MarketState.priceOf
+
 class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   initWithDefaultState(MarketState(headSide))
   private var collectTxs = true
@@ -74,14 +76,14 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
     while (continue && remainingTakerQuantity > 0) {
       makerMpos.headOption match {
         // new LPO to match existing MPOs
-        case Some(makerOrder) if takerOrder.price > 0 =>
-          foundMatching(makerOrder, Left(takerOrder.price))
+        case Some(makerOrder) if priceOf(takerOrder) > 0 =>
+          foundMatching(makerOrder, Left(priceOf(takerOrder)))
 
         case _ =>
           makerLpos.headOption match {
             // new LPO or MPO to match existing LPOs
-            case Some(makerOrder) if makerOrder.price * takerOrder.price <= 1 =>
-              foundMatching(makerOrder, Right(makerOrder.price))
+            case Some(makerOrder) if priceOf(makerOrder) * priceOf(takerOrder) <= 1 =>
+              foundMatching(makerOrder, Right(priceOf(makerOrder)))
 
             case _ =>
               continue = false
