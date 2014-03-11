@@ -15,8 +15,7 @@
 
 package com.coinport.coinex.exchange
 
-import com.coinport.coinex.domain.StateManager
-
+import com.coinport.coinex.common.StateManager
 import BuyOrSell._
 import MarketOrLimit._
 

@@ -3,10 +3,10 @@
  *
  */
 
-package com.coinport.coinex.processors
+package com.coinport.coinex.accounts
 
 import akka.persistence.SnapshotOffer
-import com.coinport.coinex.domain._
+import com.coinport.coinex.data._
 import akka.actor._
 import akka.persistence._
 import com.coinport.coinex.common.ExtendedProcessor

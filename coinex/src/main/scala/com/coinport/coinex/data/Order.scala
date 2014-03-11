@@ -6,7 +6,7 @@
  * the in-memory state can still be updated.
  */
 
-package com.coinport.coinex.domain
+package com.coinport.coinex.data
 
 case class Order(userId: Long, id: Long, quantity: Long, price: Option[Double]) {
   def inversePrice = price match {

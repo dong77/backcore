@@ -13,7 +13,7 @@
  * keep it plain old scala/java.
  */
 
-package com.coinport.coinex.domain
+package com.coinport.coinex.common
 
 trait StateManager[T] {
   protected var defaultState: T = null.asInstanceOf[T]

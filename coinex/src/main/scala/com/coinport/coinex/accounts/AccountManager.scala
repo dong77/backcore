@@ -13,9 +13,10 @@
  * keep it plain old scala/java.
  */
 
-package com.coinport.coinex.domain
+package com.coinport.coinex.accounts
 
-
+import com.coinport.coinex.data._
+import com.coinport.coinex.common.StateManager
 
 class AccountManager extends StateManager[AccountState] {
   initWithDefaultState(AccountState())

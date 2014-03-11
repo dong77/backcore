@@ -3,13 +3,13 @@
  *
  */
 
-package com.coinport.coinex.processors
+package com.coinport.coinex.markets
 
 import akka.actor.ActorPath
 import akka.persistence.SnapshotOffer
 import akka.persistence._
 import com.coinport.coinex.common.ExtendedProcessor
-import com.coinport.coinex.domain._
+import com.coinport.coinex.data._
 
 class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) extends ExtendedProcessor {
   override val processorId = "coinex_mp_" + marketSide

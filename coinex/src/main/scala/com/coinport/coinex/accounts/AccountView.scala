@@ -3,7 +3,7 @@
  *
  */
 
-package com.coinport.coinex.views
+package com.coinport.coinex.accounts
 
 import com.coinport.coinex.common.ExtendedView
 
