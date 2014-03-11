@@ -20,7 +20,8 @@ case object InvalidAmount extends AccountOperationCode
 case object SaveSnapshotNow
 case class AccountOperationOK
 case class AccountOperationFailed(error: AccountOperationCode)
-case class OrderSubmissionOK(order: Order, txs: Seq[Transaction])
+case class BuyOrderSubmissionOK(market: MarketSide, order: Order, txs: Seq[Transaction])
+case class SellOrderSubmissionOK(market: MarketSide, order: Order, txs: Seq[Transaction])
 
 
 // ------------------------------------------------------------------------------------------------
@@ -28,7 +29,8 @@ case class OrderSubmissionOK(order: Order, txs: Seq[Transaction])
 // Please name all commands starting with "Do"
 
 // AccountProcessor commands
-case class DoSubmitOrder(order: Order)
+case class DoSubmitBuyOrder(market: MarketSide, order: Order)
+case class DoSubmitSellOrder(market: MarketSide, order: Order)
 
 case class DoDepositCash(userId: Long, currency: Currency, amount: Long)
 case class DoRequestCashWithdrawal(userId: Long, currency: Currency, amount: Long)
@@ -44,7 +46,8 @@ case class DoCancelOrder(id: Long)
 // For each event, we'll comment it in the form of "origin -> handler".
 
 // AccountProcessor -> MarketProcessor events
-case class OrderSubmitted(order: Order)
+case class BuyOrderSubmitted(market: MarketSide, order: Order)
+case class SellOrderSubmitted(market: MarketSide, order: Order)
 
 // MarketProcessor -> AccountProcessor events
 case class OrderCancelled(order: Order)

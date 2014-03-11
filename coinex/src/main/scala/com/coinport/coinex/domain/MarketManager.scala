@@ -22,10 +22,8 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   //This is for testing only
   private[domain] def disableCollectingTransactions() = this.collectTxs = false
 
-  def addOrder(order: Order): List[Transaction] = {
-    checkOrder(order)
-    val (takerSide, makerSide) = (order.side, order.side.reverse)
-    val takerOrder = order.data
+  def addOrder(takerSide: MarketSide, takerOrder: Order): List[Transaction] = {
+    val makerSide = takerSide.reverse
 
     def takerMpos = state.marketPriceOrderPool(takerSide)
     def takerLpos = state.limitPriceOrderPool(takerSide)
@@ -38,12 +36,11 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
     var txs = List.empty[Transaction]
 
     // We extract common logics into an inner method for better readability.
-    def foundMatching(makerOrder: OrderData, actualTakerPrice: Either[Double /*multiply*/ , Double /*divide*/ ]) {
-      def calcTxAmount(amount: Double, multiply: Boolean) = {
-        var total = BigDecimal(amount)
-        total = actualTakerPrice match {
-          case Left(v) => if (multiply) total * v else total / v
-          case Right(v) => if (multiply) total / v else total * v
+    def foundMatching(makerOrder: Order, actualTakerPrice: Either[Double /*multiply*/ , Double /*divide*/ ]) {
+      def calcTxAmount(amount: Long, multiply: Boolean) = {
+        val total = actualTakerPrice match {
+          case Left(v) => if (multiply) amount * v else amount / v
+          case Right(v) => if (multiply) amount / v else amount * v
         }
         total.toLong
       }
@@ -63,8 +60,8 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
       } else {
         // new taker order is fully executed but maker order is not.
         val txAmount = calcTxAmount(remainingTakerQuantity, true)
-        val updatedMakerOrder = Order(makerSide, makerOrder.copy(quantity = makerOrder.quantity - txAmount))
-        state = state.addOrder(updatedMakerOrder)
+        val updatedMakerOrder = makerOrder.copy(quantity = makerOrder.quantity - txAmount)
+        state = state.addOrder(makerSide, updatedMakerOrder)
         if (collectTxs) {
           txs ::= Transaction(
             Transfer(takerOrder.id, takerSide.outCurrency, remainingTakerQuantity, true),
@@ -94,7 +91,7 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
 
     // The new order is not fully executed, so we add a pending order into the pool
     if (remainingTakerQuantity > 0) {
-      state = state.addOrder(order.copy(data = takerOrder.copy(quantity = remainingTakerQuantity)))
+      state = state.addOrder(takerSide, takerOrder.copy(quantity = remainingTakerQuantity))
     }
 
     txs
@@ -103,8 +100,5 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   def removeOrder(id: Long): Option[Order] = {
     // TODO
     None
-  }
-  def checkOrder(order: Order) {
-    assert(state.bothSides.contains(order.side))
   }
 }
