@@ -55,11 +55,18 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
         case Right(_) => sender ! AccountOperationOK
       }
 
-    case DoSubmitOrder(order @ Order(side, data @ OrderData(id, quantity, price, userId))) =>
+    case DoSubmitBuyOrder(side: MarketSide, order @ Order(userId, id, quantity, price)) =>
       manager.lockCash(userId, side.outCurrency, quantity) match {
         case Left(error) => sender ! AccountOperationFailed(error)
         case Right(_) =>
-          deliver(OrderSubmitted(order), getProcessorRef(order.side))
+          deliver(BuyOrderSubmitted(side, order), getProcessorRef(side))
+      }
+
+    case DoSubmitSellOrder(side: MarketSide, order @ Order(userId, id, quantity, price)) =>
+      manager.lockCash(userId, side.outCurrency, quantity) match {
+        case Left(error) => sender ! AccountOperationFailed(error)
+        case Right(_) =>
+          deliver(SellOrderSubmitted(side, order), getProcessorRef(side))
       }
 
     // ------------------------------------------------------------------------------------------------

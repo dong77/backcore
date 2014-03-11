@@ -16,20 +16,21 @@ case class MarketSide(outCurrency: Currency, inCurrency: Currency) {
 }
 
 object MarketState {
-  implicit val ordering = new Ordering[OrderData] {
-    def compare(a: OrderData, b: OrderData) = {
-      if (a.price < b.price) -1
-      else if (a.price > b.price) 1
+  def priceOf(order: Order) = order.price.getOrElse(.0)
+  implicit val ordering = new Ordering[Order] {
+    def compare(a: Order, b: Order) = {
+      if (priceOf(a) < priceOf(b)) -1
+      else if (priceOf(a) > priceOf(b)) 1
       else if (a.id < b.id) -1
       else if (a.id > b.id) 1
       else 0
     }
   }
 
-  type OrderPool = SortedSet[OrderData]
+  type OrderPool = SortedSet[Order]
   type OrderPools = Map[MarketSide, MarketState.OrderPool]
 
-  val EmptyOrderPool = SortedSet.empty[OrderData]
+  val EmptyOrderPool = SortedSet.empty[Order]
   val EmptyOrderPools = Map.empty[MarketSide, MarketState.OrderPool]
 }
 
@@ -59,38 +60,38 @@ case class MarketState(
     limitPriceOrderPools.getOrElse(side, MarketState.EmptyOrderPool)
   }
 
-  def addOrder(order: Order): MarketState = {
-    val validated = validateOrder(order)
-    val data = validated.data
-    val side = validated.side
-    val market = removeOrder(data.id)
+  def addOrder(side: MarketSide, order: Order): MarketState = {
+    val market = removeOrder(order.id)
 
     var mpos = market.marketPriceOrderPools
     var lpos = market.limitPriceOrderPools
 
-    if (data.price <= 0) {
-      mpos += (side -> (market.marketPriceOrderPool(side) + data))
-    } else {
-      lpos += (side -> (market.limitPriceOrderPool(side) + data))
+    order.price match {
+      case Some(p) if p > 0 =>
+        lpos += (side -> (market.limitPriceOrderPool(side) + order))
+      case _ =>
+        mpos += (side -> (market.marketPriceOrderPool(side) + order))
     }
-    val orders = market.orderMap + (data.id -> validated)
+    val orders = market.orderMap + (order.id -> order)
 
     market.copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
   }
 
   def removeOrder(id: Long): MarketState = {
     orderMap.get(id) match {
-      case Some(old) =>
+      case Some(order) =>
         var mpos = marketPriceOrderPools
         var lpos = limitPriceOrderPools
 
-        var pool = marketPriceOrderPool(old.side) - old.data
-        if (pool.isEmpty) mpos -= old.side
-        else mpos += (old.side -> pool)
+        bothSides foreach { side =>
+          var pool = marketPriceOrderPool(side) - order
+          if (pool.isEmpty) mpos -= side
+          else mpos += (side -> pool)
 
-        pool = limitPriceOrderPool(old.side) - old.data
-        if (pool.isEmpty) lpos -= old.side
-        else lpos += (old.side -> pool)
+          pool = limitPriceOrderPool(side) - order
+          if (pool.isEmpty) lpos -= side
+          else lpos += (side -> pool)
+        }
 
         val orders = orderMap - id
         copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
@@ -98,10 +99,5 @@ case class MarketState(
       case None =>
         this
     }
-  }
-
-  def validateOrder(order: Order): Order = {
-    val data = if (order.data.price >= 0) order.data else order.data.copy(price = 0)
-    order.copy(data = data)
   }
 }
