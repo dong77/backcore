@@ -14,7 +14,7 @@ case object InvalidAmount extends AccountOperationCode
 
 // ------------------------------------------------------------------------------------------------
 // Non-persistent message
-case object SaveSnapshotNow extends Msg
+case object TakeSnapshotNow extends Msg
 case class AccountOperationOK extends Msg
 case class AccountOperationFailed(error: AccountOperationCode) extends Msg
 case class BuyOrderSubmissionOK(market: MarketSide, order: Order, txs: Seq[Transaction]) extends Msg

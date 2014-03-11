@@ -19,7 +19,10 @@ class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) e
   def receiveMessage: Receive = {
     // ------------------------------------------------------------------------------------------------
     // Snapshots
-    case SaveSnapshotNow => saveSnapshot(manager())
+    case TakeSnapshotNow =>
+      cancelSnapshotSchedule()
+      saveSnapshot(manager())
+      scheduleSnapshot()
 
     case SaveSnapshotSuccess(metadata) =>
 
@@ -28,7 +31,7 @@ class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) e
     case SnapshotOffer(meta, snapshot) =>
       log.info("Loaded snapshot {}", meta)
       manager.reset(snapshot.asInstanceOf[MarketState])
-      
+
     case DebugDump =>
       log.info("state: {}", manager())
     // ------------------------------------------------------------------------------------------------

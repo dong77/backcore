@@ -19,7 +19,10 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
   def receiveMessage: Receive = {
     // ------------------------------------------------------------------------------------------------
     // Snapshots
-    case SaveSnapshotNow => saveSnapshot(manager())
+    case TakeSnapshotNow =>
+      cancelSnapshotSchedule()
+      saveSnapshot(manager())
+      scheduleSnapshot()
 
     case SaveSnapshotSuccess(metadata) =>
 
