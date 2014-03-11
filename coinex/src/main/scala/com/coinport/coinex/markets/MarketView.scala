@@ -3,10 +3,10 @@
  *
  */
 
-package com.coinport.coinex.views
+package com.coinport.coinex.markets
 
 import akka.persistence.Persistent
-import com.coinport.coinex.domain._
+import com.coinport.coinex.data._
 import com.coinport.coinex.common.ExtendedView
 
 class MarketView(marketSide: MarketSide) extends ExtendedView {

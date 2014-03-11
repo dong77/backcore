@@ -2,10 +2,12 @@
  * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
  */
 
-package com.coinport.coinex.domain
+package com.coinport.coinex.markets
 
 import org.specs2.mutable._
 import scala.collection.immutable.SortedSet
+import com.coinport.coinex.data._
+import com.coinport.coinex.data.MarketState
 import MarketState._
 
 class MarketManagerSpec extends Specification {

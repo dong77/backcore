@@ -6,16 +6,16 @@
 package com.coinport.coinex
 
 import com.typesafe.config.ConfigFactory
-import com.coinport.coinex.domain._
 import akka.actor._
 import akka.cluster._
 import akka.cluster.routing._
 import akka.routing._
 import akka.contrib.pattern._
 import akka.persistence.Persistent
-import com.coinport.coinex.common.ClusterSingletonRouter
-import com.coinport.coinex.processors._
-import com.coinport.coinex.views._
+import com.coinport.coinex.data._
+import com.coinport.coinex.common._
+import com.coinport.coinex.accounts._
+import com.coinport.coinex.markets._
 
 object CoinexApp extends App {
   val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0))

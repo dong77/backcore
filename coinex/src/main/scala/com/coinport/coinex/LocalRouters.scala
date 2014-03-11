@@ -5,13 +5,11 @@
 
 package com.coinport.coinex
 
-import akka.actor.ActorSystem
-import com.coinport.coinex.domain.MarketSide
-import akka.actor.Props
-import akka.cluster.routing.ClusterRouterGroup
+import akka.actor._
+import akka.cluster.routing._
+import akka.routing._
 import com.coinport.coinex.common.ClusterSingletonRouter
-import akka.routing.RoundRobinGroup
-import akka.cluster.routing.ClusterRouterGroupSettings
+import com.coinport.coinex.data._
 
 class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
   val accountProcessor = system.actorOf(Props(new ClusterSingletonRouter("ap", "user/ap/singleton")), "ap_router")

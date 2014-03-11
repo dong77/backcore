@@ -6,9 +6,10 @@
  * the in-memory state can still be updated.
  */
 
-package com.coinport.coinex.domain
+package com.coinport.coinex.data
 
 import scala.collection.immutable.SortedSet
+import MarketState._
 
 case class MarketSide(outCurrency: Currency, inCurrency: Currency) {
   def reverse = inCurrency ~> outCurrency
@@ -33,8 +34,6 @@ object MarketState {
   val EmptyOrderPool = SortedSet.empty[Order]
   val EmptyOrderPools = Map.empty[MarketSide, MarketState.OrderPool]
 }
-
-import MarketState._
 
 /**
  * This class is the real in-memory state (data model) for a event-sourcing market processor.
