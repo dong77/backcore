@@ -312,8 +312,8 @@ class MarketManagerSpec extends Specification {
       mm().limitPriceOrderPool(takerSide) mustEqual SortedSet(taker.copy(quantity = 240))
 
       txs mustEqual
-        Transaction(Transfer(888, 10, BTC, 50, false), Transfer(666, 2, RMB, 100, true)) ::
-        Transaction(Transfer(888, 10, BTC, 10, false), Transfer(777, 1, RMB, 20, true)) ::
+        Transaction(Transfer(888, 10, BTC, 50, false), Transfer(777, 2, RMB, 100, true)) ::
+        Transaction(Transfer(888, 10, BTC, 10, false), Transfer(666, 1, RMB, 20, true)) ::
         Nil
     }
   }

@@ -22,12 +22,11 @@ case class SellOrderSubmissionOK(market: MarketSide, order: Order, txs: Seq[Tran
 
 // Handled by AccountView
 case class QueryAccount(userId: Long) extends Msg
-case class QueryAccountResult(account: Option[UserAccount]) extends Msg
+case class QueryAccountResult(account: UserAccount) extends Msg
 
 // Handled by MarketView
 case class QueryMarket(side: MarketSide, depth: Int) extends Msg
-case class QueryMarketResult(orders: Seq[Order], reverseOrders: Seq[Order]) extends Msg
-
+case class QueryMarketResult(lastPrice: Option[(MarketSide, Double)], orders: Seq[Order], reverseOrders: Seq[Order]) extends Msg
 
 // DEBUG
 case object DebugDump

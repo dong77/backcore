@@ -35,50 +35,37 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
     // ------------------------------------------------------------------------------------------------
     // Commands
     case DoDepositCash(userId, currency, amount) =>
-      manager.depositCash(userId, currency, amount) match {
-        case Left(error) => sender ! AccountOperationFailed(error)
-        case Right(_) => sender ! AccountOperationOK
-      }
+      sender ! manager.updateCashAccount(userId, CashAccount(currency, available = amount))
 
     case DoRequestCashWithdrawal(userId, currency, amount) =>
-      manager.lockCashForWithdrawal(userId, currency, amount) match {
-        case Left(error) => sender ! AccountOperationFailed(error)
-        case Right(_) => sender ! AccountOperationOK
-      }
+      sender ! manager.updateCashAccount(userId, CashAccount(currency, available = -amount, pendingWithdrawal = amount))
 
     case DoConfirmCashWithdrawalSuccess(userId, currency, amount) =>
-      manager.confirmCashWithdrawal(userId, currency, amount) match {
-        case Left(error) => sender ! AccountOperationFailed(error)
-        case Right(_) => sender ! AccountOperationOK
-      }
+      sender ! manager.updateCashAccount(userId, CashAccount(currency, pendingWithdrawal = -amount))
 
     case DoConfirmCashWithdrawalFailed(userId, currency, amount) =>
-      manager.unlockCashForWithdrawal(userId, currency, amount) match {
-        case Left(error) => sender ! AccountOperationFailed(error)
-        case Right(_) => sender ! AccountOperationOK
-      }
+      sender ! manager.updateCashAccount(userId, CashAccount(currency, available = amount, pendingWithdrawal = -amount))
 
     case DoSubmitOrder(side: MarketSide, order @ Order(userId, id, quantity, price)) =>
-      manager.lockCash(userId, side.outCurrency, quantity) match {
-        case Left(error) => sender ! AccountOperationFailed(error)
-        case Right(_) => deliver(OrderSubmitted(side, order), getProcessorRef(side))
+
+      manager.updateCashAccount(userId, CashAccount(side.outCurrency, available = -quantity, locked = quantity)) match {
+        case AccountOperationOK => deliver(OrderSubmitted(side, order), getProcessorRef(side))
+        case m: AccountOperationFailed => sender ! m
       }
 
     // ------------------------------------------------------------------------------------------------
     // Events
     case e @ OrderCancelled(side, Order(userId, _, quantity, _)) =>
-      manager.unlockCash(userId, side.outCurrency, quantity) match {
-        case Left(error) => sender ! AccountOperationFailed(error)
-        case Right(_) => sender ! e
-      }
+      sender ! manager.updateCashAccount(userId, CashAccount(side.outCurrency, available = quantity, locked = -quantity))
 
     case TransactionsCreated(txs) =>
       txs foreach { tx =>
         val (taker, maker) = (tx.taker, tx.maker)
-        manager.cleanLocked(taker.userId, taker.currency, taker.quantity)
-        manager.cleanLocked(maker.userId, maker.currency, maker.quantity)
-        manager.depositCash(taker.userId, maker.currency, maker.quantity)
-        manager.depositCash(maker.userId, taker.currency, taker.quantity)
+        manager.updateCashAccount(taker.userId, CashAccount(taker.currency, locked = -taker.quantity))
+        manager.updateCashAccount(taker.userId, CashAccount(maker.currency, available = maker.quantity))
+
+        manager.updateCashAccount(maker.userId, CashAccount(maker.currency, locked = -maker.quantity))
+        manager.updateCashAccount(maker.userId, CashAccount(taker.currency, available = taker.quantity))
       }
   }
 
