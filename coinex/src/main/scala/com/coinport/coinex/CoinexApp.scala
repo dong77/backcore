@@ -14,6 +14,7 @@ import akka.contrib.pattern._
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
 import com.coinport.coinex.common._
+import com.coinport.coinex.users._
 import com.coinport.coinex.accounts._
 import com.coinport.coinex.markets._
 
@@ -31,6 +32,20 @@ object CoinexApp extends App {
 
   // ------------------------------------------------------------------------------------------------
   // Processors and Views Deployment
+
+  // Account Processor (path: /user/up/singleton)
+  system.actorOf(ClusterSingletonManager.props(
+    singletonProps = Props(new UserProcessor()),
+    singletonName = "singleton",
+    terminationMessage = PoisonPill,
+    role = Some("up")),
+    name = "up")
+
+  // Account View (path: /user/av)
+  if (cluster.selfRoles.contains("uv")) {
+    system.actorOf(Props(classOf[UserView]), "uv")
+  }
+
   // Account Processor (path: /user/ap/singleton)
   system.actorOf(ClusterSingletonManager.props(
     singletonProps = Props(new AccountProcessor(routers.marketProcessors)),

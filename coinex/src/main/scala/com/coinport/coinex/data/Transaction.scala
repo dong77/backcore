@@ -8,9 +8,13 @@
 
 package com.coinport.coinex.data
 
-case class Transfer(orderId: Long, currency: Currency, quantity: Long, fullyExecuted: Boolean)
+case class Transfer(
+  orderId: Long,
+  currency: Currency,
+  quantity: Long,
+  fullyExecuted: Boolean) 
 
-case class Transaction(taker: Transfer, maker: Transfer) {
+case class Transaction(taker: Transfer, maker: Transfer)  {
   lazy val takerPrice = maker.quantity.toDouble / taker.quantity
   lazy val makerPrice = taker.quantity.toDouble / maker.quantity
 }

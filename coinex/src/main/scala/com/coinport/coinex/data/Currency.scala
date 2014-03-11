@@ -8,7 +8,7 @@
 
 package com.coinport.coinex.data
 
-sealed trait Currency {
+sealed trait Currency  {
   def ~>(another: Currency) = MarketSide(this, another)
   def <~(another: Currency) = MarketSide(another, this)
 }

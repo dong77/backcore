@@ -12,7 +12,11 @@ package com.coinport.coinex.data
  * available: the amount the user can spend or withdraw.
  * locked: the amount that has been put on lock for pending orders.
  */
-case class CashAccount(currency: Currency, available: Long = 0, locked: Long = 0, pendingWithdrawal: Long = 0) {
+case class CashAccount(
+  currency: Currency,
+  available: Long = 0,
+  locked: Long = 0,
+  pendingWithdrawal: Long = 0)  {
   def total: Long = available + locked + pendingWithdrawal
 }
 
@@ -23,7 +27,7 @@ object UserAccount {
 
 case class UserAccount(
   userId: Long,
-  cashAccounts: UserAccount.CashAccounts = UserAccount.EmptyCashAccounts)
+  cashAccounts: UserAccount.CashAccounts = UserAccount.EmptyCashAccounts) 
 
 object AccountState {
   type UserAccounts = Map[Long, UserAccount]
@@ -32,7 +36,7 @@ object AccountState {
 }
 
 case class AccountState(
-  val userAccountsMap: AccountState.UserAccounts = AccountState.EmptyUserAccounts) {
+  val userAccountsMap: AccountState.UserAccounts = AccountState.EmptyUserAccounts)  {
 
   def getUserAccounts(userId: Long): Option[UserAccount] = userAccountsMap.get(userId)
 

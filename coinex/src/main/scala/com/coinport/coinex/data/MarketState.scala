@@ -11,11 +11,6 @@ package com.coinport.coinex.data
 import scala.collection.immutable.SortedSet
 import MarketState._
 
-case class MarketSide(outCurrency: Currency, inCurrency: Currency) {
-  def reverse = inCurrency ~> outCurrency
-  override def toString = "%s_%s".format(outCurrency, inCurrency).toLowerCase
-}
-
 object MarketState {
   def priceOf(order: Order) = order.price.getOrElse(.0)
   implicit val ordering = new Ordering[Order] {
