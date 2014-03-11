@@ -11,11 +11,6 @@ package com.coinport.coinex.data
 import scala.collection.immutable.SortedSet
 import MarketState._
 
-case class MarketSide(outCurrency: Currency, inCurrency: Currency) {
-  def reverse = inCurrency ~> outCurrency
-  override def toString = "%s_%s".format(outCurrency, inCurrency).toLowerCase
-}
-
 object MarketState {
   def priceOf(order: Order) = order.price.getOrElse(.0)
   implicit val ordering = new Ordering[Order] {
@@ -60,7 +55,7 @@ case class MarketState(
   }
 
   def addOrder(side: MarketSide, order: Order): MarketState = {
-    val market = removeOrder(order.id)
+    val market = removeOrder(side, order.id)
 
     var mpos = market.marketPriceOrderPools
     var lpos = market.limitPriceOrderPools
@@ -76,26 +71,33 @@ case class MarketState(
     market.copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
   }
 
-  def removeOrder(id: Long): MarketState = {
+  def getOrder(side: MarketSide, id: Long): Option[Order] = {
     orderMap.get(id) match {
       case Some(order) =>
+        if (marketPriceOrderPool(side).contains(order) || limitPriceOrderPool(side).contains(order)) Some(order)
+        else Some(order)
+      case None => None
+    }
+  }
+
+  def removeOrder(side: MarketSide, id: Long): MarketState = {
+    orderMap.get(id) match {
+      case Some(order) if marketPriceOrderPool(side).contains(order) || limitPriceOrderPool(side).contains(order) =>
         var mpos = marketPriceOrderPools
         var lpos = limitPriceOrderPools
 
-        bothSides foreach { side =>
-          var pool = marketPriceOrderPool(side) - order
-          if (pool.isEmpty) mpos -= side
-          else mpos += (side -> pool)
+        var pool = marketPriceOrderPool(side) - order
+        if (pool.isEmpty) mpos -= side
+        else mpos += (side -> pool)
 
-          pool = limitPriceOrderPool(side) - order
-          if (pool.isEmpty) lpos -= side
-          else lpos += (side -> pool)
-        }
+        pool = limitPriceOrderPool(side) - order
+        if (pool.isEmpty) lpos -= side
+        else lpos += (side -> pool)
 
         val orders = orderMap - id
         copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
 
-      case None =>
+      case _ =>
         this
     }
   }

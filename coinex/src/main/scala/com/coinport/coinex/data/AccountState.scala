@@ -12,8 +12,31 @@ package com.coinport.coinex.data
  * available: the amount the user can spend or withdraw.
  * locked: the amount that has been put on lock for pending orders.
  */
-case class CashAccount(currency: Currency, available: Long = 0, locked: Long = 0, pendingWithdrawal: Long = 0) {
+case class CashAccount(
+  currency: Currency,
+  available: Long = 0,
+  locked: Long = 0,
+  pendingWithdrawal: Long = 0) {
   def total: Long = available + locked + pendingWithdrawal
+  def +(another: CashAccount) = {
+    if (currency != another.currency)
+      throw new IllegalArgumentException("Cannot add different currency accounts")
+    CashAccount(currency,
+      available + another.available,
+      locked + another.locked,
+      pendingWithdrawal + another.pendingWithdrawal)
+  }
+
+  def -(another: CashAccount) = {
+    if (currency != another.currency)
+      throw new IllegalArgumentException("Cannot minus different currency accounts")
+    CashAccount(currency,
+      available - another.available,
+      locked - another.locked,
+      pendingWithdrawal - another.pendingWithdrawal)
+  }
+
+  def isValid = (available >= 0 && locked >= 0 && pendingWithdrawal >= 0)
 }
 
 object UserAccount {
@@ -34,21 +57,20 @@ object AccountState {
 case class AccountState(
   val userAccountsMap: AccountState.UserAccounts = AccountState.EmptyUserAccounts) {
 
-  def getUserAccounts(userId: Long): Option[UserAccount] = userAccountsMap.get(userId)
+  def getUserAccounts(userId: Long): UserAccount =
+    userAccountsMap.get(userId).getOrElse(UserAccount(userId))
 
-  def getUserAccount(userId: Long, currency: Currency): Option[CashAccount] =
-    userAccountsMap.get(userId) map { _.cashAccounts.getOrElse(currency, null) }
+  def getUserCashAccount(userId: Long, currency: Currency): CashAccount =
+    getUserAccounts(userId).cashAccounts.getOrElse(currency, CashAccount(currency))
 
-  def adjust(userId: Long, currency: Currency)(update: CashAccount => Option[CashAccount]): AccountState = {
-    var accounts = userAccountsMap.getOrElse(userId, UserAccount(userId))
-    var cashAccount = accounts.cashAccounts.getOrElse(currency, CashAccount(currency))
-    update(cashAccount) match {
-      case Some(ca) =>
-        accounts = accounts.copy(cashAccounts = accounts.cashAccounts + (currency -> ca))
-        copy(userAccountsMap = userAccountsMap + (userId -> accounts))
-      case None =>
-        this
+  def setUserCashAccount(userId: Long, cashAccount: CashAccount): AccountState = {
+    if (!cashAccount.isValid) {
+      println("warning: attempted to set user cash account to an invalid value: " + cashAccount)
+      this
+    } else {
+      var accounts = userAccountsMap.getOrElse(userId, UserAccount(userId))
+      accounts = accounts.copy(cashAccounts = accounts.cashAccounts + (cashAccount.currency -> cashAccount))
+      copy(userAccountsMap = userAccountsMap + (userId -> accounts))
     }
-
   }
 }

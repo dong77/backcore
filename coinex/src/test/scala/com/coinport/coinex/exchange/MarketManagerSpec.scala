@@ -222,7 +222,7 @@ class MarketManagerSpec extends Specification {
                     t.copy(id = 0, timestamp = 0) mustEqual
                         Transaction(0,Transfer(42,41,BTC,10),Transfer(41,42,RMB,1000),100,6,7,0)
             }
-            println(mm())
+ 
             mm().getOrderPool(MARKET, BUY).headOption match {
                 case Some(orderData) => orderData mustEqual
                     OrderData(6,41,BUY,MARKET,21490,9223372036854775807L,2149000,100006)

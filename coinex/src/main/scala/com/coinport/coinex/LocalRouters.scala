@@ -12,6 +12,17 @@ import com.coinport.coinex.common.ClusterSingletonRouter
 import com.coinport.coinex.data._
 
 class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
+  val userProcessor = system.actorOf(Props(new ClusterSingletonRouter("ap", "user/up/singleton")), "up_router")
+
+  val userView = system.actorOf(
+    ClusterRouterGroup(
+      RoundRobinGroup(Nil),
+      ClusterRouterGroupSettings(
+        totalInstances = Int.MaxValue,
+        routeesPaths = List("/user/uv"),
+        allowLocalRoutees = true,
+        useRole = None)).props, "uv_router")
+
   val accountProcessor = system.actorOf(Props(new ClusterSingletonRouter("ap", "user/ap/singleton")), "ap_router")
 
   val accountView = system.actorOf(
@@ -23,22 +34,20 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
         allowLocalRoutees = true,
         useRole = None)).props, "av_router")
 
-  val marketProcessors = Map(
-    markets map { m =>
-      m -> system.actorOf(
-        Props(new ClusterSingletonRouter("mp_" + m, "/user/mp_" + m + "/singleton")),
-        "mp_" + m + "_router")
-    }: _*)
+  val marketProcessors = Map(markets map { m =>
+    m -> system.actorOf(
+      Props(new ClusterSingletonRouter("mp_" + m, "/user/mp_" + m + "/singleton")),
+      "mp_" + m + "_router")
+  }: _*)
 
-  val marketViews = markets map { market =>
-    market -> system.actorOf(
+  val marketViews = Map(markets map { m =>
+    m -> system.actorOf(
       ClusterRouterGroup(
         RoundRobinGroup(Nil),
         ClusterRouterGroupSettings(
           totalInstances = Int.MaxValue,
-          routeesPaths = List("/user/mv_" + market),
+          routeesPaths = List("/user/mv_" + m),
           allowLocalRoutees = true,
-          useRole = None)).props, "mv_" + market + "_router")
-  }
-
+          useRole = None)).props, "mv_" + m + "_router")
+  }: _*)
 }

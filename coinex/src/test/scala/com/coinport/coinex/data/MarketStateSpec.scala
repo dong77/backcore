@@ -80,7 +80,7 @@ class MarketStateSpec extends Specification {
       val order1 = Order(888L, 1L, 100, Some(1000.0))
       var m = market.addOrder(side, order1)
 
-      m.removeOrder(2) mustEqual m
+      m.removeOrder(side, 2) mustEqual m
     }
 
     "remove existing orders if id matches" in {
@@ -89,7 +89,15 @@ class MarketStateSpec extends Specification {
       val order1 = Order(888L, 1L, 100, Some(1000.0))
       val order2 = Order(888L, 2L, 100, None)
 
-      market.addOrder(side, order1).addOrder(side, order2).removeOrder(1).removeOrder(2) mustEqual market
+      var m = market.addOrder(side, order1)
+      m= m.removeOrder(side.reverse, 1)
+      m.orderMap.size mustEqual 1
+
+      m= m.addOrder(side, order1)
+      m= m.addOrder(side, order2)
+      m= m.removeOrder(side, 1)
+      m = m.removeOrder(side, 2)
+      m mustEqual market
     }
   }
 }
