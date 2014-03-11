@@ -3,12 +3,13 @@
  *
  */
 
-package com.coinport.coinex
+package com.coinport.coinex.views
 
 import akka.persistence.Persistent
 import com.coinport.coinex.domain._
+import com.coinport.coinex.common.ExtendedView
 
-class MarketView(marketSide: MarketSide) extends common.ExtendedView {
+class MarketView(marketSide: MarketSide) extends ExtendedView {
   override def processorId = "coinex_mp_" + marketSide
 
   def receive = {

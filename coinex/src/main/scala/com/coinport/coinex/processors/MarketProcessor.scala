@@ -3,19 +3,20 @@
  *
  */
 
-package com.coinport.coinex
+package com.coinport.coinex.processors
 
 import akka.actor.ActorPath
 import akka.persistence.SnapshotOffer
 import akka.persistence._
-import domain._
+import com.coinport.coinex.common.ExtendedProcessor
+import com.coinport.coinex.domain._
 
-class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) extends common.ExtendedProcessor {
+class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) extends ExtendedProcessor {
   override val processorId = "coinex_mp_" + marketSide
 
   val manager = new MarketManager(marketSide)
 
-  override val receiveMessage: Receive = {
+  def receiveMessage: Receive = {
     // ------------------------------------------------------------------------------------------------
     // Snapshots
     case SaveSnapshotNow => saveSnapshot(manager() )

@@ -3,9 +3,11 @@
  *
  */
 
-package com.coinport.coinex
+package com.coinport.coinex.views
 
-class AccountView extends common.ExtendedView {
+import com.coinport.coinex.common.ExtendedView
+
+class AccountView extends ExtendedView {
   override def processorId = "coinex_ap"
 
   def receive = {

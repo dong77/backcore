@@ -21,7 +21,7 @@ trait ExtendedProcessor extends Processor with ActorLogging {
     case p @ ConfirmablePersistent(payload, seq, _) =>
       sequenceNr = seq
       autoConfirmChannelMessage = true
-      if (receiveMessage.isDefinedAt(p)) receiveMessage(p)
+      if (receiveMessage.isDefinedAt(payload)) receiveMessage(payload)
       if (autoConfirmChannelMessage) p.confirm()
 
     case p @ Persistent(payload, seq) =>
@@ -31,6 +31,9 @@ trait ExtendedProcessor extends Processor with ActorLogging {
     case msg =>
       sequenceNr = -1L
       if (receiveMessage.isDefinedAt(msg)) receiveMessage(msg)
+      else {
+        println("msg " + msg + " not defined")
+      }
   }
 
   def keepWhen(conditionEval: => Boolean)(updateState: => Any) = {

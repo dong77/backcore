@@ -3,20 +3,20 @@
  *
  */
 
-package com.coinport.coinex
+package com.coinport.coinex.processors
 
 import akka.persistence.SnapshotOffer
 import com.coinport.coinex.domain._
-import akka.actor.ActorRef
-import akka.actor.ActorPath
+import akka.actor._
 import akka.persistence._
+import com.coinport.coinex.common.ExtendedProcessor
 
-class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends common.ExtendedProcessor {
+class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends ExtendedProcessor {
   override val processorId = "coinex_ap"
 
   val manager = new AccountManager()
 
-  override val receiveMessage: Receive = {
+  def receiveMessage: Receive = {
     // ------------------------------------------------------------------------------------------------
     // Snapshots
     case SaveSnapshotNow => saveSnapshot(manager())
@@ -31,7 +31,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends comm
 
     // ------------------------------------------------------------------------------------------------
     // Commands
-    case cmd @ DoDepositCash(userId, currency, amount) =>
+    case DoDepositCash(userId, currency, amount) =>
       manager.depositCash(userId, currency, amount) match {
         case Left(error) => sender ! AccountOperationFailed(error)
         case Right(_) => sender ! AccountOperationOK
