@@ -21,7 +21,7 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
         totalInstances = Int.MaxValue,
         routeesPaths = List("/user/uv"),
         allowLocalRoutees = true,
-        useRole = None)).props, "uv_router")
+        useRole = Some("uv"))).props, "uv_router")
 
   val accountProcessor = system.actorOf(Props(new ClusterSingletonRouter("ap", "user/ap/singleton")), "ap_router")
 
@@ -32,7 +32,7 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
         totalInstances = Int.MaxValue,
         routeesPaths = List("/user/av"),
         allowLocalRoutees = true,
-        useRole = None)).props, "av_router")
+        useRole = Some("av"))).props, "av_router")
 
   val marketProcessors = Map(markets map { m =>
     m -> system.actorOf(
@@ -48,6 +48,6 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
           totalInstances = Int.MaxValue,
           routeesPaths = List("/user/mv_" + m),
           allowLocalRoutees = true,
-          useRole = None)).props, "mv_" + m + "_router")
+          useRole = Some("mv_" + m))).props, "mv_" + m + "_router")
   }: _*)
 }
