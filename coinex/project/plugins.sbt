@@ -27,6 +27,8 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.5.0")
 
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.2.0")
 
+addSbtPlugin("com.twitter" %% "scrooge-sbt-plugin" % "3.12.3")
+
 // addSbtPlugin("reaktor" % "sbt-scct" % "0.2-SNAPSHOT")
 
 // addSbtPlugin("net.leifwarner" % "sbt-git-info" % "0.1-SNAPSHOT")

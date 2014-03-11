@@ -6,15 +6,17 @@ package com.coinport.coinex.data
 
 import org.specs2.mutable._
 import MarketState._
+import Implicits._
+import Currency._
 
 class MarketStateSpec extends Specification {
   val rand = new scala.util.Random
-  def newMarket = if (rand.nextBoolean) MarketState(BTC ~> RMB) else MarketState(BTC <~ RMB)
+  def newMarket = if (rand.nextBoolean) MarketState(Btc ~> Rmb) else MarketState(Btc <~ Rmb)
 
   "MarketState" should {
     "add new orders into pending order pool and replace existing ones" in {
       var m = newMarket
-      val side = BTC ~> RMB
+      val side = Btc ~> Rmb
       val order1 = Order(888L, 1L, 100, Some(1000.0))
       val order2 = Order(888L, 1L, 101, Some(1000.0))
 
@@ -44,7 +46,7 @@ class MarketStateSpec extends Specification {
 
     "sort limit-price orders correctly" in {
       var m = newMarket
-      val side = BTC ~> RMB
+      val side = Btc ~> Rmb
       val order1 = Order(888L, 1L, 100, Some(1000.0))
       val order2 = Order(888L, 2L, 100, Some(999.99))
       val order3 = Order(888L, 3L, 100, Some(1000.1))
@@ -60,7 +62,7 @@ class MarketStateSpec extends Specification {
 
     "sort market-price orders correctly" in {
       var m = newMarket
-      val side = BTC ~> RMB
+      val side = Btc ~> Rmb
       val order1 = Order(888L, 1L, 100, None)
       val order2 = Order(888L, 2L, 100, None)
       val order3 = Order(888L, 3L, 100, None)
@@ -76,7 +78,7 @@ class MarketStateSpec extends Specification {
 
     "keep unchanged after removing non-existing orders" in {
       val market = newMarket
-      val side = BTC ~> RMB
+      val side = Btc ~> Rmb
       val order1 = Order(888L, 1L, 100, Some(1000.0))
       var m = market.addOrder(side, order1)
 
@@ -85,7 +87,7 @@ class MarketStateSpec extends Specification {
 
     "remove existing orders if id matches" in {
       val market = newMarket
-      val side = BTC ~> RMB
+      val side = Btc ~> Rmb
       val order1 = Order(888L, 1L, 100, Some(1000.0))
       val order2 = Order(888L, 2L, 100, None)
 

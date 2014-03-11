@@ -17,7 +17,7 @@ package com.coinport.coinex.markets
 
 import com.coinport.coinex.data._
 import com.coinport.coinex.common.StateManager
-import com.coinport.coinex.data.MarketState.priceOf
+import Implicits._
 
 class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   initWithDefaultState(MarketState(headSide))
@@ -78,14 +78,14 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
     while (continue && remainingTakerQuantity > 0) {
       makerMpos.headOption match {
         // new LPO to match existing MPOs
-        case Some(makerOrder) if priceOf(takerOrder) > 0 =>
-          foundMatching(makerOrder, Left(priceOf(takerOrder)))
+        case Some(makerOrder) if takerOrder.vprice > 0 =>
+          foundMatching(makerOrder, Left(takerOrder.vprice))
 
         case _ =>
           makerLpos.headOption match {
             // new LPO or MPO to match existing LPOs
-            case Some(makerOrder) if priceOf(makerOrder) * priceOf(takerOrder) <= 1 =>
-              foundMatching(makerOrder, Right(priceOf(makerOrder)))
+            case Some(makerOrder) if makerOrder.vprice * takerOrder.vprice <= 1 =>
+              foundMatching(makerOrder, Right(makerOrder.vprice))
 
             case _ =>
               continue = false

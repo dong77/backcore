@@ -17,6 +17,8 @@ package com.coinport.coinex.accounts
 
 import com.coinport.coinex.data._
 import com.coinport.coinex.common.StateManager
+import Implicits._
+import AccountOperationCode._
 
 class AccountManager extends StateManager[AccountState] {
   initWithDefaultState(AccountState())
@@ -27,9 +29,9 @@ class AccountManager extends StateManager[AccountState] {
 
     if (current.isValid) {
       state = state.setUserCashAccount(userId, updated)
-      AccountOperationOK
+      AccountOperationOk
     } else {
-      AccountOperationFailed(InsuffcientFund)
+      AccountOperationFailed(InsufficientFund)
     }
   }
 }

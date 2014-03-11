@@ -10,6 +10,8 @@ import com.coinport.coinex.data._
 import akka.actor._
 import akka.persistence._
 import com.coinport.coinex.common.ExtendedProcessor
+import Implicits._
+import AccountOperationCode._
 
 class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends ExtendedProcessor {
   override val processorId = "coinex_ap"
@@ -38,37 +40,37 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
     // ------------------------------------------------------------------------------------------------
     // Commands
     case DoDepositCash(userId, currency, amount) =>
-      sender ! manager.updateCashAccount(userId, CashAccount(currency, available = amount))
+      sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, 0))
 
     case DoRequestCashWithdrawal(userId, currency, amount) =>
-      sender ! manager.updateCashAccount(userId, CashAccount(currency, available = -amount, pendingWithdrawal = amount))
+      sender ! manager.updateCashAccount(userId, CashAccount(currency, -amount, 0, amount))
 
     case DoConfirmCashWithdrawalSuccess(userId, currency, amount) =>
-      sender ! manager.updateCashAccount(userId, CashAccount(currency, pendingWithdrawal = -amount))
+      sender ! manager.updateCashAccount(userId, CashAccount(currency, 0, 0, -amount))
 
     case DoConfirmCashWithdrawalFailed(userId, currency, amount) =>
-      sender ! manager.updateCashAccount(userId, CashAccount(currency, available = amount, pendingWithdrawal = -amount))
+      sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
     case DoSubmitOrder(side: MarketSide, order @ Order(userId, id, quantity, price)) =>
 
-      manager.updateCashAccount(userId, CashAccount(side.outCurrency, available = -quantity, locked = quantity)) match {
-        case AccountOperationOK => deliver(OrderSubmitted(side, order), getProcessorRef(side))
+      manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
+        case AccountOperationOk => deliver(OrderSubmitted(side, order), getProcessorRef(side))
         case m: AccountOperationFailed => sender ! m
       }
 
     // ------------------------------------------------------------------------------------------------
     // Events
     case e @ OrderCancelled(side, Order(userId, _, quantity, _)) =>
-      sender ! manager.updateCashAccount(userId, CashAccount(side.outCurrency, available = quantity, locked = -quantity))
+      sender ! manager.updateCashAccount(userId, CashAccount(side.outCurrency, quantity, -quantity, 0))
 
     case TransactionsCreated(txs) =>
       txs foreach { tx =>
         val (taker, maker) = (tx.taker, tx.maker)
-        manager.updateCashAccount(taker.userId, CashAccount(taker.currency, locked = -taker.quantity))
-        manager.updateCashAccount(taker.userId, CashAccount(maker.currency, available = maker.quantity))
+        manager.updateCashAccount(taker.userId, CashAccount(taker.currency, 0, -taker.quantity, 0))
+        manager.updateCashAccount(taker.userId, CashAccount(maker.currency, maker.quantity, 0, 0))
 
-        manager.updateCashAccount(maker.userId, CashAccount(maker.currency, locked = -maker.quantity))
-        manager.updateCashAccount(maker.userId, CashAccount(taker.currency, available = taker.quantity))
+        manager.updateCashAccount(maker.userId, CashAccount(maker.currency, 0, -maker.quantity, 0))
+        manager.updateCashAccount(maker.userId, CashAccount(taker.currency, taker.quantity, 0, 0))
       }
   }
 

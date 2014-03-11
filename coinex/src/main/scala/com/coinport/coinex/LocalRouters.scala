@@ -10,6 +10,7 @@ import akka.cluster.routing._
 import akka.routing._
 import com.coinport.coinex.common.ClusterSingletonRouter
 import com.coinport.coinex.data._
+import Implicits._
 
 class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
   val userProcessor = system.actorOf(Props(new ClusterSingletonRouter("ap", "user/up/singleton")), "up_router")
@@ -36,8 +37,8 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
 
   val marketProcessors = Map(markets map { m =>
     m -> system.actorOf(
-      Props(new ClusterSingletonRouter("mp_" + m, "/user/mp_" + m + "/singleton")),
-      "mp_" + m + "_router")
+      Props(new ClusterSingletonRouter("mp_" + m.asString, "/user/mp_" + m.asString + "/singleton")),
+      "mp_" + m.asString + "_router")
   }: _*)
 
   val marketViews = Map(markets map { m =>
@@ -46,8 +47,8 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
         RoundRobinGroup(Nil),
         ClusterRouterGroupSettings(
           totalInstances = Int.MaxValue,
-          routeesPaths = List("/user/mv_" + m),
+          routeesPaths = List("/user/mv_" + m.asString),
           allowLocalRoutees = true,
-          useRole = None)).props, "mv_" + m + "_router")
+          useRole = None)).props, "mv_" + m.asString + "_router")
   }: _*)
 }

@@ -15,6 +15,7 @@ import com.coinport.coinex.users._
 import com.coinport.coinex.accounts._
 import com.coinport.coinex.markets._
 import akka.cluster.Cluster
+import Implicits._
 
 class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
   val system = cluster.system
@@ -50,20 +51,20 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
     }
 
     // Market Processors and Views
-    markets foreach { market =>
+    markets foreach { m =>
       // path: /user/mp_btc_rmb/singleton
-      if (cluster.selfRoles.contains("mp_" + market)) {
+      if (cluster.selfRoles.contains("mp_" + m.asString)) {
         system.actorOf(ClusterSingletonManager.props(
-          singletonProps = Props(new MarketProcessor(market, routers.accountProcessor.path)),
+          singletonProps = Props(new MarketProcessor(m, routers.accountProcessor.path)),
           singletonName = "singleton",
           terminationMessage = PoisonPill,
-          role = Some("mp_" + market)),
-          name = "mp_" + market)
+          role = Some("mp_" + m.asString)),
+          name = "mp_" + m.asString)
       }
 
       // Market views (path: /user/mv_btc_rmb)
-      if (cluster.selfRoles.contains("mv_" + market)) {
-        system.actorOf(Props(new MarketView(market)), "mv_" + market)
+      if (cluster.selfRoles.contains("mv_" + m.asString)) {
+        system.actorOf(Props(new MarketView(m)), "mv_" + m.asString)
       }
     }
   }

@@ -10,6 +10,9 @@ import com.typesafe.config.ConfigFactory
 import akka.actor._
 import akka.cluster.Cluster
 import data._
+import com.coinport.coinex.data._
+import Implicits._
+import Currency._
 
 object CoinexApp extends App {
   val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0))
@@ -18,7 +21,7 @@ object CoinexApp extends App {
   implicit val system = ActorSystem("coinex", config)
   implicit val cluster = Cluster(system)
 
-  val markets = Seq(BTC ~> RMB)
+  val markets = Seq(Btc ~> Rmb)
 
   val routers = new LocalRouters(markets)
   val deployer = new Deployer(markets)

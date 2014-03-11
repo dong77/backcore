@@ -8,60 +8,16 @@
 
 package com.coinport.coinex.data
 
-/**
- * available: the amount the user can spend or withdraw.
- * locked: the amount that has been put on lock for pending orders.
- */
-case class CashAccount(
-  currency: Currency,
-  available: Long = 0,
-  locked: Long = 0,
-  pendingWithdrawal: Long = 0) {
-  def total: Long = available + locked + pendingWithdrawal
-  def +(another: CashAccount) = {
-    if (currency != another.currency)
-      throw new IllegalArgumentException("Cannot add different currency accounts")
-    CashAccount(currency,
-      available + another.available,
-      locked + another.locked,
-      pendingWithdrawal + another.pendingWithdrawal)
-  }
-
-  def -(another: CashAccount) = {
-    if (currency != another.currency)
-      throw new IllegalArgumentException("Cannot minus different currency accounts")
-    CashAccount(currency,
-      available - another.available,
-      locked - another.locked,
-      pendingWithdrawal - another.pendingWithdrawal)
-  }
-
-  def isValid = (available >= 0 && locked >= 0 && pendingWithdrawal >= 0)
-}
-
-object UserAccount {
-  type CashAccounts = Map[Currency, CashAccount]
-  val EmptyCashAccounts = Map.empty[Currency, CashAccount]
-}
-
-case class UserAccount(
-  userId: Long,
-  cashAccounts: UserAccount.CashAccounts = UserAccount.EmptyCashAccounts)
-
-object AccountState {
-  type UserAccounts = Map[Long, UserAccount]
-
-  val EmptyUserAccounts = Map.empty[Long, UserAccount]
-}
+import Implicits._
 
 case class AccountState(
-  val userAccountsMap: AccountState.UserAccounts = AccountState.EmptyUserAccounts) {
+  val userAccountsMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]) {
 
   def getUserAccounts(userId: Long): UserAccount =
     userAccountsMap.get(userId).getOrElse(UserAccount(userId))
 
   def getUserCashAccount(userId: Long, currency: Currency): CashAccount =
-    getUserAccounts(userId).cashAccounts.getOrElse(currency, CashAccount(currency))
+    getUserAccounts(userId).cashAccounts.getOrElse(currency, CashAccount(currency, 0, 0, 0))
 
   def setUserCashAccount(userId: Long, cashAccount: CashAccount): AccountState = {
     if (!cashAccount.isValid) {

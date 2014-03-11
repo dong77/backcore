@@ -10,13 +10,13 @@ package com.coinport.coinex.data
 
 import scala.collection.immutable.SortedSet
 import MarketState._
+import Implicits._
 
 object MarketState {
-  def priceOf(order: Order) = order.price.getOrElse(.0)
   implicit val ordering = new Ordering[Order] {
     def compare(a: Order, b: Order) = {
-      if (priceOf(a) < priceOf(b)) -1
-      else if (priceOf(a) > priceOf(b)) 1
+      if (a.vprice < b.vprice) -1
+      else if (a.vprice > b.vprice) 1
       else if (a.id < b.id) -1
       else if (a.id > b.id) 1
       else 0
