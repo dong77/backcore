@@ -6,7 +6,8 @@
  * the in-memory state can still be updated.
  */
 
-package com.coinport.coinex.domain
+package com.coinport.coinex.data
+
 case class Transfer(orderId: Long, currency: Currency, quantity: Long, fullyExecuted: Boolean)
 
 case class Transaction(taker: Transfer, maker: Transfer) {

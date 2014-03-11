@@ -13,16 +13,18 @@
  * keep it plain old scala/java.
  */
 
-package com.coinport.coinex.domain
+package com.coinport.coinex.markets
 
-import MarketState.priceOf
+import com.coinport.coinex.data._
+import com.coinport.coinex.common.StateManager
+import com.coinport.coinex.data.MarketState.priceOf
 
 class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   initWithDefaultState(MarketState(headSide))
   private var collectTxs = true
 
   //This is for testing only
-  private[domain] def disableCollectingTransactions() = this.collectTxs = false
+  private[markets] def disableCollectingTransactions() = this.collectTxs = false
 
   def addOrder(takerSide: MarketSide, takerOrder: Order): List[Transaction] = {
     val makerSide = takerSide.reverse

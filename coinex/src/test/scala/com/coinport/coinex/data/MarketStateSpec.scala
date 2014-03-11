@@ -2,7 +2,7 @@
  * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
  */
 
-package com.coinport.coinex.domain
+package com.coinport.coinex.data
 
 import org.specs2.mutable._
 import MarketState._

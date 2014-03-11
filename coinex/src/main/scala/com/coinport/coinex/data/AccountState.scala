@@ -6,9 +6,7 @@
  * the in-memory state can still be updated.
  */
 
-package com.coinport.coinex.domain
-
-import scala.collection.immutable.SortedSet
+package com.coinport.coinex.data
 
 /**
  * available: the amount the user can spend or withdraw.
