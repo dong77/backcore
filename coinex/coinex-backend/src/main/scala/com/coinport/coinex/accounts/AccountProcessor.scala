@@ -51,10 +51,9 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
     case DoConfirmCashWithdrawalFailed(userId, currency, amount) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
-    case DoSubmitOrder(side: MarketSide, order @ Order(userId, id, quantity, price)) =>
-
+    case DoSubmitOrder(side: MarketSide, order @ Order(userId, id, quantity, price)) =>	
       manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
-        case AccountOperationResult(Ok) => deliver(OrderSubmitted(side, order), getProcessorRef(side))
+        case AccountOperationResult(Ok, _) => deliver(OrderSubmitted(side, order), getProcessorRef(side))
         case m: AccountOperationResult => sender ! m
       }
 

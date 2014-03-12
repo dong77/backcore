@@ -27,11 +27,11 @@ class AccountManager extends StateManager[AccountState] {
     val current = state.getUserCashAccount(userId, adjustment.currency)
     val updated = current + adjustment
 
-    if (current.isValid) {
+    if (updated.isValid) {
       state = state.setUserCashAccount(userId, updated)
-      AccountOperationResult(Ok)
+      AccountOperationResult(Ok, updated)
     } else {
-      AccountOperationResult(InsufficientFund)
+      AccountOperationResult(InsufficientFund, current)
     }
   }
 }

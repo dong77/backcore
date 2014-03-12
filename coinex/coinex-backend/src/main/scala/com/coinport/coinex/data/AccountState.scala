@@ -20,13 +20,11 @@ case class AccountState(
     getUserAccounts(userId).cashAccounts.getOrElse(currency, CashAccount(currency, 0, 0, 0))
 
   def setUserCashAccount(userId: Long, cashAccount: CashAccount): AccountState = {
-    if (!cashAccount.isValid) {
-      println("warning: attempted to set user cash account to an invalid value: " + cashAccount)
-      this
-    } else {
-      var accounts = userAccountsMap.getOrElse(userId, UserAccount(userId))
-      accounts = accounts.copy(cashAccounts = accounts.cashAccounts + (cashAccount.currency -> cashAccount))
-      copy(userAccountsMap = userAccountsMap + (userId -> accounts))
-    }
+    if (!cashAccount.isValid)
+      throw new IllegalArgumentException("Attempted to set user cash account to an invalid value: " + cashAccount)
+
+    var accounts = userAccountsMap.getOrElse(userId, UserAccount(userId))
+    accounts = accounts.copy(cashAccounts = accounts.cashAccounts + (cashAccount.currency -> cashAccount))
+    copy(userAccountsMap = userAccountsMap + (userId -> accounts))
   }
 }

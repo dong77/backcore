@@ -3,7 +3,6 @@ import Keys._
 import com.twitter.scrooge._
 
 object CoinexBuild extends Build {
-  scalaVersion in ThisBuild := "2.10.3"
   val akkaVersion = "2.3.0"
   val bijectionVersion = "0.6.2"
 
