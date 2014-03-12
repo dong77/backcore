@@ -64,7 +64,7 @@ struct User{
 
 // ------------------------------------------------------------------------------------------------
 // Non-persistent message.
-struct AccountOperationResult{1: AccountOperationCode code}
+struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
 struct OrderSubmissionOk{1: MarketSide side, 2: Order order, 3: list<Transaction> txs}
 struct QueryAccount{1: i64 userId}
 struct QueryAccountResult{1: UserAccount userAccount}

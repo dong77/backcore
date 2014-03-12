@@ -29,12 +29,4 @@ object CoinexApp extends App {
 
   Thread.sleep(5000)
   println("============= Akka Node Ready =============\n\n")
-
-  ////////  TO  BE DELETED //////////////////////////////////////////////////
-  if (args.size > 1)
-    (1 to 1000) foreach { i =>
-      routers.accountView ! DoDepositCash(123L, Rmb, i)
-      Thread.sleep(1000)
-    }
-
 }
