@@ -8,7 +8,6 @@
 
 package com.coinport.coinex.data
 
-
 class RichCurrency(raw: Currency) {
   def ~>(another: Currency) = MarketSide(raw, another)
   def <~(another: Currency) = MarketSide(another, raw)

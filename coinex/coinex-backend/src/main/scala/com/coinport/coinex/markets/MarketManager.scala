@@ -24,7 +24,7 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   private var collectTxs = true
 
   //This is for testing only
-  private[markets] def disableCollectingTransactions() = this.collectTxs = false
+  private[markets] def disableCollectingTransactions() = collectTxs = false
 
   def addOrder(takerSide: MarketSide, takerOrder: Order): List[Transaction] = {
     val makerSide = takerSide.reverse
