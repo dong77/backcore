@@ -49,6 +49,6 @@ class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) e
       if (txs.nonEmpty) {
         deliver(TransactionsCreated(txs), accountProcessorPath)
       }
-      sender ! OrderSubmissionOk(side, order, txs)
+      sender ! OrderSubmissionDone(side, order, txs)
   }
 }
