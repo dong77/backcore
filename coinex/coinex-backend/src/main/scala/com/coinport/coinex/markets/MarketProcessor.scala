@@ -10,9 +10,10 @@ import akka.persistence.SnapshotOffer
 import akka.persistence._
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.data._
+import Implicits._
 
 class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) extends ExtendedProcessor {
-  override val processorId = "coinex_mp_" + marketSide
+  override val processorId = "coinex_mp_" + marketSide.asString
 
   val manager = new MarketManager(marketSide)
 
