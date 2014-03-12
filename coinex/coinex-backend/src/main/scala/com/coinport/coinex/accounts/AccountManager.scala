@@ -29,9 +29,9 @@ class AccountManager extends StateManager[AccountState] {
 
     if (current.isValid) {
       state = state.setUserCashAccount(userId, updated)
-      AccountOperationOk
+      AccountOperationResult(Ok)
     } else {
-      AccountOperationFailed(InsufficientFund)
+      AccountOperationResult(InsufficientFund)
     }
   }
 }

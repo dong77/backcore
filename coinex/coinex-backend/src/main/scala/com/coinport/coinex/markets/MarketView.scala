@@ -11,7 +11,7 @@ import com.coinport.coinex.common.ExtendedView
 import Implicits._
 
 class MarketView(marketSide: MarketSide) extends ExtendedView {
-  override def processorId = "coinex_mp_" + marketSide
+  override def processorId = "coinex_mp_" + marketSide.asString
   val manager = new MarketManager(marketSide)
   var lastPrice: Option[Price] = None
 

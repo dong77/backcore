@@ -6,6 +6,7 @@
  * the in-memory state can still be updated.
  */
 
+// WARNING: all structs must have at least 1 parameters, otherwise serialization fails.
 
 namespace java com.coinport.coinex.data
 
@@ -63,11 +64,8 @@ struct User{
 
 // ------------------------------------------------------------------------------------------------
 // Non-persistent message.
-struct TakeSnapshotNow{}
-struct AccountOperationFailed{1: AccountOperationCode code}
-struct AccountOperationOk{}
+struct AccountOperationResult{1: AccountOperationCode code}
 struct OrderSubmissionOk{1: MarketSide side, 2: Order order, 3: list<Transaction> txs}
-struct DebugDump{}
 struct QueryAccount{1: i64 userId}
 struct QueryAccountResult{1: UserAccount userAccount}
 
