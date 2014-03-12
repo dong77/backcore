@@ -47,11 +47,11 @@ object CoinexBuild extends Build {
     id = "coinex",
     base = file("."),
     settings = Project.defaultSettings ++ sharedSettings)
-    .aggregate(data, backend)
+    .aggregate(client, backend)
 
-  lazy val data = Project(
-    id = "coinex-data",
-    base = file("coinex-data"),
+  lazy val client = Project(
+    id = "coinex-client",
+    base = file("coinex-client"),
     settings = Project.defaultSettings ++
       sharedSettings ++
       ScroogeSBT.newSettings)
@@ -63,5 +63,5 @@ object CoinexBuild extends Build {
       sharedSettings ++
       ScroogeSBT.newSettings ++
       sbtassembly.Plugin.assemblySettings)
-    .dependsOn(data)
+    .dependsOn(client)
 }
