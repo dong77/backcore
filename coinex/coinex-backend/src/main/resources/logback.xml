@@ -3,7 +3,7 @@
 	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
 		<target>System.out</target>
 		<encoder>
-			<pattern>%-5level %X{akkaSource}(%logger{0}) >>>%n%msg%n%n</pattern>
+			<pattern>%-5level %X{akkaSource}[%logger{0}] >>>%n%msg%n%n</pattern>
 		</encoder>
 	</appender>
 	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
