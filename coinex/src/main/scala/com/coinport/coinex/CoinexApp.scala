@@ -33,7 +33,7 @@ object CoinexApp extends App {
   ////////  TO  BE DELETED //////////////////////////////////////////////////
   if (args.size > 1)
     (1 to 1000) foreach { i =>
-      routers.accountView ! "hi " + i
+      routers.accountView ! DoDepositCash(123L, Rmb, i)
       Thread.sleep(1000)
     }
 

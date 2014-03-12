@@ -7,7 +7,7 @@ import com.coinport.coinex.data._
 // TODO(d): Auto-generate this file.
 
 class EventSerializer extends Serializer {
-  val includeManifest: Boolean = false
+  val includeManifest: Boolean = true
   val identifier = 870725
 
   def toBinary(obj: AnyRef): Array[Byte] = obj match {
@@ -38,7 +38,7 @@ class EventSerializer extends Serializer {
     case m: Transfer => BinaryScalaCodec(Transfer)(m)
     case m: User => BinaryScalaCodec(User)(m)
     case m: UserAccount => BinaryScalaCodec(UserAccount)(m)
-    case _ => throw new IllegalArgumentException("talk to wangdong")
+    case m => throw new IllegalArgumentException("Cannot serialize object: " + m + ". Talk to wangdong!")
   }
 
   def fromBinary(bytes: Array[Byte],
@@ -70,6 +70,7 @@ class EventSerializer extends Serializer {
     case Some(c) if c == classOf[Transfer.Immutable] => BinaryScalaCodec(Transfer).invert(bytes).get
     case Some(c) if c == classOf[User.Immutable] => BinaryScalaCodec(User).invert(bytes).get
     case Some(c) if c == classOf[UserAccount.Immutable] => BinaryScalaCodec(UserAccount).invert(bytes).get
-    case _ => throw new IllegalArgumentException("talk to wangdong")
+    case Some(c) => throw new IllegalArgumentException("Cannot deserialize class: " + c.getCanonicalName + ". Talk to wangdong!")
+    case None => throw new IllegalArgumentException("No class found in EventSerializer when deserializing array: " + bytes.mkString(""))
   }
 }
