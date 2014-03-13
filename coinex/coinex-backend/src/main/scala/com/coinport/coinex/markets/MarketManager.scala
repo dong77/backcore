@@ -37,22 +37,17 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
 
     // If the top order on the taker side is a market price order, it means
     // the maker side has no limit-price-order to match at all, we stop.
-    var (remainingTakerQuantity, continue) = (takerOrder.quantity, takerMpos.isEmpty)
+    var remainingTakerQuantity = takerOrder.quantity
+    var continue = takerMpos.isEmpty
+    var remainingTakeLimit = takerOrder.takeLimit
+
     var txs = List.empty[Transaction]
     var fullyExecutedOrders = List.empty[Order]
     var partiallyExecutedOrders = List.empty[Order]
 
     // We extract common logics into an inner method for better readability.
-    def foundMatching(makerOrder: Order, actualTakerPrice: Either[Double /*multiply*/ , Double /*divide*/ ]) {
-      def calcTxAmount(amount: Long, multiply: Boolean) = {
-        val total = actualTakerPrice match {
-          case Left(v) => if (multiply) amount * v else amount / v
-          case Right(v) => if (multiply) amount / v else amount * v
-        }
-        total.toLong
-      }
-
-      val txAmount = calcTxAmount(makerOrder.quantity, false)
+    def foundMatching(makerOrder: Order, actualTakerPrice: Double) {
+      val txAmount: Long = makerOrder.quantity / actualTakerPrice
       if (remainingTakerQuantity >= txAmount) {
         // new taker order is not fully executed but maker order is.
         remainingTakerQuantity -= txAmount
@@ -68,7 +63,7 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
 
       } else {
         // new taker order is fully executed but maker order is not.
-        val txAmount = calcTxAmount(remainingTakerQuantity, true)
+        val txAmount: Long = remainingTakerQuantity * actualTakerPrice
         val updatedMakerOrder = makerOrder.copy(quantity = makerOrder.quantity - txAmount)
         state = state.addOrder(makerSide, updatedMakerOrder)
         partiallyExecutedOrders ::= updatedMakerOrder
@@ -85,13 +80,13 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
       makerMpos.headOption match {
         // new LPO to match existing MPOs
         case Some(makerOrder) if takerOrder.vprice > 0 =>
-          foundMatching(makerOrder, Left(takerOrder.vprice))
+          foundMatching(makerOrder, takerOrder.vprice)
 
         case _ =>
           makerLpos.headOption match {
             // new LPO or MPO to match existing LPOs
             case Some(makerOrder) if makerOrder.vprice * takerOrder.vprice <= 1 =>
-              foundMatching(makerOrder, Right(makerOrder.vprice))
+              foundMatching(makerOrder, 1 / makerOrder.vprice)
 
             case _ =>
               continue = false

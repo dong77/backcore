@@ -29,6 +29,7 @@ class RichOrder(raw: Order) {
   }
 
   def vprice = raw.price.getOrElse(.0)
+  def vtakelimit = raw.takeLimit.getOrElse(Long.MaxValue)
 }
 
 class RichTransaction(raw: Transaction) {
