@@ -13,9 +13,9 @@ import com.coinport.coinex.data._
 import Implicits._
 
 class MarketProcessor(
-    marketSide: MarketSide,
-    accountProcessorPath: ActorPath,
-    userLogsProcessorPath: ActorPath) extends ExtendedProcessor {
+  marketSide: MarketSide,
+  accountProcessorPath: ActorPath,
+  userLogsProcessorPath: ActorPath) extends ExtendedProcessor {
   override val processorId = "coinex_mp_" + marketSide.asString
 
   val manager = new MarketManager(marketSide)
@@ -50,11 +50,11 @@ class MarketProcessor(
     // Events
     case OrderSubmitted(side, order: Order) =>
       val marketUpdate = manager.addOrder(side, order)
-      if (marketUpdate.txs.nonEmpty) {
+      deliver(marketUpdate, userLogsProcessorPath)
+      if (marketUpdate.txs.nonEmpty || marketUpdate.unlockFunds.nonEmpty) {
         deliver(marketUpdate, accountProcessorPath)
-        deliver(marketUpdate, userLogsProcessorPath)
       }
-      //TODO: deliver(marketUpdate, accountProcessorPath)
+
       sender ! OrderSubmissionDone(side, order, marketUpdate.txs)
   }
 }
