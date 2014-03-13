@@ -61,6 +61,17 @@ class RichCashAccount(raw: CashAccount) {
   def isValid = (raw.available >= 0 && raw.locked >= 0 && raw.pendingWithdrawal >= 0)
 }
 
+class RichCandleDataItem(raw: CandleDataItem) {
+  def mergeTo(another: CandleDataItem) =
+    CandleDataItem(
+      another.timestamp,
+      raw.volumn + another.volumn,
+      another.open,
+      raw.close,
+      Math.min(raw.low, another.low),
+      Math.max(raw.high, another.high))
+}
+
 object Implicits {
   implicit def currency2Rich(raw: Currency) = new RichCurrency(raw)
   implicit def marketSide2Rich(raw: MarketSide) = new RichMarketSide(raw)
@@ -68,4 +79,5 @@ object Implicits {
   implicit def order2Rich(raw: Order) = new RichOrder(raw)
   implicit def transaction2Rich(raw: Transaction) = new RichTransaction(raw)
   implicit def cashAccont2Rich(raw: CashAccount) = new RichCashAccount(raw)
+  implicit def candleDataItem2Rich(raw: CandleDataItem) = new RichCandleDataItem(raw)
 }

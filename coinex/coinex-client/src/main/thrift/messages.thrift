@@ -31,6 +31,7 @@ struct Order {
 	3: i64 quantity
 	4: optional double price
 	5: optional i64 takeLimit
+	6: optional i64 timestamp
 }
 
 enum OrderStatus {
@@ -109,7 +110,7 @@ struct CandleDataItem {
 	1: i64 timestamp
 	2: i64 volumn
 	3: double open
-	4: double stop
+	4: double close
 	5: double low
 	6: double high
 }
@@ -117,6 +118,13 @@ struct CandleDataItem {
 struct CandleData {
 	1: i64 timestamp
 	2: list<CandleDataItem> items
+}
+
+struct CandleDataSet {
+	1: optional CandleData minutelyData
+	2: optional CandleData quarterlyData
+	3: optional CandleData hourlyData
+	4: optional CandleData dailyData
 }
 // ------------------------------------------------------------------------------------------------
 // Non-persistent message.
