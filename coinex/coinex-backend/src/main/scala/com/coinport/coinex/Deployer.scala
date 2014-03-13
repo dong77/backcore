@@ -14,7 +14,7 @@ import akka.contrib.pattern.ClusterSingletonManager
 import com.coinport.coinex.users._
 import com.coinport.coinex.accounts._
 import com.coinport.coinex.markets._
-import com.coinport.coinex.userlogs._
+import com.coinport.coinex.postmarket._
 import akka.cluster.Cluster
 import Implicits._
 
@@ -31,12 +31,12 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
         name = "up")
     }
 
-    // Account View (path: /user/uv)
+    // AccountView (path: /user/uv)
     if (cluster.selfRoles.contains("uv")) {
       system.actorOf(Props(classOf[UserView]), "uv")
     }
 
-    // Account Processor (path: /user/ap/singleton)
+    // AccountProcessor (path: /user/ap/singleton)
     if (cluster.selfRoles.contains("ap")) {
       system.actorOf(ClusterSingletonManager.props(
         singletonProps = Props(new AccountProcessor(routers.marketProcessors)),
@@ -51,19 +51,24 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
       system.actorOf(Props(classOf[AccountView]), "av")
     }
 
-    // UserLogs Processor (path: /user/ulp)
-    if (cluster.selfRoles.contains("ulp")) {
+    // PostMarketProcessor (path: /user/pmp)
+    if (cluster.selfRoles.contains("pmp")) {
       system.actorOf(ClusterSingletonManager.props(
-        singletonProps = Props(new UserLogsProcessor()),
+        singletonProps = Props(new PostMarketProcessor()),
         singletonName = "singleton",
         terminationMessage = PoisonPill,
-        role = Some("ulp")),
-        name = "ulp")
+        role = Some("pmp")),
+        name = "pmp")
     }
 
-    // UserLogs View (path: /user/ulv)
-    if (cluster.selfRoles.contains("ulv")) {
-      system.actorOf(Props(classOf[UserLogsView]), "ulv")
+    // UserLogsView (path: /user/pm_ulv)
+    if (cluster.selfRoles.contains("pm_ulv")) {
+      system.actorOf(Props(classOf[UserLogsView]), "pm_ulv")
+    }
+
+    // CandleDataView (path: /user/pm_ulv)
+    if (cluster.selfRoles.contains("pm_cdv")) {
+      system.actorOf(Props(classOf[CandleDataView]), "pm_cdv")
     }
 
     // Market Processors and Views

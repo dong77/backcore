@@ -3,13 +3,13 @@
  *
  */
 
-package com.coinport.coinex.userlogs
+package com.coinport.coinex.postmarket
 
 import com.coinport.coinex.common.ExtendedProcessor
 
 // This is an empty processor to support its views.
-class UserLogsProcessor extends ExtendedProcessor {
-  override def processorId = "coinex_ulp"
+class PostMarketProcessor extends ExtendedProcessor {
+  override def processorId = "coinex_pmp"
 
   def receiveMessage: Receive = {
     case _ =>

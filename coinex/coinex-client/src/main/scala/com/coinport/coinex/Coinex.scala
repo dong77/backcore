@@ -14,34 +14,34 @@ import akka.persistence._
 import Implicits._
 
 final class Coinex(routers: LocalRouters) extends Actor {
-  private val ap = routers.accountProcessor
-  private val av = routers.accountView
-  private val ulp = routers.userLogsProcessor
-  private val ulv = routers.userLogsView
-
-  private val mps = routers.marketProcessors
-  private val mvs = routers.marketViews
 
   def receive = {
     //-------------------------------------------------------------------------
     // Account Processor
-    case m: DoDepositCash => ap forward Persistent(m)
-    case m: DoRequestCashWithdrawal => ap forward Persistent(m)
-    case m: DoConfirmCashWithdrawalSuccess => ap forward Persistent(m)
-    case m: DoConfirmCashWithdrawalFailed => ap forward Persistent(m)
-    case m: DoSubmitOrder => ap forward Persistent(m)
+    case m: DoDepositCash => routers.accountProcessor forward Persistent(m)
+    case m: DoRequestCashWithdrawal => routers.accountProcessor forward Persistent(m)
+    case m: DoConfirmCashWithdrawalSuccess => routers.accountProcessor forward Persistent(m)
+    case m: DoConfirmCashWithdrawalFailed => routers.accountProcessor forward Persistent(m)
+    case m: DoSubmitOrder => routers.accountProcessor forward Persistent(m)
+
     // Market Processors
-    case m @ DoCancelOrder(side, _) => mps(side) forward Persistent(m)
-    // UserLogs Processor
+    case m @ DoCancelOrder(side, _) => routers.marketProcessors(side) forward Persistent(m)
+
+    // UserLogsProcessor
+    // this processor doesn't take any commands.
 
     //-------------------------------------------------------------------------
-    // Account View
-    case m: QueryAccount => av forward m
-    // Market Views
-    case m @ QueryMarket(side, _) => mvs(side) forward m
+    // AccountView
+    case m: QueryAccount => routers.accountView forward m
 
-    // UserLogs View
-    case m: QueryUserLog => ulv forward m
+    // MarketViews
+    case m @ QueryMarket(side, _) => routers.marketViews(side) forward m
+
+    // UserLogsView
+    case m: QueryUserLog => routers.userLogsView forward m
+
+    // CandleDataview
+    case m: QueryMarketCandleData => routers.candleDataView forward m
 
     //-------------------------------------------------------------------------
     case Persistent => throw new IllegalArgumentException("Coinex doesn't handle persistent messages")
