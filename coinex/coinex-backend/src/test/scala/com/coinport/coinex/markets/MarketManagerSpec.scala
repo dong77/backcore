@@ -18,6 +18,56 @@ class MarketManagerSpec extends Specification {
   val makerSide = takerSide.reverse
 
   "MarketManager" should {
+    "match limit-price order against existing limit-price order with take-limit and update take-limit" in {
+      val mm = new MarketManager(Btc ~> Rmb)
+
+      val maker = Order(userId = 666, id = 1, price = Some(1.0 / 4500), quantity = 45099, takeLimit = Some(11))
+      mm.addOrder(makerSide, maker)
+
+      val taker = Order(userId = 888, id = 3, price = Some(4000), quantity = 10)
+      val mu = mm.addOrder(takerSide, taker)
+
+      mm().orderMap mustEqual Map(1 -> maker.copy(quantity = 99, takeLimit = Some(1)))
+      mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+      mm().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
+      mm().limitPriceOrderPool(makerSide) mustEqual SortedSet(maker.copy(quantity = 99, takeLimit = Some(1)))
+      mm().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+
+      mu.txs mustEqual
+        Transaction(Transfer(888, 3, Btc, 10, true), Transfer(666, 1, Rmb, 45000, false)) ::
+        Nil
+
+      mu.unlockFunds mustEqual Nil
+    }
+
+    "match limit-price order with as many existing limit-price order with take-limit" in {
+      val mm = new MarketManager(Btc ~> Rmb)
+
+      val maker1 = Order(userId = 666, id = 1, price = Some(1.0 / 4500), quantity = 10000, takeLimit = Some(1))
+      mm.addOrder(makerSide, maker1)
+
+      val maker2 = Order(userId = 777, id = 2, price = Some(1.0 / 5000), quantity = 15000, takeLimit = Some(3))
+      mm.addOrder(makerSide, maker2)
+
+      val taker = Order(userId = 888, id = 3, price = Some(4000), quantity = 10)
+      val mu = mm.addOrder(takerSide, taker)
+
+      mm().orderMap mustEqual Map(3 -> taker.copy(quantity = 6))
+      mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+      mm().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
+      mm().limitPriceOrderPool(takerSide) mustEqual SortedSet(taker.copy(quantity = 6))
+      mm().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
+
+      mu.txs mustEqual
+        Transaction(Transfer(888, 3, Btc, 1, false), Transfer(666, 1, Rmb, 4500, false)) ::
+        Transaction(Transfer(888, 3, Btc, 3, false), Transfer(777, 2, Rmb, 15000, true)) ::
+        Nil
+
+      mu.unlockFunds mustEqual UnlockFund(666, Rmb, 5500) :: Nil
+    }
+  }
+
+  "MarketManager" should {
     "allow multiple market-price orders to co-exist" in {
       val mm = new MarketManager(Btc ~> Rmb)
 

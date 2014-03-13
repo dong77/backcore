@@ -76,17 +76,22 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
       }
 
       // Check if sell order is fully executed or take limit hit
-      if (sellOrderRemainingQuantity == 0 || sellOrderRemainingTakeLimit == Some(0)) {
+      if (sellOrderRemainingQuantity == 0) {
         fullyExecutedOrders ::= buyOrder
+        continue = false
+      } else if (sellOrderRemainingTakeLimit == Some(0)) {
+        partiallyExecutedOrders ::= buyOrder
         continue = false
       }
 
-      // Check if sell order is fully executed or take limit hit
-      if (buyOrderRemainingQuantity == 0 || buyOrderRemainingTakeLimit == Some(0)) {
+      // Check if buy order is fully executed or take limit hit
+      if (buyOrderRemainingQuantity == 0) {
         fullyExecutedOrders ::= updatedBuyOrder
-      } else {
-        state = state.addOrder(buySide, updatedBuyOrder)
+      } else if (buyOrderRemainingTakeLimit == Some(0)) {
         partiallyExecutedOrders ::= updatedBuyOrder
+      } else {
+        partiallyExecutedOrders ::= updatedBuyOrder
+        state = state.addOrder(buySide, updatedBuyOrder)
         continue = false
       }
 
