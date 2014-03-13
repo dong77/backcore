@@ -29,3 +29,7 @@ class CandleDataView extends ExtendedView {
     case q: QueryMarketCandleData =>
   }
 }
+
+private class CandleDataStateManager extends StateManager[CandleDataSet] {
+  initWithDefaultState(CandleDataSet())
+}

@@ -118,6 +118,13 @@ struct CandleData {
 	1: i64 timestamp
 	2: list<CandleDataItem> items
 }
+
+struct CandleDataSet {
+	1: optional CandleData minutelyData
+	2: optional CandleData quarterlyData
+	3: optional CandleData hourlyData
+	4: optional CandleData dailyData
+}
 // ------------------------------------------------------------------------------------------------
 // Non-persistent message.
 struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
