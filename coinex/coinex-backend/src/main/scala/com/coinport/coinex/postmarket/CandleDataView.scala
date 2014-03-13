@@ -26,10 +26,16 @@ class CandleDataView extends ExtendedView {
 
   def receiveMessage: Receive = {
     case Persistent(mu: MarketUpdate, _) if mu.txs.nonEmpty =>
+    //  val timestamp = mu.originOrderInfo.order.timestamp.get
     case q: QueryMarketCandleData =>
   }
 }
 
 private class CandleDataStateManager extends StateManager[CandleDataSet] {
   initWithDefaultState(CandleDataSet())
+
+  def extract(mu: RichCandleDataItem) = {
+    //val timestamp = mu.originOrderInfo.order.timestamp.get
+  
+  }
 }
