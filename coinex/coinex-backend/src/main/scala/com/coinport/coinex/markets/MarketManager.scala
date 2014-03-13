@@ -47,33 +47,65 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
 
     // We extract common logics into an inner method for better readability.
     def foundMatching(makerOrder: Order, actualTakerPrice: Double) {
-      val txAmount: Long = makerOrder.quantity / actualTakerPrice
-      if (remainingTakerQuantity >= txAmount) {
-        // new taker order is not fully executed but maker order is.
-        remainingTakerQuantity -= txAmount
 
-        state = state.removeOrder(makerSide, makerOrder.id)
-        fullyExecutedOrders ::= makerOrder
-        if (collectTxs) {
-          txs ::= Transaction(
-            Transfer(takerOrder.userId, takerOrder.id, takerSide.outCurrency, txAmount, remainingTakerQuantity == 0),
-            Transfer(makerOrder.userId, makerOrder.id, makerSide.outCurrency, makerOrder.quantity, true))
+      // Calculate the amount makerOrder can afford to buy, buyPower will be like 14000RMB
 
-        }
-
-      } else {
-        // new taker order is fully executed but maker order is not.
-        val txAmount: Long = remainingTakerQuantity * actualTakerPrice
-        val updatedMakerOrder = makerOrder.copy(quantity = makerOrder.quantity - txAmount)
-        state = state.addOrder(makerSide, updatedMakerOrder)
-        partiallyExecutedOrders ::= updatedMakerOrder
-        if (collectTxs) {
-          txs ::= Transaction(
-            Transfer(takerOrder.userId, takerOrder.id, takerSide.outCurrency, remainingTakerQuantity, true),
-            Transfer(makerOrder.userId, makerOrder.id, makerSide.outCurrency, txAmount, false))
-        }
-        remainingTakerQuantity = 0
+      val maxSellAmount = remainingTakeLimit match {
+        case Some(limit) if limit / actualTakerPrice < remainingTakerQuantity => limit / actualTakerPrice
+        case _ => remainingTakerQuantity
       }
+      val maxBuyAmount = makerOrder.takeLimit match {
+        case Some(limit) if limit < makerOrder.quantity / actualTakerPrice => limit
+        case _ => makerOrder.quantity / actualTakerPrice
+      }
+
+      val txAmount = Math.min(maxSellAmount, maxBuyAmount).toLong
+      val txAmountReverse = (txAmount * actualTakerPrice).toLong
+
+      remainingTakerQuantity -= txAmount
+
+      remainingTakeLimit = remainingTakeLimit match {
+        case Some(limit) => Some(limit - txAmountReverse)
+        case None => None
+      }
+
+      val makerOrderRemaining = makerOrder.quantity - txAmountReverse
+      val makerOrderRemainingTakeLimit = makerOrder.takeLimit map (_ - txAmount)
+      val newMakerOrder = makerOrder.copy(quantity = makerOrderRemaining, takeLimit = makerOrderRemainingTakeLimit)
+
+      if (collectTxs) {
+        txs ::= Transaction(
+          Transfer(takerOrder.userId, takerOrder.id, takerSide.outCurrency, txAmount, remainingTakerQuantity == 0),
+          Transfer(makerOrder.userId, makerOrder.id, makerSide.outCurrency, txAmountReverse, newMakerOrder.quantity == 0))
+
+      }
+
+      // Check if sell order is fully executed
+      if (remainingTakerQuantity == 0 || remainingTakeLimit == Some(0)) {
+        fullyExecutedOrders ::= takerOrder
+        continue = false
+      }
+
+      // check if buy oder is fully executed
+
+      state = state.removeOrder(makerSide, makerOrder.id)
+      if (makerOrderRemaining == 0 || makerOrderRemainingTakeLimit == Some(0)) {
+        fullyExecutedOrders ::= newMakerOrder
+      } else {
+        state = state.addOrder(makerSide, newMakerOrder)
+        partiallyExecutedOrders ::= newMakerOrder
+        continue = false
+      }
+
+      // handles refund
+
+      if (remainingTakeLimit == Some(0) && makerOrderRemaining > 0) {
+        //Refund(makerOrderRemaining)
+      }
+      if (makerOrderRemainingTakeLimit == Some(0) && newMakerOrder.quantity > 0) {
+        //Refund(newMakerOrder.quantity)
+      }
+
     }
 
     while (continue && remainingTakerQuantity > 0) {
