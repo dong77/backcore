@@ -71,6 +71,12 @@ struct CashAccount {
 	4: i64 pendingWithdrawal = 0
 }
 
+struct UnlockFund {
+	1: i64 userId
+	2: Currency currency
+	3: i64 amount
+}
+
 struct UserAccount {
 	1: i64 userId
 	2: map<Currency, CashAccount> cashAccounts
@@ -140,4 +146,4 @@ struct OrderCancelled{1: MarketSide side, 2:Order order}
 struct NewTxPriceSeen{1: MarketSide side, 2: double price}
 
 // MarketProcessor -> AggregateUserView
-struct MarketUpdate{1: OrderInfo originOrderInfo, 2: i64 currentQuantity, 3: list<Order> fullyExecutedOrders, 4: list<Order> partiallyExecutedOrders, 5: list<Transaction> txs}
+struct MarketUpdate{1: OrderInfo originOrderInfo, 2: i64 currentQuantity, 3: list<Order> fullyExecutedOrders, 4: list<Order> partiallyExecutedOrders, 5: list<Transaction> txs, 6: list<UnlockFund> unlockFunds}
