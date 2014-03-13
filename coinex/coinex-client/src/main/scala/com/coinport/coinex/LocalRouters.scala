@@ -51,4 +51,6 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
           allowLocalRoutees = false,
           useRole = Some("mv_" + m.asString))).props, "mv_" + m.asString + "_router")
   }: _*)
+
+  val userLogsProcessor = system.actorOf(Props(new ClusterSingletonRouter("ulp", "user/ulp/singleton")), "ulp_router")
 }

@@ -89,13 +89,13 @@ struct OrderInfo {
 	3: OrderStatus status
 }
 
-struct UserOrderTransactionHistory {
+struct UserLog {
 	1: list<OrderInfo> orders
 	2: list<Transaction> txs
 }
 
-struct UserOrderTransactionHistoryState {
- 	1: map<i64, UserOrderTransactionHistory> historyMap
+struct UserLogs {
+ 	1: map<i64, UserLog> userLogs
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -103,8 +103,8 @@ struct UserOrderTransactionHistoryState {
 struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
 struct OrderSubmissionDone{1: MarketSide side, 2: Order order, 3: list<Transaction> txs}
 
-struct QueryUserOrderTransactionHistory{1: i64 userId}
-struct QueryUserOrderTransactionHistoryResult{1: i64 userId, 2: UserOrderTransactionHistory history}
+struct QueryUserLog{1: i64 userId}
+struct QueryUserLogResult{1: i64 userId, 2: UserLog userLog}
 
 struct QueryAccount{1: i64 userId}
 struct QueryAccountResult{1: UserAccount userAccount}
