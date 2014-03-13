@@ -10,8 +10,7 @@ package com.coinport.coinex.data
 
 import Implicits._
 
-case class AccountState(
-  val userAccountsMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]) {
+case class AccountState(nextOrderId: Long = 0, userAccountsMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]) {
 
   def getUserAccounts(userId: Long): UserAccount =
     userAccountsMap.get(userId).getOrElse(UserAccount(userId))
@@ -26,5 +25,9 @@ case class AccountState(
     var accounts = userAccountsMap.getOrElse(userId, UserAccount(userId))
     accounts = accounts.copy(cashAccounts = accounts.cashAccounts + (cashAccount.currency -> cashAccount))
     copy(userAccountsMap = userAccountsMap + (userId -> accounts))
+  }
+
+  def increaseNextOrderId(): AccountState = {
+    copy(nextOrderId = nextOrderId + 1)
   }
 }

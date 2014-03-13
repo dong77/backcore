@@ -34,4 +34,9 @@ class AccountManager extends StateManager[AccountState] {
       AccountOperationResult(InsufficientFund, current)
     }
   }
+
+  def getAndIncreaseNextOrderId(): Long = {
+    state = state.increaseNextOrderId()
+    state.nextOrderId
+  }
 }

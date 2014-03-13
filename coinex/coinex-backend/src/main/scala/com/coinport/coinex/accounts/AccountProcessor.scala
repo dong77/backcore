@@ -55,7 +55,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
     case DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _)) =>
       manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
         case m @ AccountOperationResult(Ok, _) =>
-          val o = order.copy( /*id = sequenceNr, */ timestamp = Some(System.currentTimeMillis))
+          val o = order.copy( id = manager.getAndIncreaseNextOrderId, timestamp = Some(System.currentTimeMillis))
           sender ! OrderSubmissionInProgross(side, o)
           deliver(OrderSubmitted(side, o), getProcessorRef(side))
         case m: AccountOperationResult => sender ! m

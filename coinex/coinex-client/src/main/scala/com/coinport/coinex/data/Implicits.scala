@@ -79,5 +79,5 @@ object Implicits {
   implicit def order2Rich(raw: Order) = new RichOrder(raw)
   implicit def transaction2Rich(raw: Transaction) = new RichTransaction(raw)
   implicit def cashAccont2Rich(raw: CashAccount) = new RichCashAccount(raw)
-  implicit def candleDataItem2Rich(raw: CandleDataItem) = RichCandleDataItem(raw)
+  implicit def candleDataItem2Rich(raw: CandleDataItem) = new RichCandleDataItem(raw)
 }
