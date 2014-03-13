@@ -30,9 +30,11 @@ class EventSerializer extends Serializer {
     case m: MarketUpdate => BinaryScalaCodec(MarketUpdate)(m)
     case m: QueryUserLog => BinaryScalaCodec(QueryUserLog)(m)
     case m: QueryUserLogResult => BinaryScalaCodec(QueryUserLogResult)(m)
+    case m: QueryMarketCandleData => BinaryScalaCodec(QueryMarketCandleData)(m)
+    case m: QueryMarketCandleDataResult => BinaryScalaCodec(QueryMarketCandleDataResult)(m)
     case m => throw new IllegalArgumentException("Cannot serialize object: " + m + ". Talk to wangdong!")
   }
-  
+
   def fromBinary(bytes: Array[Byte],
     clazz: Option[Class[_]]): AnyRef = clazz match {
     case Some(c) if c == classOf[AccountOperationResult.Immutable] => BinaryScalaCodec(AccountOperationResult).invert(bytes).get
@@ -54,6 +56,9 @@ class EventSerializer extends Serializer {
     case Some(c) if c == classOf[MarketUpdate.Immutable] => BinaryScalaCodec(MarketUpdate).invert(bytes).get
     case Some(c) if c == classOf[QueryUserLog.Immutable] => BinaryScalaCodec(QueryUserLog).invert(bytes).get
     case Some(c) if c == classOf[QueryUserLogResult.Immutable] => BinaryScalaCodec(QueryUserLogResult).invert(bytes).get
+    case Some(c) if c == classOf[QueryMarketCandleData.Immutable] => BinaryScalaCodec(QueryMarketCandleData).invert(bytes).get
+    case Some(c) if c == classOf[QueryMarketCandleDataResult.Immutable] => BinaryScalaCodec(QueryMarketCandleDataResult).invert(bytes).get
+
     case Some(c) => throw new IllegalArgumentException("Cannot deserialize class: " + c.getCanonicalName + ". Talk to wangdong!")
     case None => throw new IllegalArgumentException("No class found in EventSerializer when deserializing array: " + bytes.mkString(""))
   }

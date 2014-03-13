@@ -3,7 +3,7 @@
  *
  */
 
-package com.coinport.coinex.userlogs
+package com.coinport.coinex.postmarket
 
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
@@ -12,7 +12,7 @@ import com.coinport.coinex.common.StateManager
 import Implicits._
 
 class UserLogsView extends ExtendedView {
-  override def processorId = "coinex_ulp"
+  override def processorId = "coinex_pmp"
   private val manager = new UserLogsStateManager
 
   def receive = {

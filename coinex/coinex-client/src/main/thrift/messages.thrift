@@ -105,6 +105,19 @@ struct UserLogs {
  	1: map<i64, UserLog> userLogs
 }
 
+struct CandleDataItem {
+	1: i64 timestamp
+	2: i64 volumn
+	3: double open
+	4: double stop
+	5: double low
+	6: double high
+}
+
+struct CandleData {
+	1: i64 timestamp
+	2: list<CandleDataItem> items
+}
 // ------------------------------------------------------------------------------------------------
 // Non-persistent message.
 struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
@@ -118,6 +131,9 @@ struct QueryAccountResult{1: UserAccount userAccount}
 
 struct QueryMarket{1: MarketSide side, 2: i32 depth}
 struct QueryMarketResult{1: optional Price price, 2: list<Order> orders1, 3: list<Order> orders2}
+
+struct QueryMarketCandleData{1: MarketSide side}
+struct QueryMarketCandleDataResult{1: CandleData candleData}
 
 struct OrderSubmissionInProgross{1: MarketSide side, 2: Order order}
 // ----------------------------------------------------------------------------
