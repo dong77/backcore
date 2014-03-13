@@ -90,7 +90,7 @@ struct OrderInfo {
 }
 
 struct UserLog {
-	1: list<OrderInfo> orders
+	1: list<OrderInfo> orderInfos
 	2: list<Transaction> txs
 }
 
@@ -103,7 +103,7 @@ struct UserLogs {
 struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
 struct OrderSubmissionDone{1: MarketSide side, 2: Order order, 3: list<Transaction> txs}
 
-struct QueryUserLog{1: i64 userId}
+struct QueryUserLog{1: i64 userId, 2: optional i32 numOrders, 3: optional i32 skipOrders, 4: optional OrderStatus status, 5: optional i32 numTxs, 6: optional i32 skipTxs}
 struct QueryUserLogResult{1: i64 userId, 2: UserLog userLog}
 
 struct QueryAccount{1: i64 userId}
