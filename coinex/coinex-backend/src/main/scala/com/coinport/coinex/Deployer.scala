@@ -21,7 +21,7 @@ import Implicits._
 class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
   val system = cluster.system
   def deploy(routers: LocalRouters) = {
-    // Account Processor (path: /user/up/singleton)
+    // User Processor (path: /user/up/singleton)
     if (cluster.selfRoles.contains("up")) {
       system.actorOf(ClusterSingletonManager.props(
         singletonProps = Props(new UserProcessor()),
@@ -51,6 +51,7 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
       system.actorOf(Props(classOf[AccountView]), "av")
     }
 
+    // UserLogs Processor (path: /user/ulp)
     if (cluster.selfRoles.contains("ulp")) {
       system.actorOf(ClusterSingletonManager.props(
         singletonProps = Props(new UserLogsProcessor()),
@@ -58,6 +59,11 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
         terminationMessage = PoisonPill,
         role = Some("ulp")),
         name = "ulp")
+    }
+
+    // UserLogs View (path: /user/ulv)
+    if (cluster.selfRoles.contains("ulv")) {
+      system.actorOf(Props(classOf[UserLogsView]), "ulv")
     }
 
     // Market Processors and Views

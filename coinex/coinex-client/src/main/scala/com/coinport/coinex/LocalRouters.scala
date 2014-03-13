@@ -13,6 +13,7 @@ import com.coinport.coinex.data._
 import Implicits._
 
 class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
+  //---------------------------------------------------------------------------
   val userProcessor = system.actorOf(Props(new ClusterSingletonRouter("ap", "user/up/singleton")), "up_router")
 
   val userView = system.actorOf(
@@ -24,6 +25,7 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
         allowLocalRoutees = false,
         useRole = Some("uv"))).props, "uv_router")
 
+  //---------------------------------------------------------------------------
   val accountProcessor = system.actorOf(Props(new ClusterSingletonRouter("ap", "user/ap/singleton")), "ap_router")
 
   val accountView = system.actorOf(
@@ -35,6 +37,19 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
         allowLocalRoutees = false,
         useRole = Some("av"))).props, "av_router")
 
+  //---------------------------------------------------------------------------
+  val userLogsProcessor = system.actorOf(Props(new ClusterSingletonRouter("ulp", "user/ulp/singleton")), "ulp_router")
+
+  val userLogsProcessorView = system.actorOf(
+    ClusterRouterGroup(
+      RoundRobinGroup(Nil),
+      ClusterRouterGroupSettings(
+        totalInstances = Int.MaxValue,
+        routeesPaths = List("/user/ulv"),
+        allowLocalRoutees = false,
+        useRole = Some("ulv"))).props, "ulv_router")
+
+  //---------------------------------------------------------------------------
   val marketProcessors = Map(markets map { m =>
     m -> system.actorOf(
       Props(new ClusterSingletonRouter("mp_" + m.asString, "/user/mp_" + m.asString + "/singleton")),
@@ -51,6 +66,4 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
           allowLocalRoutees = false,
           useRole = Some("mv_" + m.asString))).props, "mv_" + m.asString + "_router")
   }: _*)
-
-  val userLogsProcessor = system.actorOf(Props(new ClusterSingletonRouter("ulp", "user/ulp/singleton")), "ulp_router")
 }
