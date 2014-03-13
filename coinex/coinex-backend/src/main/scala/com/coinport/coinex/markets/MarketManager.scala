@@ -18,6 +18,7 @@ package com.coinport.coinex.markets
 import com.coinport.coinex.data._
 import com.coinport.coinex.common.StateManager
 import Implicits._
+import OrderStatus._
 
 class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   initWithDefaultState(MarketState(headSide))
@@ -26,7 +27,7 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   //This is for testing only
   private[markets] def disableCollectingTransactions() = collectTxs = false
 
-  def addOrder(takerSide: MarketSide, takerOrder: Order): List[Transaction] = {
+  def addOrder(takerSide: MarketSide, takerOrder: Order): MarketUpdate = {
     val makerSide = takerSide.reverse
 
     def takerMpos = state.marketPriceOrderPool(takerSide)
@@ -38,6 +39,8 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
     // the maker side has no limit-price-order to match at all, we stop.
     var (remainingTakerQuantity, continue) = (takerOrder.quantity, takerMpos.isEmpty)
     var txs = List.empty[Transaction]
+    var fullyExecutedOrders = List.empty[Order]
+    var partiallyExecutedOrders = List.empty[Order]
 
     // We extract common logics into an inner method for better readability.
     def foundMatching(makerOrder: Order, actualTakerPrice: Either[Double /*multiply*/ , Double /*divide*/ ]) {
@@ -55,10 +58,12 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
         remainingTakerQuantity -= txAmount
 
         state = state.removeOrder(makerSide, makerOrder.id)
+        fullyExecutedOrders ::= makerOrder
         if (collectTxs) {
           txs ::= Transaction(
             Transfer(takerOrder.userId, takerOrder.id, takerSide.outCurrency, txAmount, remainingTakerQuantity == 0),
             Transfer(makerOrder.userId, makerOrder.id, makerSide.outCurrency, makerOrder.quantity, true))
+
         }
 
       } else {
@@ -66,6 +71,7 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
         val txAmount = calcTxAmount(remainingTakerQuantity, true)
         val updatedMakerOrder = makerOrder.copy(quantity = makerOrder.quantity - txAmount)
         state = state.addOrder(makerSide, updatedMakerOrder)
+        partiallyExecutedOrders ::= updatedMakerOrder
         if (collectTxs) {
           txs ::= Transaction(
             Transfer(takerOrder.userId, takerOrder.id, takerSide.outCurrency, remainingTakerQuantity, true),
@@ -93,12 +99,18 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
       }
     }
 
-    // The new order is not fully executed, so we add a pending order into the pool
     if (remainingTakerQuantity > 0) {
       state = state.addOrder(takerSide, takerOrder.copy(quantity = remainingTakerQuantity))
     }
 
-    txs
+    val status =
+      if (remainingTakerQuantity == takerOrder.quantity) OrderStatus.Pending
+      else if (remainingTakerQuantity > 0) OrderStatus.PartiallyExecuted
+      else OrderStatus.FullyExecuted
+
+    val orderInfo = OrderInfo(takerSide, takerOrder, status)
+
+    MarketUpdate(orderInfo, remainingTakerQuantity, fullyExecutedOrders, partiallyExecutedOrders, txs)
   }
 
   def removeOrder(side: MarketSide, id: Long): Option[Order] = {

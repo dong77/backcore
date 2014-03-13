@@ -14,6 +14,7 @@ namespace java com.coinport.coinex.data
 // Data and Structs
 
 enum Currency {
+	UNKNOWN = 0
     RMB = 1
     USD = 2
     BTC = 1000
@@ -31,15 +32,35 @@ struct Order {
     4: optional double price
 }
 
-struct Transfer{1: i64 userId, 2: i64 orderId, 3: Currency currency, 4: i64 quantity, 5: bool fullyExecuted}
-struct Transaction{1: Transfer taker, 2: Transfer maker}
-struct CashAccount{1: Currency currency, 2: i64 available, 3: i64 locked, 4: i64 pendingWithdrawal}
+enum OrderStatus {
+	PENDING = 0
+	PARTIALLY_EXECUTED = 1
+	FULLY_EXECUTED = 2
+	CANCELLED = 3
+}
 
+struct Transfer{
+	1: i64 userId
+	2: i64 orderId
+	3: Currency currency
+	4: i64 quantity
+	5: bool fullyExecuted
+}
+struct Transaction{
+	1: Transfer taker
+	2: Transfer maker
+}
+struct CashAccount{
+	1: Currency currency
+	2: i64 available
+	3: i64 locked
+	4: i64 pendingWithdrawal
+}
 
 enum AccountOperationCode {
-    Ok = 0
-    InsufficientFund = 1
-    InvalidAmount = 2
+    OK = 0
+    INSUFFICIENT_FUND = 1
+	INVALID_AMOUNT = 2
 }
 
 struct CashAccount {
@@ -62,10 +83,28 @@ struct Price {
 struct User{
 }
 
+struct OrderInfo {
+	1: MarketSide side
+	2: Order order
+	3: OrderStatus status
+}
+
+struct UserOrderTransactionHistory {
+	1: list<OrderInfo> orders
+	2: list<Transaction> txs
+}
+
+struct UserOrderTransactionHistoryState {
+ 	1: map<i64, UserOrderTransactionHistory> historyMap
+}
+
 // ------------------------------------------------------------------------------------------------
 // Non-persistent message.
 struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
 struct OrderSubmissionDone{1: MarketSide side, 2: Order order, 3: list<Transaction> txs}
+
+struct QueryUserOrderTransactionHistory{1: i64 userId}
+struct QueryUserOrderTransactionHistoryResult{1: i64 userId, 2: UserOrderTransactionHistory history}
 
 struct QueryAccount{1: i64 userId}
 struct QueryAccountResult{1: UserAccount userAccount}
@@ -97,5 +136,7 @@ struct OrderSubmitted{1: MarketSide side, 2: Order order}
 
 // MarketProcessor -> AccountProcessor events
 struct OrderCancelled{1: MarketSide side, 2:Order order}
-struct TransactionsCreated{1: list<Transaction> txs}
 struct NewTxPriceSeen{1: MarketSide side, 2: double price}
+
+// MarketProcessor -> AggregateUserView
+struct MarketUpdate{1: OrderInfo originOrderInfo, 2: i64 currentQuantity, 3: list<Order> fullyExecutedOrders, 4: list<Order> partiallyExecutedOrders, 5: list<Transaction> txs}

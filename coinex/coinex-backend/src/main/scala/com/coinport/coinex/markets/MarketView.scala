@@ -18,7 +18,7 @@ class MarketView(marketSide: MarketSide) extends ExtendedView {
   def receive = {
     case DebugDump =>
       log.info("state: {}", manager())
-      
+
     case x =>
       log.info("~~~ saw: " + x)
       if (receiveMessage.isDefinedAt(x)) receiveMessage(x)
@@ -29,14 +29,13 @@ class MarketView(marketSide: MarketSide) extends ExtendedView {
       manager.removeOrder(side, orderId)
 
     case Persistent(OrderSubmitted(side, order: Order), _) =>
-      val txs = manager.addOrder(side, order)
-      txs.headOption foreach {
-        tx =>
-          lastPrice = Some(Price(tx.taker.currency ~> tx.maker.currency, tx.maker.quantity.toDouble / tx.taker.quantity))
+      val marketUpdate = manager.addOrder(side, order)
+      marketUpdate.txs.headOption foreach {
+        tx => lastPrice = Some(Price(tx.taker.currency ~> tx.maker.currency, tx.maker.quantity.toDouble / tx.taker.quantity))
       }
 
     case QueryMarket(side, depth) =>
-      val price = lastPrice map { p => if (p.side == side) p else p.reverse}
+      val price = lastPrice map { p => if (p.side == side) p else p.reverse }
       sender ! QueryMarketResult(price,
         manager().limitPriceOrderPool(side).take(depth).toSeq,
         manager().limitPriceOrderPool(side.reverse).take(depth).toSeq)

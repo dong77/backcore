@@ -45,10 +45,11 @@ class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) e
     // ------------------------------------------------------------------------------------------------
     // Events
     case OrderSubmitted(side, order: Order) =>
-      val txs = manager.addOrder(side, order)
-      if (txs.nonEmpty) {
-        deliver(TransactionsCreated(txs), accountProcessorPath)
+      val marketUpdate = manager.addOrder(side, order)
+      if (marketUpdate.txs.nonEmpty) {
+        deliver(marketUpdate, accountProcessorPath)
       }
-      sender ! OrderSubmissionDone(side, order, txs)
+      //TODO: deliver(marketUpdate, accountProcessorPath)
+      sender ! OrderSubmissionDone(side, order, marketUpdate.txs)
   }
 }
