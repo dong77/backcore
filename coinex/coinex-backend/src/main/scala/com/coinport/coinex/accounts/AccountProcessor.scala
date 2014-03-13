@@ -74,6 +74,11 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
         manager.updateCashAccount(maker.userId, CashAccount(maker.currency, 0, -maker.quantity, 0))
         manager.updateCashAccount(maker.userId, CashAccount(taker.currency, taker.quantity, 0, 0))
       }
+
+      mu.unlockFunds foreach { u =>
+        manager.updateCashAccount(u.userId, CashAccount(u.currency, u.amount, -u.amount, 0))
+      }
+
   }
 
   private def getProcessorRef(side: MarketSide): ActorPath = {
