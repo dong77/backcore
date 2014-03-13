@@ -51,7 +51,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
     case DoConfirmCashWithdrawalFailed(userId, currency, amount) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
-    case DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _)) =>
+    case DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _)) =>
       manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
         case m @ AccountOperationResult(Ok, _) =>
           val o = order.copy(id = sequenceNr)
@@ -62,7 +62,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
 
     // ------------------------------------------------------------------------------------------------
     // Events
-    case e @ OrderCancelled(side, Order(userId, _, quantity, _)) =>
+    case e @ OrderCancelled(side, Order(userId, _, quantity, _, _)) =>
       sender ! manager.updateCashAccount(userId, CashAccount(side.outCurrency, quantity, -quantity, 0))
 
     case mu: MarketUpdate =>

@@ -44,7 +44,7 @@ final class Coinex(routers: LocalRouters) extends Actor {
     case m: QueryUserLog => ulv forward m
 
     //-------------------------------------------------------------------------
-    case Persistent => throw new IllegalArgumentException("Coinex class doesn't handle Persistent messages")
-    case m => throw new IllegalArgumentException("Coinex class doesn't handle messages of type: " + m.getClass.getCanonicalName)
+    case Persistent => throw new IllegalArgumentException("Coinex doesn't handle persistent messages")
+    case m => throw new IllegalArgumentException("Coinex doesn't handle messages of type: " + m.getClass.getCanonicalName)
   }
 }

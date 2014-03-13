@@ -33,21 +33,21 @@ class AccountView extends ExtendedView {
     case Persistent(DoConfirmCashWithdrawalFailed(userId, currency, amount), _) =>
       manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
-    case Persistent(DoSubmitOrder(side: MarketSide, Order(userId, _, quantity, _)), _) =>
+    case Persistent(DoSubmitOrder(side: MarketSide, Order(userId, _, quantity, _, _)), _) =>
       manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0))
 
-    case Persistent(OrderCancelled(side, Order(userId, _, quantity, _)), _) =>
+    case Persistent(OrderCancelled(side, Order(userId, _, quantity, _, _)), _) =>
       manager.updateCashAccount(userId, CashAccount(side.outCurrency, quantity, -quantity, 0))
 
-    case Persistent(marketUpdate @ MarketUpdate, _) =>
-      /*marketUpdate.txs foreach { tx =>
+    case Persistent(marketUpdate: MarketUpdate, _) =>
+      marketUpdate.txs foreach { tx =>
         val (taker, maker) = (tx.taker, tx.maker)
         manager.updateCashAccount(taker.userId, CashAccount(taker.currency, 0, -taker.quantity, 0))
         manager.updateCashAccount(taker.userId, CashAccount(maker.currency, maker.quantity, 0, 0))
 
         manager.updateCashAccount(maker.userId, CashAccount(maker.currency, 0, -maker.quantity, 0))
         manager.updateCashAccount(maker.userId, CashAccount(taker.currency, taker.quantity, 0, 0))
-      }*/
+      }
 
     case QueryAccount(userId) =>
       sender ! QueryAccountResult(manager().getUserAccounts(userId))

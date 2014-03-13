@@ -15,21 +15,22 @@ namespace java com.coinport.coinex.data
 
 enum Currency {
 	UNKNOWN = 0
-    RMB = 1
-    USD = 2
-    BTC = 1000
+	RMB = 1
+	USD = 2
+	BTC = 1000
 }
 
 struct MarketSide {
-    1: Currency outCurrency
-    2: Currency inCurrency
+	1: Currency outCurrency
+	2: Currency inCurrency
 }
 
 struct Order {
-    1: i64 userId
-    2: i64 id
-    3: i64 quantity
-    4: optional double price
+	1: i64 userId
+	2: i64 id
+	3: i64 quantity
+	4: optional double price
+	5: optional i64 takeLimit
 }
 
 enum OrderStatus {
@@ -58,21 +59,21 @@ struct CashAccount{
 }
 
 enum AccountOperationCode {
-    OK = 0
-    INSUFFICIENT_FUND = 1
+	OK = 0
+	INSUFFICIENT_FUND = 1
 	INVALID_AMOUNT = 2
 }
 
 struct CashAccount {
-    1: Currency currency
-    2: i64 available = 0
-    3: i64 locked = 0
-    4: i64 pendingWithdrawal = 0
+	1: Currency currency
+	2: i64 available = 0
+	3: i64 locked = 0
+	4: i64 pendingWithdrawal = 0
 }
 
 struct UserAccount {
-    1: i64 userId
-    2: map<Currency, CashAccount> cashAccounts
+	1: i64 userId
+	2: map<Currency, CashAccount> cashAccounts
 }
 
 struct Price {
