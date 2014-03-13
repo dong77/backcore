@@ -27,7 +27,9 @@ class EventSerializer extends Serializer {
     case m: QueryAccountResult => BinaryScalaCodec(QueryAccountResult)(m)
     case m: QueryMarket => BinaryScalaCodec(QueryMarket)(m)
     case m: QueryMarketResult => BinaryScalaCodec(QueryMarketResult)(m)
-    case m: TransactionsCreated => BinaryScalaCodec(TransactionsCreated)(m)
+    case m: MarketUpdate => BinaryScalaCodec(MarketUpdate)(m)
+    case m: QueryUserLog => BinaryScalaCodec(QueryUserLog)(m)
+    case m: QueryUserLogResult => BinaryScalaCodec(QueryUserLogResult)(m)
     case m => throw new IllegalArgumentException("Cannot serialize object: " + m + ". Talk to wangdong!")
   }
   
@@ -49,7 +51,9 @@ class EventSerializer extends Serializer {
     case Some(c) if c == classOf[QueryAccountResult.Immutable] => BinaryScalaCodec(QueryAccountResult).invert(bytes).get
     case Some(c) if c == classOf[QueryMarket.Immutable] => BinaryScalaCodec(QueryMarket).invert(bytes).get
     case Some(c) if c == classOf[QueryMarketResult.Immutable] => BinaryScalaCodec(QueryMarketResult).invert(bytes).get
-    case Some(c) if c == classOf[TransactionsCreated.Immutable] => BinaryScalaCodec(TransactionsCreated).invert(bytes).get
+    case Some(c) if c == classOf[MarketUpdate.Immutable] => BinaryScalaCodec(MarketUpdate).invert(bytes).get
+    case Some(c) if c == classOf[QueryUserLog.Immutable] => BinaryScalaCodec(QueryUserLog).invert(bytes).get
+    case Some(c) if c == classOf[QueryUserLogResult.Immutable] => BinaryScalaCodec(QueryUserLogResult).invert(bytes).get
     case Some(c) => throw new IllegalArgumentException("Cannot deserialize class: " + c.getCanonicalName + ". Talk to wangdong!")
     case None => throw new IllegalArgumentException("No class found in EventSerializer when deserializing array: " + bytes.mkString(""))
   }

@@ -25,7 +25,7 @@ class MarketManagerSpec extends Specification {
       mm.addOrder(makerSide, maker1)
 
       val maker2 = Order(userId = 888L, id = 2, price = None, quantity = 500)
-      val txs = mm.addOrder(makerSide, maker2)
+      val txs = mm.addOrder(makerSide, maker2).txs
 
       mm().orderMap mustEqual Map(1L -> maker1, 2 -> maker2)
       mm().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
@@ -43,7 +43,7 @@ class MarketManagerSpec extends Specification {
       mm.addOrder(makerSide, maker)
 
       val taker = Order(userId = 888L, id = 2, price = None, quantity = 100)
-      val txs = mm.addOrder(takerSide, taker)
+      val txs = mm.addOrder(takerSide, taker).txs
 
       mm().orderMap mustEqual Map(1L -> maker, 2 -> taker)
       mm().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
@@ -62,7 +62,7 @@ class MarketManagerSpec extends Specification {
         mm.addOrder(makerSide, maker)
 
         val taker = Order(userId = 888L, id = 2, price = None, quantity = 100)
-        val txs = mm.addOrder(takerSide, taker)
+        val txs = mm.addOrder(takerSide, taker).txs
 
         mm().orderMap.size mustEqual 0
         mm().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
@@ -83,7 +83,7 @@ class MarketManagerSpec extends Specification {
         mm.addOrder(makerSide, maker)
 
         val taker = Order(userId = 888L, id = 2, price = None, quantity = 10)
-        val txs = mm.addOrder(takerSide, taker)
+        val txs = mm.addOrder(takerSide, taker).txs
 
         mm().orderMap mustEqual Map(1 -> maker.copy(quantity = 90))
         mm().limitPriceOrderPool(makerSide) mustEqual SortedSet(maker.copy(quantity = 90))
@@ -104,7 +104,7 @@ class MarketManagerSpec extends Specification {
         mm.addOrder(makerSide, maker)
 
         val taker = Order(userId = 888L, id = 2, price = None, quantity = 100)
-        val txs = mm.addOrder(takerSide, taker)
+        val txs = mm.addOrder(takerSide, taker).txs
 
         mm().orderMap mustEqual Map(2 -> taker.copy(quantity = 90))
 
@@ -129,7 +129,7 @@ class MarketManagerSpec extends Specification {
         mm.addOrder(makerSide, maker2)
 
         val taker = Order(userId = 888L, id = 10, price = None, quantity = 120)
-        val txs = mm.addOrder(takerSide, taker)
+        val txs = mm.addOrder(takerSide, taker).txs
 
         mm().orderMap mustEqual Map(1 -> maker1.copy(quantity = 30)) //  100 x 0.5 + 100 x 1 - 120 = 30
         mm().limitPriceOrderPool(makerSide) mustEqual SortedSet(maker1.copy(quantity = 30))
@@ -154,7 +154,7 @@ class MarketManagerSpec extends Specification {
         mm.addOrder(makerSide, maker2)
 
         val taker = Order(userId = 888L, id = 10, price = None, quantity = 120)
-        val txs = mm.addOrder(takerSide, taker)
+        val txs = mm.addOrder(takerSide, taker).txs
 
         mm().orderMap mustEqual Map(10 -> taker.copy(quantity = 50)) //  120 - 100 x 0.5 + 20 x 1 - 120 = 50
         mm().marketPriceOrderPool(takerSide) mustEqual SortedSet(taker.copy(quantity = 50))
@@ -181,7 +181,7 @@ class MarketManagerSpec extends Specification {
       mm.addOrder(makerSide, maker2)
 
       val taker = Order(userId = 888L, id = 10, price = Some(1), quantity = 10)
-      val txs = mm.addOrder(takerSide, taker)
+      val txs = mm.addOrder(takerSide, taker).txs
 
       mm().orderMap mustEqual Map(1 -> maker1, 2 -> maker2.copy(quantity = 80))
       mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
@@ -205,7 +205,7 @@ class MarketManagerSpec extends Specification {
       mm.addOrder(makerSide, maker2)
 
       val taker = Order(userId = 888L, id = 10, price = Some(1), quantity = 60)
-      val txs = mm.addOrder(takerSide, taker)
+      val txs = mm.addOrder(takerSide, taker).txs
 
       mm().orderMap mustEqual Map(1 -> maker1.copy(quantity = 10))
       mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
@@ -230,7 +230,7 @@ class MarketManagerSpec extends Specification {
       mm.addOrder(makerSide, maker2)
 
       val taker = Order(userId = 888L, id = 10, price = Some(2), quantity = 90)
-      val txs = mm.addOrder(takerSide, taker)
+      val txs = mm.addOrder(takerSide, taker).txs
 
       mm().orderMap mustEqual Map(10 -> taker.copy(quantity = 40)) // 90 - 100x0.4 - 20x0.5
       mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
@@ -255,7 +255,7 @@ class MarketManagerSpec extends Specification {
       mm.addOrder(makerSide, maker2)
 
       val taker = Order(userId = 888L, id = 10, price = Some(2), quantity = 5)
-      val txs = mm.addOrder(takerSide, taker)
+      val txs = mm.addOrder(takerSide, taker).txs
 
       mm().orderMap mustEqual Map(1 -> maker1.copy(quantity = 10), 2 -> maker2)
       mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
@@ -279,7 +279,7 @@ class MarketManagerSpec extends Specification {
       mm.addOrder(makerSide, maker2)
 
       val taker = Order(userId = 888L, id = 10, price = Some(2), quantity = 30)
-      val txs = mm.addOrder(takerSide, taker)
+      val txs = mm.addOrder(takerSide, taker).txs
 
       mm().orderMap mustEqual Map(2 -> maker2.copy(quantity = 60))
       mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
@@ -304,7 +304,7 @@ class MarketManagerSpec extends Specification {
       mm.addOrder(makerSide, maker2)
 
       val taker = Order(userId = 888L, id = 10, price = Some(2), quantity = 300)
-      val txs = mm.addOrder(takerSide, taker)
+      val txs = mm.addOrder(takerSide, taker).txs
 
       mm().orderMap mustEqual Map(10 -> taker.copy(quantity = 240))
       mm().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool

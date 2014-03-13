@@ -12,7 +12,10 @@ import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.data._
 import Implicits._
 
-class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) extends ExtendedProcessor {
+class MarketProcessor(
+    marketSide: MarketSide,
+    accountProcessorPath: ActorPath,
+    userLogsProcessorPath: ActorPath) extends ExtendedProcessor {
   override val processorId = "coinex_mp_" + marketSide.asString
 
   val manager = new MarketManager(marketSide)
@@ -40,15 +43,18 @@ class MarketProcessor(marketSide: MarketSide, accountProcessorPath: ActorPath) e
     case DoCancelOrder(side, orderId) =>
       manager.removeOrder(side, orderId) foreach { order =>
         deliver(OrderCancelled(side, order), accountProcessorPath)
+        deliver(OrderCancelled(side, order), userLogsProcessorPath)
       }
 
     // ------------------------------------------------------------------------------------------------
     // Events
     case OrderSubmitted(side, order: Order) =>
-      val txs = manager.addOrder(side, order)
-      if (txs.nonEmpty) {
-        deliver(TransactionsCreated(txs), accountProcessorPath)
+      val marketUpdate = manager.addOrder(side, order)
+      if (marketUpdate.txs.nonEmpty) {
+        deliver(marketUpdate, accountProcessorPath)
+        deliver(marketUpdate, userLogsProcessorPath)
       }
-      sender ! OrderSubmissionDone(side, order, txs)
+      //TODO: deliver(marketUpdate, accountProcessorPath)
+      sender ! OrderSubmissionDone(side, order, marketUpdate.txs)
   }
 }

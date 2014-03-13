@@ -51,21 +51,22 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
     case DoConfirmCashWithdrawalFailed(userId, currency, amount) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
-    case DoSubmitOrder(side: MarketSide, order @ Order(userId, id, quantity, price)) =>
+    case DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _)) =>
       manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
         case m @ AccountOperationResult(Ok, _) =>
-          sender ! OrderSubmissionInProgross(side, order)
-          deliver(OrderSubmitted(side, order), getProcessorRef(side))
+          val o = order.copy(id = sequenceNr)
+          sender ! OrderSubmissionInProgross(side, o)
+          deliver(OrderSubmitted(side, o), getProcessorRef(side))
         case m: AccountOperationResult => sender ! m
       }
 
     // ------------------------------------------------------------------------------------------------
     // Events
-    case e @ OrderCancelled(side, Order(userId, _, quantity, _)) =>
+    case e @ OrderCancelled(side, Order(userId, _, quantity, _, _)) =>
       sender ! manager.updateCashAccount(userId, CashAccount(side.outCurrency, quantity, -quantity, 0))
 
-    case TransactionsCreated(txs) =>
-      txs foreach { tx =>
+    case mu: MarketUpdate =>
+      mu.txs foreach { tx =>
         val (taker, maker) = (tx.taker, tx.maker)
         manager.updateCashAccount(taker.userId, CashAccount(taker.currency, 0, -taker.quantity, 0))
         manager.updateCashAccount(taker.userId, CashAccount(maker.currency, maker.quantity, 0, 0))

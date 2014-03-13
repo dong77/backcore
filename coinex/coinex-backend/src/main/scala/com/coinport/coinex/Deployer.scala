@@ -14,13 +14,14 @@ import akka.contrib.pattern.ClusterSingletonManager
 import com.coinport.coinex.users._
 import com.coinport.coinex.accounts._
 import com.coinport.coinex.markets._
+import com.coinport.coinex.userlogs._
 import akka.cluster.Cluster
 import Implicits._
 
 class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
   val system = cluster.system
   def deploy(routers: LocalRouters) = {
-    // Account Processor (path: /user/up/singleton)
+    // User Processor (path: /user/up/singleton)
     if (cluster.selfRoles.contains("up")) {
       system.actorOf(ClusterSingletonManager.props(
         singletonProps = Props(new UserProcessor()),
@@ -50,12 +51,27 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
       system.actorOf(Props(classOf[AccountView]), "av")
     }
 
+    // UserLogs Processor (path: /user/ulp)
+    if (cluster.selfRoles.contains("ulp")) {
+      system.actorOf(ClusterSingletonManager.props(
+        singletonProps = Props(new UserLogsProcessor()),
+        singletonName = "singleton",
+        terminationMessage = PoisonPill,
+        role = Some("ulp")),
+        name = "ulp")
+    }
+
+    // UserLogs View (path: /user/ulv)
+    if (cluster.selfRoles.contains("ulv")) {
+      system.actorOf(Props(classOf[UserLogsView]), "ulv")
+    }
+
     // Market Processors and Views
     markets foreach { m =>
       // path: /user/mp_btc_rmb/singleton
       if (cluster.selfRoles.contains("mp_" + m.asString)) {
         system.actorOf(ClusterSingletonManager.props(
-          singletonProps = Props(new MarketProcessor(m, routers.accountProcessor.path)),
+          singletonProps = Props(new MarketProcessor(m, routers.accountProcessor.path, routers.userLogsProcessor.path)),
           singletonName = "singleton",
           terminationMessage = PoisonPill,
           role = Some("mp_" + m.asString)),
