@@ -40,7 +40,7 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
   //---------------------------------------------------------------------------
   val userLogsProcessor = system.actorOf(Props(new ClusterSingletonRouter("ulp", "user/ulp/singleton")), "ulp_router")
 
-  val userLogsProcessorView = system.actorOf(
+  val userLogsView = system.actorOf(
     ClusterRouterGroup(
       RoundRobinGroup(Nil),
       ClusterRouterGroupSettings(
@@ -50,13 +50,13 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
         useRole = Some("ulv"))).props, "ulv_router")
 
   //---------------------------------------------------------------------------
-  val marketProcessors = Map(markets map { m =>
+  val marketProcessors = bidirection(Map(markets map { m =>
     m -> system.actorOf(
       Props(new ClusterSingletonRouter("mp_" + m.asString, "/user/mp_" + m.asString + "/singleton")),
       "mp_" + m.asString + "_router")
-  }: _*)
+  }: _*))
 
-  val marketViews = Map(markets map { m =>
+  val marketViews = bidirection(Map(markets map { m =>
     m -> system.actorOf(
       ClusterRouterGroup(
         RoundRobinGroup(Nil),
@@ -65,5 +65,11 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
           routeesPaths = List("/user/mv_" + m.asString),
           allowLocalRoutees = false,
           useRole = Some("mv_" + m.asString))).props, "mv_" + m.asString + "_router")
-  }: _*)
+  }: _*))
+
+  private def bidirection(m: Map[MarketSide, ActorRef]): Map[MarketSide, ActorRef] = {
+    m ++ m.map {
+      case (side, v) => (side.reverse, v)
+    }
+  }
 }
