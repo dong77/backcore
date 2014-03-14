@@ -28,15 +28,15 @@ class UserLogsView extends ExtendedView {
     case Persistent(OrderCancelled(side, order), _) =>
       manager.markOrderAs(order, OrderStatus.Cancelled)
 
-    case Persistent(MarketUpdate(oi, amount, fullyExecutedOrders, partiallyExecutedOrders, txs, _), _) =>
+    case Persistent(mu: MarketUpdate, _) =>
       val status =
-        if (amount == 0) OrderStatus.FullyExecuted
-        else if (amount == oi.order.quantity) OrderStatus.Pending
+        if (mu.outAmount == mu.originOrderInfo.order.quantity) OrderStatus.FullyExecuted
+        else if (mu.outAmount == 0) OrderStatus.Pending
         else OrderStatus.PartiallyExecuted
 
-      manager.addOrderAs(oi.side, oi.order, status)
-      fullyExecutedOrders foreach { manager.markOrderAs(_, OrderStatus.FullyExecuted) }
-      partiallyExecutedOrders foreach { manager.markOrderAs(_, OrderStatus.PartiallyExecuted) }
+      manager.addOrderAs(mu.originOrderInfo.side, mu.originOrderInfo.order, status)
+      mu.fullyExecutedOrders foreach { manager.markOrderAs(_, OrderStatus.FullyExecuted) }
+      mu.partiallyExecutedOrders foreach { manager.markOrderAs(_, OrderStatus.PartiallyExecuted) }
 
     case q: QueryUserLog =>
       val userLog = manager.getOrderInfos(q)

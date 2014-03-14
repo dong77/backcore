@@ -13,7 +13,7 @@ import Implicits._
 
 class CandleDataView extends ExtendedView {
   override def processorId = "coinex_pmp"
-  private val manager = new UserLogsStateManager
+  private val manager = new CandleDataBundlesManager
 
   def receive = {
     case DebugDump =>
@@ -31,11 +31,21 @@ class CandleDataView extends ExtendedView {
   }
 }
 
-private class CandleDataStateManager extends StateManager[CandleDataSet] {
-  initWithDefaultState(CandleDataSet())
+private class CandleDataBundlesManager extends StateManager[CandleDataBundles] {
+  initWithDefaultState(CandleDataBundles())
 
-  def extract(mu: RichCandleDataItem) = {
-    //val timestamp = mu.originOrderInfo.order.timestamp.get
-  
+  val minute = 60 * 1000
+  val quarter = 15 * minute
+  val hour = 4 * quarter
+  val day = 24 * hour
+
+  def extract(mu: MarketUpdate) = {
+    val side = mu.originOrderInfo.side
+    val order = mu.originOrderInfo.order
+    val timestamp = order.timestamp.get
+ //   val volumn = mu.outAmount // volumn as side.outCurrency
+
+    val time = timestamp / minute
+  // CandleDataItem(time, )
   }
 }
