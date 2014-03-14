@@ -13,7 +13,7 @@ import Implicits._
 
 class UserLogsView extends ExtendedView {
   override def processorId = "coinex_pmp"
-  private val manager = new UserLogsStateManager
+  private val manager = new UserLogsManager
 
   def receive = {
     case DebugDump =>

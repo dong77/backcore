@@ -13,7 +13,7 @@ import Implicits._
 
 class CandleDataView extends ExtendedView {
   override def processorId = "coinex_pmp"
-  private val manager = new CandleDataStateManager
+  private val manager = new CandleDataManager
 
   def receive = {
     case DebugDump =>

@@ -11,7 +11,7 @@ import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.common.StateManager
 import Implicits._
 
-private[postmarket] class CandleDataStateManager extends StateManager[CandleDataState] {
+private[postmarket] class CandleDataManager extends StateManager[CandleDataState] {
   initWithDefaultState(CandleDataState())
 
   val minute = 60 * 1000

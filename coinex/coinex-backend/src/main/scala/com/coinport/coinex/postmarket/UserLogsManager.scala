@@ -12,7 +12,7 @@ import com.coinport.coinex.common.StateManager
 import Implicits._
 
 // TODO(d): test this.
-private[postmarket] class UserLogsStateManager extends StateManager[UserLogsState] {
+private[postmarket] class UserLogsManager extends StateManager[UserLogsState] {
   initWithDefaultState(UserLogsState())
 
   def getOrderInfos(param: QueryUserLog): UserLog = {
