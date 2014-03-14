@@ -18,7 +18,6 @@ class EventSerializer extends Serializer {
     case m: DoDepositCash => BinaryScalaCodec(DoDepositCash)(m)
     case m: DoRequestCashWithdrawal => BinaryScalaCodec(DoRequestCashWithdrawal)(m)
     case m: DoSubmitOrder => BinaryScalaCodec(DoSubmitOrder)(m)
-    case m: NewTxPriceSeen => BinaryScalaCodec(NewTxPriceSeen)(m)
     case m: OrderCancelled => BinaryScalaCodec(OrderCancelled)(m)
     case m: OrderSubmissionDone => BinaryScalaCodec(OrderSubmissionDone)(m)
     case m: OrderSubmissionInProgross => BinaryScalaCodec(OrderSubmissionInProgross)(m)
@@ -44,7 +43,6 @@ class EventSerializer extends Serializer {
     case Some(c) if c == classOf[DoDepositCash.Immutable] => BinaryScalaCodec(DoDepositCash).invert(bytes).get
     case Some(c) if c == classOf[DoRequestCashWithdrawal.Immutable] => BinaryScalaCodec(DoRequestCashWithdrawal).invert(bytes).get
     case Some(c) if c == classOf[DoSubmitOrder.Immutable] => BinaryScalaCodec(DoSubmitOrder).invert(bytes).get
-    case Some(c) if c == classOf[NewTxPriceSeen.Immutable] => BinaryScalaCodec(NewTxPriceSeen).invert(bytes).get
     case Some(c) if c == classOf[OrderCancelled.Immutable] => BinaryScalaCodec(OrderCancelled).invert(bytes).get
     case Some(c) if c == classOf[OrderSubmissionDone.Immutable] => BinaryScalaCodec(OrderSubmissionDone).invert(bytes).get
     case Some(c) if c == classOf[OrderSubmissionInProgross.Immutable] => BinaryScalaCodec(OrderSubmissionInProgross).invert(bytes).get
