@@ -13,7 +13,7 @@ import Implicits._
 
 class CandleDataView extends ExtendedView {
   override def processorId = "coinex_pmp"
-  private val manager = new CandleDataBundlesManager
+  private val manager = new CandleDataManager
 
   def receive = {
     case DebugDump =>
@@ -28,35 +28,5 @@ class CandleDataView extends ExtendedView {
     case Persistent(mu: MarketUpdate, _) if mu.txs.nonEmpty =>
     //  val timestamp = mu.originOrderInfo.order.timestamp.get
     case q: QueryMarketCandleData =>
-  }
-}
-
-private class CandleDataBundlesManager extends StateManager[CandleDataBundles] {
-  initWithDefaultState(CandleDataBundles())
-
-  val minute = 60 * 1000
-  val quarter = 15 * minute
-  val hour = 4 * quarter
-  val day = 24 * hour
-
-  def extract(mu: MarketUpdate) = {
-    val side = mu.originOrderInfo.side
-    val order = mu.originOrderInfo.order
-    val timestamp = order.timestamp.get
-    //   val volumn = mu.outAmount // volumn as side.outCurrency
-
-    val time = timestamp / minute
-    for {
-      first <- mu.firstPrice
-      high = first
-      last <- mu.lastPrice
-      low = last
-    } {
-      // Since all orders are sell orders, first price will always be the highest price,
-      // and last price will always be the lowest price
-      val item = CandleDataItem(time, mu.outAmount, first, last, low, high)
-      
-    }
-
   }
 }

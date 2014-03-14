@@ -101,10 +101,9 @@ struct OrderInfo {
 
 struct UserLog {
 	1: list<OrderInfo> orderInfos
-	2: list<Transaction> txs
 }
 
-struct UserLogs {
+struct UserLogsState {
  	1: map<i64, UserLog> userLogs
 }
 
@@ -129,7 +128,7 @@ struct CandleDataBundle {
 	4: optional CandleData dailyData
 }
 
-struct CandleDataBundles {
+struct CandleDataState {
 	1: map<MarketSide , CandleDataBundle> bundles
 }
 // ------------------------------------------------------------------------------------------------
@@ -137,7 +136,7 @@ struct CandleDataBundles {
 struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
 struct OrderSubmissionDone{1: MarketSide side, 2: Order order, 3: list<Transaction> txs}
 
-struct QueryUserLog{1: i64 userId, 2: optional i32 numOrders, 3: optional i32 skipOrders, 4: optional OrderStatus status, 5: optional i32 numTxs, 6: optional i32 skipTxs}
+struct QueryUserLog{1: i64 userId, 2: optional i32 numOrders, 3: optional i32 skipOrders, 4: optional OrderStatus status}
 struct QueryUserLogResult{1: i64 userId, 2: UserLog userLog}
 
 struct QueryAccount{1: i64 userId}
@@ -179,10 +178,9 @@ struct MarketUpdate{
 	1: OrderInfo originOrderInfo
 	2: i64 outAmount
 	3: i64 inAmount
-	4: list<Order> fullyExecutedOrders
-	5: list<Order> partiallyExecutedOrders
-	6: list<Transaction> txs
-	7: list<UnlockFund> unlockFunds
-	8: optional double firstPrice
-	9: optional double lastPrice
+	4: list<OrderInfo> matchedOrders
+	5: list<Transaction> txs
+	6: list<UnlockFund> unlockCashs
+	7: optional double firstPrice
+	8: optional double lastPrice
 }
