@@ -39,15 +39,20 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
     // the buy side has no limit-price-order to match at all, we stop.
     var sellOrderRemainingQuantity = sellOrder.quantity
     var sellOrderRemainingTakeLimit = sellOrder.takeLimit
+    var sellOrderTotalInAmount = 0L
     var continue = sellMpos.isEmpty
 
     var txs = List.empty[Transaction]
     var fullyExecutedOrders = List.empty[Order]
     var partiallyExecutedOrders = List.empty[Order]
     var unlockFunds = List.empty[UnlockFund]
+    var firstPrice: Option[Double] = None
+    var lastPrice: Option[Double] = None
 
     // We extract common logics into an inner method for better readability.
     def foundMatching(buyOrder: Order, price: Double) {
+      if (firstPrice.isEmpty) firstPrice = Some(price)
+      lastPrice = Some(price)
 
       // Calculate the amount buyOrder can afford to buy, buyPower will be like 14000RMB
       val maxSellAmount = sellOrderRemainingTakeLimit match {
@@ -67,6 +72,7 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
       state = state.removeOrder(buySide, buyOrder.id)
 
       sellOrderRemainingQuantity -= outAmount
+      sellOrderTotalInAmount += inAmount
       sellOrderRemainingTakeLimit = sellOrderRemainingTakeLimit map (_ - inAmount)
 
       if (collectTxs) {
@@ -129,7 +135,15 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
 
     val orderInfo = OrderInfo(sellSide, sellOrder, status)
 
-    MarketUpdate(orderInfo, sellOrderRemainingQuantity, fullyExecutedOrders, partiallyExecutedOrders, txs, unlockFunds)
+    MarketUpdate(orderInfo,
+      sellOrder.quantity - sellOrderRemainingQuantity,
+      sellOrderTotalInAmount,
+      fullyExecutedOrders,
+      partiallyExecutedOrders,
+      txs,
+      unlockFunds,
+      firstPrice,
+      lastPrice)
   }
 
   def removeOrder(side: MarketSide, id: Long): Option[Order] = {

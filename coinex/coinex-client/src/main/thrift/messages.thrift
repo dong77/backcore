@@ -120,11 +120,15 @@ struct CandleData {
 	2: list<CandleDataItem> items
 }
 
-struct CandleDataSet {
+struct CandleDataBundle {
 	1: optional CandleData minutelyData
 	2: optional CandleData quarterlyData
 	3: optional CandleData hourlyData
 	4: optional CandleData dailyData
+}
+
+struct CandleDataBundles {
+	1: map<MarketSide , CandleDataBundle> bundles
 }
 // ------------------------------------------------------------------------------------------------
 // Non-persistent message.
@@ -167,7 +171,16 @@ struct OrderSubmitted{1: MarketSide side, 2: Order order}
 
 // MarketProcessor -> AccountProcessor events
 struct OrderCancelled{1: MarketSide side, 2:Order order}
-struct NewTxPriceSeen{1: MarketSide side, 2: double price}
 
 // MarketProcessor -> AggregateUserView
-struct MarketUpdate{1: OrderInfo originOrderInfo, 2: i64 currentQuantity, 3: list<Order> fullyExecutedOrders, 4: list<Order> partiallyExecutedOrders, 5: list<Transaction> txs, 6: list<UnlockFund> unlockFunds}
+struct MarketUpdate{
+	1: OrderInfo originOrderInfo
+	2: i64 outAmount
+	3: i64 inAmount
+	4: list<Order> fullyExecutedOrders
+	5: list<Order> partiallyExecutedOrders
+	6: list<Transaction> txs
+	7: list<UnlockFund> unlockFunds
+	8: optional double firstPrice
+	9: optional double lastPrice
+}
