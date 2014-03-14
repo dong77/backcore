@@ -51,7 +51,7 @@ class MarketProcessor(
     case OrderSubmitted(side, order: Order) =>
       val marketUpdate = manager.addOrder(side, order)
       deliver(marketUpdate, userLogsProcessorPath)
-      if (marketUpdate.txs.nonEmpty || marketUpdate.unlockFunds.nonEmpty) {
+      if (marketUpdate.txs.nonEmpty || marketUpdate.unlockCashs.nonEmpty) {
         deliver(marketUpdate, accountProcessorPath)
       }
 

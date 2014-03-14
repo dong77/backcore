@@ -24,9 +24,6 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
   initWithDefaultState(MarketState(headSide))
   private var collectTxs = true
 
-  //This is for testing only
-  private[markets] def disableCollectingTransactions() = collectTxs = false
-
   def addOrder(sellSide: MarketSide, sellOrder: Order): MarketUpdate = {
     val buySide = sellSide.reverse
 
@@ -37,27 +34,26 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
 
     // If the top order on the sell side is a market price order, it means
     // the buy side has no limit-price-order to match at all, we stop.
-    var sellOrderRemainingQuantity = sellOrder.quantity
-    var sellOrderRemainingTakeLimit = sellOrder.takeLimit
-    var sellOrderTotalInAmount = 0L
+    var remainingQuantity = sellOrder.quantity
+    var remainingTakeLimit = sellOrder.takeLimit
+    var totalInAmount = 0L
     var continue = sellMpos.isEmpty
 
     var txs = List.empty[Transaction]
-    var fullyExecutedOrders = List.empty[Order]
-    var partiallyExecutedOrders = List.empty[Order]
-    var unlockFunds = List.empty[UnlockFund]
+    var matchedOrders = List.empty[OrderInfo]
+    var unlockCashs = List.empty[UnlockFund]
     var firstPrice: Option[Double] = None
     var lastPrice: Option[Double] = None
 
     // We extract common logics into an inner method for better readability.
     def foundMatching(buyOrder: Order, price: Double) {
-      if (firstPrice.isEmpty) firstPrice = Some(price)
       lastPrice = Some(price)
+      if (firstPrice.isEmpty) firstPrice = lastPrice
 
       // Calculate the amount buyOrder can afford to buy, buyPower will be like 14000RMB
-      val maxSellAmount = sellOrderRemainingTakeLimit match {
-        case Some(limit) if limit / price < sellOrderRemainingQuantity => limit / price
-        case _ => sellOrderRemainingQuantity
+      val maxSellAmount = remainingTakeLimit match {
+        case Some(limit) if limit / price < remainingQuantity => limit / price
+        case _ => remainingQuantity
       }
       val maxBuyAmount = buyOrder.takeLimit match {
         case Some(limit) if limit < buyOrder.quantity / price => limit
@@ -66,52 +62,45 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
 
       val outAmount = Math.min(maxSellAmount, maxBuyAmount).toLong
       val inAmount = (outAmount * price).toLong
-      val buyOrderRemainingQuantity = buyOrder.quantity - inAmount
+      remainingQuantity -= outAmount
+      totalInAmount += inAmount
+      remainingTakeLimit = remainingTakeLimit map (_ - inAmount)
+
+      val buyOrderRemainingAmount = buyOrder.quantity - inAmount
       val buyOrderRemainingTakeLimit = buyOrder.takeLimit map (_ - outAmount)
-      val updatedBuyOrder = buyOrder.copy(quantity = buyOrderRemainingQuantity, takeLimit = buyOrderRemainingTakeLimit)
+      val buyOrderStatus = if (buyOrderRemainingAmount == 0) OrderStatus.FullyExecuted else OrderStatus.PartiallyExecuted
+
+      val updatedBuyOrder = buyOrder.copy(quantity = buyOrderRemainingAmount, takeLimit = buyOrderRemainingTakeLimit)
       state = state.removeOrder(buySide, buyOrder.id)
 
-      sellOrderRemainingQuantity -= outAmount
-      sellOrderTotalInAmount += inAmount
-      sellOrderRemainingTakeLimit = sellOrderRemainingTakeLimit map (_ - inAmount)
+      val buyOrderInfo = OrderInfo(buySide, buyOrder, buyOrderStatus, buyOrderRemainingAmount, outAmount)
+      matchedOrders ::= buyOrderInfo
 
-      if (collectTxs) {
-        txs ::= Transaction(
-          Transfer(sellOrder.userId, sellOrder.id, sellSide.outCurrency, outAmount, sellOrderRemainingQuantity == 0),
-          Transfer(buyOrder.userId, buyOrder.id, buySide.outCurrency, inAmount, buyOrderRemainingQuantity == 0))
-      }
+      txs ::= Transaction(
+        Transfer(sellOrder.userId, sellOrder.id, sellSide.outCurrency, outAmount, remainingQuantity == 0),
+        Transfer(buyOrder.userId, buyOrder.id, buySide.outCurrency, inAmount, buyOrderRemainingAmount == 0))
 
       // Check if sell order is fully executed or take limit hit
-      if (sellOrderRemainingQuantity == 0) {
-        fullyExecutedOrders ::= buyOrder
-        continue = false
-      } else if (sellOrderRemainingTakeLimit == Some(0)) {
-        partiallyExecutedOrders ::= buyOrder
+      if (remainingQuantity == 0 || remainingTakeLimit == Some(0)) {
         continue = false
       }
 
       // Check if buy order is fully executed or take limit hit
-      if (buyOrderRemainingQuantity == 0) {
-        fullyExecutedOrders ::= updatedBuyOrder
-      } else if (buyOrderRemainingTakeLimit == Some(0)) {
-        partiallyExecutedOrders ::= updatedBuyOrder
-      } else {
-        partiallyExecutedOrders ::= updatedBuyOrder
+      if (!(buyOrderRemainingAmount == 0 || buyOrderRemainingTakeLimit == Some(0))) {
         state = state.addOrder(buySide, updatedBuyOrder)
         continue = false
       }
 
       // handles refund
-      if (sellOrderRemainingTakeLimit == Some(0) && buyOrderRemainingQuantity > 0) {
-        unlockFunds ::= UnlockFund(sellOrder.userId, sellSide.outCurrency, sellOrderRemainingQuantity)
+      if (remainingTakeLimit == Some(0) && buyOrderRemainingAmount > 0) {
+        unlockCashs ::= UnlockFund(sellOrder.userId, sellSide.outCurrency, remainingQuantity)
       }
       if (buyOrderRemainingTakeLimit == Some(0) && updatedBuyOrder.quantity > 0) {
-        //Refund(newMakerOrder.quantity)
-        unlockFunds ::= UnlockFund(buyOrder.userId, buySide.outCurrency, buyOrderRemainingQuantity)
+        unlockCashs ::= UnlockFund(buyOrder.userId, buySide.outCurrency, buyOrderRemainingAmount)
       }
     }
 
-    while (continue && sellOrderRemainingQuantity > 0) {
+    while (continue && remainingQuantity > 0) {
       buyMpos.headOption match {
         // new LPO to match existing MPOs
         case Some(buyOrder) if sellOrder.vprice > 0 => foundMatching(buyOrder, sellOrder.vprice)
@@ -124,24 +113,23 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
       }
     }
 
-    if (sellOrderRemainingQuantity > 0 && sellOrderRemainingTakeLimit != Some(0)) {
-      state = state.addOrder(sellSide, sellOrder.copy(quantity = sellOrderRemainingQuantity))
+    if (remainingQuantity > 0 && remainingTakeLimit != Some(0)) {
+      state = state.addOrder(sellSide, sellOrder.copy(quantity = remainingQuantity))
     }
 
     val status =
-      if (sellOrderRemainingQuantity == sellOrder.quantity) OrderStatus.Pending
-      else if (sellOrderRemainingQuantity > 0) OrderStatus.PartiallyExecuted
+      if (remainingQuantity == sellOrder.quantity) OrderStatus.Pending
+      else if (remainingQuantity > 0) OrderStatus.PartiallyExecuted
       else OrderStatus.FullyExecuted
 
-    val orderInfo = OrderInfo(sellSide, sellOrder, status, sellOrderRemainingQuantity, sellOrderTotalInAmount)
+    val orderInfo = OrderInfo(sellSide, sellOrder, status, remainingQuantity, totalInAmount)
 
     MarketUpdate(orderInfo,
-      sellOrder.quantity - sellOrderRemainingQuantity,
-      sellOrderTotalInAmount,
-      fullyExecutedOrders,
-      partiallyExecutedOrders,
+      sellOrder.quantity - remainingQuantity,
+      totalInAmount,
+      matchedOrders,
       txs,
-      unlockFunds,
+      unlockCashs,
       firstPrice,
       lastPrice)
   }

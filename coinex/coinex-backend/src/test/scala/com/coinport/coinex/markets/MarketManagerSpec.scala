@@ -37,7 +37,7 @@ class MarketManagerSpec extends Specification {
         Transaction(Transfer(888, 3, Btc, 10, true), Transfer(666, 1, Rmb, 45000, false)) ::
         Nil
 
-      mu.unlockFunds mustEqual Nil
+      mu.unlockCashs mustEqual Nil
     }
 
     "match limit-price order with as many existing limit-price order with take-limit" in {
@@ -63,7 +63,7 @@ class MarketManagerSpec extends Specification {
         Transaction(Transfer(888, 3, Btc, 3, false), Transfer(777, 2, Rmb, 15000, true)) ::
         Nil
 
-      mu.unlockFunds mustEqual UnlockFund(666, Rmb, 5500) :: Nil
+      mu.unlockCashs mustEqual UnlockFund(666, Rmb, 5500) :: Nil
     }
   }
 

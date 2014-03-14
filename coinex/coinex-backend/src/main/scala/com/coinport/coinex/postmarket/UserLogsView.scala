@@ -26,12 +26,11 @@ class UserLogsView extends ExtendedView {
 
   def receiveMessage: Receive = {
     case Persistent(OrderCancelled(side, order), _) =>
-      manager.markOrderAs(order, OrderStatus.Cancelled)
+     // manager.markOrderAs(OrderInfo(side, order, OrderStatus.Cancelled, order.amount, )
 
     case Persistent(mu: MarketUpdate, _) =>
-      manager.addOrderInfo(mu.originOrderInfo)
-      mu.fullyExecutedOrders foreach { manager.markOrderAs(_, OrderStatus.FullyExecuted) }
-      mu.partiallyExecutedOrders foreach { manager.markOrderAs(_, OrderStatus.PartiallyExecuted) }
+      manager.addOrUpdateOrderInfo(mu.originOrderInfo)
+      mu.matchedOrders foreach { manager.addOrUpdateOrderInfo }
 
     case q: QueryUserLog =>
       val userLog = manager.getOrderInfos(q)
@@ -42,18 +41,7 @@ class UserLogsView extends ExtendedView {
 private class UserLogsStateManager extends StateManager[UserLogs] {
   initWithDefaultState(UserLogs())
 
-  def markOrderAs(order: Order, status: OrderStatus) = {
-    var userLog = state.userLogs.getOrElse(order.userId, UserLog(Nil, Nil))
-    val orderInfos = userLog.orderInfos map { oi =>
-      if (oi.order.id == order.id) oi.copy(status = status)
-      else oi
-    }
-    userLog = userLog.copy(orderInfos = orderInfos)
-    val userLogs = state.userLogs + (order.userId -> userLog)
-    state = state.copy(userLogs = userLogs)
-  }
-
-  def addOrderInfo(oi: OrderInfo) = {
+  def addOrUpdateOrderInfo(oi: OrderInfo) = {
     val id = oi.order.id
     var userLog = state.userLogs.getOrElse(oi.order.userId, UserLog(Nil, Nil))
     val (olds, others) = userLog.orderInfos.partition(_.order.id == id)

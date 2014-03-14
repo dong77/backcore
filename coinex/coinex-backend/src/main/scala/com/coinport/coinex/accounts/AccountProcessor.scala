@@ -76,7 +76,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
         manager.updateCashAccount(maker.userId, CashAccount(taker.currency, taker.quantity, 0, 0))
       }
 
-      mu.unlockFunds foreach { u =>
+      mu.unlockCashs foreach { u =>
         manager.updateCashAccount(u.userId, CashAccount(u.currency, u.amount, -u.amount, 0))
       }
 

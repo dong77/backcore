@@ -179,10 +179,9 @@ struct MarketUpdate{
 	1: OrderInfo originOrderInfo
 	2: i64 outAmount
 	3: i64 inAmount
-	4: list<Order> fullyExecutedOrders
-	5: list<Order> partiallyExecutedOrders
-	6: list<Transaction> txs
-	7: list<UnlockFund> unlockFunds
-	8: optional double firstPrice
-	9: optional double lastPrice
+	4: list<OrderInfo> matchedOrders
+	5: list<Transaction> txs
+	6: list<UnlockFund> unlockCashs
+	7: optional double firstPrice
+	8: optional double lastPrice
 }
