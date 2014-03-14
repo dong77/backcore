@@ -53,9 +53,17 @@ private class UserLogsStateManager extends StateManager[UserLogs] {
     state = state.copy(userLogs = userLogs)
   }
 
-  def addOrderInfo(orderInfo: OrderInfo) = {
-    var userLog = state.userLogs.getOrElse(orderInfo.order.userId, UserLog(Nil, Nil))
-    val orderInfos = Seq(orderInfo) ++ userLog.orderInfos
+  def addOrderInfo(oi: OrderInfo) = {
+    val id = oi.order.id
+    var userLog = state.userLogs.getOrElse(oi.order.userId, UserLog(Nil, Nil))
+    val (olds, others) = userLog.orderInfos.partition(_.order.id == id)
+    val orderInfo = olds.headOption match {
+      case Some(old) =>
+        old.copy(status = oi.status, remainingQuantity = old.remainingQuantity, inAmount = old.inAmount + oi.inAmount)
+      case None => oi
+    }
+
+    val orderInfos = Seq(orderInfo) ++ others
     userLog = userLog.copy(orderInfos = orderInfos)
     val userLogs = state.userLogs + (orderInfo.order.userId -> userLog)
     state = state.copy(userLogs = userLogs)

@@ -133,7 +133,7 @@ class MarketManager(headSide: MarketSide) extends StateManager[MarketState] {
       else if (sellOrderRemainingQuantity > 0) OrderStatus.PartiallyExecuted
       else OrderStatus.FullyExecuted
 
-    val orderInfo = OrderInfo(sellSide, sellOrder, status, sellOrderRemainingQuantity)
+    val orderInfo = OrderInfo(sellSide, sellOrder, status, sellOrderRemainingQuantity, sellOrderTotalInAmount)
 
     MarketUpdate(orderInfo,
       sellOrder.quantity - sellOrderRemainingQuantity,
