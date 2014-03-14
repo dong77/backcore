@@ -10,7 +10,7 @@ package com.coinport.coinex.data
 
 import Implicits._
 
-case class AccountState(nextOrderId: Long = 0, userAccountsMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]) {
+case class AccountState(lastOrderId: Long = 0, userAccountsMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]) {
 
   def getUserAccounts(userId: Long): UserAccount =
     userAccountsMap.get(userId).getOrElse(UserAccount(userId))
@@ -27,7 +27,7 @@ case class AccountState(nextOrderId: Long = 0, userAccountsMap: Map[Long, UserAc
     copy(userAccountsMap = userAccountsMap + (userId -> accounts))
   }
 
-  def increaseNextOrderId(): AccountState = {
-    copy(nextOrderId = nextOrderId + 1)
+  def increaselLastOrderId(): AccountState = {
+    copy(lastOrderId = lastOrderId + 1)
   }
 }

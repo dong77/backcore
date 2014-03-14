@@ -29,12 +29,7 @@ class UserLogsView extends ExtendedView {
       manager.markOrderAs(order, OrderStatus.Cancelled)
 
     case Persistent(mu: MarketUpdate, _) =>
-      val status =
-        if (mu.outAmount == mu.originOrderInfo.order.quantity) OrderStatus.FullyExecuted
-        else if (mu.outAmount == 0) OrderStatus.Pending
-        else OrderStatus.PartiallyExecuted
-
-      manager.addOrderAs(mu.originOrderInfo.side, mu.originOrderInfo.order, status)
+      manager.addOrderAs(mu.originOrderInfo.side, mu.originOrderInfo.order, mu.originOrderInfo.status)
       mu.fullyExecutedOrders foreach { manager.markOrderAs(_, OrderStatus.FullyExecuted) }
       mu.partiallyExecutedOrders foreach { manager.markOrderAs(_, OrderStatus.PartiallyExecuted) }
 
