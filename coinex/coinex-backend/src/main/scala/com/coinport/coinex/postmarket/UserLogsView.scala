@@ -25,12 +25,11 @@ class UserLogsView extends ExtendedView {
   }
 
   def receiveMessage: Receive = {
-    case Persistent(OrderCancelled(side, order), _) =>
-    // manager.markOrderAs(OrderInfo(side, order, OrderStatus.Cancelled, order.amount, )
+    case Persistent(OrderCancelled(_, order), _) => manager.cancelOrder(order)
 
     case Persistent(mu: MarketUpdate, _) =>
       manager.addOrUpdateOrderInfo(mu.originOrderInfo)
-      mu.matchedOrders foreach { manager.addOrUpdateOrderInfo }
+      mu.matchedOrders foreach manager.addOrUpdateOrderInfo
 
     case q: QueryUserLog =>
       val userLog = manager.getOrderInfos(q)

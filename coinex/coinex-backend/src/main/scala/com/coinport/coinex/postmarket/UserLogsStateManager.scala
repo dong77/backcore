@@ -11,30 +11,40 @@ import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.common.StateManager
 import Implicits._
 
+// TODO(d): test this.
 private[postmarket] class UserLogsStateManager extends StateManager[UserLogsState] {
   initWithDefaultState(UserLogsState())
 
-  def addOrUpdateOrderInfo(oi: OrderInfo) = {
-    val id = oi.order.id
-    var userLog = state.userLogs.getOrElse(oi.order.userId, UserLog(Nil, Nil))
-    val (olds, others) = userLog.orderInfos.partition(_.order.id == id)
-    val orderInfo = olds.headOption match {
-      case Some(old) =>
-        old.copy(status = oi.status, remainingQuantity = old.remainingQuantity, inAmount = old.inAmount + oi.inAmount)
-      case None => oi
-    }
-
-    val orderInfos = Seq(orderInfo) ++ others
-    userLog = userLog.copy(orderInfos = orderInfos)
-    val userLogs = state.userLogs + (orderInfo.order.userId -> userLog)
-    state = state.copy(userLogs = userLogs)
-  }
-
   def getOrderInfos(param: QueryUserLog): UserLog = {
     def eval(orderInfo: OrderInfo) = (param.status.isEmpty || param.status.get == orderInfo.status)
-    val userLog = state.userLogs.getOrElse(param.userId, UserLog(Nil, Nil))
+    val userLog = state.userLogs.getOrElse(param.userId, UserLog(Nil))
     val orderInfos = userLog.orderInfos.filter(eval).drop(param.skipOrders.getOrElse(0)).take(param.numOrders.getOrElse(100))
-    val txs = userLog.txs.drop(param.skipTxs.getOrElse(0)).take(param.numTxs.getOrElse(100))
-    UserLog(orderInfos, txs)
+    UserLog(orderInfos)
+  }
+
+  def addOrUpdateOrderInfo(oi: OrderInfo) = {
+    def merge(old: OrderInfo, neu: OrderInfo): OrderInfo = {
+      old.copy(status = neu.status, remainingQuantity = neu.remainingQuantity, inAmount = old.inAmount + neu.inAmount)
+    }
+    val userId = oi.order.userId
+    val orderId = oi.order.id
+    var userLog = state.userLogs.getOrElse(userId, UserLog(Nil))
+    var orderInfos = userLog.orderInfos
+    val idx = orderInfos.indexWhere(_.order.id == orderId)
+    orderInfos = if (idx == -1) oi +: orderInfos else {
+      val (head, tail) = orderInfos.splitAt(idx)
+      head ++ (merge(tail(0), oi) +: tail.drop(1))
+    }
+    userLog = userLog.copy(orderInfos = orderInfos)
+    state = state.copy(userLogs = state.userLogs + (userId -> userLog))
+  }
+
+  def cancelOrder(order: Order) = {
+    var userLog = state.userLogs.getOrElse(order.userId, UserLog(Nil))
+    var orderInfos = userLog.orderInfos map { oi =>
+      if (oi.order.id == order.id) oi.copy(status = OrderStatus.Cancelled) else oi
+    }
+    userLog = userLog.copy(orderInfos = orderInfos)
+    state = state.copy(userLogs = state.userLogs + (order.userId -> userLog))
   }
 }

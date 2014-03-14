@@ -101,7 +101,6 @@ struct OrderInfo {
 
 struct UserLog {
 	1: list<OrderInfo> orderInfos
-	2: list<Transaction> txs
 }
 
 struct UserLogsState {
