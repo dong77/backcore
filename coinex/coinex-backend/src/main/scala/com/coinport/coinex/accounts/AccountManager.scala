@@ -35,8 +35,8 @@ class AccountManager extends StateManager[AccountState] {
     }
   }
 
-  def getAndIncreaseNextOrderId(): Long = {
-    state = state.increaseNextOrderId()
-    state.nextOrderId
+  def getAndIncreaseOrderId(): Long = {
+    state = state.increaselLastOrderId()
+    state.lastOrderId
   }
 }

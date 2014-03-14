@@ -43,9 +43,20 @@ private class CandleDataBundlesManager extends StateManager[CandleDataBundles] {
     val side = mu.originOrderInfo.side
     val order = mu.originOrderInfo.order
     val timestamp = order.timestamp.get
- //   val volumn = mu.outAmount // volumn as side.outCurrency
+    //   val volumn = mu.outAmount // volumn as side.outCurrency
 
     val time = timestamp / minute
-  // CandleDataItem(time, )
+    for {
+      first <- mu.firstPrice
+      high = first
+      last <- mu.lastPrice
+      low = last
+    } {
+      // Since all orders are sell orders, first price will always be the highest price,
+      // and last price will always be the lowest price
+      val item = CandleDataItem(time, mu.outAmount, first, last, low, high)
+      
+    }
+
   }
 }

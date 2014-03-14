@@ -29,12 +29,7 @@ class UserLogsView extends ExtendedView {
       manager.markOrderAs(order, OrderStatus.Cancelled)
 
     case Persistent(mu: MarketUpdate, _) =>
-      val status =
-        if (mu.outAmount == mu.originOrderInfo.order.quantity) OrderStatus.FullyExecuted
-        else if (mu.outAmount == 0) OrderStatus.Pending
-        else OrderStatus.PartiallyExecuted
-
-      manager.addOrderAs(mu.originOrderInfo.side, mu.originOrderInfo.order, status)
+      manager.addOrderInfo(mu.originOrderInfo)
       mu.fullyExecutedOrders foreach { manager.markOrderAs(_, OrderStatus.FullyExecuted) }
       mu.partiallyExecutedOrders foreach { manager.markOrderAs(_, OrderStatus.PartiallyExecuted) }
 
@@ -58,11 +53,19 @@ private class UserLogsStateManager extends StateManager[UserLogs] {
     state = state.copy(userLogs = userLogs)
   }
 
-  def addOrderAs(side: MarketSide, order: Order, status: OrderStatus) = {
-    var userLog = state.userLogs.getOrElse(order.userId, UserLog(Nil, Nil))
-    val orderInfos = Seq(OrderInfo(side, order, status)) ++ userLog.orderInfos
+  def addOrderInfo(oi: OrderInfo) = {
+    val id = oi.order.id
+    var userLog = state.userLogs.getOrElse(oi.order.userId, UserLog(Nil, Nil))
+    val (olds, others) = userLog.orderInfos.partition(_.order.id == id)
+    val orderInfo = olds.headOption match {
+      case Some(old) =>
+        old.copy(status = oi.status, remainingQuantity = old.remainingQuantity, inAmount = old.inAmount + oi.inAmount)
+      case None => oi
+    }
+
+    val orderInfos = Seq(orderInfo) ++ others
     userLog = userLog.copy(orderInfos = orderInfos)
-    val userLogs = state.userLogs + (order.userId -> userLog)
+    val userLogs = state.userLogs + (orderInfo.order.userId -> userLog)
     state = state.copy(userLogs = userLogs)
   }
 

@@ -95,6 +95,8 @@ struct OrderInfo {
 	1: MarketSide side
 	2: Order order
 	3: OrderStatus status
+	4: i64 remainingQuantity
+	5: i64 inAmount
 }
 
 struct UserLog {
