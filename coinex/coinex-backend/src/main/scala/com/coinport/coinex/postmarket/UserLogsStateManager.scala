@@ -11,8 +11,8 @@ import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.common.StateManager
 import Implicits._
 
-private[postmarket] class UserLogsStateManager extends StateManager[UserLogs] {
-  initWithDefaultState(UserLogs())
+private[postmarket] class UserLogsStateManager extends StateManager[UserLogsState] {
+  initWithDefaultState(UserLogsState())
 
   def addOrUpdateOrderInfo(oi: OrderInfo) = {
     val id = oi.order.id

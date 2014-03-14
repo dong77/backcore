@@ -104,7 +104,7 @@ struct UserLog {
 	2: list<Transaction> txs
 }
 
-struct UserLogs {
+struct UserLogsState {
  	1: map<i64, UserLog> userLogs
 }
 
