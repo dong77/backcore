@@ -129,7 +129,7 @@ struct CandleDataBundle {
 	4: optional CandleData dailyData
 }
 
-struct CandleDataBundles {
+struct CandleDataState {
 	1: map<MarketSide , CandleDataBundle> bundles
 }
 // ------------------------------------------------------------------------------------------------
