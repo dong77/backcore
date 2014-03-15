@@ -12,12 +12,24 @@ namespace java com.coinport.coinex.data
 
 //---------------------------------------------------------------------
 // Data and Structs
-
 enum Currency {
 	UNKNOWN = 0
 	RMB = 1
 	USD = 2
 	BTC = 1000
+}
+
+enum OrderStatus {
+	PENDING = 0
+	PARTIALLY_EXECUTED = 1
+	FULLY_EXECUTED = 2
+	CANCELLED = 3
+}
+
+enum AccountOperationCode {
+	OK = 0
+	INSUFFICIENT_FUND = 1
+	INVALID_AMOUNT = 2
 }
 
 struct MarketSide {
@@ -34,16 +46,20 @@ struct Order {
 	6: optional i64 timestamp
 }
 
-enum OrderStatus {
-	PENDING = 0
-	PARTIALLY_EXECUTED = 1
-	FULLY_EXECUTED = 2
-	CANCELLED = 3
+
+
+struct OrderInfo {
+	1: MarketSide side
+	2: Order order
+	3: i64 outAmount
+	4: i64 inAmount
+	5: OrderStatus status
+	6: optional i64 lastTxTimestamp
 }
 
 struct OrderUpdate {
-1: Order previous
-2: Order current
+	1: Order previous
+	2: Order current
 }
 
 struct Transaction{
@@ -58,19 +74,6 @@ struct CashAccount{
 	4: i64 pendingWithdrawal
 }
 
-enum AccountOperationCode {
-	OK = 0
-	INSUFFICIENT_FUND = 1
-	INVALID_AMOUNT = 2
-}
-
-struct CashAccount {
-	1: Currency currency
-	2: i64 available = 0
-	3: i64 locked = 0
-	4: i64 pendingWithdrawal = 0
-}
-
 struct UserAccount {
 	1: i64 userId
 	2: map<Currency, CashAccount> cashAccounts
@@ -83,16 +86,6 @@ struct Price {
 
 struct User{
 }
-
-struct OrderInfo {
-	1: MarketSide side
-	2: Order order
-	3: i64 outAmount
-	4: i64 inAmount
-	5: OrderStatus status
-	6: optional i64 lastTxTimestamp
-}
-
 
 struct UserLogsState {
  	1: map<i64, list<OrderInfo>> orderInfoMap
@@ -122,8 +115,10 @@ struct CandleDataBundle {
 struct CandleDataState {
 	1: map<MarketSide , CandleDataBundle> bundles
 }
+
 // ------------------------------------------------------------------------------------------------
 // Non-persistent message.
+
 struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
 struct OrderSubmissionDone{1: MarketSide side, 2: Order order, 3: list<Transaction> txs}
 
