@@ -29,12 +29,36 @@ class RichOrder(raw: Order) {
   }
 
   def vprice = raw.price.getOrElse(.0)
-  def vtakelimit = raw.takeLimit.getOrElse(Long.MaxValue)
+
+  def maxOutAmount(price: Double): Long = raw.takeLimit match {
+    case Some(limit) if limit / price < raw.quantity => (limit / price).toLong
+    case _ => raw.quantity
+  }
+
+  def maxInAmount(price: Double): Long = raw.takeLimit match {
+    case Some(limit) if limit < raw.quantity * price => limit
+    case _ => (raw.quantity * price).toLong
+  }
+
+  def hitTakeLimit = raw.takeLimit == Some(0)
+
+  def isFullyExecuted: Boolean = raw.quantity == 0 || hitTakeLimit
+
+  def -->(another: Order) = OrderUpdate(raw, another)
+}
+
+class RichOrderUpdate(raw: OrderUpdate) {
+  def userId = raw.previous.userId
+  def id = raw.previous.id
+  def outAmount = raw.previous.quantity - raw.current.quantity
 }
 
 class RichTransaction(raw: Transaction) {
-  lazy val takerPrice = raw.maker.quantity.toDouble / raw.taker.quantity
-  lazy val makerPrice = raw.taker.quantity.toDouble / raw.maker.quantity
+
+}
+
+class RichOrderSubmitted(raw: OrderSubmitted) {
+  def hasTransaction = raw.txs != null && raw.txs.nonEmpty
 }
 
 class RichCashAccount(raw: CashAccount) {
@@ -77,7 +101,9 @@ object Implicits {
   implicit def marketSide2Rich(raw: MarketSide) = new RichMarketSide(raw)
   implicit def price2Rich(raw: Price) = new RichPrice(raw)
   implicit def order2Rich(raw: Order) = new RichOrder(raw)
+  implicit def orderUpdate2Rich(raw: OrderUpdate) = new RichOrderUpdate(raw)
   implicit def transaction2Rich(raw: Transaction) = new RichTransaction(raw)
+  implicit def orderSubmitted2Rich(raw: OrderSubmitted) = new RichOrderSubmitted(raw)
   implicit def cashAccont2Rich(raw: CashAccount) = new RichCashAccount(raw)
   implicit def candleDataItem2Rich(raw: CandleDataItem) = new RichCandleDataItem(raw)
 }

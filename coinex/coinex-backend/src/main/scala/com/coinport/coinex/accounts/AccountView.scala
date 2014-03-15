@@ -8,6 +8,7 @@ package com.coinport.coinex.accounts
 import com.coinport.coinex.common.ExtendedView
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
+import Implicits._
 
 class AccountView extends ExtendedView {
   override def processorId = "coinex_ap"
@@ -39,14 +40,14 @@ class AccountView extends ExtendedView {
     case Persistent(OrderCancelled(side, Order(userId, _, quantity, _, _, _)), _) =>
       manager.updateCashAccount(userId, CashAccount(side.outCurrency, quantity, -quantity, 0))
 
-    case Persistent(marketUpdate: MarketUpdate, _) =>
-      marketUpdate.txs foreach { tx =>
-        val (taker, maker) = (tx.taker, tx.maker)
-        manager.updateCashAccount(taker.userId, CashAccount(taker.currency, 0, -taker.quantity, 0))
-        manager.updateCashAccount(taker.userId, CashAccount(maker.currency, maker.quantity, 0, 0))
-
-        manager.updateCashAccount(maker.userId, CashAccount(maker.currency, 0, -maker.quantity, 0))
-        manager.updateCashAccount(maker.userId, CashAccount(taker.currency, taker.quantity, 0, 0))
+    case Persistent(mu: OrderSubmitted, _) =>
+      val side = mu.originOrderInfo.side
+      mu.txs foreach { tx =>
+        val Transaction(_, takerOrderUpdate, makerOrderUpdate) = tx
+        manager.sendCash(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
+        manager.sendCash(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
+        manager.refund(takerOrderUpdate.current, side.outCurrency)
+        manager.refund(makerOrderUpdate.current, side.inCurrency)
       }
 
     case QueryAccount(userId) =>

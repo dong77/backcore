@@ -41,16 +41,15 @@ enum OrderStatus {
 	CANCELLED = 3
 }
 
-struct Transfer{
-	1: i64 userId
-	2: i64 orderId
-	3: Currency currency
-	4: i64 quantity
-	5: bool fullyExecuted
+struct OrderUpdate {
+1: Order previous
+2: Order current
 }
+
 struct Transaction{
-	1: Transfer taker
-	2: Transfer maker
+	1: i64 timestamp
+	2: OrderUpdate takerUpdate
+	3: OrderUpdate makerUpdate
 }
 struct CashAccount{
 	1: Currency currency
@@ -72,12 +71,6 @@ struct CashAccount {
 	4: i64 pendingWithdrawal = 0
 }
 
-struct UnlockFund {
-	1: i64 userId
-	2: Currency currency
-	3: i64 amount
-}
-
 struct UserAccount {
 	1: i64 userId
 	2: map<Currency, CashAccount> cashAccounts
@@ -94,9 +87,10 @@ struct User{
 struct OrderInfo {
 	1: MarketSide side
 	2: Order order
-	3: OrderStatus status
-	4: i64 remainingQuantity
-	5: i64 inAmount
+	3: i64 outAmount
+	4: i64 inAmount
+	5: OrderStatus status
+	6: optional i64 lastTxTimestamp
 }
 
 
@@ -165,19 +159,8 @@ struct DoCancelOrder{1: MarketSide side, 2: i64 id}
 // For each event, we'll comment it in the form of "origin -> handler".
 
 // AccountProcessor -> MarketProcessor events
-struct OrderSubmitted{1: MarketSide side, 2: Order order}
+struct OrderCashLocked{1: MarketSide side, 2: Order order}
 
-// MarketProcessor -> AccountProcessor events
+// MarketProcessor -> AccountProcessor/MarketUpdateProcessor events
 struct OrderCancelled{1: MarketSide side, 2:Order order}
-
-// MarketProcessor -> AggregateUserView
-struct MarketUpdate{
-	1: OrderInfo originOrderInfo
-	2: i64 outAmount
-	3: i64 inAmount
-	4: list<OrderInfo> matchedOrders
-	5: list<Transaction> txs
-	6: list<UnlockFund> unlockCashs
-	7: optional double firstPrice
-	8: optional double lastPrice
-}
+struct OrderSubmitted{1: OrderInfo originOrderInfo, 2: list<Transaction> txs}

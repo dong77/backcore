@@ -60,14 +60,14 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
         name = "mup")
     }
 
-    // MarketUpdateUserLogsView (path: /user/mu_ulv)
-    if (cluster.selfRoles.contains("mu_ulv")) {
-      system.actorOf(Props(classOf[MarketUpdateUserLogsView]), "mu_ulv")
+    // MarketUserLogsView (path: /user/mv_ul)
+    if (cluster.selfRoles.contains("mv_ul")) {
+      system.actorOf(Props(classOf[MarketUserLogsView]), "mv_ul")
     }
 
-    // MarketUpdateCandleDataView (path: /user/mu_ulv)
-    if (cluster.selfRoles.contains("mu_cdv")) {
-      system.actorOf(Props(classOf[MarketUpdateCandleDataView]), "mu_cdv")
+    // MarketCandleDataView (path: /user/mv_cd)
+    if (cluster.selfRoles.contains("mv_cd")) {
+      system.actorOf(Props(classOf[MarketCandleDataView]), "mv_cd")
     }
 
     // Market Processors and Views
@@ -75,7 +75,7 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
       // path: /user/mp_btc_rmb/singleton
       if (cluster.selfRoles.contains("mp_" + m.asString)) {
         system.actorOf(ClusterSingletonManager.props(
-          singletonProps = Props(new MarketProcessor(m, routers.accountProcessor.path, routers.userLogsProcessor.path)),
+          singletonProps = Props(new MarketProcessor(m, routers.accountProcessor.path, routers.marketUpdateProcessoressor.path)),
           singletonName = "singleton",
           terminationMessage = PoisonPill,
           role = Some("mp_" + m.asString)),
@@ -83,8 +83,8 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
       }
 
       // Market views (path: /user/mv_btc_rmb)
-      if (cluster.selfRoles.contains("mdv_" + m.asString)) {
-        system.actorOf(Props(new MarketDepthView(m)), "mdv_" + m.asString)
+      if (cluster.selfRoles.contains("mv_" + m.asString)) {
+        system.actorOf(Props(new MarketDepthView(m)), "mv_" + m.asString)
       }
     }
   }

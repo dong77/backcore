@@ -11,9 +11,9 @@ import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.common.StateManager
 import Implicits._
 
-class MarketUpdateCandleDataView extends ExtendedView {
+class MarketCandleDataView extends ExtendedView {
   override def processorId = "coinex_mup"
-  private val manager = new MarketUpdateCandleDataManager
+  private val manager = new MarketCandleDataManager
 
   def receive = {
     case DebugDump =>
@@ -25,8 +25,7 @@ class MarketUpdateCandleDataView extends ExtendedView {
   }
 
   def receiveMessage: Receive = {
-    case Persistent(mu: MarketUpdate, _) if mu.txs.nonEmpty =>
-    //  val timestamp = mu.originOrderInfo.order.timestamp.get
+    case Persistent(mu: OrderSubmitted, _) if mu.txs.nonEmpty =>
     case q: QueryMarketCandleData =>
   }
 }

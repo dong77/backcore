@@ -38,25 +38,25 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
         useRole = Some("av"))).props, "av_router")
 
   //---------------------------------------------------------------------------
-  val userLogsProcessor = system.actorOf(Props(new ClusterSingletonRouter("pmp", "user/pmp/singleton")), "pmp_router")
+  val marketUpdateProcessoressor = system.actorOf(Props(new ClusterSingletonRouter("pmp", "user/pmp/singleton")), "pmp_router")
 
   val userLogsView = system.actorOf(
     ClusterRouterGroup(
       RoundRobinGroup(Nil),
       ClusterRouterGroupSettings(
         totalInstances = Int.MaxValue,
-        routeesPaths = List("/user/mu_ulv"),
+        routeesPaths = List("/user/mv_ul"),
         allowLocalRoutees = false,
-        useRole = Some("mu_ulv"))).props, "mu_ulv_router")
+        useRole = Some("mv_ul"))).props, "mv_ul_router")
 
   val candleDataView = system.actorOf(
     ClusterRouterGroup(
       RoundRobinGroup(Nil),
       ClusterRouterGroupSettings(
         totalInstances = Int.MaxValue,
-        routeesPaths = List("/user/mu_cdv"),
+        routeesPaths = List("/user/mv_cd"),
         allowLocalRoutees = false,
-        useRole = Some("mu_cdv"))).props, "mu_cdv_router")
+        useRole = Some("mv_cd"))).props, "mv_cd_router")
 
   //---------------------------------------------------------------------------
   val marketProcessors = bidirection(Map(markets map { m =>

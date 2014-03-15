@@ -15,9 +15,10 @@ import Implicits._
 class MarketProcessor(
   marketSide: MarketSide,
   accountProcessorPath: ActorPath,
-  userLogsProcessorPath: ActorPath) extends ExtendedProcessor {
+  marketUpdateProcessoressorPath: ActorPath) extends ExtendedProcessor {
   override val processorId = "coinex_mp_" + marketSide.asString
 
+  implicit def timeProvider() = System.currentTimeMillis
   val manager = new MarketManager(marketSide)
 
   def receiveMessage: Receive = {
@@ -43,18 +44,18 @@ class MarketProcessor(
     case DoCancelOrder(side, orderId) =>
       manager.removeOrder(side, orderId) foreach { order =>
         deliver(OrderCancelled(side, order), accountProcessorPath)
-        deliver(OrderCancelled(side, order), userLogsProcessorPath)
+        deliver(OrderCancelled(side, order), marketUpdateProcessoressorPath)
       }
 
     // ------------------------------------------------------------------------------------------------
     // Events
-    case OrderSubmitted(side, order: Order) =>
-      val marketUpdate = manager.addOrder(side, order)
-      deliver(marketUpdate, userLogsProcessorPath)
-      if (marketUpdate.txs.nonEmpty || marketUpdate.unlockCashs.nonEmpty) {
-        deliver(marketUpdate, accountProcessorPath)
+    case OrderCashLocked(side, order: Order) =>
+      val orderSubmitted = manager.addOrder(side, order)
+      deliver(orderSubmitted, marketUpdateProcessoressorPath)
+      if (orderSubmitted.hasTransaction) {
+        deliver(orderSubmitted, accountProcessorPath)
       }
 
-      sender ! OrderSubmissionDone(side, order, marketUpdate.txs)
+      sender ! orderSubmitted
   }
 }

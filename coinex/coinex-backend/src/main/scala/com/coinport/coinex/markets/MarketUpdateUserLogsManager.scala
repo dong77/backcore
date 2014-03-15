@@ -11,7 +11,7 @@ import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.common.StateManager
 import Implicits._
 
-class MarketUpdateUserLogsManager extends StateManager[UserLogsState] {
+class MarketUserLogsManager extends StateManager[UserLogsState] {
   initWithDefaultState(UserLogsState())
 
   def getOrderInfos(param: QueryUserOrders): Seq[OrderInfo] = {
@@ -43,6 +43,10 @@ class MarketUpdateUserLogsManager extends StateManager[UserLogsState] {
   }
 
   private def mergeOrderInfos(old: OrderInfo, neu: OrderInfo): OrderInfo = {
-    old.copy(status = neu.status, remainingQuantity = neu.remainingQuantity, inAmount = old.inAmount + neu.inAmount)
+    old.copy(
+      status = neu.status,
+      outAmount = old.outAmount + neu.outAmount,
+      inAmount = old.inAmount + neu.inAmount,
+      lastTxTimestamp = neu.lastTxTimestamp)
   }
 }

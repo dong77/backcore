@@ -11,9 +11,9 @@ import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.common.StateManager
 import Implicits._
 
-class MarketUpdateUserLogsView extends ExtendedView {
+class MarketUserLogsView extends ExtendedView {
   override def processorId = "coinex_mup"
-  private val manager = new MarketUpdateUserLogsManager
+  private val manager = new MarketUserLogsManager
 
   def receive = {
     case DebugDump =>
@@ -27,9 +27,23 @@ class MarketUpdateUserLogsView extends ExtendedView {
   def receiveMessage: Receive = {
     case Persistent(OrderCancelled(_, order), _) => manager.cancelOrder(order)
 
-    case Persistent(mu: MarketUpdate, _) =>
-      manager.addOrUpdateOrderInfo(mu.originOrderInfo)
-      mu.matchedOrders foreach manager.addOrUpdateOrderInfo
+    case Persistent(m: OrderSubmitted, _) =>
+      manager.addOrUpdateOrderInfo(m.originOrderInfo)
+      m.txs.foreach { tx =>
+        val outAmount = tx.makerUpdate.previous.quantity - tx.makerUpdate.current.quantity
+        val inAmount = tx.takerUpdate.previous.quantity - tx.takerUpdate.current.quantity
+        val status =
+          if (tx.makerUpdate.current.isFullyExecuted == 0) OrderStatus.FullyExecuted
+          else OrderStatus.PartiallyExecuted
+
+        val orderInfo = OrderInfo(
+          m.originOrderInfo.side.reverse,
+          tx.makerUpdate.current,
+          outAmount, inAmount,
+          status, Some(tx.timestamp))
+          
+        manager.addOrUpdateOrderInfo(orderInfo)
+      }
 
     case q: QueryUserOrders =>
       sender ! QueryUserOrdersResult(q.userId, manager.getOrderInfos(q))

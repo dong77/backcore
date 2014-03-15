@@ -55,9 +55,9 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
       if (quantity <= 0) sender ! AccountOperationResult(InvalidAmount, null)
       else manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
         case m @ AccountOperationResult(Ok, _) =>
-          val o = order.copy(id = manager.getAndIncreaseOrderId, timestamp = Some(System.currentTimeMillis))
+          val o = order.copy(id = manager.getAndIncreaseOrderId)
           sender ! OrderSubmissionInProgross(side, o)
-          deliver(OrderSubmitted(side, o), getProcessorRef(side))
+          deliver(OrderCashLocked(side, o), getProcessorRef(side))
         case m: AccountOperationResult => sender ! m
       }
 
@@ -66,20 +66,15 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
     case e @ OrderCancelled(side, Order(userId, _, quantity, _, _, _)) =>
       sender ! manager.updateCashAccount(userId, CashAccount(side.outCurrency, quantity, -quantity, 0))
 
-    case mu: MarketUpdate =>
+    case mu: OrderSubmitted =>
+      val side = mu.originOrderInfo.side
       mu.txs foreach { tx =>
-        val (taker, maker) = (tx.taker, tx.maker)
-        manager.updateCashAccount(taker.userId, CashAccount(taker.currency, 0, -taker.quantity, 0))
-        manager.updateCashAccount(taker.userId, CashAccount(maker.currency, maker.quantity, 0, 0))
-
-        manager.updateCashAccount(maker.userId, CashAccount(maker.currency, 0, -maker.quantity, 0))
-        manager.updateCashAccount(maker.userId, CashAccount(taker.currency, taker.quantity, 0, 0))
+        val Transaction(_, takerOrderUpdate, makerOrderUpdate) = tx
+        manager.sendCash(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
+        manager.sendCash(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
+        manager.refund(takerOrderUpdate.current, side.outCurrency)
+        manager.refund(makerOrderUpdate.current, side.inCurrency)
       }
-
-      mu.unlockCashs foreach { u =>
-        manager.updateCashAccount(u.userId, CashAccount(u.currency, u.amount, -u.amount, 0))
-      }
-
   }
 
   private def getProcessorRef(side: MarketSide): ActorPath = {
