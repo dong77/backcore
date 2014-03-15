@@ -99,12 +99,9 @@ struct OrderInfo {
 	5: i64 inAmount
 }
 
-struct UserLog {
-	1: list<OrderInfo> orderInfos
-}
 
 struct UserLogsState {
- 	1: map<i64, UserLog> userLogs
+ 	1: map<i64, list<OrderInfo>> orderInfoMap
 }
 
 struct CandleDataItem {
@@ -136,8 +133,8 @@ struct CandleDataState {
 struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
 struct OrderSubmissionDone{1: MarketSide side, 2: Order order, 3: list<Transaction> txs}
 
-struct QueryUserLog{1: i64 userId, 2: optional i32 numOrders, 3: optional i32 skipOrders, 4: optional OrderStatus status}
-struct QueryUserLogResult{1: i64 userId, 2: UserLog userLog}
+struct QueryUserOrders{1: i64 userId, 2: optional i32 numOrders, 3: optional i32 skipOrders, 4: optional OrderStatus status}
+struct QueryUserOrdersResult{1: i64 userId, 2: list<OrderInfo> orders}
 
 struct QueryAccount{1: i64 userId}
 struct QueryAccountResult{1: UserAccount userAccount}

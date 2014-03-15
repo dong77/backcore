@@ -11,40 +11,38 @@ import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.common.StateManager
 import Implicits._
 
-// TODO(d): test this.
 private[postmarket] class UserLogsManager extends StateManager[UserLogsState] {
   initWithDefaultState(UserLogsState())
 
-  def getOrderInfos(param: QueryUserLog): UserLog = {
+  def getOrderInfos(param: QueryUserOrders): Seq[OrderInfo] = {
     def eval(orderInfo: OrderInfo) = (param.status.isEmpty || param.status.get == orderInfo.status)
-    val userLog = state.userLogs.getOrElse(param.userId, UserLog(Nil))
-    val orderInfos = userLog.orderInfos.filter(eval).drop(param.skipOrders.getOrElse(0)).take(param.numOrders.getOrElse(100))
-    UserLog(orderInfos)
+    state.orderInfoMap.getOrElse(param.userId, Nil)
+      .filter(eval)
+      .drop(param.skipOrders.getOrElse(0)).
+      take(param.numOrders.getOrElse(100))
   }
 
   def addOrUpdateOrderInfo(oi: OrderInfo) = {
-    def merge(old: OrderInfo, neu: OrderInfo): OrderInfo = {
-      old.copy(status = neu.status, remainingQuantity = neu.remainingQuantity, inAmount = old.inAmount + neu.inAmount)
-    }
+
     val userId = oi.order.userId
     val orderId = oi.order.id
-    var userLog = state.userLogs.getOrElse(userId, UserLog(Nil))
-    var orderInfos = userLog.orderInfos
+    var orderInfos = state.orderInfoMap.getOrElse(userId, Nil)
     val idx = orderInfos.indexWhere(_.order.id == orderId)
     orderInfos = if (idx == -1) oi +: orderInfos else {
       val (head, tail) = orderInfos.splitAt(idx)
-      head ++ (merge(tail(0), oi) +: tail.drop(1))
+      head ++ (mergeOrderInfos(tail(0), oi) +: tail.drop(1))
     }
-    userLog = userLog.copy(orderInfos = orderInfos)
-    state = state.copy(userLogs = state.userLogs + (userId -> userLog))
+    state = state.copy(orderInfoMap = state.orderInfoMap + (userId -> orderInfos))
   }
 
   def cancelOrder(order: Order) = {
-    var userLog = state.userLogs.getOrElse(order.userId, UserLog(Nil))
-    var orderInfos = userLog.orderInfos map { oi =>
+    val orderInfos = state.orderInfoMap.getOrElse(order.userId, Nil) map { oi =>
       if (oi.order.id == order.id) oi.copy(status = OrderStatus.Cancelled) else oi
     }
-    userLog = userLog.copy(orderInfos = orderInfos)
-    state = state.copy(userLogs = state.userLogs + (order.userId -> userLog))
+    state = state.copy(orderInfoMap = state.orderInfoMap + (order.userId -> orderInfos))
+  }
+
+  private def mergeOrderInfos(old: OrderInfo, neu: OrderInfo): OrderInfo = {
+    old.copy(status = neu.status, remainingQuantity = neu.remainingQuantity, inAmount = old.inAmount + neu.inAmount)
   }
 }

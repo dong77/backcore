@@ -27,8 +27,8 @@ class EventSerializer extends Serializer {
     case m: QueryMarket => BinaryScalaCodec(QueryMarket)(m)
     case m: QueryMarketResult => BinaryScalaCodec(QueryMarketResult)(m)
     case m: MarketUpdate => BinaryScalaCodec(MarketUpdate)(m)
-    case m: QueryUserLog => BinaryScalaCodec(QueryUserLog)(m)
-    case m: QueryUserLogResult => BinaryScalaCodec(QueryUserLogResult)(m)
+    case m: QueryUserOrders => BinaryScalaCodec(QueryUserOrders)(m)
+    case m: QueryUserOrdersResult => BinaryScalaCodec(QueryUserOrdersResult)(m)
     case m: QueryMarketCandleData => BinaryScalaCodec(QueryMarketCandleData)(m)
     case m: QueryMarketCandleDataResult => BinaryScalaCodec(QueryMarketCandleDataResult)(m)
     case m => throw new IllegalArgumentException("Cannot serialize object: " + m + ". Talk to wangdong!")
@@ -52,8 +52,8 @@ class EventSerializer extends Serializer {
     case Some(c) if c == classOf[QueryMarket.Immutable] => BinaryScalaCodec(QueryMarket).invert(bytes).get
     case Some(c) if c == classOf[QueryMarketResult.Immutable] => BinaryScalaCodec(QueryMarketResult).invert(bytes).get
     case Some(c) if c == classOf[MarketUpdate.Immutable] => BinaryScalaCodec(MarketUpdate).invert(bytes).get
-    case Some(c) if c == classOf[QueryUserLog.Immutable] => BinaryScalaCodec(QueryUserLog).invert(bytes).get
-    case Some(c) if c == classOf[QueryUserLogResult.Immutable] => BinaryScalaCodec(QueryUserLogResult).invert(bytes).get
+    case Some(c) if c == classOf[QueryUserOrders.Immutable] => BinaryScalaCodec(QueryUserOrders).invert(bytes).get
+    case Some(c) if c == classOf[QueryUserOrdersResult.Immutable] => BinaryScalaCodec(QueryUserOrdersResult).invert(bytes).get
     case Some(c) if c == classOf[QueryMarketCandleData.Immutable] => BinaryScalaCodec(QueryMarketCandleData).invert(bytes).get
     case Some(c) if c == classOf[QueryMarketCandleDataResult.Immutable] => BinaryScalaCodec(QueryMarketCandleDataResult).invert(bytes).get
 

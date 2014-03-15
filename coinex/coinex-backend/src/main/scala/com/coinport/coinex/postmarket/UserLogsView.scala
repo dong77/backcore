@@ -31,8 +31,7 @@ class UserLogsView extends ExtendedView {
       manager.addOrUpdateOrderInfo(mu.originOrderInfo)
       mu.matchedOrders foreach manager.addOrUpdateOrderInfo
 
-    case q: QueryUserLog =>
-      val userLog = manager.getOrderInfos(q)
-      sender ! QueryUserLogResult(q.userId, userLog)
+    case q: QueryUserOrders =>
+      sender ! QueryUserOrdersResult(q.userId, manager.getOrderInfos(q))
   }
 }

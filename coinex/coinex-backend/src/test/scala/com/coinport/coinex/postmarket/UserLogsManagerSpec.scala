@@ -14,10 +14,6 @@ import Currency._
 
 class UserLogsManagerSpec extends Specification {
 
-  /**
-   * struct QueryUserLog{1: i64 userId, 2: optional i32 numOrders, 3: optional i32 skipOrders, 4: optional OrderStatus status, 5: optional i32 numTxs, 6: optional i32 skipTxs}
-   * struct QueryUserLogResult{1: i64 userId, 2: UserLog userLog}
-   */
   "UserLogsManager" should {
     "change existing order to cancelled state without changing other fields" in {
       val side = Btc ~> Rmb
@@ -35,31 +31,31 @@ class UserLogsManagerSpec extends Specification {
 
       val manager = new UserLogsManager()
       manager.addOrUpdateOrderInfo(orderInfo1)
-      manager.getOrderInfos(QueryUserLog(666)) mustEqual UserLog(Seq(orderInfo1))
+      manager.getOrderInfos(QueryUserOrders(666)) mustEqual Seq(orderInfo1)
 
       manager.addOrUpdateOrderInfo(orderInfo2)
-      manager.getOrderInfos(QueryUserLog(666)) mustEqual UserLog(Seq(orderInfo2, orderInfo1))
+      manager.getOrderInfos(QueryUserOrders(666)) mustEqual Seq(orderInfo2, orderInfo1)
 
       manager.addOrUpdateOrderInfo(orderInfo3)
       manager.addOrUpdateOrderInfo(orderInfo4)
-      manager.getOrderInfos(QueryUserLog(666)) mustEqual UserLog(Seq(orderInfo3, orderInfo2, orderInfo1))
-      manager.getOrderInfos(QueryUserLog(666, numOrders = Option(2))) mustEqual UserLog(Seq(orderInfo3, orderInfo2))
-      manager.getOrderInfos(QueryUserLog(666, numOrders = Option(2), skipOrders = Option(1))) mustEqual UserLog(Seq(orderInfo2, orderInfo1))
-      manager.getOrderInfos(QueryUserLog(666, numOrders = Option(2), skipOrders = Option(1), status = Some(Pending))) mustEqual UserLog(Nil)
-      manager.getOrderInfos(QueryUserLog(666, numOrders = Option(2), status = Some(Pending))) mustEqual UserLog(Seq(orderInfo1))
+      manager.getOrderInfos(QueryUserOrders(666)) mustEqual Seq(orderInfo3, orderInfo2, orderInfo1)
+      manager.getOrderInfos(QueryUserOrders(666, numOrders = Option(2))) mustEqual Seq(orderInfo3, orderInfo2)
+      manager.getOrderInfos(QueryUserOrders(666, numOrders = Option(2), skipOrders = Option(1))) mustEqual Seq(orderInfo2, orderInfo1)
+      manager.getOrderInfos(QueryUserOrders(666, numOrders = Option(2), skipOrders = Option(1), status = Some(Pending))) mustEqual Nil
+      manager.getOrderInfos(QueryUserOrders(666, numOrders = Option(2), status = Some(Pending))) mustEqual Seq(orderInfo1)
 
       manager.cancelOrder(order1)
-      manager.getOrderInfos(QueryUserLog(666)) mustEqual UserLog(Seq(orderInfo3, orderInfo2, orderInfo1.copy(status = Cancelled)))
+      manager.getOrderInfos(QueryUserOrders(666)) mustEqual Seq(orderInfo3, orderInfo2, orderInfo1.copy(status = Cancelled))
 
       manager.cancelOrder(order3)
-      manager.getOrderInfos(QueryUserLog(666)) mustEqual UserLog(Seq(orderInfo3.copy(status = Cancelled), orderInfo2, orderInfo1.copy(status = Cancelled)))
+      manager.getOrderInfos(QueryUserOrders(666)) mustEqual Seq(orderInfo3.copy(status = Cancelled), orderInfo2, orderInfo1.copy(status = Cancelled))
 
       val order11 = Order(userId = 666, id = 1, quantity = 100, takeLimit = Some(12), timestamp = Some(12345698L))
       val orderInfo11 = OrderInfo(side, order11, Pending, 88, 222)
       manager.addOrUpdateOrderInfo(orderInfo11)
-      manager.getOrderInfos(QueryUserLog(666)).orderInfos(2) mustEqual orderInfo1.copy(remainingQuantity = 88, inAmount = 111 + 222)
-      
-      manager().userLogs.size mustEqual 2
+      manager.getOrderInfos(QueryUserOrders(666))(2) mustEqual orderInfo1.copy(remainingQuantity = 88, inAmount = 111 + 222)
+
+      manager().orderInfoMap.size mustEqual 2
     }
   }
 }
