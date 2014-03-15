@@ -32,6 +32,10 @@ enum AccountOperationCode {
 	INVALID_AMOUNT = 2
 }
 
+enum OrderSubmissionFailReason {
+	PRICE_OUT_OF_RANGE = 1
+}
+
 struct MarketSide {
 	1: Currency outCurrency
 	2: Currency inCurrency
@@ -157,5 +161,6 @@ struct DoCancelOrder{1: MarketSide side, 2: i64 id}
 struct OrderCashLocked{1: MarketSide side, 2: Order order}
 
 // MarketProcessor -> AccountProcessor/MarketUpdateProcessor events
-struct OrderCancelled{1: MarketSide side, 2:Order order}
+struct OrderCancelled{1: MarketSide side, 2: Order order}
+struct OrderSubmissionFailed{1: MarketSide side, 2: Order order, 3: OrderSubmissionFailReason reason}
 struct OrderSubmitted{1: OrderInfo originOrderInfo, 2: list<Transaction> txs}

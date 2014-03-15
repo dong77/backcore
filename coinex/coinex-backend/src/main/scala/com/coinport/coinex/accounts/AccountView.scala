@@ -40,14 +40,14 @@ class AccountView extends ExtendedView {
     case Persistent(OrderCancelled(side, Order(userId, _, quantity, _, _, _)), _) =>
       manager.updateCashAccount(userId, CashAccount(side.outCurrency, quantity, -quantity, 0))
 
-    case Persistent(mu: OrderSubmitted, _) =>
-      val side = mu.originOrderInfo.side
-      mu.txs foreach { tx =>
+    case Persistent(m: OrderSubmitted, _) =>
+      val side = m.originOrderInfo.side
+      m.txs foreach { tx =>
         val Transaction(_, takerOrderUpdate, makerOrderUpdate) = tx
         manager.sendCash(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
         manager.sendCash(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
-        manager.refund(takerOrderUpdate.current, side.outCurrency)
-        manager.refund(makerOrderUpdate.current, side.inCurrency)
+        manager.conditionalRefund(takerOrderUpdate.current.hitTakeLimit)(side.outCurrency, takerOrderUpdate.current)
+        manager.conditionalRefund(makerOrderUpdate.current.hitTakeLimit)(side.inCurrency, makerOrderUpdate.current)
       }
 
     case QueryAccount(userId) =>

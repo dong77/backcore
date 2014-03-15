@@ -25,13 +25,21 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
   initWithDefaultState(MarketState(headSide))
   private var collectTxs = true
 
+  def isOrderPriceInGoodRange(sellSide: MarketSide, price: Option[Double]): Boolean = {
+    if (price.isEmpty) true
+    else if (price.get <= 0) false
+    else if (state.priceRestriction.isEmpty || state.limitPriceOrderPool(sellSide).isEmpty) true
+    else if (price.get / state.limitPriceOrderPool(sellSide).headOption.get.price.get - 1.0 <= state.priceRestriction.get) true
+    else false
+  }
+
   def addOrder(sellSide: MarketSide, order: Order): OrderSubmitted = {
     val orderWithTime = order.copy(timestamp = Some(now()))
     val buySide = sellSide.reverse
 
     def sellMpos = state.marketPriceOrderPool(sellSide)
-    def buyMpos = state.marketPriceOrderPool(buySide)
     def buyLpos = state.limitPriceOrderPool(buySide)
+    def buyMpos = state.marketPriceOrderPool(buySide)
 
     var sellOrder = orderWithTime
     var totalOutAmount = 0L
@@ -68,7 +76,6 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
     }
 
     while (continue) {
-
       buyLpos.headOption match {
         // new LPO or MPO to match existing LPOs
         case Some(buyOrder) if buyOrder.vprice * sellOrder.vprice <= 1 =>

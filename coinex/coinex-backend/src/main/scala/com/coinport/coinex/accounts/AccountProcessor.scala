@@ -56,24 +56,26 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
       else manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
         case m @ AccountOperationResult(Ok, _) =>
           val o = order.copy(id = manager.getAndIncreaseOrderId)
-          sender ! OrderSubmissionInProgross(side, o)
           deliver(OrderCashLocked(side, o), getProcessorRef(side))
         case m: AccountOperationResult => sender ! m
       }
 
     // ------------------------------------------------------------------------------------------------
     // Events
-    case e @ OrderCancelled(side, Order(userId, _, quantity, _, _, _)) =>
-      sender ! manager.updateCashAccount(userId, CashAccount(side.outCurrency, quantity, -quantity, 0))
+    case OrderSubmissionFailed(side, order, _) =>
+      manager.conditionalRefund(true)(side.outCurrency, order)
 
-    case mu: OrderSubmitted =>
-      val side = mu.originOrderInfo.side
-      mu.txs foreach { tx =>
+    case OrderCancelled(side, order) =>
+      manager.conditionalRefund(true)(side.outCurrency, order)
+
+    case m: OrderSubmitted =>
+      val side = m.originOrderInfo.side
+      m.txs foreach { tx =>
         val Transaction(_, takerOrderUpdate, makerOrderUpdate) = tx
         manager.sendCash(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
         manager.sendCash(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
-        manager.refund(takerOrderUpdate.current, side.outCurrency)
-        manager.refund(makerOrderUpdate.current, side.inCurrency)
+        manager.conditionalRefund(takerOrderUpdate.current.hitTakeLimit)(side.outCurrency, takerOrderUpdate.current)
+        manager.conditionalRefund(makerOrderUpdate.current.hitTakeLimit)(side.inCurrency, makerOrderUpdate.current)
       }
   }
 

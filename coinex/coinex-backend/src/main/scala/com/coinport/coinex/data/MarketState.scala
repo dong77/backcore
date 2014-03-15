@@ -38,7 +38,8 @@ case class MarketState(
   headSide: MarketSide,
   marketPriceOrderPools: MarketState.OrderPools = MarketState.EmptyOrderPools,
   limitPriceOrderPools: MarketState.OrderPools = MarketState.EmptyOrderPools,
-  orderMap: Map[Long, Order] = Map.empty) {
+  orderMap: Map[Long, Order] = Map.empty,
+  priceRestriction: Option[Double] = None) {
 
   val tailSide = headSide.reverse
   val bothSides = Seq(headSide, tailSide)
@@ -52,6 +53,10 @@ case class MarketState(
 
   def limitPriceOrderPool(side: MarketSide): OrderPool = {
     limitPriceOrderPools.getOrElse(side, MarketState.EmptyOrderPool)
+  }
+
+  def setPriceRestriction(value: Option[Double]) = {
+    copy(priceRestriction = value)
   }
 
   def addOrder(side: MarketSide, order: Order): MarketState = {
