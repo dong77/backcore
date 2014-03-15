@@ -3,7 +3,7 @@
  *
  */
 
-package com.coinport.coinex.postmarket
+package com.coinport.coinex.markets
 
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
@@ -11,7 +11,7 @@ import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.common.StateManager
 import Implicits._
 
-private[postmarket] class UserLogsManager extends StateManager[UserLogsState] {
+class MarketUpdateUserLogsManager extends StateManager[UserLogsState] {
   initWithDefaultState(UserLogsState())
 
   def getOrderInfos(param: QueryUserOrders): Seq[OrderInfo] = {

@@ -32,10 +32,10 @@ final class Coinex(routers: LocalRouters) extends Actor {
     // AccountView
     case m: QueryAccount => routers.accountView forward m
 
-    // MarketViews
-    case m @ QueryMarket(side, _) => routers.marketViews(side) forward m
+    // MarketDepthViews
+    case m @ QueryMarket(side, _) => routers.marketDepthViews(side) forward m
 
-    // UserLogsView
+    // MarketUpdateUserLogsView
     case m: QueryUserOrders => routers.userLogsView forward m
 
     // CandleDataview

@@ -2,7 +2,7 @@
  * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
  */
 
-package com.coinport.coinex.postmarket
+package com.coinport.coinex.markets
 
 import org.specs2.mutable._
 import scala.collection.immutable.SortedSet
@@ -12,9 +12,9 @@ import OrderStatus._
 import Implicits._
 import Currency._
 
-class UserLogsManagerSpec extends Specification {
+class MarketUpdateUserLogsManagerSpec extends Specification {
 
-  "UserLogsManager" should {
+  "MarketUpdateUserLogsManager" should {
     "change existing order to cancelled state without changing other fields" in {
       val side = Btc ~> Rmb
       val order1 = Order(userId = 666, id = 1, price = Some(1.0 / 4500), quantity = 150, takeLimit = Some(11), timestamp = Some(123456L))
@@ -29,7 +29,7 @@ class UserLogsManagerSpec extends Specification {
       val order4 = Order(userId = 777, id = 3, quantity = 90)
       val orderInfo4 = OrderInfo(side.reverse, order4, PartiallyExecuted, 5, 0)
 
-      val manager = new UserLogsManager()
+      val manager = new MarketUpdateUserLogsManager()
       manager.addOrUpdateOrderInfo(orderInfo1)
       manager.getOrderInfos(QueryUserOrders(666)) mustEqual Seq(orderInfo1)
 

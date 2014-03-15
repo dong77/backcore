@@ -3,7 +3,7 @@
  *
  */
 
-package com.coinport.coinex.postmarket
+package com.coinport.coinex.markets
 
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
@@ -11,9 +11,9 @@ import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.common.StateManager
 import Implicits._
 
-class CandleDataView extends ExtendedView {
-  override def processorId = "coinex_pmp"
-  private val manager = new CandleDataManager
+class MarketUpdateCandleDataView extends ExtendedView {
+  override def processorId = "coinex_mup"
+  private val manager = new MarketUpdateCandleDataManager
 
   def receive = {
     case DebugDump =>
