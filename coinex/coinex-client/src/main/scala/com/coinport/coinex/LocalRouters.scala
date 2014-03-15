@@ -45,18 +45,18 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
       RoundRobinGroup(Nil),
       ClusterRouterGroupSettings(
         totalInstances = Int.MaxValue,
-        routeesPaths = List("/user/pm_ulv"),
+        routeesPaths = List("/user/mu_ulv"),
         allowLocalRoutees = false,
-        useRole = Some("pm_ulv"))).props, "pm_ulv_router")
+        useRole = Some("mu_ulv"))).props, "mu_ulv_router")
 
   val candleDataView = system.actorOf(
     ClusterRouterGroup(
       RoundRobinGroup(Nil),
       ClusterRouterGroupSettings(
         totalInstances = Int.MaxValue,
-        routeesPaths = List("/user/pm_cdv"),
+        routeesPaths = List("/user/mu_cdv"),
         allowLocalRoutees = false,
-        useRole = Some("pm_cdv"))).props, "pm_cdv_router")
+        useRole = Some("mu_cdv"))).props, "mu_cdv_router")
 
   //---------------------------------------------------------------------------
   val marketProcessors = bidirection(Map(markets map { m =>
@@ -65,15 +65,15 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
       "mp_" + m.asString + "_router")
   }: _*))
 
-  val marketViews = bidirection(Map(markets map { m =>
+  val marketDepthViews = bidirection(Map(markets map { m =>
     m -> system.actorOf(
       ClusterRouterGroup(
         RoundRobinGroup(Nil),
         ClusterRouterGroupSettings(
           totalInstances = Int.MaxValue,
-          routeesPaths = List("/user/mv_" + m.asString),
+          routeesPaths = List("/user/mdv_" + m.asString),
           allowLocalRoutees = false,
-          useRole = Some("mv_" + m.asString))).props, "mv_" + m.asString + "_router")
+          useRole = Some("mdv_" + m.asString))).props, "mdv_" + m.asString + "_router")
   }: _*))
 
   private def bidirection(m: Map[MarketSide, ActorRef]): Map[MarketSide, ActorRef] = {

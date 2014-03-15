@@ -3,7 +3,7 @@
  *
  */
 
-package com.coinport.coinex.postmarket
+package com.coinport.coinex.markets
 
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
@@ -11,9 +11,9 @@ import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.common.StateManager
 import Implicits._
 
-class UserLogsView extends ExtendedView {
-  override def processorId = "coinex_pmp"
-  private val manager = new UserLogsManager
+class MarketUpdateUserLogsView extends ExtendedView {
+  override def processorId = "coinex_mup"
+  private val manager = new MarketUpdateUserLogsManager
 
   def receive = {
     case DebugDump =>
@@ -31,8 +31,7 @@ class UserLogsView extends ExtendedView {
       manager.addOrUpdateOrderInfo(mu.originOrderInfo)
       mu.matchedOrders foreach manager.addOrUpdateOrderInfo
 
-    case q: QueryUserLog =>
-      val userLog = manager.getOrderInfos(q)
-      sender ! QueryUserLogResult(q.userId, userLog)
+    case q: QueryUserOrders =>
+      sender ! QueryUserOrdersResult(q.userId, manager.getOrderInfos(q))
   }
 }

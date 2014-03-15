@@ -27,18 +27,16 @@ final class Coinex(routers: LocalRouters) extends Actor {
     // Market Processors
     case m @ DoCancelOrder(side, _) => routers.marketProcessors(side) forward Persistent(m)
 
-    // UserLogsProcessor
-    // this processor doesn't take any commands.
 
     //-------------------------------------------------------------------------
     // AccountView
     case m: QueryAccount => routers.accountView forward m
 
-    // MarketViews
-    case m @ QueryMarket(side, _) => routers.marketViews(side) forward m
+    // MarketDepthViews
+    case m @ QueryMarket(side, _) => routers.marketDepthViews(side) forward m
 
-    // UserLogsView
-    case m: QueryUserLog => routers.userLogsView forward m
+    // MarketUpdateUserLogsView
+    case m: QueryUserOrders => routers.userLogsView forward m
 
     // CandleDataview
     case m: QueryMarketCandleData => routers.candleDataView forward m

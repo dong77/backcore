@@ -14,7 +14,6 @@ import akka.contrib.pattern.ClusterSingletonManager
 import com.coinport.coinex.users._
 import com.coinport.coinex.accounts._
 import com.coinport.coinex.markets._
-import com.coinport.coinex.postmarket._
 import akka.cluster.Cluster
 import Implicits._
 
@@ -51,24 +50,24 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
       system.actorOf(Props(classOf[AccountView]), "av")
     }
 
-    // PostMarketProcessor (path: /user/pmp)
-    if (cluster.selfRoles.contains("pmp")) {
+    // MarketUpdateProcessor (path: /user/mup)
+    if (cluster.selfRoles.contains("mup")) {
       system.actorOf(ClusterSingletonManager.props(
-        singletonProps = Props(new PostMarketProcessor()),
+        singletonProps = Props(new MarketUpdateProcessor()),
         singletonName = "singleton",
         terminationMessage = PoisonPill,
-        role = Some("pmp")),
-        name = "pmp")
+        role = Some("mup")),
+        name = "mup")
     }
 
-    // UserLogsView (path: /user/pm_ulv)
-    if (cluster.selfRoles.contains("pm_ulv")) {
-      system.actorOf(Props(classOf[UserLogsView]), "pm_ulv")
+    // MarketUpdateUserLogsView (path: /user/mu_ulv)
+    if (cluster.selfRoles.contains("mu_ulv")) {
+      system.actorOf(Props(classOf[MarketUpdateUserLogsView]), "mu_ulv")
     }
 
-    // CandleDataView (path: /user/pm_ulv)
-    if (cluster.selfRoles.contains("pm_cdv")) {
-      system.actorOf(Props(classOf[CandleDataView]), "pm_cdv")
+    // MarketUpdateCandleDataView (path: /user/mu_ulv)
+    if (cluster.selfRoles.contains("mu_cdv")) {
+      system.actorOf(Props(classOf[MarketUpdateCandleDataView]), "mu_cdv")
     }
 
     // Market Processors and Views
@@ -84,8 +83,8 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
       }
 
       // Market views (path: /user/mv_btc_rmb)
-      if (cluster.selfRoles.contains("mv_" + m.asString)) {
-        system.actorOf(Props(new MarketView(m)), "mv_" + m.asString)
+      if (cluster.selfRoles.contains("mdv_" + m.asString)) {
+        system.actorOf(Props(new MarketDepthView(m)), "mdv_" + m.asString)
       }
     }
   }
