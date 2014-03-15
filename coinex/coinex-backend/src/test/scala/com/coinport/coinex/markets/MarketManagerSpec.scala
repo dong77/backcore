@@ -19,6 +19,38 @@ class MarketManagerSpec extends Specification {
   val makerSide = takerSide.reverse
 
   "MarketManager" should {
+    "match limit-price order against limit-price orders prior to market-price orders" in {
+      val manager = new MarketManager(Btc ~> Rmb)(() => 0) // constant time
+      val mpo1 = Order(userId = 1, id = 1, price = None, quantity = 30000, timestamp = Some(0)) // higher priority
+      val mpo2 = Order(userId = 2, id = 2, price = None, quantity = 60000, timestamp = Some(0))
+      val lpo1 = Order(userId = 3, id = 3, price = Some(1.0 / 5000), quantity = 10000, timestamp = Some(0)) // higher priority
+      val lpo2 = Order(userId = 4, id = 4, price = Some(1.0 / 4000), quantity = 40000, timestamp = Some(0))
+      val taker = Order(userId = 5, id = 5, price = Some(2000), quantity = 100, timestamp = Some(0))
+
+      manager.addOrder(makerSide, mpo1)
+      manager.addOrder(makerSide, mpo2)
+      manager.addOrder(makerSide, lpo1)
+      manager.addOrder(makerSide, lpo2)
+
+      val result = manager.addOrder(takerSide, taker)
+
+      val updatedLpo1 = lpo1.copy(quantity = 0) // buy 2
+      val updatedLpo2 = lpo2.copy(quantity = 0) // buy 10 
+      val updatedMpo1 = mpo1.copy(quantity = 0) // buy 15
+      val updatedMpo2 = mpo2.copy(quantity = 0) // buy 30
+      val updatedTaker = taker.copy(quantity = 100 - 57)
+
+      result mustEqual OrderSubmitted(
+        OrderInfo(takerSide, taker, 57, 140000, PartiallyExecuted, Some(0)),
+        Seq(
+          Transaction(0, taker --> taker.copy(quantity = 98), lpo1 --> updatedLpo1),
+          Transaction(0, taker.copy(quantity = 98) --> taker.copy(quantity = 88), lpo2 --> updatedLpo2),
+          Transaction(0, taker.copy(quantity = 88) --> taker.copy(quantity = 73), mpo1 --> updatedMpo1),
+          Transaction(0, taker.copy(quantity = 73) --> taker.copy(quantity = 43), mpo2 --> updatedMpo2)))
+    }
+  }
+
+  "MarketManager" should {
     "match limit-price order against existing limit-price order with take-limit and update take-limit" in {
       val manager = new MarketManager(Btc ~> Rmb)(() => 100000) // constant time
       val maker = Order(userId = 666, id = 1, price = Some(1.0 / 4500), quantity = 45099, takeLimit = Some(11), timestamp = Some(100000))

@@ -42,8 +42,14 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
     def foundMatching(buyOrder: Order, price: Double) {
       val outAmount = Math.min(sellOrder.maxOutAmount(price), buyOrder.maxInAmount(1 / price))
       val inAmount = (outAmount * price).toLong
-      val updatedSellOrder = sellOrder.copy(quantity = sellOrder.quantity - outAmount, takeLimit = sellOrder.takeLimit.map(_ - inAmount))
-      val updatedBuyOrder = buyOrder.copy(quantity = buyOrder.quantity - inAmount, takeLimit = buyOrder.takeLimit.map(_ - outAmount))
+
+      val updatedSellOrder = sellOrder.copy(
+        quantity = sellOrder.quantity - outAmount,
+        takeLimit = sellOrder.takeLimit.map(_ - inAmount))
+
+      val updatedBuyOrder = buyOrder.copy(
+        quantity = buyOrder.quantity - inAmount,
+        takeLimit = buyOrder.takeLimit.map(_ - outAmount))
 
       txBuffer += Transaction(now(), sellOrder --> updatedSellOrder, buyOrder --> updatedBuyOrder)
 
@@ -62,14 +68,18 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
     }
 
     while (continue) {
-      buyMpos.headOption match {
-        // new LPO to match existing MPOs
-        case Some(buyOrder) if sellOrder.vprice > 0 => foundMatching(buyOrder, sellOrder.vprice)
+
+      buyLpos.headOption match {
+        // new LPO or MPO to match existing LPOs
+        case Some(buyOrder) if buyOrder.vprice * sellOrder.vprice <= 1 =>
+          foundMatching(buyOrder, 1 / buyOrder.vprice)
         case _ =>
-          buyLpos.headOption match {
-            // new LPO or MPO to match existing LPOs
-            case Some(buyOrder) if buyOrder.vprice * sellOrder.vprice <= 1 => foundMatching(buyOrder, 1 / buyOrder.vprice)
-            case _ => continue = false
+          buyMpos.headOption match {
+            // new LPO to match existing MPOs
+            case Some(buyOrder) if sellOrder.vprice > 0 =>
+              foundMatching(buyOrder, sellOrder.vprice)
+            case _ =>
+              continue = false
           }
       }
     }
