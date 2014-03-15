@@ -12,12 +12,24 @@ namespace java com.coinport.coinex.data
 
 //---------------------------------------------------------------------
 // Data and Structs
-
 enum Currency {
 	UNKNOWN = 0
 	RMB = 1
 	USD = 2
 	BTC = 1000
+}
+
+enum OrderStatus {
+	PENDING = 0
+	PARTIALLY_EXECUTED = 1
+	FULLY_EXECUTED = 2
+	CANCELLED = 3
+}
+
+enum AccountOperationCode {
+	OK = 0
+	INSUFFICIENT_FUND = 1
+	INVALID_AMOUNT = 2
 }
 
 struct MarketSide {
@@ -34,48 +46,32 @@ struct Order {
 	6: optional i64 timestamp
 }
 
-enum OrderStatus {
-	PENDING = 0
-	PARTIALLY_EXECUTED = 1
-	FULLY_EXECUTED = 2
-	CANCELLED = 3
+
+
+struct OrderInfo {
+	1: MarketSide side
+	2: Order order
+	3: i64 outAmount
+	4: i64 inAmount
+	5: OrderStatus status
+	6: optional i64 lastTxTimestamp
 }
 
-struct Transfer{
-	1: i64 userId
-	2: i64 orderId
-	3: Currency currency
-	4: i64 quantity
-	5: bool fullyExecuted
+struct OrderUpdate {
+	1: Order previous
+	2: Order current
 }
+
 struct Transaction{
-	1: Transfer taker
-	2: Transfer maker
+	1: i64 timestamp
+	2: OrderUpdate takerUpdate
+	3: OrderUpdate makerUpdate
 }
 struct CashAccount{
 	1: Currency currency
 	2: i64 available
 	3: i64 locked
 	4: i64 pendingWithdrawal
-}
-
-enum AccountOperationCode {
-	OK = 0
-	INSUFFICIENT_FUND = 1
-	INVALID_AMOUNT = 2
-}
-
-struct CashAccount {
-	1: Currency currency
-	2: i64 available = 0
-	3: i64 locked = 0
-	4: i64 pendingWithdrawal = 0
-}
-
-struct UnlockFund {
-	1: i64 userId
-	2: Currency currency
-	3: i64 amount
 }
 
 struct UserAccount {
@@ -90,15 +86,6 @@ struct Price {
 
 struct User{
 }
-
-struct OrderInfo {
-	1: MarketSide side
-	2: Order order
-	3: OrderStatus status
-	4: i64 remainingQuantity
-	5: i64 inAmount
-}
-
 
 struct UserLogsState {
  	1: map<i64, list<OrderInfo>> orderInfoMap
@@ -128,8 +115,10 @@ struct CandleDataBundle {
 struct CandleDataState {
 	1: map<MarketSide , CandleDataBundle> bundles
 }
+
 // ------------------------------------------------------------------------------------------------
 // Non-persistent message.
+
 struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
 struct OrderSubmissionDone{1: MarketSide side, 2: Order order, 3: list<Transaction> txs}
 
@@ -165,19 +154,8 @@ struct DoCancelOrder{1: MarketSide side, 2: i64 id}
 // For each event, we'll comment it in the form of "origin -> handler".
 
 // AccountProcessor -> MarketProcessor events
-struct OrderSubmitted{1: MarketSide side, 2: Order order}
+struct OrderCashLocked{1: MarketSide side, 2: Order order}
 
-// MarketProcessor -> AccountProcessor events
+// MarketProcessor -> AccountProcessor/MarketUpdateProcessor events
 struct OrderCancelled{1: MarketSide side, 2:Order order}
-
-// MarketProcessor -> AggregateUserView
-struct MarketUpdate{
-	1: OrderInfo originOrderInfo
-	2: i64 outAmount
-	3: i64 inAmount
-	4: list<OrderInfo> matchedOrders
-	5: list<Transaction> txs
-	6: list<UnlockFund> unlockCashs
-	7: optional double firstPrice
-	8: optional double lastPrice
-}
+struct OrderSubmitted{1: OrderInfo originOrderInfo, 2: list<Transaction> txs}

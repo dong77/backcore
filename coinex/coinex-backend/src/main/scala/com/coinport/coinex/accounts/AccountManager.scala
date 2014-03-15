@@ -23,6 +23,17 @@ import AccountOperationCode._
 class AccountManager extends StateManager[AccountState] {
   initWithDefaultState(AccountState())
 
+  def sendCash(from: Long, to: Long, currency: Currency, amount: Long) = {
+    updateCashAccount(from, CashAccount(currency, 0, -amount, 0))
+    updateCashAccount(to, CashAccount(currency, amount, 0, 0))
+  }
+
+  def refund(order: Order, currency: Currency) = {
+    if (order.hitTakeLimit && order.quantity > 0) {
+      updateCashAccount(order.userId, CashAccount(currency, order.quantity, -order.quantity, 0))
+    }
+  }
+
   def updateCashAccount(userId: Long, adjustment: CashAccount) = {
     val current = state.getUserCashAccount(userId, adjustment.currency)
     val updated = current + adjustment
