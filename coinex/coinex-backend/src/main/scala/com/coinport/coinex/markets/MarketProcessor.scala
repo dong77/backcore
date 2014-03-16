@@ -50,12 +50,19 @@ class MarketProcessor(
     // ------------------------------------------------------------------------------------------------
     // Events
     case OrderCashLocked(side, order: Order) =>
-      val orderSubmitted = manager.addOrder(side, order)
-      deliver(orderSubmitted, marketUpdateProcessoressorPath)
-      if (orderSubmitted.hasTransaction) {
-        deliver(orderSubmitted, accountProcessorPath)
+      if (!manager.isOrderPriceInGoodRange(side, order.price)) {
+        val event = OrderSubmissionFailed(side, order, OrderSubmissionFailReason.PriceOutOfRange)
+        sender ! event
+        deliver(event, accountProcessorPath)
+      } else {
+        val orderSubmitted = manager.addOrder(side, order)
+        sender ! orderSubmitted
+
+        deliver(orderSubmitted, marketUpdateProcessoressorPath)
+        if (orderSubmitted.hasTransaction) {
+          deliver(orderSubmitted, accountProcessorPath)
+        }
       }
 
-      sender ! orderSubmitted
   }
 }

@@ -32,6 +32,10 @@ enum AccountOperationCode {
 	INVALID_AMOUNT = 2
 }
 
+enum OrderSubmissionFailReason {
+	PRICE_OUT_OF_RANGE = 1
+}
+
 struct MarketSide {
 	1: Currency outCurrency
 	2: Currency inCurrency
@@ -45,8 +49,6 @@ struct Order {
 	5: optional i64 takeLimit
 	6: optional i64 timestamp
 }
-
-
 
 struct OrderInfo {
 	1: MarketSide side
@@ -79,16 +81,20 @@ struct UserAccount {
 	2: map<Currency, CashAccount> cashAccounts
 }
 
-struct Price {
-	1: MarketSide side
-	2: double price
-}
-
-struct User{
-}
-
 struct UserLogsState {
  	1: map<i64, list<OrderInfo>> orderInfoMap
+}
+
+struct MarketDepthItem {
+	1: double price
+	2: i64 quantity
+}
+
+
+struct MarketDepth {
+	1: MarketSide side
+	2: list<MarketDepthItem> asks
+	3: list<MarketDepthItem> bids
 }
 
 struct CandleDataItem {
@@ -128,8 +134,8 @@ struct QueryUserOrdersResult{1: i64 userId, 2: list<OrderInfo> orders}
 struct QueryAccount{1: i64 userId}
 struct QueryAccountResult{1: UserAccount userAccount}
 
-struct QueryMarket{1: MarketSide side, 2: i32 depth}
-struct QueryMarketResult{1: optional Price price, 2: list<Order> orders1, 3: list<Order> orders2}
+struct QueryMarket{1: MarketSide side, 2: i32 maxDepth}
+struct QueryMarketResult{1: MarketDepth marketDepth}
 
 struct QueryMarketCandleData{1: MarketSide side}
 struct QueryMarketCandleDataResult{1: CandleData candleData}
@@ -157,5 +163,6 @@ struct DoCancelOrder{1: MarketSide side, 2: i64 id}
 struct OrderCashLocked{1: MarketSide side, 2: Order order}
 
 // MarketProcessor -> AccountProcessor/MarketUpdateProcessor events
-struct OrderCancelled{1: MarketSide side, 2:Order order}
+struct OrderCancelled{1: MarketSide side, 2: Order order}
+struct OrderSubmissionFailed{1: MarketSide side, 2: Order order, 3: OrderSubmissionFailReason reason}
 struct OrderSubmitted{1: OrderInfo originOrderInfo, 2: list<Transaction> txs}

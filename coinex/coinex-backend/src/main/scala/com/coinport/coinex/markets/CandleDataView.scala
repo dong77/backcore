@@ -13,7 +13,7 @@ import Implicits._
 
 class MarketCandleDataView extends ExtendedView {
   override def processorId = "coinex_mup"
-  private val manager = new MarketCandleDataManager
+  private val manager = new CandleDataManager
 
   def receive = {
     case DebugDump =>
@@ -28,4 +28,13 @@ class MarketCandleDataView extends ExtendedView {
     case Persistent(mu: OrderSubmitted, _) if mu.txs.nonEmpty =>
     case q: QueryMarketCandleData =>
   }
+}
+
+class CandleDataManager extends StateManager[CandleDataState] {
+  initWithDefaultState(CandleDataState())
+
+  val minute = 60 * 1000
+  val quarter = 15 * minute
+  val hour = 4 * quarter
+  val day = 24 * hour
 }

@@ -18,14 +18,13 @@ class EventSerializer extends Serializer {
     case m: DoDepositCash => BinaryScalaCodec(DoDepositCash)(m)
     case m: DoRequestCashWithdrawal => BinaryScalaCodec(DoRequestCashWithdrawal)(m)
     case m: DoSubmitOrder => BinaryScalaCodec(DoSubmitOrder)(m)
-    case m: OrderSubmissionDone => BinaryScalaCodec(OrderSubmissionDone)(m)
-    case m: OrderSubmissionInProgross => BinaryScalaCodec(OrderSubmissionInProgross)(m)
     case m: OrderCashLocked => BinaryScalaCodec(OrderCashLocked)(m)
     case m: QueryAccount => BinaryScalaCodec(QueryAccount)(m)
     case m: QueryAccountResult => BinaryScalaCodec(QueryAccountResult)(m)
     case m: QueryMarket => BinaryScalaCodec(QueryMarket)(m)
     case m: QueryMarketResult => BinaryScalaCodec(QueryMarketResult)(m)
     case m: OrderCancelled => BinaryScalaCodec(OrderCancelled)(m)
+    case m: OrderSubmissionFailed => BinaryScalaCodec(OrderSubmissionFailed)(m)
     case m: OrderSubmitted => BinaryScalaCodec(OrderSubmitted)(m)
     case m: QueryUserOrders => BinaryScalaCodec(QueryUserOrders)(m)
     case m: QueryUserOrdersResult => BinaryScalaCodec(QueryUserOrdersResult)(m)
@@ -43,14 +42,13 @@ class EventSerializer extends Serializer {
     case Some(c) if c == classOf[DoDepositCash.Immutable] => BinaryScalaCodec(DoDepositCash).invert(bytes).get
     case Some(c) if c == classOf[DoRequestCashWithdrawal.Immutable] => BinaryScalaCodec(DoRequestCashWithdrawal).invert(bytes).get
     case Some(c) if c == classOf[DoSubmitOrder.Immutable] => BinaryScalaCodec(DoSubmitOrder).invert(bytes).get
-    case Some(c) if c == classOf[OrderSubmissionDone.Immutable] => BinaryScalaCodec(OrderSubmissionDone).invert(bytes).get
-    case Some(c) if c == classOf[OrderSubmissionInProgross.Immutable] => BinaryScalaCodec(OrderSubmissionInProgross).invert(bytes).get
     case Some(c) if c == classOf[OrderCashLocked.Immutable] => BinaryScalaCodec(OrderCashLocked).invert(bytes).get
     case Some(c) if c == classOf[QueryAccount.Immutable] => BinaryScalaCodec(QueryAccount).invert(bytes).get
     case Some(c) if c == classOf[QueryAccountResult.Immutable] => BinaryScalaCodec(QueryAccountResult).invert(bytes).get
     case Some(c) if c == classOf[QueryMarket.Immutable] => BinaryScalaCodec(QueryMarket).invert(bytes).get
     case Some(c) if c == classOf[QueryMarketResult.Immutable] => BinaryScalaCodec(QueryMarketResult).invert(bytes).get
     case Some(c) if c == classOf[OrderCancelled.Immutable] => BinaryScalaCodec(OrderCancelled).invert(bytes).get
+    case Some(c) if c == classOf[OrderSubmissionFailed.Immutable] => BinaryScalaCodec(OrderSubmissionFailed).invert(bytes).get
     case Some(c) if c == classOf[OrderSubmitted.Immutable] => BinaryScalaCodec(OrderSubmitted).invert(bytes).get
     case Some(c) if c == classOf[QueryUserOrders.Immutable] => BinaryScalaCodec(QueryUserOrders).invert(bytes).get
     case Some(c) if c == classOf[QueryUserOrdersResult.Immutable] => BinaryScalaCodec(QueryUserOrdersResult).invert(bytes).get

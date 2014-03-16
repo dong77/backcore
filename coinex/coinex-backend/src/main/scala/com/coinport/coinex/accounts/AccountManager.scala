@@ -28,12 +28,12 @@ class AccountManager extends StateManager[AccountState] {
     updateCashAccount(to, CashAccount(currency, amount, 0, 0))
   }
 
-  def refund(order: Order, currency: Currency) = {
-    if (order.hitTakeLimit && order.quantity > 0) {
+  def conditionalRefund(condition: Boolean)(currency: Currency, order: Order) = {
+    if (condition && order.quantity > 0) {
       updateCashAccount(order.userId, CashAccount(currency, order.quantity, -order.quantity, 0))
     }
   }
-
+  
   def updateCashAccount(userId: Long, adjustment: CashAccount) = {
     val current = state.getUserCashAccount(userId, adjustment.currency)
     val updated = current + adjustment

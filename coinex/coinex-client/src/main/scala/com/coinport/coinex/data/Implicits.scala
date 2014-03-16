@@ -18,10 +18,6 @@ class RichMarketSide(raw: MarketSide) {
   def asString = "%s_%s".format(raw.outCurrency, raw.inCurrency).toLowerCase
 }
 
-class RichPrice(raw: Price) {
-  def reverse = Price(new RichMarketSide(raw.side).reverse, 1 / raw.price)
-}
-
 class RichOrder(raw: Order) {
   def inversePrice: Order = raw.price match {
     case Some(p) if p > 0 => raw.copy(price = Some(1 / p))
@@ -50,6 +46,7 @@ class RichOrder(raw: Order) {
 class RichOrderUpdate(raw: OrderUpdate) {
   def userId = raw.previous.userId
   def id = raw.previous.id
+  def price = raw.previous.price
   def outAmount = raw.previous.quantity - raw.current.quantity
 }
 
@@ -99,7 +96,6 @@ class RichCandleDataItem(raw: CandleDataItem) {
 object Implicits {
   implicit def currency2Rich(raw: Currency) = new RichCurrency(raw)
   implicit def marketSide2Rich(raw: MarketSide) = new RichMarketSide(raw)
-  implicit def price2Rich(raw: Price) = new RichPrice(raw)
   implicit def order2Rich(raw: Order) = new RichOrder(raw)
   implicit def orderUpdate2Rich(raw: OrderUpdate) = new RichOrderUpdate(raw)
   implicit def transaction2Rich(raw: Transaction) = new RichTransaction(raw)
