@@ -5,15 +5,16 @@
 
 package com.coinport.coinex.markets
 
+import scala.collection.mutable
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
 import com.coinport.coinex.common.ExtendedView
+import com.coinport.coinex.common.StateManager
 import Implicits._
 
-// TODO: make this a OrderSubmittedMarketDepthView
-class MarketDepthView(marketSide: MarketSide) extends ExtendedView {
+class MarketDepthView(side: MarketSide) extends ExtendedView {
   override def processorId = "coinex_mup"
-
+  val manager = new MarketDepthManager(side)
   def receive = {
     case DebugDump =>
     // log.info("state: {}", manager())
@@ -24,20 +25,27 @@ class MarketDepthView(marketSide: MarketSide) extends ExtendedView {
   }
 
   def receiveMessage: Receive = {
-    case Persistent(DoCancelOrder(side, orderId), _) =>
-    //  manager.removeOrder(side, orderId)
-    /*
-    case Persistent(OrderCashLocked(side, order), _) =>
-      val orderSubmitted = manager.addOrder(side, order)
-      lastPrice = orderSubmitted.lastPrice map { Price(side, _) }
+    case Persistent(OrderCancelled(side, order), _) if side == side =>
+      order.price foreach { manager.adjustAmount(side, _, -order.quantity) }
 
-    case QueryMarket(side, depth) =>
-      val price = lastPrice map { p => if (p.side == side) p else p.reverse }
-      println("state: " + manager())
-      sender ! QueryMarketResult(price,
-        manager().limitPriceOrderPool(side).take(depth).toSeq,
-        manager().limitPriceOrderPool(side.reverse).take(depth).toSeq)
-        * */
+    case Persistent(OrderSubmitted(oi, txs), _) if oi.side == side =>
+      oi.order.price foreach { manager.adjustAmount(side.reverse, _, oi.order.quantity - oi.outAmount) }
+      txs.foreach { tx =>
+        tx.makerUpdate.price foreach { manager.adjustAmount(side.reverse, _, -tx.makerUpdate.outAmount) }
+      }
+  }
+}
+object MarketDepthState {
 
+}
+
+// TODO
+case class MarketDepthState()
+// 2: list<MarketDepthItem> asks
+//	3: list<MarketDepthItem> bids
+
+class MarketDepthManager(side: MarketSide) extends StateManager[MarketDepthState] {
+  initWithDefaultState(MarketDepthState())
+  def adjustAmount(side: MarketSide, price: Double, amountAdjustment: Long) = {
   }
 }

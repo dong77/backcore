@@ -48,7 +48,7 @@ class EventSerializer extends Serializer {
     case Some(c) if c == classOf[QueryMarket.Immutable] => BinaryScalaCodec(QueryMarket).invert(bytes).get
     case Some(c) if c == classOf[QueryMarketResult.Immutable] => BinaryScalaCodec(QueryMarketResult).invert(bytes).get
     case Some(c) if c == classOf[OrderCancelled.Immutable] => BinaryScalaCodec(OrderCancelled).invert(bytes).get
-		case Some(c) if c == classOf[OrderSubmissionFailed.Immutable] => BinaryScalaCodec(OrderSubmissionFailed).invert(bytes).get
+    case Some(c) if c == classOf[OrderSubmissionFailed.Immutable] => BinaryScalaCodec(OrderSubmissionFailed).invert(bytes).get
     case Some(c) if c == classOf[OrderSubmitted.Immutable] => BinaryScalaCodec(OrderSubmitted).invert(bytes).get
     case Some(c) if c == classOf[QueryUserOrders.Immutable] => BinaryScalaCodec(QueryUserOrders).invert(bytes).get
     case Some(c) if c == classOf[QueryUserOrdersResult.Immutable] => BinaryScalaCodec(QueryUserOrdersResult).invert(bytes).get

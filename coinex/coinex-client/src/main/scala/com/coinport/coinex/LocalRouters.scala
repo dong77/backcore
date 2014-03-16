@@ -12,68 +12,50 @@ import com.coinport.coinex.common.ClusterSingletonRouter
 import com.coinport.coinex.data._
 import Implicits._
 
+object LocalRouters {
+  val USER_PROCESSOR = "user_processor"
+  val ACCOUNT_PROCESSOR = "account_processor"
+  val MARKET_UPDATE_PROCESSOR = "marke_update_processor"
+  def MARKET_PROCESSOR(side: MarketSide) = "market_processor_" + side.asString
+
+  val USER_VIEW = "user_view"
+  val ACCOUNT_VIEW = "account_view"
+  val USER_ORDERS_VIEW = "user_orders_view"
+  val CANDLE_DATA_VIEW = "candle_data_view"
+  def MARKET_DEPTH_VIEW(side: MarketSide) = "market_depth_view_" + side.asString
+}
+
 class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
-  //---------------------------------------------------------------------------
-  val userProcessor = system.actorOf(Props(new ClusterSingletonRouter("ap", "user/up/singleton")), "up_router")
 
-  val userView = system.actorOf(
-    ClusterRouterGroup(
-      RoundRobinGroup(Nil),
+  def singletonRouter(name: String) = system.actorOf(
+    Props(new ClusterSingletonRouter(name, "user/" + name + "/singleton")), name + "_router")
+
+  def viewRouter(name: String) = system.actorOf(
+    ClusterRouterGroup(RoundRobinGroup(Nil),
       ClusterRouterGroupSettings(
         totalInstances = Int.MaxValue,
-        routeesPaths = List("/user/uv"),
+        routeesPaths = List("/user/" + name),
         allowLocalRoutees = false,
-        useRole = Some("uv"))).props, "uv_router")
+        useRole = Some(name))).props,
+    name + "_router")
 
+  import LocalRouters._
   //---------------------------------------------------------------------------
-  val accountProcessor = system.actorOf(Props(new ClusterSingletonRouter("ap", "user/ap/singleton")), "ap_router")
+  val userProcessor = singletonRouter(USER_PROCESSOR)
+  val accountProcessor = singletonRouter(ACCOUNT_PROCESSOR)
+  val marketUpdateProcessor = singletonRouter(MARKET_UPDATE_PROCESSOR)
 
-  val accountView = system.actorOf(
-    ClusterRouterGroup(
-      RoundRobinGroup(Nil),
-      ClusterRouterGroupSettings(
-        totalInstances = Int.MaxValue,
-        routeesPaths = List("/user/av"),
-        allowLocalRoutees = false,
-        useRole = Some("av"))).props, "av_router")
-
-  //---------------------------------------------------------------------------
-  val marketUpdateProcessoressor = system.actorOf(Props(new ClusterSingletonRouter("pmp", "user/pmp/singleton")), "pmp_router")
-
-  val userLogsView = system.actorOf(
-    ClusterRouterGroup(
-      RoundRobinGroup(Nil),
-      ClusterRouterGroupSettings(
-        totalInstances = Int.MaxValue,
-        routeesPaths = List("/user/mv_ul"),
-        allowLocalRoutees = false,
-        useRole = Some("mv_ul"))).props, "mv_ul_router")
-
-  val candleDataView = system.actorOf(
-    ClusterRouterGroup(
-      RoundRobinGroup(Nil),
-      ClusterRouterGroupSettings(
-        totalInstances = Int.MaxValue,
-        routeesPaths = List("/user/mv_cd"),
-        allowLocalRoutees = false,
-        useRole = Some("mv_cd"))).props, "mv_cd_router")
-
-  //---------------------------------------------------------------------------
   val marketProcessors = bidirection(Map(markets map { m =>
-    m -> system.actorOf(
-      Props(new ClusterSingletonRouter("mp_" + m.asString, "/user/mp_" + m.asString + "/singleton")),
-      "mp_" + m.asString + "_router")
+    m -> singletonRouter(MARKET_PROCESSOR(m))
   }: _*))
 
+  val userView = viewRouter(USER_VIEW)
+  val accountView = viewRouter(ACCOUNT_VIEW)
+  val userOrdersView = viewRouter(USER_ORDERS_VIEW)
+  val candleDataView = viewRouter(CANDLE_DATA_VIEW)
+
   val marketDepthViews = bidirection(Map(markets map { m =>
-    m -> system.actorOf(
-      ClusterRouterGroup(
-        RoundRobinGroup(Nil),
-        ClusterRouterGroupSettings(
-          totalInstances = Int.MaxValue,
-          routeesPaths = List("/user/mdv_" + m.asString),
-          allowLocalRoutees = false,
-          useRole = Some("mdv_" + m.asString))).props, "mdv_" + m.asString + "_router")
+    m -> viewRouter(MARKET_DEPTH_VIEW(m))
   }: _*))
 
   private def bidirection(m: Map[MarketSide, ActorRef]): Map[MarketSide, ActorRef] = {
