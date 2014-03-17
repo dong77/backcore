@@ -76,14 +76,7 @@ case class MarketState(
     market.copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
   }
 
-  def getOrder(side: MarketSide, id: Long): Option[Order] = {
-    orderMap.get(id) match {
-      case Some(order) =>
-        if (marketPriceOrderPool(side).contains(order) || limitPriceOrderPool(side).contains(order)) Some(order)
-        else Some(order)
-      case None => None
-    }
-  }
+  def getOrder(side: MarketSide,id: Long): Option[Order] =  orderMap.get(id)
 
   def removeOrder(side: MarketSide, id: Long): MarketState = {
     orderMap.get(id) match {

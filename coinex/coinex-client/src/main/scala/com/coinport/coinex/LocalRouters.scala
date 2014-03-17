@@ -27,10 +27,30 @@ object LocalRouters {
 
 class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
 
-  def singletonRouter(name: String) = system.actorOf(
+
+  import LocalRouters._
+  val userProcessor = routerForProcessor(USER_PROCESSOR)
+  val accountProcessor = routerForProcessor(ACCOUNT_PROCESSOR)
+  val marketUpdateProcessor = routerForProcessor(MARKET_UPDATE_PROCESSOR)
+
+  val marketProcessors = bidirection(Map(markets map { m =>
+    m -> routerForProcessor(MARKET_PROCESSOR(m))
+  }: _*))
+
+  val userView = routerForView(USER_VIEW)
+  val accountView = routerForView(ACCOUNT_VIEW)
+  val userOrdersView = routerForView(USER_ORDERS_VIEW)
+  val candleDataView = routerForView(CANDLE_DATA_VIEW)
+
+  val marketDepthViews = bidirection(Map(markets map { m =>
+    m -> routerForView(MARKET_DEPTH_VIEW(m))
+  }: _*))
+
+
+  private def routerForProcessor(name: String) = system.actorOf(
     Props(new ClusterSingletonRouter(name, "user/" + name + "/singleton")), name + "_router")
 
-  def viewRouter(name: String) = system.actorOf(
+  private def routerForView(name: String) = system.actorOf(
     ClusterRouterGroup(RoundRobinGroup(Nil),
       ClusterRouterGroupSettings(
         totalInstances = Int.MaxValue,
@@ -38,25 +58,6 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
         allowLocalRoutees = false,
         useRole = Some(name))).props,
     name + "_router")
-
-  import LocalRouters._
-  //---------------------------------------------------------------------------
-  val userProcessor = singletonRouter(USER_PROCESSOR)
-  val accountProcessor = singletonRouter(ACCOUNT_PROCESSOR)
-  val marketUpdateProcessor = singletonRouter(MARKET_UPDATE_PROCESSOR)
-
-  val marketProcessors = bidirection(Map(markets map { m =>
-    m -> singletonRouter(MARKET_PROCESSOR(m))
-  }: _*))
-
-  val userView = viewRouter(USER_VIEW)
-  val accountView = viewRouter(ACCOUNT_VIEW)
-  val userOrdersView = viewRouter(USER_ORDERS_VIEW)
-  val candleDataView = viewRouter(CANDLE_DATA_VIEW)
-
-  val marketDepthViews = bidirection(Map(markets map { m =>
-    m -> viewRouter(MARKET_DEPTH_VIEW(m))
-  }: _*))
 
   private def bidirection(m: Map[MarketSide, ActorRef]): Map[MarketSide, ActorRef] = {
     m ++ m.map {

@@ -20,21 +20,6 @@ import Implicits._
 class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
   val system = cluster.system
 
-  def deployProcessor(props: Props, name: String) =
-    if (cluster.selfRoles.contains(name)) {
-      system.actorOf(ClusterSingletonManager.props(
-        singletonProps = props,
-        singletonName = "singleton",
-        terminationMessage = PoisonPill,
-        role = Some(name)),
-        name = name)
-    }
-
-  def deployView(props: Props, name: String) =
-    if (cluster.selfRoles.contains(name)) {
-      system.actorOf(props, name)
-    }
-
   def deploy(routers: LocalRouters) = {
     import LocalRouters._
 
@@ -53,4 +38,20 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
     deployView(Props(classOf[UserOrdersView]), USER_ORDERS_VIEW)
     deployView(Props(classOf[MarketCandleDataView]), CANDLE_DATA_VIEW)
   }
+	
+  private def deployProcessor(props: Props, name: String) =
+    if (cluster.selfRoles.contains(name)) {
+      system.actorOf(ClusterSingletonManager.props(
+        singletonProps = props,
+        singletonName = "singleton",
+        terminationMessage = PoisonPill,
+        role = Some(name)),
+        name = name)
+    }
+
+  private def deployView(props: Props, name: String) =
+    if (cluster.selfRoles.contains(name)) {
+      system.actorOf(props, name)
+    }
+	
 }

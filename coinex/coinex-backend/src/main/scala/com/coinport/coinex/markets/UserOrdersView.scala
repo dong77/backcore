@@ -57,8 +57,8 @@ class UserOrdersManager extends StateManager[UserLogsState] {
     def eval(orderInfo: OrderInfo) = (param.status.isEmpty || param.status.get == orderInfo.status)
     state.orderInfoMap.getOrElse(param.userId, Nil)
       .filter(eval)
-      .drop(param.skipOrders.getOrElse(0)).
-      take(param.numOrders.getOrElse(100))
+      .drop(param.skipOrders.getOrElse(0))
+      .take(param.numOrders.getOrElse(100))
   }
 
   def addOrder(oi: OrderInfo) = {
