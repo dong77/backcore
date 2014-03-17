@@ -30,7 +30,7 @@ class EventSerializer extends Serializer {
     case m: QueryUserOrdersResult => BinaryScalaCodec(QueryUserOrdersResult)(m)
     case m: QueryMarketCandleData => BinaryScalaCodec(QueryMarketCandleData)(m)
     case m: QueryMarketCandleDataResult => BinaryScalaCodec(QueryMarketCandleDataResult)(m)
-    case m => throw new IllegalArgumentException("Cannot serialize object: " + m + ". Talk to wangdong!")
+    case m => throw new IllegalArgumentException("Cannot serialize object: " + m)
   }
 
   def fromBinary(bytes: Array[Byte],
@@ -55,7 +55,7 @@ class EventSerializer extends Serializer {
     case Some(c) if c == classOf[QueryMarketCandleData.Immutable] => BinaryScalaCodec(QueryMarketCandleData).invert(bytes).get
     case Some(c) if c == classOf[QueryMarketCandleDataResult.Immutable] => BinaryScalaCodec(QueryMarketCandleDataResult).invert(bytes).get
 
-    case Some(c) => throw new IllegalArgumentException("Cannot deserialize class: " + c.getCanonicalName + ". Talk to wangdong!")
+    case Some(c) => throw new IllegalArgumentException("Cannot deserialize class: " + c.getCanonicalName)
     case None => throw new IllegalArgumentException("No class found in EventSerializer when deserializing array: " + bytes.mkString(""))
   }
 }
