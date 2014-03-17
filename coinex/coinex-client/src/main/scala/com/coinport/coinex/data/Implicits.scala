@@ -48,6 +48,10 @@ class RichOrderUpdate(raw: OrderUpdate) {
   def id = raw.previous.id
   def price = raw.previous.price
   def outAmount = raw.previous.quantity - raw.current.quantity
+  def takeLimitDiff =
+    if (raw.previous.takeLimit.isDefined && raw.current.takeLimit.isDefined)
+      raw.previous.takeLimit.get - raw.current.takeLimit.get
+    else throw new IllegalStateException("Cannot get takeLimitDiff for " + raw)
 }
 
 class RichTransaction(raw: Transaction) {
