@@ -13,113 +13,113 @@ namespace java com.coinport.coinex.data
 //---------------------------------------------------------------------
 // Data and Structs
 enum Currency {
-	UNKNOWN = 0
-	RMB = 1
-	USD = 2
-	BTC = 1000
+    UNKNOWN = 0
+    RMB = 1
+    USD = 2
+    BTC = 1000
 }
 
 enum OrderStatus {
-	PENDING = 0
-	PARTIALLY_EXECUTED = 1
-	FULLY_EXECUTED = 2
-	CANCELLED = 3
+    PENDING = 0
+    PARTIALLY_EXECUTED = 1
+    FULLY_EXECUTED = 2
+    CANCELLED = 3
 }
 
 enum AccountOperationCode {
-	OK = 0
-	INSUFFICIENT_FUND = 1
-	INVALID_AMOUNT = 2
+    OK = 0
+    INSUFFICIENT_FUND = 1
+    INVALID_AMOUNT = 2
 }
 
 enum OrderSubmissionFailReason {
-	PRICE_OUT_OF_RANGE = 1
+    PRICE_OUT_OF_RANGE = 1
 }
 
 struct MarketSide {
-	1: Currency outCurrency
-	2: Currency inCurrency
+    1: Currency outCurrency
+    2: Currency inCurrency
 }
 
 struct Order {
-	1: i64 userId
-	2: i64 id
-	3: i64 quantity
-	4: optional double price
-	5: optional i64 takeLimit
-	6: optional i64 timestamp
+    1: i64 userId
+    2: i64 id
+    3: i64 quantity
+    4: optional double price
+    5: optional i64 takeLimit
+    6: optional i64 timestamp
 }
 
 struct OrderInfo {
-	1: MarketSide side
-	2: Order order
-	3: i64 outAmount
-	4: i64 inAmount
-	5: OrderStatus status
-	6: optional i64 lastTxTimestamp
+    1: MarketSide side
+    2: Order order
+    3: i64 outAmount
+    4: i64 inAmount
+    5: OrderStatus status
+    6: optional i64 lastTxTimestamp
 }
 
 struct OrderUpdate {
-	1: Order previous
-	2: Order current
+    1: Order previous
+    2: Order current
 }
 
 struct Transaction{
-	1: i64 timestamp
-	2: OrderUpdate takerUpdate
-	3: OrderUpdate makerUpdate
+    1: i64 timestamp
+    2: OrderUpdate takerUpdate
+    3: OrderUpdate makerUpdate
 }
 struct CashAccount{
-	1: Currency currency
-	2: i64 available
-	3: i64 locked
-	4: i64 pendingWithdrawal
+    1: Currency currency
+    2: i64 available
+    3: i64 locked
+    4: i64 pendingWithdrawal
 }
 
 struct UserAccount {
-	1: i64 userId
-	2: map<Currency, CashAccount> cashAccounts
+    1: i64 userId
+    2: map<Currency, CashAccount> cashAccounts
 }
 
 struct UserLogsState {
- 	1: map<i64, list<OrderInfo>> orderInfoMap
+    1: map<i64, list<OrderInfo>> orderInfoMap
 }
 
 struct MarketDepthItem {
-	1: double price
-	2: i64 quantity
+    1: double price
+    2: i64 quantity
 }
 
 
 struct MarketDepth {
-	1: MarketSide side
-	2: list<MarketDepthItem> asks
-	3: list<MarketDepthItem> bids
+    1: MarketSide side
+    2: list<MarketDepthItem> asks
+    3: list<MarketDepthItem> bids
 }
 
 struct CandleDataItem {
-	1: i64 timestamp
-	2: i64 volumn
-	3: double open
-	4: double close
-	5: double low
-	6: double high
+    1: i64 timestamp
+    2: i64 volumn
+    3: double open
+    4: double close
+    5: double low
+    6: double high
 }
 
 struct CandleData {
-	1: i64 timestamp
-	2: list<CandleDataItem> items
+    1: i64 timestamp
+    2: list<CandleDataItem> items
 }
 
 struct CandleDataBundle {
-	1: optional CandleData minutelyData
-	2: optional CandleData quarterlyData
-	3: optional CandleData hourlyData
-	4: optional CandleData dailyData
+    1: optional CandleData minutelyData
+    2: optional CandleData quarterlyData
+    3: optional CandleData hourlyData
+    4: optional CandleData dailyData
 }
 
 struct CandleDataState {
-	1: map<MarketSide , CandleDataBundle> bundles
+    1: map<MarketSide , CandleDataBundle> bundles
 }
 
 // ------------------------------------------------------------------------------------------------

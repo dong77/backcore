@@ -68,14 +68,21 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
     case OrderCancelled(side, order) =>
       manager.conditionalRefund(true)(side.outCurrency, order)
 
-    case m: OrderSubmitted =>
-      val side = m.originOrderInfo.side
-      m.txs foreach { tx =>
+    case OrderSubmitted(originOrderInfo, txs) =>
+      val side = originOrderInfo.side
+      txs foreach { tx =>
         val Transaction(_, takerOrderUpdate, makerOrderUpdate) = tx
         manager.sendCash(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
         manager.sendCash(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
         manager.conditionalRefund(takerOrderUpdate.current.hitTakeLimit)(side.outCurrency, takerOrderUpdate.current)
         manager.conditionalRefund(makerOrderUpdate.current.hitTakeLimit)(side.inCurrency, makerOrderUpdate.current)
+      }
+      val order = originOrderInfo.order
+      // need refund the rest locked currency for the market-price order
+      order.price match {
+        case None if (order.quantity - originOrderInfo.outAmount > 0) =>
+          manager.refund(order.userId, side.outCurrency, order.quantity - originOrderInfo.outAmount)
+        case _ => None
       }
   }
 
