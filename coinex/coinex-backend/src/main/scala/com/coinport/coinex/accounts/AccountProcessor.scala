@@ -79,10 +79,9 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
       }
       val order = originOrderInfo.order
       // need refund the rest locked currency for the market-price order
-      order.price match {
-        case None if (order.quantity - originOrderInfo.outAmount > 0) =>
+      order.price foreach { price =>
+        if (order.quantity - originOrderInfo.outAmount > 0)
           manager.refund(order.userId, side.outCurrency, order.quantity - originOrderInfo.outAmount)
-        case _ => None
       }
   }
 
