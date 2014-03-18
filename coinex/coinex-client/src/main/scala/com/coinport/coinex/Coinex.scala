@@ -16,6 +16,12 @@ import Implicits._
 final class Coinex(routers: LocalRouters) extends Actor {
 
   def receive = {
+    case x =>
+      println("Coinex got: " + x)
+      if (handle.isDefinedAt(x)) handle(x)
+  }
+
+  def handle: Receive = {
     //-------------------------------------------------------------------------
     // Account Processor
     case m: DoDepositCash => routers.accountProcessor forward Persistent(m)
@@ -32,7 +38,8 @@ final class Coinex(routers: LocalRouters) extends Actor {
     case m: QueryAccount => routers.accountView forward m
 
     // MarketDepthViews
-    case m @ QueryMarket(side, _) => routers.marketDepthViews(side) forward m
+    case m @ QueryMarket(side, _) =>
+      routers.marketDepthViews(side) forward m
 
     // UserOrdersView
     case m: QueryUserOrders => routers.userOrdersView forward m

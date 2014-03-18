@@ -36,8 +36,8 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
       if (orderInfo.side != market && orderInfo.side != market.reverse)
         throw new IllegalArgumentException("MarketDepthView(%s) doesn't support market side %s".format(market, orderInfo.side))
 
-      manager.adjustAmount(market, orderInfo.order, true)
-      txs foreach { manager.reductAmount(market, _) }
+      manager.adjustAmount(orderInfo.side, orderInfo.order, true)
+      txs foreach { manager.reductAmount(orderInfo.side, _) }
 
     case QueryMarket(side, maxDepth) =>
       if (side != market)
@@ -45,6 +45,7 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
 
       val (asks, bids) = manager().get(maxDepth)
       sender ! QueryMarketResult(MarketDepth(market, asks, bids))
+      println(manager())
 
   }
 }
@@ -57,8 +58,8 @@ class MarketDepthManager(market: MarketSide) extends StateManager[MarketDepthSta
     def adjust(amount: Long) = if (addOrRemove) amount else -amount
     if (side == market && order.price.isDefined) {
       state = state.adjustAsk(order.price.get, adjust(order.quantity))
-    } else if (side == market.reverse && order.price.isDefined && order.takeLimit.isDefined) {
-      state = state.adjustBid(order.price.get, adjust(order.takeLimit.get))
+    } else if (side == market.reverse && order.price.isDefined) {
+      state = state.adjustBid(order.price.get, adjust(order.minimalTake))
     }
   }
 
@@ -70,7 +71,7 @@ class MarketDepthManager(market: MarketSide) extends StateManager[MarketDepthSta
       state = state.adjustAsk(ask.previous.price.get, -ask.outAmount)
     }
     if (bid.previous.price.isDefined && bid.previous.takeLimit.isDefined) {
-      state = state.adjustBid(bid.previous.price.get, -bid.takeLimitDiff)
+      state = state.adjustBid(bid.previous.price.get, -bid.minimalTakeDiff)
     }
   }
 }

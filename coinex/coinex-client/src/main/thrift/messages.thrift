@@ -81,6 +81,11 @@ struct UserAccount {
     2: map<Currency, CashAccount> cashAccounts
 }
 
+struct PersistentAccountState {
+	1: i64 lastOrderId
+	2: map<i64, UserAccount> userAccountsMap
+}
+
 struct UserLogsState {
     1: map<i64, list<OrderInfo>> orderInfoMap
 }

@@ -26,7 +26,7 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
     markets foreach { m =>
       val props = Props(new MarketProcessor(m, routers.accountProcessor.path, routers.marketUpdateProcessor.path))
       deployProcessor(props, MARKET_PROCESSOR(m))
-      deployProcessor(Props(new MarketDepthView(m)), MARKET_DEPTH_VIEW(m))
+      deployView(Props(new MarketDepthView(m)), MARKET_DEPTH_VIEW(m))
     }
 
     deployProcessor(Props(new UserProcessor()), USER_PROCESSOR)
