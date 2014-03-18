@@ -8,6 +8,7 @@
         </encoder>
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <filter class="com.coinport.coinex.LogFilter" />
         <file>log/coinex.log</file>
         <append>false</append>
         <encoder>
