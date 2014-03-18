@@ -92,12 +92,12 @@ class MarketStateSpec extends Specification {
       val order2 = Order(888L, 2L, 100, None)
 
       var m = market.addOrder(side, order1)
-      m= m.removeOrder(side.reverse, 1)
+      m = m.removeOrder(side.reverse, 1)
       m.orderMap.size mustEqual 1
 
-      m= m.addOrder(side, order1)
-      m= m.addOrder(side, order2)
-      m= m.removeOrder(side, 1)
+      m = m.addOrder(side, order1)
+      m = m.addOrder(side, order2)
+      m = m.removeOrder(side, 1)
       m = m.removeOrder(side, 2)
       m mustEqual market
     }

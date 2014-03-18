@@ -136,6 +136,7 @@ struct QueryAccountResult{1: UserAccount userAccount}
 
 struct QueryMarket{1: MarketSide side, 2: i32 maxDepth}
 struct QueryMarketResult{1: MarketDepth marketDepth}
+struct QueryMarketUnsupportedMarketFailure{1: MarketSide side}
 
 struct QueryMarketCandleData{1: MarketSide side}
 struct QueryMarketCandleDataResult{1: CandleData candleData}
