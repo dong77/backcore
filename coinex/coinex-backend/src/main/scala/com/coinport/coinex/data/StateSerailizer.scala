@@ -16,7 +16,7 @@ class StateSerializer extends Serializer {
 
   def fromBinary(bytes: Array[Byte],
     clazz: Option[Class[_]]): AnyRef = clazz match {
-    case Some(c) if c == classOf[PersistentAccountState.Immutable] => BinaryScalaCodec(PersistentAccountState).invert(bytes).get.toPojo
+    case Some(c) if c == classOf[AccountState] => BinaryScalaCodec(PersistentAccountState).invert(bytes).get.toPojo
 
     case Some(c) => throw new IllegalArgumentException("Cannot deserialize class: " + c.getCanonicalName)
     case None => throw new IllegalArgumentException("No class found in EventSerializer when deserializing array: " + bytes.mkString(""))

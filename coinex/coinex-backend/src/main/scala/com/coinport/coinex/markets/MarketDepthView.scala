@@ -22,7 +22,6 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
     case x =>
       log.info("~~~ saw: " + x)
       if (receiveMessage.isDefinedAt(x)) receiveMessage(x)
-      log.info("-" * 100 + "\n market depth state: {}", manager())
   }
 
   def receiveMessage: Receive = {
