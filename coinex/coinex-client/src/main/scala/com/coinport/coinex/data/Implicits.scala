@@ -43,11 +43,19 @@ class RichOrder(raw: Order) {
   def -->(another: Order) = OrderUpdate(raw, another)
 }
 
+class RichOrderInfo(raw: OrderInfo) {
+  def remainingQuantity = raw.order.quantity - raw.outAmount
+}
+
 class RichOrderUpdate(raw: OrderUpdate) {
   def userId = raw.previous.userId
   def id = raw.previous.id
   def price = raw.previous.price
   def outAmount = raw.previous.quantity - raw.current.quantity
+  def takeLimitDiff =
+    if (raw.previous.takeLimit.isDefined && raw.current.takeLimit.isDefined)
+      raw.previous.takeLimit.get - raw.current.takeLimit.get
+    else throw new IllegalStateException("Cannot get takeLimitDiff for " + raw)
 }
 
 class RichTransaction(raw: Transaction) {
@@ -97,6 +105,7 @@ object Implicits {
   implicit def currency2Rich(raw: Currency) = new RichCurrency(raw)
   implicit def marketSide2Rich(raw: MarketSide) = new RichMarketSide(raw)
   implicit def order2Rich(raw: Order) = new RichOrder(raw)
+  implicit def orderInfo2Rich(raw: OrderInfo) = new RichOrderInfo(raw)
   implicit def orderUpdate2Rich(raw: OrderUpdate) = new RichOrderUpdate(raw)
   implicit def transaction2Rich(raw: Transaction) = new RichTransaction(raw)
   implicit def orderSubmitted2Rich(raw: OrderSubmitted) = new RichOrderSubmitted(raw)

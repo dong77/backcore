@@ -51,6 +51,7 @@ object CoinexBuild extends Build {
       sbtassembly.Plugin.assemblySettings)
     .settings(
       libraryDependencies ++= Seq(
+        "com.typesafe.akka" %% "akka-remote" % akkaVersion,
         "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
         "com.typesafe.akka" %% "akka-contrib" % akkaVersion,
         "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
