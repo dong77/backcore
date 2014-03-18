@@ -39,8 +39,6 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
 
       val (asks, bids) = manager().get(maxDepth)
       sender ! QueryMarketResult(MarketDepth(market, asks, bids))
-      println(manager())
-
   }
 }
 
