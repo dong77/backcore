@@ -55,6 +55,13 @@ case class MarketState(
     copy(priceRestriction = value)
   }
 
+  def popOrder(side: MarketSide): (Option[Order], MarketState) = {
+    orderPool(side).headOption match {
+      case None => (None, this)
+      case order => (order, removeOrder(side, order.get.id))
+    }
+  }
+
   def addOrder(side: MarketSide, order: Order): MarketState = {
     order.price match {
       case None =>
