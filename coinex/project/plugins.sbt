@@ -6,7 +6,7 @@ resolvers += "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/repos
 
 libraryDependencies ++= Seq(
   "com.github.siasia" %% "xsbt-web-plugin" % "0.12.0-0.2.11.1",
-  "com.decodified" % "scala-ssh" % "0.6.2",
+  // "com.decodified" % "scala-ssh" % "0.6.2",
   "org.bouncycastle" % "bcprov-jdk16" % "1.46",
   "com.jcraft" % "jzlib" % "1.1.1"
 )

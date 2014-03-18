@@ -10,12 +10,11 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.common.StateManager
 import Implicits._
-import scala.collection.immutable.SortedMap
 
-class MarketDepthView(side: MarketSide) extends ExtendedView {
+class MarketDepthView(market: MarketSide) extends ExtendedView {
   override def processorId = "coinex_mup"
 
-  val manager = new MarketDepthManager(side)
+  val manager = new MarketDepthManager(market)
   def receive = {
     case DebugDump =>
       log.info("state: {}", manager())
@@ -28,76 +27,51 @@ class MarketDepthView(side: MarketSide) extends ExtendedView {
 
   def receiveMessage: Receive = {
     case Persistent(OrderCancelled(side, order), _) =>
+      if (side != market && side != market.reverse)
+        throw new IllegalArgumentException("MarketDepthView(%s) doesn't support market side %s".format(market, side))
+
       manager.adjustAmount(side, order, false)
 
     case Persistent(OrderSubmitted(orderInfo, txs), _) =>
-      manager.adjustAmount(side, orderInfo.order, true)
-      txs foreach { manager.reductAmount(side, _) }
+      if (orderInfo.side != market && orderInfo.side != market.reverse)
+        throw new IllegalArgumentException("MarketDepthView(%s) doesn't support market side %s".format(market, orderInfo.side))
+
+      manager.adjustAmount(orderInfo.side, orderInfo.order, true)
+      txs foreach { manager.reductAmount(orderInfo.side, _) }
+
+    case QueryMarket(side, maxDepth) =>
+      if (side != market)
+        throw new IllegalArgumentException("MarketDepthView(%s) doesn't support querying for market side %s".format(market, side))
+
+      val (asks, bids) = manager().get(maxDepth)
+      sender ! QueryMarketResult(MarketDepth(market, asks, bids))
+      println(manager())
+
   }
 }
-
-object MarketDepthState {
-  type ItemMap = SortedMap[Double, Long]
-  val EmptyItemMap = SortedMap.empty[Double, Long]
-}
-
-case class MarketDepthState(
-  askMap: MarketDepthState.ItemMap = MarketDepthState.EmptyItemMap,
-  bidMap: MarketDepthState.ItemMap = MarketDepthState.EmptyItemMap)
 
 // TODO(d): test this class.
 class MarketDepthManager(market: MarketSide) extends StateManager[MarketDepthState] {
   initWithDefaultState(MarketDepthState())
 
-  def adjustAmount(side: MarketSide, order: Order, addOrRemove: Boolean /*true for add, false for remove*/ ) {
+  def adjustAmount(side: MarketSide, order: Order, addOrRemove: Boolean /*true for increase, false for reduce*/ ) {
     def adjust(amount: Long) = if (addOrRemove) amount else -amount
-    if (side == market) {
-      if (order.price.isDefined) {
-        adjustAsk(order.price.get, adjust(order.quantity))
-      }
-    } else if (side == market.reverse) {
-      if (order.price.isDefined && order.takeLimit.isDefined) {
-        adjustAsk(order.price.get, adjust(order.takeLimit.get))
-      }
-    } else throw new IllegalArgumentException(side + " not supported by MarketDepthManager for " + market)
+    if (side == market && order.price.isDefined) {
+      state = state.adjustAsk(order.price.get, adjust(order.quantity))
+    } else if (side == market.reverse && order.price.isDefined) {
+      state = state.adjustBid(order.price.get, adjust(order.minimalTake))
+    }
   }
 
   def reductAmount(side: MarketSide, tx: Transaction) = {
     val Transaction(_, taker, maker) = tx
-    val (ask, bid) =
-      if (side == market) (taker, maker)
-      else if (side == market.reverse) (maker, taker)
-      else throw new IllegalArgumentException(side + " not supported by MarketDepthManager for " + market)
+    val (ask, bid) = if (side == market) (taker, maker) else (maker, taker)
 
     if (ask.previous.price.isDefined) {
-      adjustAsk(ask.previous.price.get, -ask.outAmount)
+      state = state.adjustAsk(ask.previous.price.get, -ask.outAmount)
     }
     if (bid.previous.price.isDefined && bid.previous.takeLimit.isDefined) {
-      adjustBid(bid.previous.price.get, -bid.takeLimitDiff)
+      state = state.adjustBid(bid.previous.price.get, -bid.minimalTakeDiff)
     }
   }
-
-  private def adjustAsk(price: Double, amount: Long) = {
-    var old: Long = state.askMap.getOrElse(price, 0)
-    val updatedAmount = old + amount
-    var map = state.askMap - price
-    if (updatedAmount > 0) {
-      state = state.copy(askMap = map + (price -> updatedAmount))
-    } else if (updatedAmount < 0) {
-      throw new IllegalArgumentException("Market depth askMap found minus value %d for price %d".format(updatedAmount, price))
-    }
-  }
-
-  private def adjustBid(price: Double, amount: Long) = {
-    val priceReverse = 1 / price
-    var old: Long = state.bidMap.getOrElse(priceReverse, 0)
-    val updatedAmount = old + amount
-    var map = state.bidMap - priceReverse
-    if (updatedAmount > 0) {
-      state = state.copy(bidMap = map + (priceReverse -> updatedAmount))
-    } else if (updatedAmount < 0) {
-      throw new IllegalArgumentException("Market depth bidMap found minus value %d for price %d".format(updatedAmount, price))
-    }
-  }
-
 }

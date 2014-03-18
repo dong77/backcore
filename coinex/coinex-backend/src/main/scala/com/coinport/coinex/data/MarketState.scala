@@ -35,24 +35,20 @@ object MarketState {
  * It should be kept as a case class with immutable collections.
  */
 case class MarketState(
-  headSide: MarketSide,
-  marketPriceOrderPools: MarketState.OrderPools = MarketState.EmptyOrderPools,
-  limitPriceOrderPools: MarketState.OrderPools = MarketState.EmptyOrderPools,
-  orderMap: Map[Long, Order] = Map.empty,
-  priceRestriction: Option[Double] = None) {
+    headSide: MarketSide,
+    orderPools: MarketState.OrderPools = MarketState.EmptyOrderPools,
+    orderMap: Map[Long, Order] = Map.empty,
+    // the price restriction of market price which avoiding user mis-type a price (5000 -> 500)
+    priceRestriction: Option[Double] = None) {
 
   val tailSide = headSide.reverse
   val bothSides = Seq(headSide, tailSide)
 
-  def bestHeadSidePrice = limitPriceOrderPool(headSide).headOption.map(_.price)
-  def bestTailSidePrice = limitPriceOrderPool(tailSide).headOption.map(_.price)
+  def bestHeadSidePrice = orderPool(headSide).headOption.map(_.price)
+  def bestTailSidePrice = orderPool(tailSide).headOption.map(_.price)
 
-  def marketPriceOrderPool(side: MarketSide): OrderPool = {
-    marketPriceOrderPools.getOrElse(side, MarketState.EmptyOrderPool)
-  }
-
-  def limitPriceOrderPool(side: MarketSide): OrderPool = {
-    limitPriceOrderPools.getOrElse(side, MarketState.EmptyOrderPool)
+  def orderPool(side: MarketSide): OrderPool = {
+    orderPools.getOrElse(side, MarketState.EmptyOrderPool)
   }
 
   def setPriceRestriction(value: Option[Double]) = {
@@ -60,40 +56,34 @@ case class MarketState(
   }
 
   def addOrder(side: MarketSide, order: Order): MarketState = {
-    val market = removeOrder(side, order.id)
-
-    var mpos = market.marketPriceOrderPools
-    var lpos = market.limitPriceOrderPools
-
     order.price match {
-      case Some(p) if p > 0 =>
-        lpos += (side -> (market.limitPriceOrderPool(side) + order))
-      case _ =>
-        mpos += (side -> (market.marketPriceOrderPool(side) + order))
-    }
-    val orders = market.orderMap + (order.id -> order)
+      case None =>
+        this
+      case p =>
+        val market = removeOrder(side, order.id)
 
-    market.copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
+        var lpos = market.orderPools
+
+        lpos += (side -> (market.orderPool(side) + order))
+        val orders = market.orderMap + (order.id -> order)
+
+        market.copy(orderPools = lpos, orderMap = orders)
+    }
   }
 
-  def getOrder(side: MarketSide,id: Long): Option[Order] =  orderMap.get(id)
+  def getOrder(id: Long): Option[Order] = orderMap.get(id)
 
   def removeOrder(side: MarketSide, id: Long): MarketState = {
     orderMap.get(id) match {
-      case Some(order) if marketPriceOrderPool(side).contains(order) || limitPriceOrderPool(side).contains(order) =>
-        var mpos = marketPriceOrderPools
-        var lpos = limitPriceOrderPools
+      case Some(order) if orderPool(side).contains(order) =>
+        var lpos = orderPools
 
-        var pool = marketPriceOrderPool(side) - order
-        if (pool.isEmpty) mpos -= side
-        else mpos += (side -> pool)
-
-        pool = limitPriceOrderPool(side) - order
+        var pool = orderPool(side) - order
         if (pool.isEmpty) lpos -= side
         else lpos += (side -> pool)
 
         val orders = orderMap - id
-        copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
+        copy(orderPools = lpos, orderMap = orders)
 
       case _ =>
         this

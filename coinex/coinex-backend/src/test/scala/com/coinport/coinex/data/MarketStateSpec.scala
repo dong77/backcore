@@ -25,10 +25,9 @@ class MarketStateSpec extends Specification {
 
       m.orderMap.size mustEqual 1
       m.orderMap(1L) mustEqual order2
-      m.marketPriceOrderPools mustEqual EmptyOrderPools
-      m.limitPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
-      m.limitPriceOrderPool(side).size mustEqual 1
-      m.limitPriceOrderPool(side).head mustEqual order2
+      m.orderPool(side.reverse) mustEqual EmptyOrderPool
+      m.orderPool(side).size mustEqual 1
+      m.orderPool(side).head mustEqual order2
 
       val order3 = Order(888L, 1L, 103, None)
       val order4 = Order(888L, 1L, 104, None)
@@ -37,11 +36,7 @@ class MarketStateSpec extends Specification {
       m = m.addOrder(side, order4)
 
       m.orderMap.size mustEqual 1
-      m.orderMap(1L) mustEqual order4
-      m.limitPriceOrderPools mustEqual EmptyOrderPools
-      m.marketPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
-      m.marketPriceOrderPool(side).size mustEqual 1
-      m.marketPriceOrderPool(side).head mustEqual order4
+      m.orderMap(1L) mustEqual order2
     }
 
     "sort limit-price orders correctly" in {
@@ -54,9 +49,8 @@ class MarketStateSpec extends Specification {
       m = m.addOrder(side, order2)
       m = m.addOrder(side, order3)
 
-      m.marketPriceOrderPools mustEqual EmptyOrderPools
-      m.limitPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
-      m.limitPriceOrderPool(side).toList mustEqual order2 :: order1 :: order3 :: Nil
+      m.orderPool(side.reverse) mustEqual EmptyOrderPool
+      m.orderPool(side).toList mustEqual order2 :: order1 :: order3 :: Nil
       m.orderMap mustEqual Map(order1.id -> order1, order2.id -> order2, order3.id -> order3)
     }
 
@@ -70,10 +64,8 @@ class MarketStateSpec extends Specification {
       m = m.addOrder(side, order2)
       m = m.addOrder(side, order3)
 
-      m.limitPriceOrderPools mustEqual EmptyOrderPools
-      m.marketPriceOrderPool(side.reverse) mustEqual EmptyOrderPool
-      m.marketPriceOrderPool(side).toList mustEqual order1 :: order2 :: Order(888L, 3L, 100, None) :: Nil
-      m.orderMap mustEqual Map(order1.id -> order1, order2.id -> order2, order3.id -> Order(888L, 3L, 100, None))
+      m.orderPools mustEqual EmptyOrderPools
+      m.orderMap mustEqual Map()
     }
 
     "keep unchanged after removing non-existing orders" in {
@@ -92,12 +84,12 @@ class MarketStateSpec extends Specification {
       val order2 = Order(888L, 2L, 100, None)
 
       var m = market.addOrder(side, order1)
-      m= m.removeOrder(side.reverse, 1)
+      m = m.removeOrder(side.reverse, 1)
       m.orderMap.size mustEqual 1
 
-      m= m.addOrder(side, order1)
-      m= m.addOrder(side, order2)
-      m= m.removeOrder(side, 1)
+      m = m.addOrder(side, order1)
+      m = m.addOrder(side, order2)
+      m = m.removeOrder(side, 1)
       m = m.removeOrder(side, 2)
       m mustEqual market
     }

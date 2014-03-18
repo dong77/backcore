@@ -23,6 +23,7 @@ class EventSerializer extends Serializer {
     case m: QueryAccountResult => BinaryScalaCodec(QueryAccountResult)(m)
     case m: QueryMarket => BinaryScalaCodec(QueryMarket)(m)
     case m: QueryMarketResult => BinaryScalaCodec(QueryMarketResult)(m)
+    case m: QueryMarketUnsupportedMarketFailure => BinaryScalaCodec(QueryMarketUnsupportedMarketFailure)(m)
     case m: OrderCancelled => BinaryScalaCodec(OrderCancelled)(m)
     case m: OrderSubmissionFailed => BinaryScalaCodec(OrderSubmissionFailed)(m)
     case m: OrderSubmitted => BinaryScalaCodec(OrderSubmitted)(m)
@@ -47,6 +48,7 @@ class EventSerializer extends Serializer {
     case Some(c) if c == classOf[QueryAccountResult.Immutable] => BinaryScalaCodec(QueryAccountResult).invert(bytes).get
     case Some(c) if c == classOf[QueryMarket.Immutable] => BinaryScalaCodec(QueryMarket).invert(bytes).get
     case Some(c) if c == classOf[QueryMarketResult.Immutable] => BinaryScalaCodec(QueryMarketResult).invert(bytes).get
+    case Some(c) if c == classOf[QueryMarketUnsupportedMarketFailure.Immutable] => BinaryScalaCodec(QueryMarketUnsupportedMarketFailure).invert(bytes).get
     case Some(c) if c == classOf[OrderCancelled.Immutable] => BinaryScalaCodec(OrderCancelled).invert(bytes).get
     case Some(c) if c == classOf[OrderSubmissionFailed.Immutable] => BinaryScalaCodec(OrderSubmissionFailed).invert(bytes).get
     case Some(c) if c == classOf[OrderSubmitted.Immutable] => BinaryScalaCodec(OrderSubmitted).invert(bytes).get

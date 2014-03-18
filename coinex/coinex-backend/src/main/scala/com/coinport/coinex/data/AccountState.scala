@@ -8,6 +8,7 @@
 
 package com.coinport.coinex.data
 
+import scala.collection.immutable.Map
 import Implicits._
 
 case class AccountState(lastOrderId: Long = 0, userAccountsMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]) {

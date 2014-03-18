@@ -27,7 +27,6 @@ object LocalRouters {
 
 class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
 
-
   import LocalRouters._
   val userProcessor = routerForProcessor(USER_PROCESSOR)
   val accountProcessor = routerForProcessor(ACCOUNT_PROCESSOR)
@@ -45,7 +44,6 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
   val marketDepthViews = bidirection(Map(markets map { m =>
     m -> routerForView(MARKET_DEPTH_VIEW(m))
   }: _*))
-
 
   private def routerForProcessor(name: String) = system.actorOf(
     Props(new ClusterSingletonRouter(name, "user/" + name + "/singleton")), name + "_router")

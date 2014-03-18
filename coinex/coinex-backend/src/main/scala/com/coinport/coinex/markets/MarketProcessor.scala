@@ -13,9 +13,9 @@ import com.coinport.coinex.data._
 import Implicits._
 
 class MarketProcessor(
-  marketSide: MarketSide,
-  accountProcessorPath: ActorPath,
-  marketUpdateProcessoressorPath: ActorPath) extends ExtendedProcessor {
+    marketSide: MarketSide,
+    accountProcessorPath: ActorPath,
+    marketUpdateProcessoressorPath: ActorPath) extends ExtendedProcessor {
   override val processorId = "coinex_mp_" + marketSide.asString
 
   implicit def timeProvider() = System.currentTimeMillis
@@ -24,6 +24,7 @@ class MarketProcessor(
   def receiveMessage: Receive = {
     // ------------------------------------------------------------------------------------------------
     // Snapshots
+    // TODO(c) add global flag to indicate if is snapshoting
     case TakeSnapshotNow =>
       cancelSnapshotSchedule()
       saveSnapshot(manager())
