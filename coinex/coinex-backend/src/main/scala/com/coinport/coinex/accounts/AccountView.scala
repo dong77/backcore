@@ -5,6 +5,7 @@
 
 package com.coinport.coinex.accounts
 
+import akka.event.LoggingReceive
 import com.coinport.coinex.common.ExtendedView
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
@@ -13,15 +14,11 @@ import Implicits._
 class AccountView extends ExtendedView {
   override def processorId = "coinex_ap"
   val manager = new AccountManager()
-  def receive = {
+
+  def receive = LoggingReceive {
     case DebugDump =>
       log.info("state: {}", manager())
-    case x =>
-      log.info("~~~ saw: " + x)
-      if (receiveMessage.isDefinedAt(x)) receiveMessage(x)
-  }
 
-  def receiveMessage: Receive = {
     case Persistent(DoDepositCash(userId, currency, amount), _) =>
       manager.updateCashAccount(userId, CashAccount(currency, amount, 0, 0))
 

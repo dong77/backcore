@@ -5,6 +5,7 @@
 
 package com.coinport.coinex.markets
 
+import akka.event.LoggingReceive
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
 import com.coinport.coinex.common.ExtendedView
@@ -15,16 +16,10 @@ class MarketCandleDataView extends ExtendedView {
   override def processorId = "coinex_mup"
   private val manager = new CandleDataManager
 
-  def receive = {
+  def receive = LoggingReceive {
     case DebugDump =>
       log.info("state: {}", manager())
 
-    case x =>
-      log.info("~~~ saw: " + x)
-      if (receiveMessage.isDefinedAt(x)) receiveMessage(x)
-  }
-
-  def receiveMessage: Receive = {
     case Persistent(mu: OrderSubmitted, _) if mu.txs.nonEmpty =>
     case q: QueryMarketCandleData =>
   }

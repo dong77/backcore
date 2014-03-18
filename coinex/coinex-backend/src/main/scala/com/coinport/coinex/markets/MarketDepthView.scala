@@ -5,6 +5,7 @@
 
 package com.coinport.coinex.markets
 
+import akka.event.LoggingReceive
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
 import com.coinport.coinex.common.ExtendedView
@@ -13,19 +14,12 @@ import Implicits._
 
 class MarketDepthView(market: MarketSide) extends ExtendedView {
   override def processorId = "coinex_mup"
-
   val manager = new MarketDepthManager(market)
-  def receive = {
+
+  def receive = LoggingReceive {
     case DebugDump =>
       log.info("state: {}", manager())
 
-    case x =>
-      log.info("~~~ saw: " + x)
-      if (receiveMessage.isDefinedAt(x)) receiveMessage(x)
-      log.info("-" * 100 + "\n market depth state: {}", manager())
-  }
-
-  def receiveMessage: Receive = {
     case Persistent(OrderCancelled(side, order), _) =>
       if (side != market && side != market.reverse)
         throw new IllegalArgumentException("MarketDepthView(%s) doesn't support market side %s".format(market, side))

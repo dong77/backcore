@@ -5,12 +5,13 @@
 
 package com.coinport.coinex.users
 
+import akka.event.LoggingReceive
 import com.coinport.coinex.common.ExtendedView
 
 class UserView extends ExtendedView {
   override def processorId = "coinex_up"
 
-  def receive = {
+  def receive = LoggingReceive {
     case _ =>
   }
 }

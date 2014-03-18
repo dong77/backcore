@@ -6,6 +6,7 @@ package com.coinport.coinex.common
 
 import akka.persistence._
 import akka.actor._
+import akka.event.LoggingReceive
 import akka.util.Timeout
 import scala.concurrent.duration._
 import com.coinport.coinex.data.TakeSnapshotNow
@@ -13,7 +14,7 @@ import com.coinport.coinex.data.TakeSnapshotNow
 trait ExtendedProcessor extends Processor with ActorLogging {
   lazy val channel = context.actorOf(PersistentChannel.props(processorId + "_c"), "channel")
   var autoConfirmChannelMessage = true
-  val snapshotInterval = 30 minute
+  val snapshotInterval = 5 minute
   var sequenceNr = -1L
 
   implicit val ec = context.system.dispatcher
@@ -25,7 +26,7 @@ trait ExtendedProcessor extends Processor with ActorLogging {
     scheduleSnapshot()
   }
 
-  def receive = {
+  def receive = LoggingReceive {
     case p @ ConfirmablePersistent(payload, seq, _) =>
       log.info("~~~ saw: {}", p)
       sequenceNr = seq
