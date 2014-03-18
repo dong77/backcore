@@ -6,6 +6,7 @@
 package com.coinport.coinex
 
 import akka.actor._
+import akka.event.LoggingReceive
 import akka.cluster.routing._
 import akka.routing._
 import com.coinport.coinex.common.ClusterSingletonRouter
@@ -15,13 +16,7 @@ import Implicits._
 
 final class Coinex(routers: LocalRouters) extends Actor {
 
-  def receive = {
-    case x =>
-      println("Coinex got: " + x)
-      if (handle.isDefinedAt(x)) handle(x)
-  }
-
-  def handle: Receive = {
+  def receive = LoggingReceive {
     //-------------------------------------------------------------------------
     // Account Processor
     case m: DoDepositCash => routers.accountProcessor forward Persistent(m)

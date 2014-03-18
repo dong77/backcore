@@ -5,6 +5,7 @@
 
 package com.coinport.coinex.markets
 
+import akka.event.LoggingReceive
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
 import com.coinport.coinex.common.ExtendedView
@@ -15,16 +16,10 @@ class UserOrdersView extends ExtendedView {
   override def processorId = "coinex_mup"
   private val manager = new UserOrdersManager
 
-  def receive = {
+  def receive = LoggingReceive {
     case DebugDump =>
       log.info("state: {}", manager())
 
-    case x =>
-      log.info("~~~ saw: " + x)
-      if (receiveMessage.isDefinedAt(x)) receiveMessage(x)
-  }
-
-  def receiveMessage: Receive = {
     case Persistent(OrderCancelled(_, order), _) => manager.cancelOrder(order)
 
     case Persistent(m: OrderSubmitted, _) =>

@@ -6,6 +6,7 @@ package com.coinport.coinex.common
 
 import akka.persistence._
 import akka.actor._
+import akka.event.LoggingReceive
 import akka.util.Timeout
 import scala.concurrent.duration._
 import com.coinport.coinex.data.TakeSnapshotNow
@@ -25,7 +26,7 @@ trait ExtendedProcessor extends Processor with ActorLogging {
     scheduleSnapshot()
   }
 
-  def receive = {
+  def receive = LoggingReceive {
     case p @ ConfirmablePersistent(payload, seq, _) =>
       log.info("~~~ saw: {}", p)
       sequenceNr = seq
