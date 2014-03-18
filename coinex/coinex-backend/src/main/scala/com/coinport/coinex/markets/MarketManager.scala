@@ -17,14 +17,13 @@ package com.coinport.coinex.markets
 
 import com.coinport.coinex.data._
 import com.coinport.coinex.common.StateManager
+import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import Implicits._
 import OrderStatus._
 
 class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends StateManager[MarketState] {
   initWithDefaultState(MarketState(headSide))
-  private var collectTxs = true
-
   def isOrderPriceInGoodRange(sellSide: MarketSide, price: Option[Double]): Boolean = {
     if (price.isEmpty) true
     else if (price.get <= 0) false
@@ -36,58 +35,11 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
 
   def addOrder(sellSide: MarketSide, order: Order): OrderSubmitted = {
     val orderWithTime = order.copy(timestamp = Some(now()))
-    val buySide = sellSide.reverse
+    val txsBuffer = new ListBuffer[Transaction]
 
-    def buyLpos = state.orderPool(buySide)
-
-    var sellOrder = orderWithTime
-    var totalOutAmount = 0L
-    var totalInAmount = 0L
-    var continue = !buyLpos.isEmpty
-    val txBuffer = new ListBuffer[Transaction]
-
-    def foundMatching(buyOrder: Order, price: Double) {
-      val outAmount = Math.min(sellOrder.maxOutAmount(price), buyOrder.maxInAmount(1 / price))
-      val inAmount = (outAmount * price).toLong
-
-      val updatedSellOrder = sellOrder.copy(
-        quantity = sellOrder.quantity - outAmount,
-        takeLimit = sellOrder.takeLimit.map(_ - inAmount))
-
-      val updatedBuyOrder = buyOrder.copy(
-        quantity = buyOrder.quantity - inAmount,
-        takeLimit = buyOrder.takeLimit.map(_ - outAmount))
-
-      txBuffer += Transaction(now(), sellOrder --> updatedSellOrder, buyOrder --> updatedBuyOrder)
-
-      if (updatedSellOrder.isFullyExecuted) {
-        continue = false
-      }
-
-      state = state.removeOrder(buySide, buyOrder.id)
-      if (!updatedBuyOrder.isFullyExecuted) {
-        state = state.addOrder(buySide, updatedBuyOrder)
-        continue = false
-      }
-      totalOutAmount += outAmount
-      totalInAmount += inAmount
-      sellOrder = updatedSellOrder
-    }
-
-    while (continue) {
-      buyLpos.headOption match {
-        // new LPO or MPO to match existing LPOs
-        case Some(buyOrder) if buyOrder.vprice * sellOrder.vprice <= 1 =>
-          foundMatching(buyOrder, 1 / buyOrder.vprice)
-        case _ =>
-          continue = false
-      }
-    }
-
-    // market order can't pending in the market
-    if (!sellOrder.isFullyExecuted && sellOrder.price != None) {
-      state = state.addOrder(sellSide, sellOrder)
-    }
+    val (totalOutAmount, totalInAmount, sellOrder, newMarket) =
+      addOrderRec(sellSide.reverse, sellSide, orderWithTime, state, 0, 0, txsBuffer)
+    state = newMarket
 
     val status =
       if (sellOrder.isFullyExecuted) OrderStatus.FullyExecuted
@@ -95,8 +47,9 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
       else if (sellOrder.price == None) OrderStatus.Cancelled
       else OrderStatus.Pending
 
-    val txs = txBuffer.toSeq
-    val orderInfo = OrderInfo(sellSide, orderWithTime, totalOutAmount, totalInAmount, status, txs.lastOption.map(_.timestamp))
+    val txs = txsBuffer.toSeq
+    val orderInfo = OrderInfo(sellSide, orderWithTime, totalOutAmount, totalInAmount,
+      status, txs.lastOption.map(_.timestamp))
 
     OrderSubmitted(orderInfo, txs)
   }
@@ -105,5 +58,36 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
     val order = state.getOrder(id)
     order foreach { _ => state = state.removeOrder(side, id) }
     order
+  }
+
+  @tailrec private final def addOrderRec(buySide: MarketSide, sellSide: MarketSide, sellOrder: Order,
+    market: MarketState, totalOutAmount: Long, totalInAmount: Long, txsBuffer: ListBuffer[Transaction]): ( /*totalOutAmount*/ Long, /*totalInAmount*/ Long, /*updatedSellOrder*/ Order, /*after order match*/ MarketState) = {
+    val buyOrderOption = market.orderPool(buySide).headOption
+    if (buyOrderOption == None || buyOrderOption.get.vprice * sellOrder.vprice > 1) {
+      // Return point. Market-price order doesn't pending
+      (totalOutAmount, totalInAmount, sellOrder, if (!sellOrder.isFullyExecuted && sellOrder.price != None)
+        market.addOrder(sellSide, sellOrder) else market)
+    } else {
+      val buyOrder = buyOrderOption.get
+      val price = 1 / buyOrder.vprice
+      val outAmount = Math.min(sellOrder.maxOutAmount(price), buyOrder.maxInAmount(1 / price))
+      val inAmount = (outAmount * price).toLong
+      val updatedSellOrder = sellOrder.copy(
+        quantity = sellOrder.quantity - outAmount, takeLimit = sellOrder.takeLimit.map(_ - inAmount))
+      val updatedBuyOrder = buyOrder.copy(
+        quantity = buyOrder.quantity - inAmount, takeLimit = buyOrder.takeLimit.map(_ - outAmount))
+      txsBuffer += Transaction(now(), sellOrder --> updatedSellOrder, buyOrder --> updatedBuyOrder)
+
+      val leftMarket = market.removeOrder(buySide, buyOrder.id)
+      if (updatedSellOrder.isFullyExecuted) {
+        // return point
+        (totalOutAmount + outAmount, totalInAmount + inAmount, updatedSellOrder, if (!updatedBuyOrder.isFullyExecuted)
+          leftMarket.addOrder(buySide, updatedBuyOrder) else leftMarket)
+      } else {
+        // return point
+        addOrderRec(buySide, sellSide, updatedSellOrder, leftMarket,
+          totalOutAmount + outAmount, totalInAmount + inAmount, txsBuffer)
+      }
+    }
   }
 }

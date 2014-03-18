@@ -55,19 +55,24 @@ case class MarketState(
     copy(priceRestriction = value)
   }
 
+  def popOrder(side: MarketSide): (Option[Order], MarketState) = {
+    orderPool(side).headOption match {
+      case None => (None, this)
+      case order => (order, removeOrder(side, order.get.id))
+    }
+  }
+
   def addOrder(side: MarketSide, order: Order): MarketState = {
     order.price match {
       case None =>
         this
       case p =>
-        val market = removeOrder(side, order.id)
+        var lpos = orderPools
 
-        var lpos = market.orderPools
+        lpos += (side -> (orderPool(side) + order))
+        val orders = orderMap + (order.id -> order)
 
-        lpos += (side -> (market.orderPool(side) + order))
-        val orders = market.orderMap + (order.id -> order)
-
-        market.copy(orderPools = lpos, orderMap = orders)
+        copy(orderPools = lpos, orderMap = orders)
     }
   }
 

@@ -93,5 +93,19 @@ class MarketStateSpec extends Specification {
       m = m.removeOrder(side, 2)
       m mustEqual market
     }
+
+    "popOrder test" in {
+      val market = newMarket
+      val side = Btc ~> Rmb
+      val order1 = Order(888L, 1L, 100, Some(1000.0))
+      val order2 = Order(888L, 2L, 100, Some(981.3))
+      val m1 = market.addOrder(side, order1)
+      val m2 = m1.addOrder(side, order2)
+      val (headOrder, leftMarket) = m2.popOrder(side)
+      headOrder foreach { o =>
+        o mustEqual order2
+      }
+      leftMarket mustEqual m1
+    }
   }
 }
