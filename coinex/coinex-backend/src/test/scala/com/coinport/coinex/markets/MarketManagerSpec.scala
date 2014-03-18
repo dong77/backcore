@@ -19,7 +19,7 @@ class MarketManagerSpec extends Specification {
   val makerSide = takerSide.reverse
 
   "MarketManager" should {
-    "match limit-price order against limit-price orders prior to market-price orders" in {
+    "match limit-price order market-price orders can't exists in the market" in {
       val manager = new MarketManager(Btc ~> Rmb)(() => 0) // constant time
       val mpo1 = Order(userId = 1, id = 1, price = None, quantity = 30000, timestamp = Some(0)) // higher priority
       val mpo2 = Order(userId = 2, id = 2, price = None, quantity = 60000, timestamp = Some(0))
@@ -35,18 +35,16 @@ class MarketManagerSpec extends Specification {
       val result = manager.addOrder(takerSide, taker)
 
       val updatedLpo1 = lpo1.copy(quantity = 0) // buy 2
-      val updatedLpo2 = lpo2.copy(quantity = 0) // buy 10 
+      val updatedLpo2 = lpo2.copy(quantity = 0) // buy 10
       val updatedMpo1 = mpo1.copy(quantity = 0) // buy 15
       val updatedMpo2 = mpo2.copy(quantity = 0) // buy 30
       val updatedTaker = taker.copy(quantity = 100 - 57)
 
       result mustEqual OrderSubmitted(
-        OrderInfo(takerSide, taker, 57, 140000, PartiallyExecuted, Some(0)),
+        OrderInfo(takerSide, taker, 12, 50000, PartiallyExecuted, Some(0)),
         Seq(
           Transaction(0, taker --> taker.copy(quantity = 98), lpo1 --> updatedLpo1),
-          Transaction(0, taker.copy(quantity = 98) --> taker.copy(quantity = 88), lpo2 --> updatedLpo2),
-          Transaction(0, taker.copy(quantity = 88) --> taker.copy(quantity = 73), mpo1 --> updatedMpo1),
-          Transaction(0, taker.copy(quantity = 73) --> taker.copy(quantity = 43), mpo2 --> updatedMpo2)))
+          Transaction(0, taker.copy(quantity = 98) --> taker.copy(quantity = 88), lpo2 --> updatedLpo2)))
     }
   }
 
@@ -67,10 +65,8 @@ class MarketManagerSpec extends Specification {
         Seq(Transaction(100000, taker --> updatedTaker, maker --> updatedMaker)))
 
       manager().orderMap mustEqual Map(1 -> updatedMaker)
-      manager().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-      manager().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-      manager().limitPriceOrderPool(makerSide) mustEqual SortedSet(updatedMaker)
-      manager().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+      manager().orderPool(makerSide) mustEqual SortedSet(updatedMaker)
+      manager().orderPool(takerSide) mustEqual EmptyOrderPool
     }
 
     "match limit-price order with as many existing limit-price order with take-limit" in {
@@ -94,15 +90,13 @@ class MarketManagerSpec extends Specification {
           Transaction(0, taker.copy(quantity = 7) --> updatedTaker, maker1 --> updatedMaker1)))
 
       manager().orderMap mustEqual Map(3 -> taker.copy(quantity = 6))
-      manager().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-      manager().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-      manager().limitPriceOrderPool(takerSide) mustEqual SortedSet(updatedTaker)
-      manager().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
+      manager().orderPool(takerSide) mustEqual SortedSet(updatedTaker)
+      manager().orderPool(makerSide) mustEqual EmptyOrderPool
     }
   }
 
   "MarketManager" should {
-    "allow multiple market-price orders to co-exist, even in an empty market" in {
+    "market-price orders can't exist in an empty market" in {
       var time = 100000
       implicit def getTime(): Long = { time += 1; time }
       val manager = new MarketManager(Btc ~> Rmb)
@@ -116,17 +110,15 @@ class MarketManagerSpec extends Specification {
       val updatedMaker1 = maker1.copy(timestamp = Some(100001))
       val updatedMaker2 = maker2.copy(timestamp = Some(100002))
 
-      result1 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker1, 0, 0, Pending, None), Nil)
-      result2 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker2, 0, 0, Pending, None), Nil)
+      result1 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker1, 0, 0, Cancelled, None), Nil)
+      result2 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker2, 0, 0, Cancelled, None), Nil)
 
-      manager().orderMap mustEqual Map(1L -> updatedMaker1, 2 -> updatedMaker2)
-      manager().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-      manager().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-      manager().marketPriceOrderPool(makerSide) mustEqual SortedSet(updatedMaker1, updatedMaker2)
-      manager().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+      manager().orderMap mustEqual Map()
+      manager().orderPool(makerSide) mustEqual EmptyOrderPool
+      manager().orderPool(takerSide) mustEqual EmptyOrderPool
     }
 
-    "NOT match new market-price taker order with existing market-price maker orders" in {
+    "NOT match new market-price taker order" in {
       val manager = new MarketManager(Btc ~> Rmb)(() => 0)
       val maker = Order(userId = 888L, id = 1, price = None, quantity = 100, timestamp = Some(0))
       val taker = Order(userId = 888L, id = 2, price = None, quantity = 100, timestamp = Some(0))
@@ -136,11 +128,9 @@ class MarketManagerSpec extends Specification {
 
       result.txs mustEqual Nil
 
-      manager().orderMap mustEqual Map(1L -> maker, 2 -> taker)
-      manager().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-      manager().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-      manager().marketPriceOrderPool(makerSide) mustEqual SortedSet(maker)
-      manager().marketPriceOrderPool(takerSide) mustEqual SortedSet(taker)
+      manager().orderMap mustEqual Map()
+      manager().orderPool(makerSide) mustEqual EmptyOrderPool
+      manager().orderPool(takerSide) mustEqual EmptyOrderPool
     }
 
     "match new market-price taker order against existing limit-price maker orders and fully execute both orders " +
@@ -166,10 +156,8 @@ class MarketManagerSpec extends Specification {
               maker.copy(timestamp = Some(1001)) --> updatedMaker)))
 
         manager().orderMap.size mustEqual 0
-        manager().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-        manager().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-        manager().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-        manager().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+        manager().orderPool(makerSide) mustEqual EmptyOrderPool
+        manager().orderPool(takerSide) mustEqual EmptyOrderPool
       }
 
     "match new market-price taker order against existing limit-price maker orders and fully execute taker orders " +
@@ -194,10 +182,8 @@ class MarketManagerSpec extends Specification {
             maker.copy(timestamp = Some(1001)) --> updatedMaker)))
 
         manager().orderMap mustEqual Map(1 -> updatedMaker)
-        manager().limitPriceOrderPool(makerSide) mustEqual SortedSet(updatedMaker)
-        manager().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-        manager().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-        manager().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+        manager().orderPool(makerSide) mustEqual SortedSet(updatedMaker)
+        manager().orderPool(takerSide) mustEqual EmptyOrderPool
 
       }
 
@@ -217,11 +203,9 @@ class MarketManagerSpec extends Specification {
           OrderInfo(takerSide, taker, 10, 10, PartiallyExecuted, Some(0)),
           Seq(Transaction(0, taker --> updatedTaker, maker --> updatedMaker)))
 
-        manager().orderMap mustEqual Map(2 -> updatedTaker)
-        manager().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-        manager().marketPriceOrderPool(takerSide) mustEqual SortedSet(updatedTaker)
-        manager().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-        manager().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+        manager().orderMap mustEqual Map()
+        manager().orderPool(makerSide) mustEqual EmptyOrderPool
+        manager().orderPool(takerSide) mustEqual EmptyOrderPool
       }
 
     "match new market-price taker order against multiple existing limit-price maker orders and fully execute " +
@@ -249,10 +233,8 @@ class MarketManagerSpec extends Specification {
             Transaction(1005, taker.copy(quantity = 70) --> updatedTaker, maker1 --> updatedMaker1)))
 
         manager().orderMap mustEqual Map(1 -> updatedMaker1) //  100 x 0.5 + 100 x 1 - 120 = 30
-        manager().limitPriceOrderPool(makerSide) mustEqual SortedSet(updatedMaker1)
-        manager().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-        manager().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-        manager().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+        manager().orderPool(makerSide) mustEqual SortedSet(updatedMaker1)
+        manager().orderPool(takerSide) mustEqual EmptyOrderPool
       }
 
     "match new market-price taker order against multiple existing limit-price maker orders and fully execute " +
@@ -276,12 +258,10 @@ class MarketManagerSpec extends Specification {
             Transaction(0, taker --> taker.copy(quantity = 70), maker2 --> updatedMaker2),
             Transaction(0, taker.copy(quantity = 70) --> updatedTaker, maker1 --> updatedMaker1)))
 
-        manager().orderMap mustEqual Map(10 -> taker.copy(quantity = 50)) //  120 - 100 x 0.5 + 20 x 1 - 120 = 50
-        manager().marketPriceOrderPool(takerSide) mustEqual SortedSet(taker.copy(quantity = 50))
-        manager().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
+        manager().orderMap mustEqual Map()
 
-        manager().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-        manager().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+        manager().orderPool(makerSide) mustEqual EmptyOrderPool
+        manager().orderPool(takerSide) mustEqual EmptyOrderPool
       }
   }
 
@@ -304,10 +284,8 @@ class MarketManagerSpec extends Specification {
         Seq(Transaction(0, taker --> updatedTaker, maker2 --> updatedMaker2)))
 
       manager().orderMap mustEqual Map(1 -> maker1, 2 -> updatedMaker2)
-      manager().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-      manager().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-      manager().limitPriceOrderPool(makerSide) mustEqual SortedSet(maker1, updatedMaker2)
-      manager().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+      manager().orderPool(makerSide) mustEqual SortedSet(maker1, updatedMaker2)
+      manager().orderPool(takerSide) mustEqual EmptyOrderPool
     }
 
     "match new limit-price taker order fully against multiple limit-price maker orders" in {
@@ -331,10 +309,8 @@ class MarketManagerSpec extends Specification {
           Transaction(0, taker.copy(quantity = 10) --> updatedTaker, maker1 --> updatedMaker1)))
 
       manager().orderMap mustEqual Map(1 -> maker1.copy(quantity = 10))
-      manager().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-      manager().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-      manager().limitPriceOrderPool(makerSide) mustEqual SortedSet(maker1.copy(quantity = 10))
-      manager().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
+      manager().orderPool(makerSide) mustEqual SortedSet(maker1.copy(quantity = 10))
+      manager().orderPool(takerSide) mustEqual EmptyOrderPool
     }
 
     "match new limit-price taker order partially against multiple limit-price maker orders" in {
@@ -358,10 +334,8 @@ class MarketManagerSpec extends Specification {
           Transaction(0, taker.copy(quantity = 50) --> updatedTaker, maker1 --> updatedMaker1)))
 
       manager().orderMap mustEqual Map(10 -> updatedTaker) // 90 - 100x0.4 - 20x0.5
-      manager().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-      manager().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-      manager().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-      manager().limitPriceOrderPool(takerSide) mustEqual SortedSet(updatedTaker)
+      manager().orderPool(makerSide) mustEqual EmptyOrderPool
+      manager().orderPool(takerSide) mustEqual SortedSet(updatedTaker)
     }
 
     "match new limit-price taker order fully against existing market-price maker order 1" in {
@@ -378,68 +352,12 @@ class MarketManagerSpec extends Specification {
       val updatedTaker = taker.copy(quantity = 0)
 
       result mustEqual OrderSubmitted(
-        OrderInfo(takerSide, taker, 5, 10, FullyExecuted, Some(0)),
-        Seq(Transaction(0, taker --> updatedTaker, maker1 --> updatedMaker1)))
+        OrderInfo(takerSide, taker, 0, 0, Pending, None),
+        Seq())
 
-      manager().orderMap mustEqual Map(1 -> updatedMaker1, 2 -> maker2)
-      manager().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-      manager().marketPriceOrderPool(makerSide) mustEqual SortedSet(updatedMaker1, maker2)
-      manager().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-      manager().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-    }
-
-    "match new limit-price taker order fully against existing market-price maker order 2" in {
-      val manager = new MarketManager(Btc ~> Rmb)(() => 0)
-      val maker1 = Order(userId = 666, id = 1, price = None, quantity = 20, timestamp = Some(0)) // higher priority
-      val maker2 = Order(userId = 777, id = 2, price = None, quantity = 100, timestamp = Some(0)) // lower priority
-      val taker = Order(userId = 888L, id = 10, price = Some(2), quantity = 30, timestamp = Some(0))
-
-      manager.addOrder(makerSide, maker1)
-      manager.addOrder(makerSide, maker2)
-      val result = manager.addOrder(takerSide, taker)
-
-      val updatedMaker1 = maker1.copy(quantity = 0)
-      val updatedMaker2 = maker2.copy(quantity = 60)
-      val updatedTaker = taker.copy(quantity = 0)
-
-      result mustEqual OrderSubmitted(
-        OrderInfo(takerSide, taker, 30, 60, FullyExecuted, Some(0)),
-        Seq(
-          Transaction(0, taker --> taker.copy(quantity = 20), maker1 --> updatedMaker1),
-          Transaction(0, taker.copy(quantity = 20) --> updatedTaker, maker2 --> updatedMaker2)))
-
-      manager().orderMap mustEqual Map(2 -> updatedMaker2)
-      manager().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-      manager().marketPriceOrderPool(makerSide) mustEqual SortedSet(updatedMaker2)
-      manager().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-      manager().limitPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-    }
-
-    "match new limit-price taker order partially against existing market-price maker order" in {
-      val manager = new MarketManager(Btc ~> Rmb)(() => 0)
-      val maker1 = Order(userId = 666, id = 1, price = None, quantity = 20, timestamp = Some(0)) // lower price
-      val maker2 = Order(userId = 777, id = 2, price = None, quantity = 100, timestamp = Some(0)) // higher price
-      val taker = Order(userId = 888L, id = 10, price = Some(2), quantity = 300, timestamp = Some(0))
-
-      manager.addOrder(makerSide, maker1)
-      manager.addOrder(makerSide, maker2)
-      val result = manager.addOrder(takerSide, taker)
-
-      val updatedMaker1 = maker1.copy(quantity = 0)
-      val updatedMaker2 = maker2.copy(quantity = 0)
-      val updatedTaker = taker.copy(quantity = 240)
-
-      result mustEqual OrderSubmitted(
-        OrderInfo(takerSide, taker, 60, 120, PartiallyExecuted, Some(0)),
-        Seq(
-          Transaction(0, taker --> taker.copy(quantity = 290), maker1 --> updatedMaker1),
-          Transaction(0, taker.copy(quantity = 290) --> updatedTaker, maker2 --> updatedMaker2)))
-
-      manager().orderMap mustEqual Map(10 -> updatedTaker)
-      manager().marketPriceOrderPool(takerSide) mustEqual EmptyOrderPool
-      manager().marketPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-      manager().limitPriceOrderPool(makerSide) mustEqual EmptyOrderPool
-      manager().limitPriceOrderPool(takerSide) mustEqual SortedSet(updatedTaker)
+      manager().orderMap mustEqual Map(10 -> taker)
+      manager().orderPool(makerSide) mustEqual EmptyOrderPool
+      manager().orderPool(takerSide) mustEqual SortedSet(taker)
     }
   }
 }

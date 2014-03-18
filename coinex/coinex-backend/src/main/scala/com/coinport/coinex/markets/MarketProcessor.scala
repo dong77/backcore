@@ -24,6 +24,7 @@ class MarketProcessor(
   def receiveMessage: Receive = {
     // ------------------------------------------------------------------------------------------------
     // Snapshots
+    // TODO(c) add global flag to indicate if is snapshoting
     case TakeSnapshotNow =>
       cancelSnapshotSchedule()
       saveSnapshot(manager())
