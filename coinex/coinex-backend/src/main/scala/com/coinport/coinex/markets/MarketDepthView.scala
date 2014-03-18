@@ -20,23 +20,14 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
     case DebugDump =>
       log.info("state: {}", manager())
 
-    case Persistent(OrderCancelled(side, order), _) =>
-      if (side != market && side != market.reverse)
-        throw new IllegalArgumentException("MarketDepthView(%s) doesn't support market side %s".format(market, side))
-
+    case Persistent(OrderCancelled(side, order), _) if side == market || side == market.reverse =>
       manager.adjustAmount(side, order, false)
 
-    case Persistent(OrderSubmitted(orderInfo, txs), _) =>
-      if (orderInfo.side != market && orderInfo.side != market.reverse)
-        throw new IllegalArgumentException("MarketDepthView(%s) doesn't support market side %s".format(market, orderInfo.side))
-
+    case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
       manager.adjustAmount(orderInfo.side, orderInfo.order, true)
       txs foreach { manager.reductAmount(orderInfo.side, _) }
 
-    case QueryMarket(side, maxDepth) =>
-      if (side != market)
-        throw new IllegalArgumentException("MarketDepthView(%s) doesn't support querying for market side %s".format(market, side))
-
+    case QueryMarket(side, maxDepth) if side == market =>
       val (asks, bids) = manager().get(maxDepth)
       sender ! QueryMarketResult(MarketDepth(market, asks, bids))
   }
