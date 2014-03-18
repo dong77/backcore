@@ -60,14 +60,12 @@ case class MarketState(
       case None =>
         this
       case p =>
-        val market = removeOrder(side, order.id)
+        var lpos = orderPools
 
-        var lpos = market.orderPools
+        lpos += (side -> (orderPool(side) + order))
+        val orders = orderMap + (order.id -> order)
 
-        lpos += (side -> (market.orderPool(side) + order))
-        val orders = market.orderMap + (order.id -> order)
-
-        market.copy(orderPools = lpos, orderMap = orders)
+        copy(orderPools = lpos, orderMap = orders)
     }
   }
 
