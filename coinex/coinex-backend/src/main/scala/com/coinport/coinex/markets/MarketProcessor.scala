@@ -60,10 +60,11 @@ class MarketProcessor(
         sender ! orderSubmitted
 
         deliver(orderSubmitted, marketUpdateProcessoressorPath)
-        if (orderSubmitted.hasTransaction) {
-          deliver(orderSubmitted, accountProcessorPath)
-        }
+        deliver(orderSubmitted, accountProcessorPath)
+        println("----------\nsender: " + sender.path + "\n----------orderSubmitted: " + orderSubmitted)
       }
+
+      println("---------market: " + manager())
 
   }
 }

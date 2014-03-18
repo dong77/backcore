@@ -28,19 +28,16 @@ trait ExtendedProcessor extends Processor with ActorLogging {
 
   def receive = LoggingReceive {
     case p @ ConfirmablePersistent(payload, seq, _) =>
-      log.info("~~~ saw: {}", p)
       sequenceNr = seq
       autoConfirmChannelMessage = true
       if (receiveMessage.isDefinedAt(payload)) receiveMessage(payload)
       if (autoConfirmChannelMessage) p.confirm()
 
     case p @ Persistent(payload, seq) =>
-      log.info("~~~ saw: {}", p)
       sequenceNr = seq
       if (receiveMessage.isDefinedAt(payload)) receiveMessage(payload)
 
     case msg =>
-      log.info("~~~ saw: {}", msg)
       sequenceNr = -1L
       if (receiveMessage.isDefinedAt(msg)) receiveMessage(msg)
   }
@@ -51,8 +48,8 @@ trait ExtendedProcessor extends Processor with ActorLogging {
   }
 
   protected def deliver(msg: Any, dest: ActorPath) = msg match {
-    case p: Persistent => channel ! Deliver(p, dest)
-    case _ => channel ! Deliver(Persistent(msg), dest)
+    case p: Persistent => channel forward Deliver(p, dest)
+    case _ => channel forward Deliver(Persistent(msg), dest)
   }
 
   protected def cancelSnapshotSchedule() = {
