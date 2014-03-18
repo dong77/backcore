@@ -35,11 +35,11 @@ object MarketState {
  * It should be kept as a case class with immutable collections.
  */
 case class MarketState(
-  headSide: MarketSide,
-  marketPriceOrderPools: MarketState.OrderPools = MarketState.EmptyOrderPools,
-  limitPriceOrderPools: MarketState.OrderPools = MarketState.EmptyOrderPools,
-  orderMap: Map[Long, Order] = Map.empty,
-  priceRestriction: Option[Double] = None) {
+    headSide: MarketSide,
+    marketPriceOrderPools: MarketState.OrderPools = MarketState.EmptyOrderPools,
+    limitPriceOrderPools: MarketState.OrderPools = MarketState.EmptyOrderPools,
+    orderMap: Map[Long, Order] = Map.empty,
+    priceRestriction: Option[Double] = None) {
 
   val tailSide = headSide.reverse
   val bothSides = Seq(headSide, tailSide)
@@ -76,7 +76,7 @@ case class MarketState(
     market.copy(marketPriceOrderPools = mpos, limitPriceOrderPools = lpos, orderMap = orders)
   }
 
-  def getOrder(side: MarketSide,id: Long): Option[Order] =  orderMap.get(id)
+  def getOrder(side: MarketSide, id: Long): Option[Order] = orderMap.get(id)
 
   def removeOrder(side: MarketSide, id: Long): MarketState = {
     orderMap.get(id) match {

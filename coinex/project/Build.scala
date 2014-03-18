@@ -1,6 +1,7 @@
 import sbt._
 import Keys._
 import com.twitter.scrooge._
+import com.typesafe.sbt.SbtScalariform._
 
 object CoinexBuild extends Build {
   val akkaVersion = "2.3.0"
@@ -20,7 +21,7 @@ object CoinexBuild extends Build {
     resolvers ++= Seq(
       Resolver.sonatypeRepo("snapshots"),
       "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/groups/public" // "scct-github-repository" at "http://mtkopone.github.com/scct/maven-repo"
-      ))
+      )) 
 
   lazy val root = Project(
     id = "coinex",
@@ -33,7 +34,8 @@ object CoinexBuild extends Build {
     base = file("coinex-client"),
     settings = Project.defaultSettings ++
       sharedSettings ++
-      ScroogeSBT.newSettings)
+      ScroogeSBT.newSettings ++
+      scalariformSettings)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
       "com.typesafe.akka" %% "akka-persistence-experimental" % akkaVersion,
@@ -48,7 +50,8 @@ object CoinexBuild extends Build {
     settings = Project.defaultSettings ++
       sharedSettings ++
       ScroogeSBT.newSettings ++
-      sbtassembly.Plugin.assemblySettings)
+      sbtassembly.Plugin.assemblySettings++
+      scalariformSettings)
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe.akka" %% "akka-remote" % akkaVersion,

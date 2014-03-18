@@ -17,6 +17,6 @@ class UserProcessor extends ExtendedProcessor {
   val manager = new UserManager()
 
   def receiveMessage: Receive = {
-    case x  =>
+    case x =>
   }
 }

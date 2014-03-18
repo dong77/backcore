@@ -38,7 +38,7 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
     deployView(Props(classOf[UserOrdersView]), USER_ORDERS_VIEW)
     deployView(Props(classOf[MarketCandleDataView]), CANDLE_DATA_VIEW)
   }
-	
+
   private def deployProcessor(props: Props, name: String) =
     if (cluster.selfRoles.contains(name)) {
       system.actorOf(ClusterSingletonManager.props(
@@ -53,5 +53,5 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
     if (cluster.selfRoles.contains(name)) {
       system.actorOf(props, name)
     }
-	
+
 }

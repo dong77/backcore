@@ -33,7 +33,7 @@ class AccountManager extends StateManager[AccountState] {
       updateCashAccount(order.userId, CashAccount(currency, order.quantity, -order.quantity, 0))
     }
   }
-  
+
   def updateCashAccount(userId: Long, adjustment: CashAccount) = {
     val current = state.getUserCashAccount(userId, adjustment.currency)
     val updated = current + adjustment
