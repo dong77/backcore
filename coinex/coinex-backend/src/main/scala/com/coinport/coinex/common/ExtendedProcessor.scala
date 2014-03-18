@@ -13,7 +13,7 @@ import com.coinport.coinex.data.TakeSnapshotNow
 trait ExtendedProcessor extends Processor with ActorLogging {
   lazy val channel = context.actorOf(PersistentChannel.props(processorId + "_c"), "channel")
   var autoConfirmChannelMessage = true
-  val snapshotInterval = 30 minute
+  val snapshotInterval = 5 minute
   var sequenceNr = -1L
 
   implicit val ec = context.system.dispatcher
