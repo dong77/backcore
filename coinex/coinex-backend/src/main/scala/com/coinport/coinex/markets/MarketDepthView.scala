@@ -27,19 +27,25 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
 
   def receiveMessage: Receive = {
     case Persistent(OrderCancelled(side, order), _) =>
+      if (side != market && side != market.reverse)
+        throw new IllegalArgumentException("MarketDepthView(%s) doesn't support market side %s".format(market, side))
+
       manager.adjustAmount(side, order, false)
 
     case Persistent(OrderSubmitted(orderInfo, txs), _) =>
+      if (orderInfo.side != market && orderInfo.side != market.reverse)
+        throw new IllegalArgumentException("MarketDepthView(%s) doesn't support market side %s".format(market, orderInfo.side))
+
       manager.adjustAmount(market, orderInfo.order, true)
       txs foreach { manager.reductAmount(market, _) }
 
     case QueryMarket(side, maxDepth) =>
-      if (side != market) {
-        sender ! QueryMarketUnsupportedMarketFailure(side)
-      } else {
-        val (asks, bids) = manager().get(maxDepth)
-        sender ! QueryMarketResult(MarketDepth(market, asks, bids))
-      }
+      if (side != market)
+        throw new IllegalArgumentException("MarketDepthView(%s) doesn't support querying for market side %s".format(market, side))
+
+      val (asks, bids) = manager().get(maxDepth)
+      sender ! QueryMarketResult(MarketDepth(market, asks, bids))
+
   }
 }
 
@@ -58,10 +64,7 @@ class MarketDepthManager(market: MarketSide) extends StateManager[MarketDepthSta
 
   def reductAmount(side: MarketSide, tx: Transaction) = {
     val Transaction(_, taker, maker) = tx
-    val (ask, bid) =
-      if (side == market) (taker, maker)
-      else if (side == market.reverse) (maker, taker)
-      else throw new IllegalArgumentException(side + " not supported by MarketDepthManager for " + market)
+    val (ask, bid) = if (side == market) (taker, maker) else (maker, taker)
 
     if (ask.previous.price.isDefined) {
       state = state.adjustAsk(ask.previous.price.get, -ask.outAmount)
@@ -70,5 +73,4 @@ class MarketDepthManager(market: MarketSide) extends StateManager[MarketDepthSta
       state = state.adjustBid(bid.previous.price.get, -bid.takeLimitDiff)
     }
   }
-
 }
