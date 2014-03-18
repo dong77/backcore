@@ -10,9 +10,8 @@ import ch.qos.logback.core.filter.Filter
 import ch.qos.logback.core.spi.FilterReply
 import ch.qos.logback.classic.spi.ILoggingEvent
 
-// Filterout ClusterHeartbeat messages
+// Filter out ClusterHeartbeat messages
 class LogFilter extends Filter[ILoggingEvent] {
-
   def decide(event: ILoggingEvent) = {
     if (event.getLoggerName == "akka.cluster.ClusterHeartbeatSender") FilterReply.DENY
     else FilterReply.ACCEPT
