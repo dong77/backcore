@@ -9,6 +9,7 @@ import akka.persistence.SnapshotOffer
 import com.coinport.coinex.data._
 import akka.actor._
 import akka.persistence._
+import akka.event.LoggingReceive
 import com.coinport.coinex.common.ExtendedProcessor
 import Implicits._
 import AccountOperationCode._
@@ -18,13 +19,10 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
 
   val manager = new AccountManager()
 
-  def receiveMessage: Receive = {
+  def receive = LoggingReceive {
     // ------------------------------------------------------------------------------------------------
     // Snapshots
-    case TakeSnapshotNow =>
-      cancelSnapshotSchedule()
-      saveSnapshot(manager())
-      scheduleSnapshot()
+    case TakeSnapshotNow => saveSnapshot(manager())
 
     case SaveSnapshotSuccess(metadata) =>
 
@@ -39,36 +37,39 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
 
     // ------------------------------------------------------------------------------------------------
     // Commands
-    case DoDepositCash(userId, currency, amount) =>
+    case Persistent(DoDepositCash(userId, currency, amount), seq) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, 0))
 
-    case DoRequestCashWithdrawal(userId, currency, amount) =>
+    case Persistent(DoRequestCashWithdrawal(userId, currency, amount), seq) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, -amount, 0, amount))
 
-    case DoConfirmCashWithdrawalSuccess(userId, currency, amount) =>
+    case Persistent(DoConfirmCashWithdrawalSuccess(userId, currency, amount), seq) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, 0, 0, -amount))
 
-    case DoConfirmCashWithdrawalFailed(userId, currency, amount) =>
+    case Persistent(DoConfirmCashWithdrawalFailed(userId, currency, amount), seq) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
-    case DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _)) =>
+    case p @ Persistent(DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _)), seq) =>
       if (quantity <= 0) sender ! AccountOperationResult(InvalidAmount, null)
       else manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
         case m @ AccountOperationResult(Ok, _) =>
           val o = order.copy(id = manager.getAndIncreaseOrderId)
-          deliver(OrderCashLocked(side, o), getProcessorRef(side))
+          channel forward Deliver(p.withPayload(OrderCashLocked(side, o)), getProcessorRef(side))
         case m: AccountOperationResult => sender ! m
       }
 
     // ------------------------------------------------------------------------------------------------
     // Events
-    case OrderSubmissionFailed(side, order, _) =>
+    case p @ ConfirmablePersistent(OrderSubmissionFailed(side, order, _), seq, _) =>
+      p.confirm()
       manager.conditionalRefund(true)(side.outCurrency, order)
 
-    case OrderCancelled(side, order) =>
+    case p @ ConfirmablePersistent(OrderCancelled(side, order), seq, _) =>
+      p.confirm()
       manager.conditionalRefund(true)(side.outCurrency, order)
 
-    case OrderSubmitted(originOrderInfo, txs) =>
+    case p @ ConfirmablePersistent(OrderSubmitted(originOrderInfo, txs), seq, _) =>
+      p.confirm()
       val side = originOrderInfo.side
       txs foreach { tx =>
         val Transaction(_, takerOrderUpdate, makerOrderUpdate) = tx
