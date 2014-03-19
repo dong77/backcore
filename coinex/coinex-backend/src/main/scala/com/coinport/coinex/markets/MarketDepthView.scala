@@ -23,9 +23,11 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
     case Persistent(OrderCancelled(side, order), _) if side == market || side == market.reverse =>
       manager.adjustAmount(side, order, false)
 
-    case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
+    case e @ Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
       manager.adjustAmount(orderInfo.side, orderInfo.order, true)
       txs foreach { manager.reductAmount(orderInfo.side, _) }
+
+      log.debug("---------- {}\nmarket depth state: {}", e, manager())
 
     case QueryMarket(side, maxDepth) if side == market =>
       val (asks, bids) = manager().get(maxDepth)
@@ -54,7 +56,8 @@ class MarketDepthManager(market: MarketSide) extends StateManager[MarketDepthSta
       state = state.adjustAsk(ask.previous.price.get, -ask.outAmount)
     }
     if (bid.previous.price.isDefined && bid.previous.takeLimit.isDefined) {
-      state = state.adjustBid(bid.previous.price.get, -bid.minimalTakeDiff)
+      val v = if (bid.current.quantity == 0) -bid.previous.takeLimit.get else -bid.minimalTakeDiff
+      state = state.adjustBid(bid.previous.price.get, v)
     }
   }
 }
