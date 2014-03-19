@@ -2,7 +2,7 @@ resolvers += Classpaths.typesafeResolver
 
 // resolvers += "scct-github-repository" at "http://mtkopone.github.com/scct/maven-repo"
 
-resolvers += "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/repositories/snapshots/"
+resolvers += "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/groups/public/"
 
 libraryDependencies ++= Seq(
   "com.github.siasia" %% "xsbt-web-plugin" % "0.12.0-0.2.11.1",
