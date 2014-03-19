@@ -45,7 +45,6 @@ class MarketProcessor(
     // ------------------------------------------------------------------------------------------------
     // Commands
     case p @ Persistent(DoCancelOrder(side, orderId), seq) =>
-      println("====::::" + p)
       manager.removeOrder(side, orderId) foreach { order =>
         channelToAccountProcessor forward Deliver(p.withPayload(OrderCancelled(side, order)), accountProcessorPath)
         channelToMarketUpdateProcessor forward Deliver(p.withPayload(OrderCancelled(side, order)), marketUpdateProcessoressorPath)
@@ -54,8 +53,7 @@ class MarketProcessor(
     // ------------------------------------------------------------------------------------------------
     // Events
     case p @ ConfirmablePersistent(OrderCashLocked(side, order: Order), seq, _) =>
-      println("====::::" + p)
-      p.confirm()
+      println("========::::" + seq + " " + p)
       if (!manager.isOrderPriceInGoodRange(side, order.price)) {
         val event = OrderSubmissionFailed(side, order, OrderSubmissionFailReason.PriceOutOfRange)
         sender ! event
@@ -65,7 +63,7 @@ class MarketProcessor(
         sender ! orderSubmitted
         channelToAccountProcessor ! Deliver(p.withPayload(orderSubmitted), accountProcessorPath)
         channelToMarketUpdateProcessor ! Deliver(p.withPayload(orderSubmitted), marketUpdateProcessoressorPath)
-        log.debug("----------orderSubmitted: {}\n---------- market state: {}", orderSubmitted, manager())
       }
+      p.confirm()
   }
 }

@@ -13,7 +13,8 @@ import com.coinport.coinex.common.StateManager
 import Implicits._
 
 class MarketCandleDataView extends ExtendedView {
-  override def processorId = "coinex_mup"
+  override val processorId = "coinex_mup"
+  override val viewId = "candel_data_view"
   private val manager = new CandleDataManager
 
   def receive = LoggingReceive {
