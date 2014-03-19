@@ -13,7 +13,8 @@ import com.coinport.coinex.common.StateManager
 import Implicits._
 
 class UserOrdersView extends ExtendedView {
-  override def processorId = "coinex_mup"
+  override val processorId = "coinex_mup"
+  override val viewId = "user_orders_view"
   private val manager = new UserOrdersManager
 
   def receive = LoggingReceive {

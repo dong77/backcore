@@ -12,7 +12,8 @@ import com.coinport.coinex.data._
 import Implicits._
 
 class AccountView extends ExtendedView {
-  override def processorId = "coinex_ap"
+  override val processorId = "coinex_ap"
+  override val viewId = "coinex_ap_view"
   val manager = new AccountManager()
 
   def receive = LoggingReceive {

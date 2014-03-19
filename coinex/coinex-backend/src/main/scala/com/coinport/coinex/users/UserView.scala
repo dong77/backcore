@@ -9,7 +9,8 @@ import akka.event.LoggingReceive
 import com.coinport.coinex.common.ExtendedView
 
 class UserView extends ExtendedView {
-  override def processorId = "coinex_up"
+  override val processorId = "coinex_up"
+  override val viewId = "user_view"
 
   def receive = LoggingReceive {
     case _ =>

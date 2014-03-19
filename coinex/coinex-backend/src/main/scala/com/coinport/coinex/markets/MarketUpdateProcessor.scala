@@ -17,7 +17,6 @@ class MarketUpdateProcessor extends ExtendedProcessor {
   def receive = LoggingReceive {
     case p @ ConfirmablePersistent(OrderSubmitted(originOrderInfo, txs), seq, _) =>
       p.confirm()
-      log.debug("=======::::::::: " + p)
   }
 }
 

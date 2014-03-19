@@ -13,7 +13,8 @@ import com.coinport.coinex.common.StateManager
 import Implicits._
 
 class MarketDepthView(market: MarketSide) extends ExtendedView {
-  override def processorId = "coinex_mup"
+  override val processorId = "coinex_mup"
+  override val viewId = "market_depth_view"
   val manager = new MarketDepthManager(market)
 
   def receive = LoggingReceive {

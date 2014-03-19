@@ -39,23 +39,20 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
     // ------------------------------------------------------------------------------------------------
     // Commands
     case p @ Persistent(DoDepositCash(userId, currency, amount), seq) =>
-      println("----::::" + p)
+      println("--------::::" + seq + " " + p)
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, 0))
 
     case p @ Persistent(DoRequestCashWithdrawal(userId, currency, amount), seq) =>
-      println("----::::" + p)
       sender ! manager.updateCashAccount(userId, CashAccount(currency, -amount, 0, amount))
 
     case p @ Persistent(DoConfirmCashWithdrawalSuccess(userId, currency, amount), seq) =>
-      println("----::::" + p)
       sender ! manager.updateCashAccount(userId, CashAccount(currency, 0, 0, -amount))
 
     case p @ Persistent(DoConfirmCashWithdrawalFailed(userId, currency, amount), seq) =>
-      println("----::::" + p)
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
     case p @ Persistent(DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _)), seq) =>
-      println("----::::" + p)
+      println("--------::::" + seq + " " + p)
       if (quantity <= 0) sender ! AccountOperationResult(InvalidAmount, null)
       else manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
         case m @ AccountOperationResult(Ok, _) =>
@@ -67,17 +64,15 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
     // ------------------------------------------------------------------------------------------------
     // Events
     case p @ ConfirmablePersistent(OrderSubmissionFailed(side, order, _), seq, _) =>
-      println("----::::" + p)
       p.confirm()
       manager.conditionalRefund(true)(side.outCurrency, order)
 
     case p @ ConfirmablePersistent(OrderCancelled(side, order), seq, _) =>
-      println("----::::" + p)
       p.confirm()
       manager.conditionalRefund(true)(side.outCurrency, order)
 
     case p @ ConfirmablePersistent(OrderSubmitted(originOrderInfo, txs), seq, _) =>
-      println("----::::" + p)
+      println("--------::::" + seq + " " + p)
       p.confirm()
       val side = originOrderInfo.side
       txs foreach { tx =>
