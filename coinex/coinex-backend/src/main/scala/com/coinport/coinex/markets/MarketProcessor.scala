@@ -17,7 +17,10 @@ class MarketProcessor(
     marketSide: MarketSide,
     accountProcessorPath: ActorPath,
     marketUpdateProcessoressorPath: ActorPath) extends ExtendedProcessor {
+
   override val processorId = "coinex_mp_" + marketSide.asString
+  val channelToAccountProcessor = createChannelTo("ap") // DO NOT CHANGE
+  val channelToMarketUpdateProcessor = createChannelTo("mup") // DO NOT CHANGE
 
   implicit def timeProvider() = System.currentTimeMillis
   val manager = new MarketManager(marketSide)
@@ -42,25 +45,26 @@ class MarketProcessor(
     // ------------------------------------------------------------------------------------------------
     // Commands
     case p @ Persistent(DoCancelOrder(side, orderId), seq) =>
+      println("====::::" + p)
       manager.removeOrder(side, orderId) foreach { order =>
-        channel forward Deliver(p.withPayload(OrderCancelled(side, order)), accountProcessorPath)
-        channel forward Deliver(p.withPayload(OrderCancelled(side, order)), marketUpdateProcessoressorPath)
+        channelToAccountProcessor forward Deliver(p.withPayload(OrderCancelled(side, order)), accountProcessorPath)
+        channelToMarketUpdateProcessor forward Deliver(p.withPayload(OrderCancelled(side, order)), marketUpdateProcessoressorPath)
       }
 
     // ------------------------------------------------------------------------------------------------
     // Events
     case p @ ConfirmablePersistent(OrderCashLocked(side, order: Order), seq, _) =>
+      println("====::::" + p)
       p.confirm()
       if (!manager.isOrderPriceInGoodRange(side, order.price)) {
         val event = OrderSubmissionFailed(side, order, OrderSubmissionFailReason.PriceOutOfRange)
         sender ! event
-        channel ! Deliver(p.withPayload(event), accountProcessorPath)
+        channelToAccountProcessor ! Deliver(p.withPayload(event), accountProcessorPath)
       } else {
         val orderSubmitted = manager.addOrder(side, order)
         sender ! orderSubmitted
-
-        channel ! Deliver(p.withPayload(orderSubmitted), marketUpdateProcessoressorPath)
-        channel ! Deliver(p.withPayload(orderSubmitted), accountProcessorPath)
+        channelToAccountProcessor ! Deliver(p.withPayload(orderSubmitted), accountProcessorPath)
+        channelToMarketUpdateProcessor ! Deliver(p.withPayload(orderSubmitted), marketUpdateProcessoressorPath)
         log.debug("----------orderSubmitted: {}\n---------- market state: {}", orderSubmitted, manager())
       }
   }
