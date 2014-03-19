@@ -39,7 +39,6 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
     // ------------------------------------------------------------------------------------------------
     // Commands
     case p @ Persistent(DoDepositCash(userId, currency, amount), seq) =>
-      println("--------::::" + seq + " " + p)
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, 0))
 
     case p @ Persistent(DoRequestCashWithdrawal(userId, currency, amount), seq) =>
@@ -52,17 +51,16 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
     case p @ Persistent(DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _)), seq) =>
-      println("--------::::" + seq + " " + p)
       if (quantity <= 0) sender ! AccountOperationResult(InvalidAmount, null)
       else manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
         case m @ AccountOperationResult(Ok, _) =>
           val o = order.copy(id = manager.getAndIncreaseOrderId)
-          channelToMarketProcessors forward Deliver(p.withPayload(OrderCashLocked(side, o)), getProcessorRef(side))
+          channelToMarketProcessors forward Deliver(p.withPayload(OrderCashLocked(side, o)), getProcessorPath(side))
         case m: AccountOperationResult => sender ! m
       }
 
     // ------------------------------------------------------------------------------------------------
-    // Events
+    // From Channel
     case p @ ConfirmablePersistent(OrderSubmissionFailed(side, order, _), seq, _) =>
       p.confirm()
       manager.conditionalRefund(true)(side.outCurrency, order)
@@ -72,7 +70,6 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
       manager.conditionalRefund(true)(side.outCurrency, order)
 
     case p @ ConfirmablePersistent(OrderSubmitted(originOrderInfo, txs), seq, _) =>
-      println("--------::::" + seq + " " + p)
       p.confirm()
       val side = originOrderInfo.side
       txs foreach { tx =>
@@ -90,7 +87,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
       }
   }
 
-  private def getProcessorRef(side: MarketSide): ActorPath = {
+  private def getProcessorPath(side: MarketSide): ActorPath = {
     marketProcessors.getOrElse(side, marketProcessors(side.reverse)).path
   }
 }

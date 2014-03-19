@@ -14,9 +14,9 @@ import com.coinport.coinex.data._
 import Implicits._
 
 class MarketProcessor(
-    marketSide: MarketSide,
-    accountProcessorPath: ActorPath,
-    marketUpdateProcessoressorPath: ActorPath) extends ExtendedProcessor {
+  marketSide: MarketSide,
+  accountProcessorPath: ActorPath,
+  marketUpdateProcessoressorPath: ActorPath) extends ExtendedProcessor {
 
   override val processorId = "coinex_mp_" + marketSide.asString
   val channelToAccountProcessor = createChannelTo("ap") // DO NOT CHANGE
@@ -53,7 +53,7 @@ class MarketProcessor(
     // ------------------------------------------------------------------------------------------------
     // Events
     case p @ ConfirmablePersistent(OrderCashLocked(side, order: Order), seq, _) =>
-      println("========::::" + seq + " " + p)
+      p.confirm()
       if (!manager.isOrderPriceInGoodRange(side, order.price)) {
         val event = OrderSubmissionFailed(side, order, OrderSubmissionFailReason.PriceOutOfRange)
         sender ! event
@@ -64,6 +64,6 @@ class MarketProcessor(
         channelToAccountProcessor ! Deliver(p.withPayload(orderSubmitted), accountProcessorPath)
         channelToMarketUpdateProcessor ! Deliver(p.withPayload(orderSubmitted), marketUpdateProcessoressorPath)
       }
-      p.confirm()
+
   }
 }
