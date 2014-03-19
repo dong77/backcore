@@ -23,6 +23,13 @@ class MarketCandleDataView extends ExtendedView {
 
     case Persistent(mu: OrderSubmitted, _) if mu.txs.nonEmpty =>
     case q: QueryMarketCandleData =>
+      log.info("aloha!!!aloha!!!aloha!!!aloha!!!aloha!!!aloha!!!")
+      val candleData = CandleData(timestamp = 0, items =
+        Seq(CandleDataItem(1390914000,6579.6768,4820,4830,4790.54,4895.03),
+        CandleDataItem(1390915000,6579.6768,4830,4840,4790.54,4895.03),
+        CandleDataItem(1390916000,6579.6768,4840,4850,4790.54,4895.03),
+        CandleDataItem(1390917000,6579.6768,4850,4860,4790.54,4895.03)))
+      sender ! QueryMarketCandleDataResult(candleData)
   }
 }
 

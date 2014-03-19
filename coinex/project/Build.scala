@@ -4,7 +4,7 @@ import com.twitter.scrooge._
 import com.typesafe.sbt.SbtMultiJvm
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 import com.typesafe.sbt.SbtScalariform._
-import com.typesafe.sbt.SbtAtmos.{ Atmos, atmosSettings }
+import org.sbtidea.SbtIdeaPlugin._
 
 object CoinexBuild extends Build {
   val akkaVersion = "2.3.0"
