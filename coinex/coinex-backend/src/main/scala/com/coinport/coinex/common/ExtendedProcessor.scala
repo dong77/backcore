@@ -37,6 +37,6 @@ trait ExtendedProcessor extends Processor with ActorLogging {
 
   protected def createChannelTo(dest: String) = {
     val channelName = processorId + "_2_" + dest
-    context.actorOf(PersistentChannel.props(channelName), channelName)
+    context.actorOf(Channel.props(channelName), channelName)
   }
 }
