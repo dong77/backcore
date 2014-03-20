@@ -3,7 +3,7 @@ import Keys._
 import com.twitter.scrooge._
 import com.typesafe.sbt.SbtMultiJvm
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
-// import com.typesafe.sbt.SbtScalariform._
+import com.typesafe.sbt.SbtScalariform._
 
 object CoinexBuild extends Build {
   val akkaVersion = "2.3.0"
@@ -36,8 +36,10 @@ object CoinexBuild extends Build {
     base = file("coinex-client"),
     settings = Project.defaultSettings ++
       sharedSettings ++
-      ScroogeSBT.newSettings// ++ scalariformSettings
+      ScroogeSBT.newSettings ++ 
+      scalariformSettings
     )
+    .settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
       "com.typesafe.akka" %% "akka-persistence-experimental" % akkaVersion,
@@ -53,8 +55,10 @@ object CoinexBuild extends Build {
       SbtMultiJvm.multiJvmSettings ++
       sharedSettings ++
       ScroogeSBT.newSettings ++
-      sbtassembly.Plugin.assemblySettings// ++ scalariformSettings
+      sbtassembly.Plugin.assemblySettings ++ 
+      scalariformSettings
     )
+    .settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe.akka" %% "akka-remote" % akkaVersion,

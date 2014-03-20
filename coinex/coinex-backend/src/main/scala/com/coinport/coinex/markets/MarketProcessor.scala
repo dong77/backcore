@@ -14,9 +14,9 @@ import com.coinport.coinex.data._
 import Implicits._
 
 class MarketProcessor(
-  marketSide: MarketSide,
-  accountProcessorPath: ActorPath,
-  marketUpdateProcessoressorPath: ActorPath) extends ExtendedProcessor {
+    marketSide: MarketSide,
+    accountProcessorPath: ActorPath,
+    marketUpdateProcessoressorPath: ActorPath) extends ExtendedProcessor {
 
   override val processorId = "coinex_mp_" + marketSide.asString
   val channelToAccountProcessor = createChannelTo("ap") // DO NOT CHANGE
