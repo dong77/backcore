@@ -82,8 +82,8 @@ struct UserAccount {
 }
 
 struct PersistentAccountState {
-	1: i64 lastOrderId
-	2: map<i64, UserAccount> userAccountsMap
+    1: i64 lastOrderId
+    2: map<i64, UserAccount> userAccountsMap
 }
 
 struct UserLogsState {
