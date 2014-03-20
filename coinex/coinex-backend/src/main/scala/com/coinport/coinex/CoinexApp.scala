@@ -19,15 +19,13 @@ import scala.concurrent.duration._
 import akka.util.Timeout
 import java.net.InetAddress
 
-// required args(0): port
-// required args(1): roles
-// optioanl args(2): seeds
 object CoinexApp extends App {
-  if (args.length < 1 || args.length > 3) {
-    val message = """please supply 1 to 3 parameters:
+  if (args.length < 1 || args.length > 4) {
+    val message = """please supply 1 to 4 parameters:
         required args(0): port - supply 0 to select a port randomly
         optioanl args(1): roles - "*" for all roles, "" for empty node, and "a,b,c" for 3 roles
         optioanl args(2): seeds - seed note seperated by comma, i.e, "127.0.0.1:25551,127.0.0.1:25552"
+        optioanl args(3): ip - the ip for current jvm, i.e, "192.168.0.100"
 
         Examples:
           - 0 * localhost:25551 // select a random port and start all roles and connects to localhost:25551
@@ -49,16 +47,18 @@ object CoinexApp extends App {
     candle_data_view,
     """
 
-  val hostName = InetAddress.getLocalHost.getHostAddress
-
   val roles =
     if (args.length < 2) ""
     else if (args(1) == "*") ALL_ROLES
-    else args(1).split(",").map(_.stripMargin).filter(_.isEmpty).map("\"" + _ + "\"").mkString(",")
+    else args(1).split(",").map(_.stripMargin).filter(!_.isEmpty).map("\"" + _ + "\"").mkString(",")
 
   val seedNodes =
     if (args.length < 3) ""
-    else args(2).split(",").map(_.stripMargin).filter(_.isEmpty).map("\"akka.tcp://coinex@" + _ + "\"").mkString(",")
+    else args(2).split(",").map(_.stripMargin).filter(!_.isEmpty).map("\"akka.tcp://coinex@" + _ + "\"").mkString(",")
+
+  val hostName =
+    if (args.length < 4) InetAddress.getLocalHost.getHostAddress
+    else args(3)
 
   val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0))
     .withFallback(ConfigFactory.parseString("akka.remote.netty.tcp.hostname=" + hostName))
