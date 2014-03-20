@@ -8,7 +8,7 @@ package com.coinport.coinex
 import akka.actor._
 import akka.cluster.routing._
 import akka.routing._
-import com.coinport.coinex.common.ClusterSingletonRouter
+import com.coinport.coinex.common.ClusterSingletonProxy
 import com.coinport.coinex.data._
 import Implicits._
 
@@ -46,7 +46,8 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
   }: _*))
 
   private def routerForProcessor(name: String) = system.actorOf(
-    Props(new ClusterSingletonRouter(name, "user/" + name + "/singleton")), name + "_router")
+    ClusterSingletonProxy.defaultProps("/user/" + name + "/singleton", name),
+    name + "_router")
 
   private def routerForView(name: String) = system.actorOf(
     ClusterRouterGroup(RoundRobinGroup(Nil),

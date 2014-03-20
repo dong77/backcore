@@ -28,8 +28,6 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
       manager.adjustAmount(orderInfo.side, orderInfo.order, true)
       txs foreach { manager.reductAmount(orderInfo.side, _) }
 
-      log.debug("---------- {}\nmarket depth state: {}", e, manager())
-
     case QueryMarket(side, maxDepth) if side == market =>
       val (asks, bids) = manager().get(maxDepth)
       sender ! QueryMarketResult(MarketDepth(market, asks, bids))

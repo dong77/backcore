@@ -53,9 +53,9 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
     case p @ Persistent(DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _)), seq) =>
       if (quantity <= 0) sender ! AccountOperationResult(InvalidAmount, null)
       else manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
-        case m @ AccountOperationResult(Ok, _) =>
-          val o = order.copy(id = manager.getAndIncreaseOrderId)
-          channelToMarketProcessors forward Deliver(p.withPayload(OrderCashLocked(side, o)), getProcessorPath(side))
+        case AccountOperationResult(Ok, _) =>
+          val orderWithId = order.copy(id = manager.getAndIncreaseOrderId)
+          channelToMarketProcessors forward Deliver(p.withPayload(OrderCashLocked(side, orderWithId)), getProcessorPath(side))
         case m: AccountOperationResult => sender ! m
       }
 
