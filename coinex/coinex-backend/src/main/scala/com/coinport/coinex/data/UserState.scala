@@ -10,18 +10,7 @@ package com.coinport.coinex.data
 
 import scala.collection.immutable.Map
 import com.coinport.coinex.util._
-import scala.util.{ Try, Success, Failure }
 import scala.Predef._
-
-object UserState {
-  def emailToId(email: String) = Hash.murmur3(email)
-
-  def computePaswordHash(profile: UserProfile, password: String) = {
-    def regulate(s: String) = s.stripMargin.toLowerCase
-    Hash.sha256("%s~%s~%s~%s".format(
-      regulate(profile.email), regulate(profile.realName), regulate(profile.nationalId), password.stripMargin))
-  }
-}
 
 case class UserState(numUsers: Long = 0,
     profileMap: Map[Long, UserProfile] = Map.empty[Long, UserProfile],

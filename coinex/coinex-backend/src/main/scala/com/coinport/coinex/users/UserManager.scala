@@ -17,7 +17,16 @@ package com.coinport.coinex.users
 
 import com.coinport.coinex.data._
 import com.coinport.coinex.common.StateManager
+import com.coinport.coinex.util._
 
 class UserManager extends StateManager[UserState] {
   initWithDefaultState(UserState())
+
+  private def emailToId(email: String) = Hash.murmur3(email)
+
+  private def computePaswordHash(profile: UserProfile, password: String) = {
+    def regulate(s: String) = s.stripMargin.toLowerCase
+    Hash.sha256("%s~%s~%s~%s".format(
+      regulate(profile.email), regulate(profile.realName), regulate(profile.nationalId), password.stripMargin))
+  }
 }
