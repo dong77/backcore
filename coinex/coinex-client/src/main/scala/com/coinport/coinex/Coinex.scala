@@ -9,7 +9,6 @@ import akka.actor._
 import akka.event.LoggingReceive
 import akka.cluster.routing._
 import akka.routing._
-import com.coinport.coinex.common.ClusterSingletonRouter
 import com.coinport.coinex.data._
 import akka.persistence._
 import Implicits._
