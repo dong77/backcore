@@ -11,6 +11,19 @@ class EventSerializer extends Serializer {
   val identifier = 870725
 
   def toBinary(obj: AnyRef): Array[Byte] = obj match {
+    case m: DoRegisterUser => BinaryScalaCodec(DoRegisterUser)(m)
+    case m: DoRequestPasswordReset => BinaryScalaCodec(DoRequestPasswordReset)(m)
+    case m: DoResetPassword => BinaryScalaCodec(DoResetPassword)(m)
+    case m: RegisterUserFailed => BinaryScalaCodec(RegisterUserFailed)(m)
+    case m: RegisterUserSucceeded => BinaryScalaCodec(RegisterUserSucceeded)(m)
+    case m: Login => BinaryScalaCodec(Login)(m)
+    case m: LoginFailed => BinaryScalaCodec(LoginFailed)(m)
+    case m: LoginSucceeded => BinaryScalaCodec(LoginSucceeded)(m)
+    case m: RequestPasswordResetFailed => BinaryScalaCodec(RequestPasswordResetFailed)(m)
+    case m: RequestPasswordResetSucceeded => BinaryScalaCodec(RequestPasswordResetSucceeded)(m)
+    case m: ResetPasswordFailed => BinaryScalaCodec(ResetPasswordFailed)(m)
+    case m: ResetPasswordSucceeded => BinaryScalaCodec(ResetPasswordSucceeded)(m)
+
     case m: AccountOperationResult => BinaryScalaCodec(AccountOperationResult)(m)
     case m: DoCancelOrder => BinaryScalaCodec(DoCancelOrder)(m)
     case m: DoConfirmCashWithdrawalFailed => BinaryScalaCodec(DoConfirmCashWithdrawalFailed)(m)
@@ -36,6 +49,19 @@ class EventSerializer extends Serializer {
 
   def fromBinary(bytes: Array[Byte],
     clazz: Option[Class[_]]): AnyRef = clazz match {
+    case Some(c) if c == classOf[DoRegisterUser.Immutable] => BinaryScalaCodec(DoRegisterUser).invert(bytes).get
+    case Some(c) if c == classOf[DoRequestPasswordReset.Immutable] => BinaryScalaCodec(DoRequestPasswordReset).invert(bytes).get
+    case Some(c) if c == classOf[DoResetPassword.Immutable] => BinaryScalaCodec(DoResetPassword).invert(bytes).get
+    case Some(c) if c == classOf[RegisterUserFailed.Immutable] => BinaryScalaCodec(RegisterUserFailed).invert(bytes).get
+    case Some(c) if c == classOf[RegisterUserSucceeded.Immutable] => BinaryScalaCodec(RegisterUserSucceeded).invert(bytes).get
+    case Some(c) if c == classOf[Login.Immutable] => BinaryScalaCodec(Login).invert(bytes).get
+    case Some(c) if c == classOf[LoginFailed.Immutable] => BinaryScalaCodec(LoginFailed).invert(bytes).get
+    case Some(c) if c == classOf[LoginSucceeded.Immutable] => BinaryScalaCodec(LoginSucceeded).invert(bytes).get
+    case Some(c) if c == classOf[RequestPasswordResetFailed.Immutable] => BinaryScalaCodec(RequestPasswordResetFailed).invert(bytes).get
+    case Some(c) if c == classOf[RequestPasswordResetSucceeded.Immutable] => BinaryScalaCodec(RequestPasswordResetSucceeded).invert(bytes).get
+    case Some(c) if c == classOf[ResetPasswordFailed.Immutable] => BinaryScalaCodec(ResetPasswordFailed).invert(bytes).get
+    case Some(c) if c == classOf[ResetPasswordSucceeded.Immutable] => BinaryScalaCodec(ResetPasswordSucceeded).invert(bytes).get
+
     case Some(c) if c == classOf[AccountOperationResult.Immutable] => BinaryScalaCodec(AccountOperationResult).invert(bytes).get
     case Some(c) if c == classOf[DoCancelOrder.Immutable] => BinaryScalaCodec(DoCancelOrder).invert(bytes).get
     case Some(c) if c == classOf[DoConfirmCashWithdrawalFailed.Immutable] => BinaryScalaCodec(DoConfirmCashWithdrawalFailed).invert(bytes).get
