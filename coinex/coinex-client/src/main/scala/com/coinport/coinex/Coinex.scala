@@ -15,34 +15,37 @@ import Implicits._
 
 final class Coinex(routers: LocalRouters) extends Actor {
 
-  def receive = LoggingReceive {
-    //-------------------------------------------------------------------------
-    // Account Processor
-    case m: DoDepositCash => routers.accountProcessor forward Persistent(m)
-    case m: DoRequestCashWithdrawal => routers.accountProcessor forward Persistent(m)
-    case m: DoConfirmCashWithdrawalSuccess => routers.accountProcessor forward Persistent(m)
-    case m: DoConfirmCashWithdrawalFailed => routers.accountProcessor forward Persistent(m)
-    case m: DoSubmitOrder => routers.accountProcessor forward Persistent(m)
+  def receive = {
+    LoggingReceive {
+      //-------------------------------------------------------------------------
+      // Account Processor
+      case m: DoDepositCash => routers.accountProcessor forward Persistent(m)
+      case m: DoRequestCashWithdrawal => routers.accountProcessor forward Persistent(m)
+      case m: DoConfirmCashWithdrawalSuccess => routers.accountProcessor forward Persistent(m)
+      case m: DoConfirmCashWithdrawalFailed => routers.accountProcessor forward Persistent(m)
+      case m: DoSubmitOrder => routers.accountProcessor forward Persistent(m)
 
-    // Market Processors
-    case m @ DoCancelOrder(side, _) => routers.marketProcessors(side) forward Persistent(m)
+      // Market Processors
+      case m @ DoCancelOrder(side, _) => routers.marketProcessors(side) forward Persistent(m)
 
-    //-------------------------------------------------------------------------
-    // AccountView
-    case m: QueryAccount => routers.accountView forward m
+      //-------------------------------------------------------------------------
+      // AccountView
+      case m: QueryAccount => routers.accountView forward m
 
-    // MarketDepthViews
-    case m @ QueryMarket(side, _) =>
-      routers.marketDepthViews(side) forward m
+      // MarketDepthViews
+      case m @ QueryMarket(side, _) =>
+        routers.marketDepthViews(side) forward m
 
-    // UserOrdersView
-    case m: QueryUserOrders => routers.userOrdersView forward m
+      // UserOrdersView
+      case m: QueryUserOrders => routers.userOrdersView forward m
 
-    // CandleDataview
-    case m: QueryMarketCandleData => routers.candleDataView forward m
+      // CandleDataview
+      case m @ QueryChartData(side, _, _, _, _) =>
+        routers.chartDataView(side) forward m
 
-    //-------------------------------------------------------------------------
-    case Persistent => throw new IllegalArgumentException("Coinex doesn't handle persistent messages")
-    case m => throw new IllegalArgumentException("Coinex doesn't handle messages of type: " + m.getClass.getCanonicalName)
+      //-------------------------------------------------------------------------
+      case Persistent => throw new IllegalArgumentException("Coinex doesn't handle persistent messages")
+      case m => throw new IllegalArgumentException("Coinex doesn't handle messages of type: " + m.getClass.getCanonicalName)
+    }
   }
 }

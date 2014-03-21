@@ -78,6 +78,22 @@ struct UserProfile {
     11: UserStatus status
 }
 
+enum ChartTimeDimension {
+    ONE_MINUTE = 1
+    THREE_MINUTES = 2
+    FIVE_MINUTES = 3
+    FIFTEEN_MINUTES = 4
+    THIRTY_MINUTES = 5
+    ONE_HOUR = 6
+    TWO_HOURS = 7
+    FOUR_HOURS = 8
+    SIX_HOURS = 9
+    TWELVE_HOURS = 10
+    ONE_DAY = 11
+    THREE_DAYS = 12
+    ONE_WEEK = 13
+}
+
 struct MarketSide {
     1: Currency outCurrency
     2: Currency inCurrency
@@ -145,27 +161,23 @@ struct MarketDepth {
 
 struct CandleDataItem {
     1: i64 timestamp
-    2: double volumn
+    2: i64 volumn
     3: double open
     4: double close
     5: double low
     6: double high
 }
 
-struct CandleData {
+struct ChartData {
     1: i64 timestamp
-    2: list<CandleDataItem> items
+    2: optional list<CandleDataItem> candleData
 }
 
-struct CandleDataBundle {
-    1: optional CandleData minutelyData
-    2: optional CandleData quarterlyData
-    3: optional CandleData hourlyData
-    4: optional CandleData dailyData
-}
-
-struct CandleDataState {
-    1: map<MarketSide , CandleDataBundle> bundles
+struct ReturnChartType {
+    1: optional bool retrunChandle = 1
+    2: optional bool returnKDJ = 0
+    3: optional bool returnMACD = 0
+    4: optional bool returnAverageLine = 0
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -199,8 +211,8 @@ struct QueryMarket{1: MarketSide side, 2: i32 maxDepth}
 struct QueryMarketResult{1: MarketDepth marketDepth}
 struct QueryMarketUnsupportedMarketFailure{1: MarketSide side}
 
-struct QueryMarketCandleData{1: MarketSide side}
-struct QueryMarketCandleDataResult{1: CandleData candleData}
+struct QueryChartData{1: MarketSide side, 2: ChartTimeDimension dimension, 3: i64 from, 4: i64 to, 5: ReturnChartType rtype}
+struct QueryChartDataResult{1: ChartData chartDate}
 
 struct OrderSubmissionInProgross{1: MarketSide side, 2: Order order}
 // ----------------------------------------------------------------------------
