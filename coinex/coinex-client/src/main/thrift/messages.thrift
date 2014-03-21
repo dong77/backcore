@@ -54,7 +54,12 @@ enum ResetPasswordFailureReason {
 }
 
 enum RequestPasswordResetFailureReason {
-   USER_NOT_EXIST = 1
+    USER_NOT_EXIST = 1
+}
+
+enum UserStatus {
+    NORMAL = 0
+    SUSPENDED = 1
 }
 
 //---------------------------------------------------------------------
@@ -69,6 +74,7 @@ struct UserProfile {
     8: optional string mobile
     9: bool mobileVerified
 		10: optional string passwordResetToken
+		11: UserStatus status
 }
 
 struct MarketSide {
@@ -198,7 +204,7 @@ struct OrderSubmissionInProgross{1: MarketSide side, 2: Order order}
 // Please name all commands starting with "Do"
 
 // UserProcessor commands
-struct DoRegisterUser{1: UserProfile userProfile}
+struct DoRegisterUser{1: UserProfile userProfile, 2: string password}
 struct DoRequestPasswordReset{1: string email}
 struct DoResetPassword{1: string email, 2: string password, 3: optional string passwordResetToken}
 
