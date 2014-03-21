@@ -24,6 +24,8 @@ enum OrderStatus {
     PARTIALLY_EXECUTED = 1
     FULLY_EXECUTED = 2
     CANCELLED = 3
+    MARKET_AUTO_CANCELLED = 4
+    MARKET_AUTO_PARTIALLY_CANCELLED = 5
 }
 
 enum AccountOperationCode {

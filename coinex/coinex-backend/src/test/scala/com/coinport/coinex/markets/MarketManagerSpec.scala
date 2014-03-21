@@ -110,8 +110,8 @@ class MarketManagerSpec extends Specification {
       val updatedMaker1 = maker1.copy(timestamp = Some(100001))
       val updatedMaker2 = maker2.copy(timestamp = Some(100002))
 
-      result1 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker1, 0, 0, Cancelled, None), Nil)
-      result2 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker2, 0, 0, Cancelled, None), Nil)
+      result1 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker1, 0, 0, MarketAutoCancelled, None), Nil)
+      result2 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker2, 0, 0, MarketAutoCancelled, None), Nil)
 
       manager().orderMap mustEqual Map()
       manager().orderPool(makerSide) mustEqual EmptyOrderPool
@@ -200,7 +200,7 @@ class MarketManagerSpec extends Specification {
         val updatedTaker = taker.copy(quantity = 90)
 
         result mustEqual OrderSubmitted(
-          OrderInfo(takerSide, taker, 10, 10, PartiallyExecuted, Some(0)),
+          OrderInfo(takerSide, taker, 10, 10, MarketAutoPartiallyCancelled, Some(0)),
           Seq(Transaction(0, taker --> updatedTaker, maker --> updatedMaker)))
 
         manager().orderMap mustEqual Map()
@@ -253,7 +253,7 @@ class MarketManagerSpec extends Specification {
         val updatedTaker = taker.copy(quantity = 50)
 
         result mustEqual OrderSubmitted(
-          OrderInfo(takerSide, taker, 70, 120, PartiallyExecuted, Some(0)),
+          OrderInfo(takerSide, taker, 70, 120, MarketAutoPartiallyCancelled, Some(0)),
           Seq(
             Transaction(0, taker --> taker.copy(quantity = 70), maker2 --> updatedMaker2),
             Transaction(0, taker.copy(quantity = 70) --> updatedTaker, maker1 --> updatedMaker1)))
