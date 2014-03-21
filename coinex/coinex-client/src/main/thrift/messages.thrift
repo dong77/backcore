@@ -204,7 +204,6 @@ struct OrderSubmissionInProgross{1: MarketSide side, 2: Order order}
 // Please name all commands starting with "Do"
 
 // UserProcessor commands
-
 struct DoRegisterUser{1: UserProfile userProfile, 2: string password}
 struct DoRequestPasswordReset{1: string email}
 struct DoResetPassword{1: string email, 2: string password, 3: optional string passwordResetToken}
