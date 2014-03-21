@@ -47,10 +47,12 @@ class AccountView extends ExtendedView {
         manager.conditionalRefund(takerOrderUpdate.current.hitTakeLimit)(side.outCurrency, takerOrderUpdate.current)
         manager.conditionalRefund(makerOrderUpdate.current.hitTakeLimit)(side.inCurrency, makerOrderUpdate.current)
       }
-      val order = m.originOrderInfo.order
       // need refund the rest locked currency for the market-price order
-      if (order.price == None && order.quantity - m.originOrderInfo.outAmount > 0) {
-        manager.refund(order.userId, side.outCurrency, order.quantity - m.originOrderInfo.outAmount)
+      val order = m.originOrderInfo.order
+      m.originOrderInfo.status match {
+        case OrderStatus.MarketAutoCancelled | OrderStatus.MarketAutoPartiallyCancelled =>
+          manager.refund(order.userId, side.outCurrency, order.quantity - m.originOrderInfo.outAmount)
+        case _ =>
       }
 
     case QueryAccount(userId) =>
