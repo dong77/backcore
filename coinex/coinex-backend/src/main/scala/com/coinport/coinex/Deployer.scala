@@ -26,6 +26,7 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
       val props = Props(new MarketProcessor(m, routers.accountProcessor.path, routers.marketUpdateProcessor.path))
       deployProcessor(props, MARKET_PROCESSOR(m))
       deployView(Props(new MarketDepthView(m)), MARKET_DEPTH_VIEW(m))
+      deployView(Props(new ChartDataView(m)), CHART_DATA_VIEW(m))
     }
 
     deployProcessor(Props(new UserProcessor()), USER_PROCESSOR)
@@ -35,7 +36,6 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
     deployView(Props(classOf[UserView]), USER_VIEW)
     deployView(Props(classOf[AccountView]), ACCOUNT_VIEW)
     deployView(Props(classOf[UserOrdersView]), USER_ORDERS_VIEW)
-    deployView(Props(classOf[MarketCandleDataView]), CANDLE_DATA_VIEW)
   }
 
   private def deployProcessor(props: Props, name: String) =

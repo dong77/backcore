@@ -42,8 +42,8 @@ class EventSerializer extends Serializer {
     case m: OrderSubmitted => BinaryScalaCodec(OrderSubmitted)(m)
     case m: QueryUserOrders => BinaryScalaCodec(QueryUserOrders)(m)
     case m: QueryUserOrdersResult => BinaryScalaCodec(QueryUserOrdersResult)(m)
-    case m: QueryMarketCandleData => BinaryScalaCodec(QueryMarketCandleData)(m)
-    case m: QueryMarketCandleDataResult => BinaryScalaCodec(QueryMarketCandleDataResult)(m)
+    case m: QueryChartData => BinaryScalaCodec(QueryChartData)(m)
+    case m: QueryChartDataResult => BinaryScalaCodec(QueryChartDataResult)(m)
     case m => throw new IllegalArgumentException("Cannot serialize object: " + m)
   }
 
@@ -80,8 +80,8 @@ class EventSerializer extends Serializer {
     case Some(c) if c == classOf[OrderSubmitted.Immutable] => BinaryScalaCodec(OrderSubmitted).invert(bytes).get
     case Some(c) if c == classOf[QueryUserOrders.Immutable] => BinaryScalaCodec(QueryUserOrders).invert(bytes).get
     case Some(c) if c == classOf[QueryUserOrdersResult.Immutable] => BinaryScalaCodec(QueryUserOrdersResult).invert(bytes).get
-    case Some(c) if c == classOf[QueryMarketCandleData.Immutable] => BinaryScalaCodec(QueryMarketCandleData).invert(bytes).get
-    case Some(c) if c == classOf[QueryMarketCandleDataResult.Immutable] => BinaryScalaCodec(QueryMarketCandleDataResult).invert(bytes).get
+    case Some(c) if c == classOf[QueryChartData.Immutable] => BinaryScalaCodec(QueryChartData).invert(bytes).get
+    case Some(c) if c == classOf[QueryChartDataResult.Immutable] => BinaryScalaCodec(QueryChartDataResult).invert(bytes).get
 
     case Some(c) => throw new IllegalArgumentException("Cannot deserialize class: " + c.getCanonicalName)
     case None => throw new IllegalArgumentException("No class found in EventSerializer when deserializing array: " + bytes.mkString(""))
