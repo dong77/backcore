@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
+ * Copyright {C} 2014 Coinport Inc. <http://www.coinport.com>
  *
  * All classes here are case-classes or case-objects. This is required since we are
  * maintaining an in-memory state that's immutable, so that while snapshot is taken,
@@ -36,6 +36,39 @@ enum AccountOperationCode {
 
 enum OrderSubmissionFailReason {
     PRICE_OUT_OF_RANGE = 1
+}
+
+enum RegisterationFailureReason { 
+    EMAIL_ALREADY_REGISTERED = 1
+    MISSING_INFORMATION = 2
+}
+
+enum LoginFailureReason { 
+    USER_NOT_EXIST = 1
+    PASSWORD_NOT_MATCH = 2
+}
+
+enum ResetPasswordFailureReason {
+    USER_NOT_EXIST = 1
+    TOKEN_NOT_MATCH = 2
+}
+
+enum RequestPasswordResetFailureReason {
+   USER_NOT_EXIST = 1
+}
+
+//---------------------------------------------------------------------
+// User profile related
+struct UserProfile {
+    1: i64 id
+    2: string email
+    3: string realName
+    4: string nationalId
+    5: optional list<byte> passwordHash
+    6: bool emailVerified
+    8: optional string mobile
+    9: bool mobileVerified
+		10: optional string passwordResetToken
 }
 
 struct MarketSide {
@@ -97,7 +130,6 @@ struct MarketDepthItem {
     2: i64 quantity
 }
 
-
 struct MarketDepth {
     1: MarketSide side
     2: list<MarketDepthItem> asks
@@ -131,6 +163,18 @@ struct CandleDataState {
 
 // ------------------------------------------------------------------------------------------------
 // Non-persistent message.
+struct RegisterUserFailed{1: RegisterationFailureReason reason, 2: optional UserProfile userProfile}
+struct RegisterUserSucceeded{1: UserProfile userProfile}
+
+struct Login{1: string email, 2: string password}
+struct LoginFailed{1: LoginFailureReason reason}
+struct LoginSucceeded{1: string email, 2: i64 id, 3: string token}
+
+struct RequestPasswordResetFailed{1: RequestPasswordResetFailureReason reason}
+struct RequestPasswordResetSucceeded{1: string email, 2: i64 id}
+
+struct ResetPasswordFailed{1: ResetPasswordFailureReason reason}
+struct ResetPasswordSucceeded{1: UserProfile userProfile}
 
 struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
 struct OrderSubmissionDone{1: MarketSide side, 2: Order order, 3: list<Transaction> txs}
@@ -152,6 +196,11 @@ struct OrderSubmissionInProgross{1: MarketSide side, 2: Order order}
 // ----------------------------------------------------------------------------
 // Persistent Commands - all commands are sent by outside world.
 // Please name all commands starting with "Do"
+
+// UserProcessor commands
+struct DoRegisterUser{1: UserProfile userProfile}
+struct DoRequestPasswordReset{1: string email}
+struct DoResetPassword{1: string email, 2: string password, 3: optional string passwordResetToken}
 
 // AccountProcessor commands
 struct DoSubmitOrder{1: MarketSide side, 2: Order order}

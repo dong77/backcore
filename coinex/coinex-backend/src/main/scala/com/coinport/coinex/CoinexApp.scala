@@ -43,12 +43,12 @@ object CoinexApp extends App {
     candle_data_view,
     """
 
-  val seedNodes = args(1).split(",").map(_.stripMargin).filter(!_.isEmpty).map("\"akka.tcp://coinex@" + _ + "\"").mkString(",")
+  val seedNodes = args(1).split(",").map(_.stripMargin).filter(_.nonEmpty).map("\"akka.tcp://coinex@" + _ + "\"").mkString(",")
 
   val roles =
     if (args.length < 3) ""
     else if (args(2) == "*") ALL_ROLES
-    else args(2).split(",").map(_.stripMargin).filter(!_.isEmpty).map("\"" + _ + "\"").mkString(",")
+    else args(2).split(",").map(_.stripMargin).filter(_.nonEmpty).map("\"" + _ + "\"").mkString(",")
 
   val hostName =
     if (args.length < 4) InetAddress.getLocalHost.getHostAddress
@@ -73,6 +73,8 @@ object CoinexApp extends App {
   Thread.sleep(5000)
   val summary = "============= Akka Node Ready =============\n" +
     "with hostname: " + hostName + "\n" +
-    "with roles: " + roles + "\n"
+    "with roles: " + roles + "\n" +
+    "with seeds: " + seedNodes + "\n"
+
   println(summary)
 }
