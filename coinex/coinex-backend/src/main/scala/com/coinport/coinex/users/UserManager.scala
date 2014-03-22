@@ -18,7 +18,6 @@ package com.coinport.coinex.users
 import com.coinport.coinex.data._
 import com.coinport.coinex.common.StateManager
 import com.coinport.coinex.util._
-import scala.util.Random
 
 class UserManager extends StateManager[UserState] {
   initWithDefaultState(UserState())
@@ -41,7 +40,7 @@ class UserManager extends StateManager[UserState] {
         val nationalId = regulate(profile.nationalId)
         val updatedProfile: UserProfile = profile.copy(
           id = id, email = email, realName = realName, nationalId = nationalId,
-          emailVerified = false, status = UserStatus.Normal, randomSeed = id)
+          emailVerified = false, status = UserStatus.Normal)
 
         val passwordHash = computePasswordHash(updatedProfile, password)
         val profileWithPassword = updatedProfile.copy(passwordHash = Some(passwordHash))
@@ -62,18 +61,16 @@ class UserManager extends StateManager[UserState] {
     }
   }
 
-  def requestPasswordReset(email: String): Either[RequestPasswordResetFailureReason, UserProfile] = {
-    val id = emailToId(regulate(email))
+  def requestPasswordReset(email: String, newToken: String): Either[RequestPasswordResetFailureReason, UserProfile] = {
+    val e = regulate(email)
+    val id = emailToId(e)
     state.profileMap.get(id) match {
       case None => Left(RequestPasswordResetFailureReason.UserNotExist)
-      case Some(profile) if profile.passwordResetToken.nonEmpty => Right(profile)
-      case Some(profile) =>
-        val random = new Random(profile.randomSeed)
-        val randomSeed = random.nextLong
-        val passwordResetToken = random.nextInt.toString
-
-        val updatedProfile = profile.copy(randomSeed = randomSeed, passwordResetToken = Some(passwordResetToken))
-        state = state.updateUserProfile(id)(_ => updatedProfile).addPasswordResetToken(passwordResetToken, id)
+      case Some(profile) if profile.email != e => Left(RequestPasswordResetFailureReason.TokenNotUnique)
+      case Some(profile) if profile.passwordResetToken.isDefined => Right(profile)
+      case Some(profile) if profile.passwordResetToken.isEmpty =>
+        val updatedProfile = profile.copy(passwordResetToken = Some(newToken))
+        state = state.updateUserProfile(id)(_ => updatedProfile).addPasswordResetToken(newToken, id)
         Right(updatedProfile)
     }
   }
@@ -85,9 +82,8 @@ class UserManager extends StateManager[UserState] {
       case None => Left(ResetPasswordFailureReason.UserNotExist)
 
       case Some(profile) if passwordResetToken.isDefined || profile.passwordResetToken == passwordResetToken =>
-        val randomSeed = new Random(profile.randomSeed).nextLong
         val passwordHash = computePasswordHash(profile, password)
-        val updatedProfile = profile.copy(passwordHash = Some(passwordHash), randomSeed = randomSeed, passwordResetToken = None)
+        val updatedProfile = profile.copy(passwordHash = Some(passwordHash), passwordResetToken = None)
         state = state.updateUserProfile(id)(_ => updatedProfile)
         profile.passwordResetToken foreach { token => state = state.deletePasswordResetToken(token) }
         Right(updatedProfile)

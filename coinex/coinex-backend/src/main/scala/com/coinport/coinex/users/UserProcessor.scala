@@ -57,8 +57,8 @@ class UserProcessor extends ExtendedProcessor {
         case Right(profile) => sender ! RegisterUserSucceeded(profile)
       }
 
-    case p @ DoRequestPasswordReset(email) =>
-      manager.requestPasswordReset(email) match {
+    case p @ DoRequestPasswordReset(email, newToken) =>
+      manager.requestPasswordReset(email, newToken) match {
         case Left(reason) => sender ! RequestPasswordResetFailed(reason)
         case Right(profile) =>
           // TODO send email here

@@ -55,6 +55,7 @@ enum ResetPasswordFailureReason {
 
 enum RequestPasswordResetFailureReason {
     USER_NOT_EXIST = 1
+    TOKEN_NOT_UNIQUE = 2
 }
 
 enum UserStatus {
@@ -75,7 +76,6 @@ struct UserProfile {
     9: bool mobileVerified
     10: optional string passwordResetToken
     11: UserStatus status
-    12: i64 randomSeed
 }
 
 struct MarketSide {
@@ -209,7 +209,7 @@ struct OrderSubmissionInProgross{1: MarketSide side, 2: Order order}
 
 // UserProcessor commands
 struct DoRegisterUser{1: UserProfile userProfile, 2: string password}
-struct DoRequestPasswordReset{1: string email}
+struct DoRequestPasswordReset{1: string email, 2: string passwordResetToken}
 struct DoResetPassword{1: string email, 2: string password, 3: optional string passwordResetToken}
 
 // AccountProcessor commands
