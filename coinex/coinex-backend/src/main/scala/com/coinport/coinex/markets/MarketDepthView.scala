@@ -34,7 +34,6 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
   }
 }
 
-// TODO(d): test this class.
 class MarketDepthManager(market: MarketSide) extends StateManager[MarketDepthState] {
   initWithDefaultState(MarketDepthState())
 
