@@ -5,6 +5,9 @@ import com.typesafe.sbt.SbtMultiJvm
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 import com.typesafe.sbt.SbtScalariform._
 import org.sbtidea.SbtIdeaPlugin._
+import com.typesafe.sbt.SbtAtmos.{ Atmos, atmosSettings }
+import com.typesafe.sbt.SbtNativePackager._
+
 
 object CoinexBuild extends Build {
   val akkaVersion = "2.3.0"
@@ -60,6 +63,7 @@ object CoinexBuild extends Build {
       scalariformSettings
     )
     .settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
+    .settings(packageArchetype.java_application:_*)
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe.akka" %% "akka-remote" % akkaVersion,
