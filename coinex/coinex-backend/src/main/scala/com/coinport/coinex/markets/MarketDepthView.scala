@@ -41,9 +41,9 @@ class MarketDepthManager(market: MarketSide) extends StateManager[MarketDepthSta
   def adjustAmount(side: MarketSide, order: Order, addOrRemove: Boolean /*true for increase, false for reduce*/ ) {
     def adjust(amount: Long) = if (addOrRemove) amount else -amount
     if (side == market && order.price.isDefined) {
-      state = state.adjustAsk(order.price.get, adjust(order.quantity))
+      state = state.adjustAsk(order.price.get, adjust(order.maxOutAmount(order.price.get)))
     } else if (side == market.reverse && order.price.isDefined) {
-      state = state.adjustBid(order.price.get, adjust(order.minimalTake))
+      state = state.adjustBid(order.price.get, adjust(order.maxInAmount(order.price.get)))
     }
   }
 
@@ -52,11 +52,13 @@ class MarketDepthManager(market: MarketSide) extends StateManager[MarketDepthSta
     val (ask, bid) = if (side == market) (taker, maker) else (maker, taker)
 
     if (ask.previous.price.isDefined) {
-      state = state.adjustAsk(ask.previous.price.get, -ask.outAmount)
+      val diff = ask.current.maxOutAmount(ask.current.price.get) - ask.previous.maxOutAmount(ask.previous.price.get)
+      state = state.adjustAsk(ask.previous.price.get, diff)
     }
-    if (bid.previous.price.isDefined && bid.previous.takeLimit.isDefined) {
-      val v = if (bid.current.quantity == 0) -bid.previous.takeLimit.get else -bid.minimalTakeDiff
-      state = state.adjustBid(bid.previous.price.get, v)
+
+    if (bid.previous.price.isDefined) {
+      val diff = bid.current.maxInAmount(bid.current.price.get) - ask.previous.maxInAmount(bid.previous.price.get)
+      state = state.adjustBid(bid.previous.price.get, diff)
     }
   }
 }
