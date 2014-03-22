@@ -26,7 +26,7 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
       val props = Props(new MarketProcessor(m, routers.accountProcessor.path, routers.marketUpdateProcessor.path))
       deployProcessor(props, MARKET_PROCESSOR(m))
       deployView(Props(new MarketDepthView(m)), MARKET_DEPTH_VIEW(m))
-      deployView(Props(new ChartDataView(m)), CHART_DATA_VIEW(m))
+      deployView(Props(new CandleDataView(m)), CANDLE_DATA_VIEW(m))
     }
 
     deployProcessor(Props(new UserProcessor()), USER_PROCESSOR)
@@ -52,5 +52,4 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
     if (cluster.selfRoles.contains(name)) {
       system.actorOf(props, name)
     }
-
 }

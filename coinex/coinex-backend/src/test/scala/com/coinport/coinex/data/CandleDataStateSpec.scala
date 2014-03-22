@@ -1,8 +1,8 @@
-package com.coinport.coinex.data
-
 /**
- * Created by chenxi on 3/20/14.
+ * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
  */
+
+package com.coinport.coinex.data
 
 import org.specs2.mutable._
 import com.coinport.coinex.data.ChartTimeDimension._
@@ -13,8 +13,8 @@ class CandleDataStateSpec extends Specification {
     "save candle data into state and can get them by time dimension" in {
       var state = CandleDataState()
 
-      //      state.getItem(OneMinute, 0, 0) mustEqual Seq.empty[CandleDataItem]
-      //      state.getReverseItem(OneMinute, 0, 0) mustEqual Seq.empty[CandleDataItem]
+      state.getItems(OneMinute, 0, 0) mustEqual Seq.empty[CandleDataItem]
+      state.getReverseItems(OneMinute, 0, 0) mustEqual Seq.empty[CandleDataItem]
 
       val txs = Seq(
         (10000000, 100.0, 1 / 100, 2, 200),
@@ -31,17 +31,17 @@ class CandleDataStateSpec extends Specification {
         state = state.addReverseItem(OneMinute, t._1, t._3, t._5)
       }
 
-      state.getItem(OneMinute, 40000001, 40000000) mustEqual Seq(CandleDataItem(666, 4, 60.0, 40.0, 60.0, 40.0))
-      state.getItem(OneMinute, 30000001, 30000000) mustEqual Seq(CandleDataItem(500, 4, 200.0, 400.0, 400.0, 200.0))
-      state.getItem(OneMinute, 20000001, 20000000) mustEqual Seq(CandleDataItem(333, 4, 50.0, 20.0, 50.0, 20.0))
-      state.getItem(OneMinute, 10000001, 10000000) mustEqual Seq(CandleDataItem(166, 4, 100.0, 200.0, 200.0, 100.0))
+      state.getItems(OneMinute, 40000001, 40000000) mustEqual Seq(CandleDataItem(666, 4, 60.0, 40.0, 60.0, 40.0))
+      state.getItems(OneMinute, 30000001, 30000000) mustEqual Seq(CandleDataItem(500, 4, 200.0, 400.0, 400.0, 200.0))
+      state.getItems(OneMinute, 20000001, 20000000) mustEqual Seq(CandleDataItem(333, 4, 50.0, 20.0, 50.0, 20.0))
+      state.getItems(OneMinute, 10000001, 10000000) mustEqual Seq(CandleDataItem(166, 4, 100.0, 200.0, 200.0, 100.0))
 
       txs.foreach { t =>
         state = state.addItem(OneDay, t._1, t._2, t._4)
         state = state.addReverseItem(OneDay, t._1, t._3, t._5)
       }
 
-      state.getItem(OneDay, 40000001, 30000001) mustEqual state.getItem(OneDay, 20000001, 0)
+      state.getItems(OneDay, 40000001, 30000001) mustEqual state.getItems(OneDay, 20000001, 0)
     }
   }
 }

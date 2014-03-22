@@ -11,30 +11,25 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.common.StateManager
 import Implicits._
-import com.coinport.coinex.data.ReturnChartType
-import scala.Some
 
-class ChartDataView(market: MarketSide) extends ExtendedView {
+class CandleDataView(market: MarketSide) extends ExtendedView {
   override def processorId = "coinex_mup"
 
-  private val manager = new ChartDataManager(market)
+  private val manager = new CandleDataManager(market)
 
   def receive = LoggingReceive {
     case DebugDump =>
       log.info("state: {}", manager())
 
     case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
-      txs foreach { t =>
-        println("transaction>>>>>>>>>>>>>>>>>\n" + t)
-        manager.addItem(t, orderInfo.side != market)
-      }
+      txs foreach (t => manager.addItem(t, orderInfo.side != market))
 
-    case QueryChartData(side, dimension, from, maxDepth, returnType) =>
-      sender ! manager.getChartData(side, dimension, from, maxDepth, returnType)
+    case QueryCandleData(side, dimension, from, maxDepth) =>
+      sender ! manager.getChartData(side, dimension, from, maxDepth)
   }
 }
 
-class ChartDataManager(market: MarketSide) extends StateManager[CandleDataState] {
+class CandleDataManager(market: MarketSide) extends StateManager[CandleDataState] {
   initWithDefaultState(CandleDataState())
 
   def addItem(t: Transaction, reverse: Boolean) {
@@ -53,17 +48,16 @@ class ChartDataManager(market: MarketSide) extends StateManager[CandleDataState]
     }
   }
 
-  def getChartData(side: MarketSide, dimension: ChartTimeDimension, from: Long, to: Long, ctype: ReturnChartType) = {
+  def getChartData(side: MarketSide, dimension: ChartTimeDimension, from: Long, to: Long) = {
     val reverse = market != side
 
-    ChartData(System.currentTimeMillis(),
-      if (ctype.retrunChandle) Some(getCandleChart(reverse, dimension, from, to)) else None)
+    CandleData(System.currentTimeMillis(), getCandleChart(reverse, dimension, from, to))
   }
 
   private def getCandleChart(reverse: Boolean, dimension: ChartTimeDimension, from: Long, to: Long): Seq[CandleDataItem] = {
     val start = Math.min(from, to)
     val stop = Math.max(from, to)
-    if (reverse) state.getReverseItem(dimension, start, stop)
-    else state.getItem(dimension, start, stop)
+    if (reverse) state.getReverseItems(dimension, start, stop)
+    else state.getItems(dimension, start, stop)
   }
 }

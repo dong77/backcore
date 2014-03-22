@@ -1,11 +1,14 @@
+/**
+ * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
+ *
+ * All classes here are case-classes or case-objects. This is required since we are
+ * maintaining an in-memory state that's immutable, so that while snapshot is taken,
+ * the in-memory state can still be updated.
+ */
+
 package com.coinport.coinex.data
 
-import scala.collection.immutable.SortedMap
 import com.coinport.coinex.data.ChartTimeDimension._
-
-/**
- * Created by chenxi on 3/19/14.
- */
 
 object CandleDataState {
   type ItemMap = Map[ChartTimeDimension, Map[Long, CandleDataItem]]
@@ -31,7 +34,7 @@ case class CandleDataState(candleMap: CandleDataState.ItemMap = CandleDataState.
     copy(reverseCandleMap = removedTimeMap ++ Map(dimension -> updateCandleData(updateMap, timestamp / getTimeSkip(dimension), price, amount)))
   }
 
-  def getItem(dimension: ChartTimeDimension, from: Long, to: Long): Seq[CandleDataItem] = {
+  def getItems(dimension: ChartTimeDimension, from: Long, to: Long): Seq[CandleDataItem] = {
     candleMap.get(dimension) match {
       case None => Nil
       case Some(map) =>
@@ -40,7 +43,7 @@ case class CandleDataState(candleMap: CandleDataState.ItemMap = CandleDataState.
     }
   }
 
-  def getReverseItem(dimension: ChartTimeDimension, from: Long, to: Long): Seq[CandleDataItem] = {
+  def getReverseItems(dimension: ChartTimeDimension, from: Long, to: Long): Seq[CandleDataItem] = {
     reverseCandleMap.get(dimension) match {
       case None => Nil
       case Some(map) =>
@@ -50,14 +53,10 @@ case class CandleDataState(candleMap: CandleDataState.ItemMap = CandleDataState.
   }
 
   private def findCandleData(start: Long, stop: Long, map: Map[Long, CandleDataItem]): Seq[CandleDataItem] = {
-    (start to stop).map { key =>
-      map.get(key) match {
-        case Some(item) =>
-          CandleDataItem(key, item.volumn, item.open, item.close, item.low, item.high)
-        case None => null
-      }
-    }
-  }.filter(_ != null)
+    (start to stop).map(key =>
+      map.get(key).map(i => CandleDataItem(key, i.volumn, i.open, i.close, i.low, i.high))
+    ).filter(_.nonEmpty).map(_.get)
+  }
 
   private def updateCandleData(map: Map[Long, CandleDataItem], key: Long, price: Double, amount: Long) = {
     map.get(key) match {

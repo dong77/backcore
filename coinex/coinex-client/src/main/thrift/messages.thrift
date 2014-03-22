@@ -168,16 +168,9 @@ struct CandleDataItem {
     6: double high
 }
 
-struct ChartData {
+struct CandleData {
     1: i64 timestamp
-    2: optional list<CandleDataItem> candleData
-}
-
-struct ReturnChartType {
-    1: optional bool retrunChandle = 1
-    2: optional bool returnKDJ = 0
-    3: optional bool returnMACD = 0
-    4: optional bool returnAverageLine = 0
+    2: list<CandleDataItem> items
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -211,8 +204,8 @@ struct QueryMarket{1: MarketSide side, 2: i32 maxDepth}
 struct QueryMarketResult{1: MarketDepth marketDepth}
 struct QueryMarketUnsupportedMarketFailure{1: MarketSide side}
 
-struct QueryChartData{1: MarketSide side, 2: ChartTimeDimension dimension, 3: i64 from, 4: i64 to, 5: ReturnChartType rtype}
-struct QueryChartDataResult{1: ChartData chartDate}
+struct QueryCandleData{1: MarketSide side, 2: ChartTimeDimension dimension, 3: i64 from, 4: i64 to}
+struct QueryCandleDataResult{1: CandleData candleData}
 
 struct OrderSubmissionInProgross{1: MarketSide side, 2: Order order}
 // ----------------------------------------------------------------------------

@@ -21,7 +21,7 @@ object LocalRouters {
   val USER_VIEW = "user_view"
   val ACCOUNT_VIEW = "account_view"
   val USER_ORDERS_VIEW = "user_orders_view"
-  def CHART_DATA_VIEW(side: MarketSide) = "chart_data_view_" + side.asString
+  def CANDLE_DATA_VIEW(side: MarketSide) = "candle_data_view_" + side.asString
   def MARKET_DEPTH_VIEW(side: MarketSide) = "market_depth_view_" + side.asString
 }
 
@@ -40,8 +40,8 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
   val accountView = routerForView(ACCOUNT_VIEW)
   val userOrdersView = routerForView(USER_ORDERS_VIEW)
 
-  val chartDataView = bidirection(Map(markets map { m =>
-    m -> routerForView(CHART_DATA_VIEW(m))
+  val candleDataView = bidirection(Map(markets map { m =>
+    m -> routerForView(CANDLE_DATA_VIEW(m))
   }: _*))
 
   val marketDepthViews = bidirection(Map(markets map { m =>
