@@ -75,6 +75,7 @@ struct UserProfile {
     9: bool mobileVerified
     10: optional string passwordResetToken
     11: UserStatus status
+    12: i64 randomSeed
 }
 
 struct MarketSide {
@@ -174,13 +175,13 @@ struct RegisterUserSucceeded{1: UserProfile userProfile}
 
 struct Login{1: string email, 2: string password}
 struct LoginFailed{1: LoginFailureReason reason}
-struct LoginSucceeded{1: string email, 2: i64 id, 3: string token}
+struct LoginSucceeded{1: i64 id, 2: string email}
 
 struct RequestPasswordResetFailed{1: RequestPasswordResetFailureReason reason}
-struct RequestPasswordResetSucceeded{1: string email, 2: i64 id}
+struct RequestPasswordResetSucceeded{1: i64 id, 2: string email, 3: string passwordResetToken}
 
 struct ResetPasswordFailed{1: ResetPasswordFailureReason reason}
-struct ResetPasswordSucceeded{1: UserProfile userProfile}
+struct ResetPasswordSucceeded{1: i64 id, 2: string email}
 
 struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
 struct OrderSubmissionDone{1: MarketSide side, 2: Order order, 3: list<Transaction> txs}

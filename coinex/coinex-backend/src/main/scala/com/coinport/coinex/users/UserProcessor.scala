@@ -10,13 +10,59 @@ import com.coinport.coinex.data._
 import akka.actor._
 import akka.persistence._
 import com.coinport.coinex.common.ExtendedProcessor
+import RegisterationFailureReason._
+import akka.event.LoggingReceive
 
 class UserProcessor extends ExtendedProcessor {
   override val processorId = "coinex_up"
 
   val manager = new UserManager()
 
-  def receive: Receive = {
-    case x =>
+  def receive = LoggingReceive {
+    // ------------------------------------------------------------------------------------------------
+    // Snapshots
+    // TODO(c) add global flag to indicate if is snapshoting
+    case TakeSnapshotNow => saveSnapshot(manager())
+
+    case SaveSnapshotSuccess(metadata) =>
+
+    case SaveSnapshotFailure(metadata, reason) =>
+
+    case SnapshotOffer(meta, snapshot) =>
+      log.info("Loaded snapshot {}", meta)
+      manager.reset(snapshot.asInstanceOf[UserState])
+
+    case DebugDump =>
+      log.info("state: {}", manager())
+
+    // ------------------------------------------------------------------------------------------------
+    // Non-persistent requests
+    case Login(email, password) =>
+      manager.checkLogin(email, password) match {
+        case Left(reason) => sender ! LoginFailed(reason)
+        case Right(profile) => LoginSucceeded(profile.id, profile.email)
+      }
+
+    // ------------------------------------------------------------------------------------------------
+    // Commands
+    case p @ Persistent(DoRegisterUser(userProfile, password), _) =>
+      manager.registerUser(userProfile, password) match {
+        case Left(reason) => sender ! RegisterUserFailed(reason, None)
+        case Right(profile) => sender ! RegisterUserSucceeded(profile)
+      }
+
+    case p @ DoRequestPasswordReset(email) =>
+      manager.requestPasswordReset(email) match {
+        case Left(reason) => sender ! RequestPasswordResetFailed(reason)
+        case Right(profile) =>
+          // TODO send email here
+          sender ! RequestPasswordResetSucceeded(profile.id, profile.email, profile.passwordResetToken.get)
+      }
+
+    case p @ DoResetPassword(email, password, token) =>
+      manager.resetPassword(email, password, token) match {
+        case Left(reason) => sender ! ResetPasswordFailed(reason)
+        case Right(profile) => sender ! ResetPasswordSucceeded(profile.id, profile.email)
+      }
   }
 }

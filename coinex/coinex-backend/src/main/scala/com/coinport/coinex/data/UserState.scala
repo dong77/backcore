@@ -18,24 +18,11 @@ case class UserState(numUsers: Long = 0,
   def userExist(email: String): Boolean = userExist(Hash.murmur3(email))
   def userExist(userId: Long): Boolean = profileMap.contains(userId)
 
-  def addUser(profile: UserProfile, password: String): UserState = {
-
-    val userId = Hash.murmur3(profile.email)
-    assert(!profileMap.contains(userId))
-    val updated = profile.copy(id = userId)
-
-    copy(numUsers = this.numUsers + 1, profileMap = this.profileMap + (userId -> updated))
+  def addUserProfile(profile: UserProfile): UserState = {
+    copy(numUsers = this.numUsers + 1, profileMap = this.profileMap + (profile.id -> profile))
   }
 
-  def setPasswordHash(userId: Long, newPasswordHash: Array[Byte]): UserState = updateUser(userId) {
-    _.copy(passwordHash = Some(newPasswordHash), passwordResetToken = None)
-  }
-
-  def setUserStatus(userId: Long, status: UserStatus) = updateUser(userId) {
-    _.copy(status = status)
-  }
-
-  private def updateUser(userId: Long)(updateOp: UserProfile => UserProfile): UserState = {
+  def updateUserProfile(userId: Long)(updateOp: UserProfile => UserProfile): UserState = {
     assert(!profileMap.contains(userId))
     copy(profileMap = this.profileMap + (userId -> updateOp(profileMap(userId))))
   }
