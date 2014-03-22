@@ -88,22 +88,22 @@ def extractStructsFromFile(file: String): Seq[String] = {
 def generateSerializerCode(structs: Seq[String], outputFile: String, time: String) = {
   val code = generateSerializerClassCode(
     time,
-    structs.zipWithIndex.map { case (struct, idx) => generateCodecClauses(idx, struct) }.mkString,
-    structs.zipWithIndex.map { case (struct, idx) => generateToBinaryClauses(idx, struct) }.mkString,
-    structs.zipWithIndex.map { case (struct, idx) => generateFromBinaryClauses(idx, struct) }.mkString)
+    structs.zipWithIndex.map { case (struct, idx) => generateCodecClauses(idx, struct) }.mkString("\n"),
+    structs.zipWithIndex.map { case (struct, idx) => generateToBinaryClauses(idx, struct) }.mkString("\n"),
+    structs.zipWithIndex.map { case (struct, idx) => generateFromBinaryClauses(idx, struct) }.mkString("\n"))
   val pw = new java.io.PrintWriter(new File(outputFile))
   try pw.write(code) finally pw.close()
 }
 
-def generateCodecClauses(idx: Int, struct: String) = "    val s_%d = BinaryScalaCodec(%s)\n".format(idx, struct)
-def generateToBinaryClauses(idx: Int, struct: String) = "    case m: %s => s_%d(m)\n".format(struct, idx)
-def generateFromBinaryClauses(idx: Int, struct: String) = "    case Some(c) if c == classOf[%s.Immutable] => s_%d.invert(bytes).get\n".format(struct, idx)
+def generateCodecClauses(idx: Int, struct: String) = "  val s_%d = BinaryScalaCodec(%s)".format(idx, struct)
+def generateToBinaryClauses(idx: Int, struct: String) = "    case m: %s => s_%d(m)".format(struct, idx)
+def generateFromBinaryClauses(idx: Int, struct: String) = "    case Some(c) if c == classOf[%s.Immutable] => s_%d.invert(bytes).get".format(struct, idx)
 def generateSerializerClassCode(time: String, serializers: String, to: String, from: String) = SERIALIZER_CODE_TEMPLATE.format(time, serializers, to, from)
 
 // Auto-generate Akka serialization configuration file
-def generateStructSerializationConfigEntry(struct: String) = "      \"com.coinport.coinex.data.%s\" = event\n".format(struct)
+def generateStructSerializationConfigEntry(struct: String) = "      \"com.coinport.coinex.data.%s\" = event".format(struct)
 def generateStructSerializationConfig(structs: Seq[String], outputFile: String, time: String) = {
-  val configs = SERIALIZATION_CONFIG_TEMPLATE.format(time, structs.map(generateStructSerializationConfigEntry).mkString)
+  val configs = SERIALIZATION_CONFIG_TEMPLATE.format(time, structs.map(generateStructSerializationConfigEntry).mkString("\n"))
   val pw = new java.io.PrintWriter(new File(outputFile))
   try pw.write(configs) finally pw.close()
 }
