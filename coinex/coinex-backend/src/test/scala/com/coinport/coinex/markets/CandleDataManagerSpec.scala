@@ -10,7 +10,7 @@ import Implicits._
 import Currency._
 import com.coinport.coinex.data.ChartTimeDimension._
 
-class ChartDataManagerSpec extends Specification {
+class CandleDataManagerSpec extends Specification {
   "ChartDataManagerSpec" should {
 
     "save data from order submitted" in {
@@ -26,14 +26,7 @@ class ChartDataManagerSpec extends Specification {
       manager.addItem(t, false)
 
       manager.getChartData(market, OneMinute, 800000, 1200000).items mustEqual
-        Seq(CandleDataItem(13, 0, 0.0, 0.0, 0.0, 0.0),
-          CandleDataItem(14, 0, 0.0, 0.0, 0.0, 0.0),
-          CandleDataItem(15, 0, 0.0, 0.0, 0.0, 0.0),
-          CandleDataItem(16, 1, 3000.0, 3000.0, 3000.0, 3000.0),
-          CandleDataItem(17, 0, 3000.0, 3000.0, 3000.0, 3000.0),
-          CandleDataItem(18, 0, 3000.0, 3000.0, 3000.0, 3000.0),
-          CandleDataItem(19, 0, 3000.0, 3000.0, 3000.0, 3000.0),
-          CandleDataItem(20, 0, 3000.0, 3000.0, 3000.0, 3000.0))
+        Seq(CandleDataItem(16, 1, 3000.0, 3000.0, 3000.0, 3000.0))
     }
   }
 }

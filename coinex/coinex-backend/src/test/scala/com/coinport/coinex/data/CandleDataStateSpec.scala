@@ -31,10 +31,10 @@ class CandleDataStateSpec extends Specification {
         state = state.addReverseItem(OneMinute, t._1, t._3, t._5)
       }
 
-      state.getItems(OneMinute, 40000001, 40000000) mustEqual Seq(CandleDataItem(666, 4, 60.0, 40.0, 60.0, 40.0))
-      state.getItems(OneMinute, 30000001, 30000000) mustEqual Seq(CandleDataItem(500, 4, 200.0, 400.0, 400.0, 200.0))
-      state.getItems(OneMinute, 20000001, 20000000) mustEqual Seq(CandleDataItem(333, 4, 50.0, 20.0, 50.0, 20.0))
-      state.getItems(OneMinute, 10000001, 10000000) mustEqual Seq(CandleDataItem(166, 4, 100.0, 200.0, 200.0, 100.0))
+      state.getItems(OneMinute, 40000001, 40000000) mustEqual Seq(CandleDataItem(666, 4, 60.0, 40.0, 40.0, 60.0))
+      state.getItems(OneMinute, 30000001, 30000000) mustEqual Seq(CandleDataItem(500, 4, 200.0, 400.0, 200.0, 400.0))
+      state.getItems(OneMinute, 20000001, 20000000) mustEqual Seq(CandleDataItem(333, 4, 50.0, 20.0, 20.0, 50.0))
+      state.getItems(OneMinute, 10000001, 10000000) mustEqual Seq(CandleDataItem(166, 4, 100.0, 200.0, 100.0, 200.0))
 
       txs.foreach { t =>
         state = state.addItem(OneDay, t._1, t._2, t._4)
