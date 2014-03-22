@@ -40,7 +40,7 @@ object CoinexBuild extends Build {
     base = file("coinex-client"),
     settings = Project.defaultSettings ++
       sharedSettings ++
-      ScroogeSBT.newSettings ++ 
+      ScroogeSBT.newSettings ++
       scalariformSettings
     )
     .settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
@@ -50,6 +50,7 @@ object CoinexBuild extends Build {
       "com.twitter" %% "bijection-scrooge" % bijectionVersion,
       "com.twitter" %% "scrooge-core" % "3.12.3",
       "com.twitter" %% "scrooge-serializer" % "3.12.3",
+      "org.slf4s" %% "slf4s-api" % "1.7.6",
       "org.apache.thrift" % "libthrift" % "0.8.0"))
 
   lazy val backend = Project(
@@ -59,7 +60,7 @@ object CoinexBuild extends Build {
       SbtMultiJvm.multiJvmSettings ++
       sharedSettings ++
       ScroogeSBT.newSettings ++
-      sbtassembly.Plugin.assemblySettings ++ 
+      sbtassembly.Plugin.assemblySettings ++
       scalariformSettings
     )
     .settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
@@ -78,12 +79,13 @@ object CoinexBuild extends Build {
         "org.specs2" %% "specs2" % "2.3.8" % "test",
         "org.scalatest" %% "scalatest" % "2.0" % "test",
         "org.apache.commons" % "commons-lang3" % "3.1",
-        "ch.qos.logback" % "logback-classic" % "1.0.13"),
+        "ch.qos.logback" % "logback-classic" % "1.0.13")
+      /*
       // make sure that MultiJvm test are compiled by the default test compilation
       compile in MultiJvm <<= (compile in MultiJvm) triggeredBy (compile in Test),
       // disable parallel tests
       parallelExecution in Test := false,
-      // make sure that MultiJvm tests are executed by the default test target, 
+      // make sure that MultiJvm tests are executed by the default test target,
       // and combine the results from ordinary test and multi-jvm tests
       executeTests in Test <<= (executeTests in Test, executeTests in MultiJvm) map {
         case (testResults, multiNodeResults)  =>
@@ -96,6 +98,7 @@ object CoinexBuild extends Build {
             testResults.events ++ multiNodeResults.events,
             testResults.summaries ++ multiNodeResults.summaries)
       }
+      */
     )
     .dependsOn(client) configs (MultiJvm)
 }

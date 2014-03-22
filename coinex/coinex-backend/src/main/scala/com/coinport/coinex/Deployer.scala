@@ -6,17 +6,19 @@
 package com.coinport.coinex
 
 import akka.actor._
+import akka.cluster.Cluster
+import akka.contrib.pattern.ClusterSingletonManager
 import akka.cluster.routing._
 import akka.routing._
-import com.coinport.coinex.data._
-import akka.contrib.pattern.ClusterSingletonManager
-import com.coinport.coinex.users._
+import org.slf4s.Logging
+
 import com.coinport.coinex.accounts._
+import com.coinport.coinex.data._
 import com.coinport.coinex.markets._
-import akka.cluster.Cluster
+import com.coinport.coinex.users._
 import Implicits._
 
-class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
+class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   val system = cluster.system
 
   def deploy(routers: LocalRouters) = {
@@ -40,6 +42,7 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) {
 
   private def deployProcessor(props: Props, name: String) =
     if (cluster.selfRoles.contains(name)) {
+      log.debug("~" * 30 + " " + name + " is created")
       system.actorOf(ClusterSingletonManager.props(
         singletonProps = props,
         singletonName = "singleton",
