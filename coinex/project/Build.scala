@@ -7,6 +7,7 @@ import com.typesafe.sbt.SbtScalariform._
 import org.sbtidea.SbtIdeaPlugin._
 import com.typesafe.sbt.SbtAtmos.{ Atmos, atmosSettings }
 import com.typesafe.sbt.SbtNativePackager._
+import NativePackagerKeys._
 
 
 object CoinexBuild extends Build {
@@ -64,6 +65,7 @@ object CoinexBuild extends Build {
     )
     .settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
     .settings(packageArchetype.java_application:_*)
+    .settings(packageDescription in Debian := "coinex")
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe.akka" %% "akka-remote" % akkaVersion,
