@@ -40,7 +40,13 @@ class UserProcessor extends ExtendedProcessor {
     case Login(email, password) =>
       manager.checkLogin(email, password) match {
         case Left(reason) => sender ! LoginFailed(reason)
-        case Right(profile) => LoginSucceeded(profile.id, profile.email)
+        case Right(profile) => sender ! LoginSucceeded(profile.id, profile.email)
+      }
+
+    case ValidatePasswordResetToken(token) =>
+      manager().passwordResetTokenMap.get(token) match {
+        case Some(id) => sender ! ValidatePasswordResetTokenResult(manager().profileMap.get(id))
+        case None => ValidatePasswordResetTokenResult(None)
       }
 
     // ------------------------------------------------------------------------------------------------

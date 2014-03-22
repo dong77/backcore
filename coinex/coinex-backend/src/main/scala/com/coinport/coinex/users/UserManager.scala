@@ -23,7 +23,7 @@ import scala.util.Random
 class UserManager extends StateManager[UserState] {
   initWithDefaultState(UserState())
 
-  def regulate(s: String) = s.stripMargin.toLowerCase
+  def regulate(s: String) = s.trim.toLowerCase
   def emailToId(email: String) = Hash.murmur3(regulate(email))
 
   private def computePasswordHash(profile: UserProfile, password: String) = {
@@ -71,8 +71,9 @@ class UserManager extends StateManager[UserState] {
         val random = new Random(profile.randomSeed)
         val randomSeed = random.nextLong
         val passwordResetToken = random.nextInt.toString
+
         val updatedProfile = profile.copy(randomSeed = randomSeed, passwordResetToken = Some(passwordResetToken))
-        state = state.updateUserProfile(id)(_ => updatedProfile)
+        state = state.updateUserProfile(id)(_ => updatedProfile).addPasswordResetToken(passwordResetToken, id)
         Right(updatedProfile)
     }
   }
@@ -88,6 +89,7 @@ class UserManager extends StateManager[UserState] {
         val passwordHash = computePasswordHash(profile, password)
         val updatedProfile = profile.copy(passwordHash = Some(passwordHash), randomSeed = randomSeed, passwordResetToken = None)
         state = state.updateUserProfile(id)(_ => updatedProfile)
+        profile.passwordResetToken foreach { token => state = state.deletePasswordResetToken(token) }
         Right(updatedProfile)
 
       case _ => Left(ResetPasswordFailureReason.TokenNotMatch)

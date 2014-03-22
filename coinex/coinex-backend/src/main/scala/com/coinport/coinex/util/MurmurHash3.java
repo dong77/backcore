@@ -1,27 +1,7 @@
 package com.coinport.coinex.util;
 
-import java.nio.charset.Charset;
-
-/**
- * MurmurHash3 implementation in Java, based on Austin Appleby's <a href=
- * "https://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp"
- * >original in C</a>
- * 
- * Only implementing x64 version, because this should always be faster on 64 bit
- * native processors, even 64 bit being ran with a 32 bit OS; this should also
- * be as fast or faster than the x86 version on some modern 32 bit processors.
- * 
- * @author Patrick McFarland
- * @see <a href="http://sites.google.com/site/murmurhash/">MurmurHash
- *      website</a>
- * @see <a href="http://en.wikipedia.org/wiki/MurmurHash">MurmurHash entry on
- *      Wikipedia</a>
- * @since 5.0
- */
 
 public class MurmurHash3 {
-	private static final Charset UTF8 = Charset.forName("UTF-8");
-
 	static class State {
 		long h1;
 		long h2;

@@ -180,6 +180,9 @@ struct LoginSucceeded{1: i64 id, 2: string email}
 struct RequestPasswordResetFailed{1: RequestPasswordResetFailureReason reason}
 struct RequestPasswordResetSucceeded{1: i64 id, 2: string email, 3: string passwordResetToken}
 
+struct ValidatePasswordResetToken{1: string passwordResetToken}
+struct ValidatePasswordResetTokenResult{1: optional UserProfile userProfile}
+
 struct ResetPasswordFailed{1: ResetPasswordFailureReason reason}
 struct ResetPasswordSucceeded{1: i64 id, 2: string email}
 

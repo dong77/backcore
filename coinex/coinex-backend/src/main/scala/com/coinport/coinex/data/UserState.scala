@@ -26,4 +26,12 @@ case class UserState(numUsers: Long = 0,
     assert(!profileMap.contains(userId))
     copy(profileMap = this.profileMap + (userId -> updateOp(profileMap(userId))))
   }
+
+  def deletePasswordResetToken(token: String): UserState = {
+    copy(passwordResetTokenMap = this.passwordResetTokenMap - token)
+  }
+
+  def addPasswordResetToken(token: String, userId: Long) = {
+    copy(passwordResetTokenMap = this.passwordResetTokenMap + (token -> userId))
+  }
 }
