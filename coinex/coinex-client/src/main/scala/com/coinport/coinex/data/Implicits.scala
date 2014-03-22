@@ -40,12 +40,7 @@ class RichOrder(raw: Order) {
 
   def isFullyExecuted: Boolean = raw.quantity == 0 || hitTakeLimit
 
-  def minimalTake: Long =
-    if (raw.price.isDefined) (raw.quantity * raw.price.get).toLong
-    else throw new IllegalStateException("Cannot get minimalTake for " + raw)
-
   def -->(another: Order) = OrderUpdate(raw, another)
-
 }
 
 class RichOrderInfo(raw: OrderInfo) {
@@ -57,8 +52,6 @@ class RichOrderUpdate(raw: OrderUpdate) {
   def id = raw.previous.id
   def price = raw.previous.price
   def outAmount = raw.previous.quantity - raw.current.quantity
-
-  def minimalTakeDiff = new RichOrder(raw.previous).minimalTake - new RichOrder(raw.current).minimalTake
 }
 
 class RichTransaction(raw: Transaction) {
