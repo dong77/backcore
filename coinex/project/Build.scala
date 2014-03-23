@@ -18,6 +18,11 @@ object CoinexBuild extends Build {
     version := "1.0.0-SNAPSHOT",
     scalaVersion := "2.10.3",
     crossScalaVersions := Seq("2.10.3"),
+    initialCommands in console := """
+      import com.coinport.coinex.Client
+      import com.coinport.coinex.data._
+      import com.coinport.coinex.data.Currency._
+    """,
     scalacOptions ++= Seq("-encoding", "utf8"),
     scalacOptions += "-deprecation",
     publishArtifact in Test := false,
