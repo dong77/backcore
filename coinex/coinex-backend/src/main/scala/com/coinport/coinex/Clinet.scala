@@ -10,6 +10,7 @@ import akka.cluster.Cluster
 import com.typesafe.config.ConfigFactory
 
 import com.coinport.coinex.data.Currency._
+import com.coinport.coinex.data.EmailType._
 import com.coinport.coinex.data.Implicits._
 
 object Client {
