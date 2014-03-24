@@ -15,6 +15,7 @@ import org.slf4s.Logging
 import com.coinport.coinex.accounts._
 import com.coinport.coinex.data._
 import com.coinport.coinex.markets._
+import com.coinport.coinex.robot._
 import com.coinport.coinex.users._
 import com.coinport.coinex.mail._
 import Implicits._
@@ -41,6 +42,8 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) extends Obje
     deployView(Props(classOf[UserOrdersView]), USER_ORDERS_VIEW)
 
     deployMailer(MAILER)
+
+    deployView(Props(classOf[RobotMetricsView]), ROBOT_METRICS_VIEW)
   }
 
   private def deployProcessor(props: Props, name: String) =

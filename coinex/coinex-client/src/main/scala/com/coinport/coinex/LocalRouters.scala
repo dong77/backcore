@@ -24,18 +24,20 @@ object LocalRouters {
   def CANDLE_DATA_VIEW(side: MarketSide) = "candle_data_view_" + side.asString
   def MARKET_DEPTH_VIEW(side: MarketSide) = "market_depth_view_" + side.asString
 
-  val MAILER = "mailer"
+  def MAILER = "mailer"
+
+  val ROBOT_METRICS_VIEW = "robot_metrics_view"
 }
 
 class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
 
   import LocalRouters._
-  val userProcessor = routerForProcessor(USER_PROCESSOR)
-  val accountProcessor = routerForProcessor(ACCOUNT_PROCESSOR)
-  val marketUpdateProcessor = routerForProcessor(MARKET_UPDATE_PROCESSOR)
+  val userProcessor = routerForSingleton(USER_PROCESSOR)
+  val accountProcessor = routerForSingleton(ACCOUNT_PROCESSOR)
+  val marketUpdateProcessor = routerForSingleton(MARKET_UPDATE_PROCESSOR)
 
   val marketProcessors = bidirection(Map(markets map { m =>
-    m -> routerForProcessor(MARKET_PROCESSOR(m))
+    m -> routerForSingleton(MARKET_PROCESSOR(m))
   }: _*))
 
   val userView = routerFor(USER_VIEW)
@@ -52,7 +54,9 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
 
   val mailer = routerFor(MAILER)
 
-  private def routerForProcessor(name: String) = system.actorOf(
+  val robotMetricsView = routerFor(ROBOT_METRICS_VIEW)
+
+  private def routerForSingleton(name: String) = system.actorOf(
     ClusterSingletonProxy.defaultProps("/user/" + name + "/singleton", name),
     name + "_router")
 

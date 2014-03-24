@@ -38,12 +38,12 @@ enum OrderSubmissionFailReason {
     PRICE_OUT_OF_RANGE = 1
 }
 
-enum RegisterationFailureReason { 
+enum RegisterationFailureReason {
     EMAIL_ALREADY_REGISTERED = 1
     MISSING_INFORMATION = 2
 }
 
-enum LoginFailureReason { 
+enum LoginFailureReason {
     USER_NOT_EXIST = 1
     PASSWORD_NOT_MATCH = 2
 }
@@ -177,6 +177,15 @@ struct CandleDataItem {
 struct CandleData {
     1: i64 timestamp
     2: list<CandleDataItem> items
+}
+
+struct MarketByMetrics {
+    1: MarketSide side
+    2: double price
+}
+
+struct RobotMetrics {
+    1: map<MarketSide, MarketByMetrics> marketByMetrics
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -1,0 +1,13 @@
+/**
+ * Copyright 2014 Coinport Inc. All Rights Reserved.
+ * Author: c@coinport.com (Chao Ma)
+ */
+
+// deposit
+Client.backend ! DoDepositCash(1, Btc, 10)
+Client.backend ! DoDepositCash(1, Rmb, 100000)
+// submit order
+Client.backend ! DoSubmitOrder(MarketSide(Btc, Rmb), Order(1, 1, 2, Some(3429.0)))
+Client.backend ! DoSubmitOrder(MarketSide(Rmb, Btc), Order(1, 2, 5000 * 3, Some(1.0 / 5000), Some(3)))
+// check robot metrics
+Client.backend ! QueryRobotMetrics

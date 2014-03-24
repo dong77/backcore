@@ -1,6 +1,7 @@
 /**
  * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
  *
+ * TODO(c): change the name as AggregateProcessor and move to the other dir
  */
 
 package com.coinport.coinex.markets

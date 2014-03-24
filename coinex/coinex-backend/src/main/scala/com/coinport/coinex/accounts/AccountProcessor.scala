@@ -40,6 +40,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
     // Commands
     case p @ Persistent(DoDepositCash(userId, currency, amount), seq) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, 0))
+      log.info("state: {}", manager())
 
     case p @ Persistent(DoRequestCashWithdrawal(userId, currency, amount), seq) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, -amount, 0, amount))
@@ -58,6 +59,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
           channelToMarketProcessors forward Deliver(p.withPayload(OrderCashLocked(side, orderWithId)), getProcessorPath(side))
         case m: AccountOperationResult => sender ! m
       }
+      log.info("state: {}", manager())
 
     // ------------------------------------------------------------------------------------------------
     // From Channel

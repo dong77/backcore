@@ -11,3 +11,5 @@ package com.coinport.coinex.data
 case object DebugDump
 
 case object TakeSnapshotNow
+
+case object QueryRobotMetrics

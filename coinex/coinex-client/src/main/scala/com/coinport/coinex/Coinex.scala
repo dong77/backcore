@@ -46,6 +46,11 @@ final class Coinex(routers: LocalRouters) extends Actor {
       // Mailer
       case m: SendMailRequest =>
         routers.mailer forward m
+
+      // RobotMetricsView
+      case QueryRobotMetrics =>
+        routers.robotMetricsView forward QueryRobotMetrics
+
       //-------------------------------------------------------------------------
       case Persistent => throw new IllegalArgumentException("Coinex doesn't handle persistent messages")
       case m => throw new IllegalArgumentException("Coinex doesn't handle messages of type: " + m.getClass.getCanonicalName)

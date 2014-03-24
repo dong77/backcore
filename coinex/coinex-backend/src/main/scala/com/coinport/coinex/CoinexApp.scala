@@ -42,6 +42,7 @@ object CoinexApp extends App {
     user_orders_view,
     candle_data_view_btc_rmb,
     mailer,
+    robot_metrics_view,
     """
 
   val seedNodes = args(1).split(",").map(_.stripMargin).filter(_.nonEmpty).map("\"akka.tcp://coinex@" + _ + "\"").mkString(",")
