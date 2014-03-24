@@ -63,6 +63,11 @@ enum UserStatus {
     SUSPENDED = 1
 }
 
+enum EmailType {
+    REGISTER_VERIFY = 1
+    LOGIN_TOKEN = 2
+}
+
 //---------------------------------------------------------------------
 // User profile related
 struct UserProfile {
@@ -208,6 +213,8 @@ struct QueryCandleData{1: MarketSide side, 2: ChartTimeDimension dimension, 3: i
 struct QueryCandleDataResult{1: CandleData candleData}
 
 struct OrderSubmissionInProgross{1: MarketSide side, 2: Order order}
+
+struct SendMailRequest{1: string email, 2: EmailType emailType, 3: map<string, string> params}
 // ----------------------------------------------------------------------------
 // Persistent Commands - all commands are sent by outside world.
 // Please name all commands starting with "Do"

@@ -23,6 +23,8 @@ object LocalRouters {
   val USER_ORDERS_VIEW = "user_orders_view"
   def CANDLE_DATA_VIEW(side: MarketSide) = "candle_data_view_" + side.asString
   def MARKET_DEPTH_VIEW(side: MarketSide) = "market_depth_view_" + side.asString
+
+  def MAILER = "mail"
 }
 
 class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {

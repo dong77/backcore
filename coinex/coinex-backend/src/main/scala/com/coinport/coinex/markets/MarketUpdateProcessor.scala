@@ -15,8 +15,8 @@ class MarketUpdateProcessor extends ExtendedProcessor {
   override def processorId = "coinex_mup"
 
   def receive = LoggingReceive {
-    case p @ ConfirmablePersistent(OrderSubmitted(originOrderInfo, txs), seq, _) =>
-      p.confirm()
+    case p: ConfirmablePersistent => p.confirm()
+    case _ =>
   }
 }
 

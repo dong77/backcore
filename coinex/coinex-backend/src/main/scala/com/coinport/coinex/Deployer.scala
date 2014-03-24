@@ -16,10 +16,11 @@ import com.coinport.coinex.accounts._
 import com.coinport.coinex.data._
 import com.coinport.coinex.markets._
 import com.coinport.coinex.users._
+import com.coinport.coinex.mail._
 import Implicits._
 
 class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
-  val system = cluster.system
+  implicit val system = cluster.system
 
   def deploy(routers: LocalRouters) = {
     import LocalRouters._
@@ -38,6 +39,8 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) extends Obje
     deployView(Props(classOf[UserView]), USER_VIEW)
     deployView(Props(classOf[AccountView]), ACCOUNT_VIEW)
     deployView(Props(classOf[UserOrdersView]), USER_ORDERS_VIEW)
+
+    deployMailer(MAILER)
   }
 
   private def deployProcessor(props: Props, name: String) =
@@ -55,4 +58,11 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) extends Obje
     if (cluster.selfRoles.contains(name)) {
       system.actorOf(props, name)
     }
+
+  private def deployMailer(name: String) = {
+    if (cluster.selfRoles.contains(name)) {
+      val handler = new MandrillMailHandler()
+      system.actorOf(Props(new MailActor(handler)), name)
+    }
+  }
 }

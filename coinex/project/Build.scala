@@ -12,6 +12,7 @@ import com.typesafe.sbt.SbtAtmos.{ Atmos, atmosSettings }
 object CoinexBuild extends Build {
   val akkaVersion = "2.3.0"
   val bijectionVersion = "0.6.2"
+  val sprayVersion = "1.3.1"
 
   val sharedSettings = Seq(
     organization := "com.coinport",
@@ -31,7 +32,9 @@ object CoinexBuild extends Build {
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     resolvers ++= Seq(
       Resolver.sonatypeRepo("snapshots"),
-      "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/groups/public" // "scct-github-repository" at "http://mtkopone.github.com/scct/maven-repo"
+      "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/groups/public",
+      "Spray Repo" at "http://repo.spray.io"
+      // "scct-github-repository" at "http://mtkopone.github.com/scct/maven-repo"
       ))
 
   lazy val root = Project(
@@ -84,7 +87,11 @@ object CoinexBuild extends Build {
         "org.specs2" %% "specs2" % "2.3.8" % "test",
         "org.scalatest" %% "scalatest" % "2.0" % "test",
         "org.apache.commons" % "commons-lang3" % "3.1",
-        "ch.qos.logback" % "logback-classic" % "1.0.13")
+        "ch.qos.logback" % "logback-classic" % "1.0.13",
+        "io.spray" %%  "spray-json" % "1.2.5",
+        "io.spray" % "spray-can" % sprayVersion,
+        "io.spray" % "spray-client" % sprayVersion,
+        "io.spray" % "spray-http" % sprayVersion)
       /*
       // make sure that MultiJvm test are compiled by the default test compilation
       compile in MultiJvm <<= (compile in MultiJvm) triggeredBy (compile in Test),

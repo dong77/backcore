@@ -24,7 +24,7 @@ class CandleDataView(market: MarketSide) extends ExtendedView {
     case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
       txs foreach (t => manager.addItem(t, orderInfo.side != market))
 
-    case QueryCandleData(side, dimension, from, maxDepth) =>
+    case QueryCandleData(side, dimension, from, maxDepth) if side == market =>
       sender ! manager.getChartData(side, dimension, from, maxDepth)
   }
 }
