@@ -32,7 +32,7 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) extends Obje
       deployView(Props(new CandleDataView(m)), CANDLE_DATA_VIEW(m))
     }
 
-    deployProcessor(Props(new UserProcessor()), USER_PROCESSOR)
+    deployProcessor(Props(new UserProcessor(routers.mailer)), USER_PROCESSOR)
     deployProcessor(Props(new AccountProcessor(routers.marketProcessors)), ACCOUNT_PROCESSOR)
     deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
 
@@ -62,7 +62,8 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) extends Obje
   private def deployMailer(name: String) = {
     if (cluster.selfRoles.contains(name)) {
       val handler = new MandrillMailHandler()
-      system.actorOf(Props(new MailActor(handler)), name)
+      val props = Props(new Mailer(handler))
+      system.actorOf(RoundRobinPool(8).props(props), name)
     }
   }
 }

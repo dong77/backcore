@@ -13,7 +13,7 @@ import com.coinport.coinex.common.ExtendedProcessor
 import RegisterationFailureReason._
 import akka.event.LoggingReceive
 
-class UserProcessor extends ExtendedProcessor {
+class UserProcessor(mailer: ActorRef) extends ExtendedProcessor {
   override val processorId = "coinex_up"
 
   val manager = new UserManager()
@@ -53,16 +53,19 @@ class UserProcessor extends ExtendedProcessor {
     // Commands
     case p @ Persistent(DoRegisterUser(userProfile, password), _) =>
       manager.registerUser(userProfile, password) match {
-        case Left(reason) => sender ! RegisterUserFailed(reason, None)
-        case Right(profile) => sender ! RegisterUserSucceeded(profile)
+        case Left(reason) =>
+          sender ! RegisterUserFailed(reason, None)
+        case Right(profile) =>
+          sender ! RegisterUserSucceeded(profile)
+          mailer ! SendMailRequest(profile.email, EmailType.RegisterVerify, Map("name" -> profile.realName))
       }
 
     case p @ DoRequestPasswordReset(email, newToken) =>
       manager.requestPasswordReset(email, newToken) match {
         case Left(reason) => sender ! RequestPasswordResetFailed(reason)
         case Right(profile) =>
-          // TODO send email here
           sender ! RequestPasswordResetSucceeded(profile.id, profile.email, profile.passwordResetToken.get)
+        //SEND EMAIL
       }
 
     case p @ DoResetPassword(email, password, token) =>

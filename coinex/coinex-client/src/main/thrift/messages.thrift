@@ -66,6 +66,7 @@ enum UserStatus {
 enum EmailType {
     REGISTER_VERIFY = 1
     LOGIN_TOKEN = 2
+    PASSWORD_RESET_TOKEN = 3
 }
 
 //---------------------------------------------------------------------

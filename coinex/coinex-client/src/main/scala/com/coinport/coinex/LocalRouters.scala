@@ -24,7 +24,7 @@ object LocalRouters {
   def CANDLE_DATA_VIEW(side: MarketSide) = "candle_data_view_" + side.asString
   def MARKET_DEPTH_VIEW(side: MarketSide) = "market_depth_view_" + side.asString
 
-  def MAILER = "mail"
+  val MAILER = "mailer"
 }
 
 class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
@@ -38,23 +38,25 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
     m -> routerForProcessor(MARKET_PROCESSOR(m))
   }: _*))
 
-  val userView = routerForView(USER_VIEW)
-  val accountView = routerForView(ACCOUNT_VIEW)
-  val userOrdersView = routerForView(USER_ORDERS_VIEW)
+  val userView = routerFor(USER_VIEW)
+  val accountView = routerFor(ACCOUNT_VIEW)
+  val userOrdersView = routerFor(USER_ORDERS_VIEW)
 
   val candleDataView = bidirection(Map(markets map { m =>
-    m -> routerForView(CANDLE_DATA_VIEW(m))
+    m -> routerFor(CANDLE_DATA_VIEW(m))
   }: _*))
 
   val marketDepthViews = bidirection(Map(markets map { m =>
-    m -> routerForView(MARKET_DEPTH_VIEW(m))
+    m -> routerFor(MARKET_DEPTH_VIEW(m))
   }: _*))
+
+  val mailer = routerFor(MAILER)
 
   private def routerForProcessor(name: String) = system.actorOf(
     ClusterSingletonProxy.defaultProps("/user/" + name + "/singleton", name),
     name + "_router")
 
-  private def routerForView(name: String) = system.actorOf(
+  private def routerFor(name: String) = system.actorOf(
     ClusterRouterGroup(RoundRobinGroup(Nil),
       ClusterRouterGroupSettings(
         totalInstances = Int.MaxValue,
