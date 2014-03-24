@@ -16,7 +16,7 @@ object CoinexBuild extends Build {
 
   val sharedSettings = Seq(
     organization := "com.coinport",
-    version := "1.0.0-SNAPSHOT",
+    version := "1.0.1-SNAPSHOT",
     scalaVersion := "2.10.3",
     crossScalaVersions := Seq("2.10.3"),
     initialCommands in console := """

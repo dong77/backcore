@@ -188,6 +188,17 @@ struct RobotMetrics {
     1: map<MarketSide, MarketByMetrics> marketByMetrics
 }
 
+struct TransactionItem {
+    1: i64 timestamp
+    2: double price
+    3: i64 volumn
+    4: i64 amount
+}
+
+struct TransactionData {
+    1: list<TransactionItem> items
+}
+
 // ------------------------------------------------------------------------------------------------
 // Non-persistent message.
 struct RegisterUserFailed{1: RegisterationFailureReason reason, 2: optional UserProfile userProfile}
@@ -221,6 +232,9 @@ struct QueryMarketUnsupportedMarketFailure{1: MarketSide side}
 
 struct QueryCandleData{1: MarketSide side, 2: ChartTimeDimension dimension, 3: i64 from, 4: i64 to}
 struct QueryCandleDataResult{1: CandleData candleData}
+
+struct QueryTransactionData{1: MarketSide side, 2: i64 from, 3: i32 num}
+struct QueryTransactionDataResult{1: TransactionData transactionData}
 
 struct OrderSubmissionInProgross{1: MarketSide side, 2: Order order}
 

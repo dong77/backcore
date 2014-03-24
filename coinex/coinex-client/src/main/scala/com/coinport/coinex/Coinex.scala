@@ -39,7 +39,7 @@ final class Coinex(routers: LocalRouters) extends Actor {
       // UserOrdersView
       case m: QueryUserOrders => routers.userOrdersView forward m
 
-      // CandleDataview
+      // CandleDataView
       case m @ QueryCandleData(side, _, _, _) =>
         routers.candleDataView(side) forward m
 
@@ -50,6 +50,10 @@ final class Coinex(routers: LocalRouters) extends Actor {
       // RobotMetricsView
       case QueryRobotMetrics =>
         routers.robotMetricsView forward QueryRobotMetrics
+
+      // TransactionDataView
+      case m @ QueryTransactionData(side, _, _) =>
+        routers.transactionDataView(side) forward m
 
       //-------------------------------------------------------------------------
       case Persistent => throw new IllegalArgumentException("Coinex doesn't handle persistent messages")

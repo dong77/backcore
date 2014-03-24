@@ -14,7 +14,7 @@ import Implicits._
 
 class CandleDataView(market: MarketSide) extends ExtendedView {
   override def processorId = "coinex_mup"
-
+  override val viewId = "candle_data_view"
   private val manager = new CandleDataManager(market)
 
   def receive = LoggingReceive {
@@ -24,7 +24,7 @@ class CandleDataView(market: MarketSide) extends ExtendedView {
     case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
       txs foreach (t => manager.addItem(t, orderInfo.side != market))
 
-    case QueryCandleData(side, dimension, from, maxDepth) if side == market =>
+    case QueryCandleData(side, dimension, from, maxDepth) if side == market || side == market.reverse =>
       sender ! manager.getChartData(side, dimension, from, maxDepth)
   }
 }
@@ -33,10 +33,10 @@ class CandleDataManager(market: MarketSide) extends StateManager[CandleDataState
   initWithDefaultState(CandleDataState())
 
   def addItem(t: Transaction, reverse: Boolean) {
-    val amount = t.takerUpdate.current.quantity - t.takerUpdate.previous.quantity
-    val reverseAmount = t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity
+    val amount = Math.abs(t.takerUpdate.current.quantity - t.takerUpdate.previous.quantity)
+    val reverseAmount = Math.abs(t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity)
 
-    val reversePrice = Math.abs(amount.toDouble / reverseAmount.toDouble)
+    val reversePrice = amount.toDouble / reverseAmount.toDouble
     val price = 1 / reversePrice
 
     if (!reverse) {

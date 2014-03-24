@@ -31,6 +31,7 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) extends Obje
       deployProcessor(props, MARKET_PROCESSOR(m))
       deployView(Props(new MarketDepthView(m)), MARKET_DEPTH_VIEW(m))
       deployView(Props(new CandleDataView(m)), CANDLE_DATA_VIEW(m))
+      deployView(Props(new TransactionDataView(m)), TRANSACTION_DATA_VIEW(m))
     }
 
     deployProcessor(Props(new UserProcessor(routers.mailer)), USER_PROCESSOR)
