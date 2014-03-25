@@ -56,13 +56,15 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
     OrderSubmitted(orderInfo, txs)
   }
 
-  def removeOrder(side: MarketSide, id: Long): Option[Order] = {
-    val order = state.getOrder(id)
-    order foreach { _ => state = state.removeOrder(side, id) }
-    order
+  def removeOrder(side: MarketSide, id: Long, userId: Long): Option[Order] = {
+    state.getOrder(id) match {
+      case Some(order) if order.userId == userId => Some(order)
+      case _ => None
+    }
   }
 
-  @tailrec private final def addOrderRec(buySide: MarketSide, sellSide: MarketSide, sellOrder: Order,
+  @tailrec
+  private final def addOrderRec(buySide: MarketSide, sellSide: MarketSide, sellOrder: Order,
     market: MarketState, totalOutAmount: Long, totalInAmount: Long, txsBuffer: ListBuffer[Transaction]): ( /*totalOutAmount*/ Long, /*totalInAmount*/ Long, /*updatedSellOrder*/ Order, /*after order match*/ MarketState) = {
     val buyOrderOption = market.orderPool(buySide).headOption
     if (buyOrderOption == None || buyOrderOption.get.vprice * sellOrder.vprice > 1) {

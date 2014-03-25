@@ -59,6 +59,8 @@ object CoinexBuild extends Build {
       "com.twitter" %% "scrooge-core" % "3.12.3",
       "com.twitter" %% "scrooge-serializer" % "3.12.3",
       "org.slf4s" %% "slf4s-api" % "1.7.6",
+      "io.spray" %%  "spray-json" % "1.2.5",
+      "org.json4s" %% "json4s-native" % "3.2.8",
       "org.apache.thrift" % "libthrift" % "0.8.0"))
 
   lazy val backend = Project(
@@ -88,7 +90,6 @@ object CoinexBuild extends Build {
         "org.scalatest" %% "scalatest" % "2.0" % "test",
         "org.apache.commons" % "commons-lang3" % "3.1",
         "ch.qos.logback" % "logback-classic" % "1.0.13",
-        "io.spray" %%  "spray-json" % "1.2.5",
         "io.spray" % "spray-can" % sprayVersion,
         "io.spray" % "spray-client" % sprayVersion,
         "io.spray" % "spray-http" % sprayVersion)

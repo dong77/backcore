@@ -44,10 +44,12 @@ class MarketProcessor(
 
     // ------------------------------------------------------------------------------------------------
     // Commands
-    case p @ Persistent(DoCancelOrder(side, orderId), seq) =>
-      manager.removeOrder(side, orderId) foreach { order =>
-        channelToAccountProcessor forward Deliver(p.withPayload(OrderCancelled(side, order)), accountProcessorPath)
-        channelToMarketUpdateProcessor forward Deliver(p.withPayload(OrderCancelled(side, order)), marketUpdateProcessoressorPath)
+    case p @ Persistent(DoCancelOrder(side, orderId, userId), seq) =>
+      manager.removeOrder(side, orderId, userId) foreach { order =>
+        val cancelled = OrderCancelled(side, order)
+        sender ! cancelled
+        channelToAccountProcessor forward Deliver(p.withPayload(cancelled), accountProcessorPath)
+        channelToMarketUpdateProcessor forward Deliver(p.withPayload(cancelled), marketUpdateProcessoressorPath)
       }
 
     // ------------------------------------------------------------------------------------------------

@@ -26,7 +26,7 @@ final class Coinex(routers: LocalRouters) extends Actor {
       case m: DoSubmitOrder => routers.accountProcessor forward Persistent(m)
 
       // Market Processors
-      case m @ DoCancelOrder(side, _) => routers.marketProcessors(side) forward Persistent(m)
+      case m @ DoCancelOrder(side, _, _) => routers.marketProcessors(side) forward Persistent(m)
 
       //-------------------------------------------------------------------------
       // AccountView
