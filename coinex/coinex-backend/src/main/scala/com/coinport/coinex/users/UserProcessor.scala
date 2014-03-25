@@ -70,7 +70,7 @@ class UserProcessor(mailer: ActorRef) extends ExtendedProcessor {
         case Right(profile) =>
           sender ! RequestPasswordResetSucceeded(profile.id, profile.email, profile.passwordResetToken.get)
 
-          mailer ! SendMailRequest(profile.email, EmailType.PasswordReset, Map(
+          mailer ! SendMailRequest(profile.email, EmailType.PasswordResetToken, Map(
             "NAME" -> profile.realName,
             "LANG" -> "CHINESE",
             "TOKEN" -> profile.passwordResetToken.get))
