@@ -95,7 +95,7 @@ def generateSerializerCode(structs: Seq[String], outputFile: String, time: Strin
   try pw.write(code) finally pw.close()
 }
 
-def generateCodecClauses(idx: Int, struct: String) = "  val s_%d = BinaryScalaCodec(%s)".format(idx, struct)
+def generateCodecClauses(idx: Int, struct: String) = "  lazy val s_%d = BinaryScalaCodec(%s)".format(idx, struct)
 def generateToBinaryClauses(idx: Int, struct: String) = "    case m: %s => s_%d(m)".format(struct, idx)
 def generateFromBinaryClauses(idx: Int, struct: String) = "    case Some(c) if c == classOf[%s.Immutable] => s_%d.invert(bytes).get".format(struct, idx)
 def generateSerializerClassCode(time: String, serializers: String, to: String, from: String) = SERIALIZER_CODE_TEMPLATE.format(time, serializers, to, from)
