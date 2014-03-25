@@ -193,6 +193,9 @@ struct TransactionItem {
     2: double price
     3: i64 volumn
     4: i64 amount
+    5: i64 taker
+    6: i64 maker
+    7: bool sameSide
 }
 
 struct TransactionData {

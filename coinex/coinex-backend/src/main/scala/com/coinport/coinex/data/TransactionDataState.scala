@@ -21,16 +21,16 @@ case class TransactionDataState(
     transactionItems: TransactionDataState.ItemSeq = TransactionDataState.EmptyItemSeq,
     transactionReverseItems: TransactionDataState.ItemSeq = TransactionDataState.EmptyItemSeq) {
 
-  def addItem(timestamp: Long, price: Double, volume: Long, amount: Long) = {
+  def addItem(item: TransactionItem) = {
     if (transactionItems.size >= maxMaintainSize)
-      copy(transactionItems = archiveItems ++ Seq(TransactionItem(timestamp, price, volume, amount)))
-    else copy(transactionItems = transactionItems ++ Seq(TransactionItem(timestamp, price, volume, amount)))
+      copy(transactionItems = archiveItems ++ Seq(item))
+    else copy(transactionItems = transactionItems ++ Seq(item))
   }
 
-  def addReverseItem(timestamp: Long, price: Double, volume: Long, amount: Long) = {
+  def addReverseItem(item: TransactionItem) = {
     if (transactionReverseItems.size >= maxMaintainSize)
-      copy(transactionReverseItems = archiveItems ++ Seq(TransactionItem(timestamp, price, volume, amount)))
-    else copy(transactionReverseItems = transactionReverseItems ++ Seq(TransactionItem(timestamp, price, volume, amount)))
+      copy(transactionReverseItems = archiveItems ++ Seq(item))
+    else copy(transactionReverseItems = transactionReverseItems ++ Seq(item))
   }
 
   def getItems(from: Long, num: Int): (Seq[TransactionItem]) = {

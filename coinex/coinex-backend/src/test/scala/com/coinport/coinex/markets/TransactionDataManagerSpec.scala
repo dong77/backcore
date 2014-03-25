@@ -23,8 +23,8 @@ class TransactionDataManagerSpec extends Specification {
         Transaction(i, OrderUpdate(takerPrevious, takerCurrent), OrderUpdate(makerPrevious, makerCurrent))
       }
 
-      txs.foreach(t => manager.addItem(t, false))
-      manager.getTransactionData(market, 0, 3).items.map(_.timestamp) mustEqual Seq(99, 98, 97)
+      txs.foreach(t => manager.addItem(t, true))
+      manager.getTransactionData(true, 0, 3).items.map(_.timestamp) mustEqual Seq(99, 98, 97)
     }
   }
 }

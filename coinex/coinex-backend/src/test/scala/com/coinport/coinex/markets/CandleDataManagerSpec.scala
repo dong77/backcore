@@ -23,9 +23,9 @@ class CandleDataManagerSpec extends Specification {
 
       val t = Transaction(1000000, OrderUpdate(takerPrevious, takerCurrent), OrderUpdate(makerPrevious, makerCurrent))
 
-      manager.addItem(t, false)
+      manager.addItem(t, true)
 
-      manager.getChartData(market, OneMinute, 800000, 1200000).items mustEqual
+      manager.getCandleData(true, OneMinute, 800000, 1200000).items mustEqual
         Seq(CandleDataItem(16, 1, 3000.0, 3000.0, 3000.0, 3000.0))
     }
   }

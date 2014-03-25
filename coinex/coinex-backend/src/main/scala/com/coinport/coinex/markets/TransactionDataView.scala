@@ -21,36 +21,41 @@ class TransactionDataView(market: MarketSide) extends ExtendedView {
       log.info("state: {}", manager())
 
     case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
-      txs foreach (t => manager.addItem(t, orderInfo.side != market))
+      txs foreach (t => manager.addItem(t, orderInfo.side == market))
 
-    case QueryTransactionData(side, from, num) if side == market =>
-      sender ! manager.getTransactionData(side, from, num)
+    case QueryTransactionData(side, from, num) if side == market || side != market =>
+      sender ! manager.getTransactionData(side == market, from, num)
   }
 }
 
 class TransactionDataManager(market: MarketSide) extends StateManager[TransactionDataState] {
   initWithDefaultState(TransactionDataState())
 
-  def addItem(t: Transaction, reverse: Boolean) {
+  def addItem(t: Transaction, sameSide: Boolean) {
     val amount = Math.abs(t.takerUpdate.current.quantity - t.takerUpdate.previous.quantity)
     val reverseAmount = Math.abs(t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity)
 
     val reversePrice = amount.toDouble / reverseAmount.toDouble
     val price = 1 / reversePrice
 
-    if (!reverse) {
-      state = state.addItem(t.timestamp, price, amount, reverseAmount)
-      state = state.addReverseItem(t.timestamp, reversePrice, reverseAmount, amount)
+    val taker = t.takerUpdate.current.userId
+    val maker = t.takerUpdate.current.userId
+
+    if (sameSide) {
+      var item = TransactionItem(t.timestamp, price, amount, reverseAmount, taker, maker, sameSide)
+      state = state.addItem(item)
+      item = TransactionItem(t.timestamp, reversePrice, reverseAmount, amount, taker, maker, sameSide)
+      state = state.addReverseItem(item)
     } else {
-      state = state.addItem(t.timestamp, reversePrice, reverseAmount, amount)
-      state = state.addReverseItem(t.timestamp, price, amount, reverseAmount)
+      var item = TransactionItem(t.timestamp, reversePrice, reverseAmount, amount, taker, maker, sameSide)
+      state = state.addItem(item)
+      item = TransactionItem(t.timestamp, price, amount, reverseAmount, taker, maker, sameSide)
+      state = state.addReverseItem(item)
     }
   }
 
-  def getTransactionData(side: MarketSide, from: Long, num: Int): TransactionData = {
-    val reverse = side != market
-
-    if (reverse) TransactionData(state.getReverseItems(from, num))
-    else TransactionData(state.getItems(from, num))
+  def getTransactionData(sameSide: Boolean, from: Long, num: Int): TransactionData = {
+    if (sameSide) TransactionData(state.getItems(from, num))
+    else TransactionData(state.getReverseItems(from, num))
   }
 }
