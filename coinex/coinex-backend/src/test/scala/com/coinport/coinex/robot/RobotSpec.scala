@@ -69,7 +69,6 @@ class RobotSpec extends Specification {
             metrics mustEqual metricsImpl
             val payload = getPayload[Int]()
             setPayload(payload map { _ - 1 })
-            println("x" * 10 + payload)
             if (payload.get != 1) {
               (Some(0), STATE_A)
             } else {
