@@ -60,7 +60,7 @@ object CoinexBuild extends Build {
       "com.twitter" %% "scrooge-serializer" % "3.12.3",
       "org.slf4s" %% "slf4s-api" % "1.7.6",
       "io.spray" %%  "spray-json" % "1.2.5",
-      "org.json4s" %% "json4s-native" % "3.2.8",
+      "org.json4s" %% "json4s-native" % "3.2.7",
       "org.apache.thrift" % "libthrift" % "0.8.0"))
 
   lazy val backend = Project(

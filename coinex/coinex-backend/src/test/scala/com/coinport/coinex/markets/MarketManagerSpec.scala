@@ -17,7 +17,7 @@ class MarketManagerSpec extends Specification {
 
   val takerSide = Btc ~> Rmb
   val makerSide = takerSide.reverse
- 
+
   "MarketManager" should {
     "match limit-price order market-price orders can't exists in the market" in {
       val manager = new MarketManager(Btc ~> Rmb)(() => 0) // constant time
