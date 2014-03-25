@@ -14,24 +14,34 @@ import scala.Predef._
 
 case class UserState(numUsers: Long = 0,
     profileMap: Map[Long, UserProfile] = Map.empty[Long, UserProfile],
-    passwordResetTokenMap: Map[String, Long] = Map.empty[String, Long]) {
+    passwordResetTokenMap: Map[String, Long] = Map.empty[String, Long],
+    verificationTokenMap: Map[String, Long] = Map.empty[String, Long]) {
+
   def userExist(email: String): Boolean = userExist(Hash.murmur3(email))
   def userExist(userId: Long): Boolean = profileMap.contains(userId)
 
   def addUserProfile(profile: UserProfile): UserState = {
-    copy(numUsers = this.numUsers + 1, profileMap = this.profileMap + (profile.id -> profile))
+    copy(numUsers = numUsers + 1, profileMap = profileMap + (profile.id -> profile))
   }
 
   def updateUserProfile(userId: Long)(updateOp: UserProfile => UserProfile): UserState = {
     assert(!profileMap.contains(userId))
-    copy(profileMap = this.profileMap + (userId -> updateOp(profileMap(userId))))
+    copy(profileMap = profileMap + (userId -> updateOp(profileMap(userId))))
   }
 
   def deletePasswordResetToken(token: String): UserState = {
-    copy(passwordResetTokenMap = this.passwordResetTokenMap - token)
+    copy(passwordResetTokenMap = passwordResetTokenMap - token)
   }
 
   def addPasswordResetToken(token: String, userId: Long) = {
-    copy(passwordResetTokenMap = this.passwordResetTokenMap + (token -> userId))
+    copy(passwordResetTokenMap = passwordResetTokenMap + (token -> userId))
+  }
+
+  def deleteVerificationToken(token: String): UserState = {
+    copy(verificationTokenMap = verificationTokenMap - token)
+  }
+
+  def addVerificationToken(token: String, userId: Long) = {
+    copy(verificationTokenMap = verificationTokenMap + (token -> userId))
   }
 }

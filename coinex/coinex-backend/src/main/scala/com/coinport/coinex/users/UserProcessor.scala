@@ -57,7 +57,9 @@ class UserProcessor(mailer: ActorRef) extends ExtendedProcessor {
           sender ! RegisterUserFailed(reason, None)
         case Right(profile) =>
           sender ! RegisterUserSucceeded(profile)
-          mailer ! SendMailRequest(profile.email, EmailType.RegisterVerify, Map("name" -> profile.realName))
+          mailer ! SendMailRequest(profile.email, EmailType.RegisterVerify, Map(
+            "name" -> profile.realName,
+            "link" -> ("http://www.coinport.com/verification/" + profile.verificationToken.get)))
       }
 
     case p @ DoRequestPasswordReset(email, newToken) =>

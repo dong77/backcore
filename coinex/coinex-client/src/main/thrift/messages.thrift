@@ -81,7 +81,9 @@ struct UserProfile {
     8: optional string mobile
     9: bool mobileVerified
     10: optional string passwordResetToken
-    11: UserStatus status
+    11: optional string verificationToken
+    12: optional string loginToken
+    14: UserStatus status
 }
 
 enum ChartTimeDimension {

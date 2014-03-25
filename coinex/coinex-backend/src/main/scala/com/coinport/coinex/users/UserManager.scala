@@ -21,6 +21,7 @@ import com.coinport.coinex.util._
 
 class UserManager extends StateManager[UserState] {
   initWithDefaultState(UserState())
+  val rand = new scala.util.Random(System.currentTimeMillis)
 
   def regulate(s: String) = s.trim.toLowerCase
   def emailToId(email: String) = Hash.murmur3(regulate(email))
@@ -38,13 +39,24 @@ class UserManager extends StateManager[UserState] {
       case None =>
         val realName = regulate(profile.realName)
         val nationalId = regulate(profile.nationalId)
+
+        val verificationToken = rand.nextLong.toHexString + rand.nextLong.toHexString
+
         val updatedProfile: UserProfile = profile.copy(
-          id = id, email = email, realName = realName, nationalId = nationalId,
-          emailVerified = false, status = UserStatus.Normal)
+          id = id,
+          email = email,
+          realName = realName,
+          nationalId = nationalId,
+          emailVerified = false,
+          passwordResetToken = None,
+          verificationToken = Some(verificationToken),
+          loginToken = None,
+          status = UserStatus.Normal)
 
         val passwordHash = computePasswordHash(updatedProfile, password)
         val profileWithPassword = updatedProfile.copy(passwordHash = Some(passwordHash))
-        state = state.addUserProfile(profileWithPassword)
+
+        state = state.addUserProfile(profileWithPassword).addVerificationToken(verificationToken, id)
         Right(profileWithPassword)
     }
   }
