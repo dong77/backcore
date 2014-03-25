@@ -73,7 +73,8 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
       val buyOrder = buyOrderOption.get
       val price = 1 / buyOrder.vprice
       val outAmount = Math.min(sellOrder.maxOutAmount(price), buyOrder.maxInAmount(1 / price))
-      val inAmount = (outAmount * price).toLong
+      val inAmount = Math.round(outAmount * price)
+
       val updatedSellOrder = sellOrder.copy(
         quantity = sellOrder.quantity - outAmount, takeLimit = sellOrder.takeLimit.map(_ - inAmount))
       val updatedBuyOrder = buyOrder.copy(

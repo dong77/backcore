@@ -360,4 +360,22 @@ class MarketManagerSpec extends Specification {
       manager().orderPool(takerSide) mustEqual SortedSet(taker)
     }
   }
+
+  "MarketManager" should {
+    "be able to handle dust" in {
+      val manager = new MarketManager(Btc ~> Rmb)(() => 0) // constant time
+      val maker = Order(userId = 1, id = 1, price = Some(500.1), quantity = 1, timestamp = Some(0))
+      val taker = Order(userId = 5, id = 5, price = None, quantity = 900, timestamp = Some(0))
+
+      manager.addOrder(makerSide, maker)
+      val result = manager.addOrder(takerSide, taker)
+
+      val updatedMaker = maker.copy(quantity = 0) // buy 2
+      val updatedTaker = taker.copy(quantity = 400) // buy 10
+
+      result mustEqual OrderSubmitted(
+        OrderInfo(takerSide, taker, 500, 1, MarketAutoPartiallyCancelled, Some(0)),
+        Seq(Transaction(0, taker --> updatedTaker, maker --> updatedMaker)))
+    }
+  }
 }
