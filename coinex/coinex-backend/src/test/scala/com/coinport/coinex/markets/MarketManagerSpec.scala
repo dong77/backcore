@@ -17,7 +17,7 @@ class MarketManagerSpec extends Specification {
 
   val takerSide = Btc ~> Rmb
   val makerSide = takerSide.reverse
-
+ 
   "MarketManager" should {
     "match limit-price order market-price orders can't exists in the market" in {
       val manager = new MarketManager(Btc ~> Rmb)(() => 0) // constant time
@@ -375,6 +375,22 @@ class MarketManagerSpec extends Specification {
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 500, 1, MarketAutoPartiallyCancelled, Some(0)),
+        Seq(Transaction(0, taker --> updatedTaker, maker --> updatedMaker)))
+    }
+
+    "be able to handle dust when price is really small" in {
+      val manager = new MarketManager(Btc ~> Rmb)(() => 0) // constant time
+      val maker = Order(userId = 1, id = 1, price = Some(0.15), quantity = 1000, timestamp = Some(0))
+      val taker = Order(userId = 5, id = 5, price = None, quantity = 180, timestamp = Some(0))
+
+      manager.addOrder(makerSide, maker)
+      val result = manager.addOrder(takerSide, taker)
+
+      val updatedMaker = maker.copy(quantity = 0) // buy 2
+      val updatedTaker = taker.copy(quantity = 30) // buy 10
+
+      result mustEqual OrderSubmitted(
+        OrderInfo(takerSide, taker, 150, 1000, MarketAutoPartiallyCancelled, Some(0)),
         Seq(Transaction(0, taker --> updatedTaker, maker --> updatedMaker)))
     }
   }
