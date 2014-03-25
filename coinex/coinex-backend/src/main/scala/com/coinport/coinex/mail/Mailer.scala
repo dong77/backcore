@@ -23,6 +23,7 @@ class Mailer(handler: MailHandler) extends Actor with ActorLogging {
           handler.sendLoginToken(email, params.toSeq)
 
         case EmailType.PasswordResetToken =>
+          handler.sendPasswordReset(email, params.toSeq)
       }
   }
 }

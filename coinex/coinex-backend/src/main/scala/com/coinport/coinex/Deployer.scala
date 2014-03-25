@@ -11,7 +11,6 @@ import akka.contrib.pattern.ClusterSingletonManager
 import akka.cluster.routing._
 import akka.routing._
 import org.slf4s.Logging
-
 import com.coinport.coinex.accounts._
 import com.coinport.coinex.data._
 import com.coinport.coinex.markets._
@@ -19,8 +18,9 @@ import com.coinport.coinex.robot._
 import com.coinport.coinex.users._
 import com.coinport.coinex.mail._
 import Implicits._
+import com.typesafe.config.Config
 
-class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
+class Deployer(config: Config, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
 
   def deploy(routers: LocalRouters) = {
@@ -49,7 +49,6 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) extends Obje
 
   private def deployProcessor(props: Props, name: String) =
     if (cluster.selfRoles.contains(name)) {
-      log.debug("~" * 30 + " " + name + " is created")
       system.actorOf(ClusterSingletonManager.props(
         singletonProps = props,
         singletonName = "singleton",
@@ -65,9 +64,10 @@ class Deployer(markets: Seq[MarketSide])(implicit cluster: Cluster) extends Obje
 
   private def deployMailer(name: String) = {
     if (cluster.selfRoles.contains(name)) {
-      val handler = new MandrillMailHandler()
+      val mandrilApiKey = config.getString("akka.mailer.mandrill-api-key")
+      val handler = new MandrillMailHandler(mandrilApiKey)
       val props = Props(new Mailer(handler))
-      system.actorOf(RoundRobinPool(8).props(props), name)
+      system.actorOf(FromConfig.props(props), name)
     }
   }
 }

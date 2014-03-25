@@ -8,4 +8,5 @@ package com.coinport.coinex.mail
 trait MailHandler {
   def sendRegistrationEmailConfirmation(to: String, params: Seq[(String, String)]): Unit
   def sendLoginToken(to: String, params: Seq[(String, String)]): Unit
+  def sendPasswordReset(to: String, params: Seq[(String, String)]): Unit
 }

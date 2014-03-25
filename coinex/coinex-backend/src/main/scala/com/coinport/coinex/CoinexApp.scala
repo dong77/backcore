@@ -70,7 +70,7 @@ object CoinexApp extends App {
   val markets = Seq(Btc ~> Rmb)
 
   val routers = new LocalRouters(markets)
-  val deployer = new Deployer(markets)
+  val deployer = new Deployer(config, markets)
   deployer.deploy(routers)
 
   Thread.sleep(5000)
