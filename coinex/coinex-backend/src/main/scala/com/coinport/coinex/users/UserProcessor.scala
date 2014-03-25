@@ -57,9 +57,11 @@ class UserProcessor(mailer: ActorRef) extends ExtendedProcessor {
           sender ! RegisterUserFailed(reason, None)
         case Right(profile) =>
           sender ! RegisterUserSucceeded(profile)
+
           mailer ! SendMailRequest(profile.email, EmailType.RegisterVerify, Map(
-            "name" -> profile.realName,
-            "link" -> ("http://www.coinport.com/verification/" + profile.verificationToken.get)))
+            "NAME" -> profile.realName,
+            "LANG" -> "CHINESE",
+            "TOKEN" -> profile.verificationToken.get))
       }
 
     case p @ DoRequestPasswordReset(email, newToken) =>
@@ -67,7 +69,11 @@ class UserProcessor(mailer: ActorRef) extends ExtendedProcessor {
         case Left(reason) => sender ! RequestPasswordResetFailed(reason)
         case Right(profile) =>
           sender ! RequestPasswordResetSucceeded(profile.id, profile.email, profile.passwordResetToken.get)
-        //SEND EMAIL
+
+          mailer ! SendMailRequest(profile.email, EmailType.PasswordReset, Map(
+            "NAME" -> profile.realName,
+            "LANG" -> "CHINESE",
+            "TOKEN" -> profile.passwordResetToken.get))
       }
 
     case p @ DoResetPassword(email, password, token) =>
