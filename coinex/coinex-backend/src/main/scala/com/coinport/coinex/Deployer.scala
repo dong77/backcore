@@ -27,35 +27,39 @@ import scala.collection.mutable.ListBuffer
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
   val paths = new ListBuffer[String]
-  val clusterAwareRouters = new ListBuffer[ActorRef]
 
-  def deploy(routers: LocalRouters) = {
+  def deploy() = {
     import LocalRouters._
 
+    // Deploy views first 
     markets foreach { m =>
-      val props = Props(new MarketProcessor(m, routers.accountProcessor.path, routers.marketUpdateProcessor.path))
-      deployProcessor(props, MARKET_PROCESSOR(m))
       deployView(Props(new MarketDepthView(m)), MARKET_DEPTH_VIEW(m))
       deployView(Props(new CandleDataView(m)), CANDLE_DATA_VIEW(m))
       deployView(Props(new TransactionDataView(m)), TRANSACTION_DATA_VIEW(m))
+    }
+
+    deployView(Props(classOf[UserView]), USER_VIEW)
+    deployView(Props(classOf[AccountView]), ACCOUNT_VIEW)
+    deployView(Props(classOf[UserOrdersView]), USER_ORDERS_VIEW)
+    deployView(Props(classOf[RobotMetricsView]), ROBOT_METRICS_VIEW)
+
+    deployMailer(MAILER)
+
+    // Then deploy routers
+    val routers = new LocalRouters(markets)
+
+    // Finally deploy processors
+    markets foreach { m =>
+      val props = Props(new MarketProcessor(m, routers.accountProcessor.path, routers.marketUpdateProcessor.path))
+      deployProcessor(props, MARKET_PROCESSOR(m))
     }
 
     deployProcessor(Props(new UserProcessor(routers.mailer)), USER_PROCESSOR)
     deployProcessor(Props(new AccountProcessor(routers.marketProcessors)), ACCOUNT_PROCESSOR)
     deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
 
-    deployView(Props(classOf[UserView]), USER_VIEW)
-    deployView(Props(classOf[AccountView]), ACCOUNT_VIEW)
-    deployView(Props(classOf[UserOrdersView]), USER_ORDERS_VIEW)
-
-    deployMailer(MAILER)
-
-    deployView(Props(classOf[RobotMetricsView]), ROBOT_METRICS_VIEW)
-
+    // Deploy other stuff
     deployMonitor(routers)
-
-    // Restart all cluster-aware routers to workaround circular dependency issue.
-    clusterAwareRouters foreach { _ ! PoisonPill }
   }
 
   private def deployProcessor(props: Props, name: String) =
@@ -73,7 +77,6 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     if (cluster.selfRoles.contains(name)) {
       val actor = system.actorOf(props, name)
       paths += actor.path.toString
-      clusterAwareRouters += actor
     }
 
   private def deployMailer(name: String) = {

@@ -69,9 +69,7 @@ object CoinexApp extends App {
   println("roles: " + cluster.selfRoles)
   val markets = Seq(Btc ~> Rmb)
 
-  val routers = new LocalRouters(markets)
-  val deployer = new Deployer(config, hostname, markets)
-  deployer.deploy(routers)
+  new Deployer(config, hostname, markets).deploy()
 
   Thread.sleep(5000)
   val summary = "============= Akka Node Ready =============\n" +
