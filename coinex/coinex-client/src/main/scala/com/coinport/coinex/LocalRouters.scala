@@ -11,6 +11,7 @@ import akka.routing._
 import com.coinport.coinex.common.ClusterSingletonProxy
 import com.coinport.coinex.data._
 import Implicits._
+import akka.cluster.Cluster
 
 object LocalRouters {
   val USER_PROCESSOR = "user_processor"
@@ -30,7 +31,8 @@ object LocalRouters {
   val ROBOT_METRICS_VIEW = "robot_metrics_view"
 }
 
-class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
+class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
+  implicit val system = cluster.system
 
   import LocalRouters._
   val userProcessor = routerForSingleton(USER_PROCESSOR)
@@ -70,7 +72,7 @@ class LocalRouters(markets: Seq[MarketSide])(implicit system: ActorSystem) {
       ClusterRouterGroupSettings(
         totalInstances = Int.MaxValue,
         routeesPaths = List("/user/" + name),
-        allowLocalRoutees = false,
+        allowLocalRoutees = cluster.selfRoles.contains(name),
         useRole = Some(name))).props,
     name + "_router")
 
