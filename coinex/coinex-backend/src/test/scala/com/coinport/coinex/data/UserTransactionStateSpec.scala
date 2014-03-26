@@ -21,7 +21,7 @@ class UserTransactionStateSpec extends Specification {
       //find taker & order results
       state.getItems(taker, 1, 0, 10) mustEqual txs.reverse
 
-      //find maker, the orderId does not exsit
+      //find maker & the orderId does not exsit
       state.getItems(maker, -1, 0, 10) mustEqual txs.reverse
 
       //find maker & orderId results
