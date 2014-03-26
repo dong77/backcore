@@ -136,6 +136,7 @@ struct Transaction{
     2: OrderUpdate takerUpdate
     3: OrderUpdate makerUpdate
 }
+
 struct CashAccount{
     1: Currency currency
     2: i64 available
@@ -241,6 +242,9 @@ struct QueryCandleDataResult{1: CandleData candleData}
 
 struct QueryTransactionData{1: MarketSide side, 2: i64 from, 3: i32 num}
 struct QueryTransactionDataResult{1: TransactionData transactionData}
+
+struct QueryUserTransaction{1: MarketSide side, 2: i64 userId, 3: i64 orderId, 4: i64 from, 5: i32 num}
+struct QueryUserTransactionResult{1: TransactionData transactionData}
 
 struct OrderSubmissionInProgross{1: MarketSide side, 2: Order order}
 

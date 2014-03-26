@@ -63,6 +63,10 @@ final class Coinex(routers: LocalRouters) extends Actor {
       case m @ QueryTransactionData(side, _, _) =>
         routers.transactionDataView(side) forward m
 
+      // UserTransactionView
+      case m @ QueryUserTransaction(side, _, _, _, _) =>
+        routers.userTransactionView(side) forward m
+
       //-------------------------------------------------------------------------
       case Persistent => throw new IllegalArgumentException("Coinex doesn't handle persistent messages")
       case m => throw new IllegalArgumentException("Coinex doesn't handle messages of type: " + m.getClass.getCanonicalName)

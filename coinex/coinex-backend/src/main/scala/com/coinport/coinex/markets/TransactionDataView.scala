@@ -23,7 +23,7 @@ class TransactionDataView(market: MarketSide) extends ExtendedView {
     case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
       txs foreach (t => manager.addItem(t, orderInfo.side == market))
 
-    case QueryTransactionData(side, from, num) if side == market || side != market =>
+    case QueryTransactionData(side, from, num) if side == market || side == market.reverse =>
       sender ! manager.getTransactionData(side == market, from, num)
   }
 }
@@ -39,7 +39,7 @@ class TransactionDataManager(market: MarketSide) extends StateManager[Transactio
     val price = 1 / reversePrice
 
     val taker = t.takerUpdate.current.userId
-    val maker = t.takerUpdate.current.userId
+    val maker = t.makerUpdate.current.userId
 
     if (sameSide) {
       var item = TransactionItem(t.timestamp, price, amount, reverseAmount, taker, maker, sameSide)

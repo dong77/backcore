@@ -25,6 +25,7 @@ object LocalRouters {
   def CANDLE_DATA_VIEW(side: MarketSide) = "candle_data_view_" + side.asString
   def MARKET_DEPTH_VIEW(side: MarketSide) = "market_depth_view_" + side.asString
   def TRANSACTION_DATA_VIEW(side: MarketSide) = "transaction_data_view_" + side.asString
+  def USER_TRANSACTION_VIEW(side: MarketSide) = "user_transaction_view_" + side.asString
 
   def MAILER = "mailer"
 
@@ -57,6 +58,10 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
 
   val transactionDataView = bidirection(Map(markets map { m =>
     m -> routerFor(TRANSACTION_DATA_VIEW(m))
+  }: _*))
+
+  val userTransactionView = bidirection(Map(markets map { m =>
+    m -> routerFor(USER_TRANSACTION_VIEW(m))
   }: _*))
 
   val mailer = routerFor(MAILER)
