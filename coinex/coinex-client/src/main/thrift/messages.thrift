@@ -76,7 +76,7 @@ struct UserProfile {
     2: string email
     3: optional string realName
     4: optional string nationalId
-    5: optional list<byte> passwordHash
+    5: optional string passwordHash
     6: bool emailVerified
     8: optional string mobile
     9: bool mobileVerified

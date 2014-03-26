@@ -16,5 +16,3 @@ case object TakeSnapshotNow
 case object QueryRobotMetrics
 
 case object QueryActorStats
-
-case class ActorStats(items: Map[String, String] = Map.empty[String, String])

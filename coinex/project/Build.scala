@@ -61,6 +61,7 @@ object CoinexBuild extends Build {
       "org.slf4s" %% "slf4s-api" % "1.7.6",
       "io.spray" %%  "spray-json" % "1.2.5",
       "org.json4s" %% "json4s-native" % "3.2.7",
+      "com.google.guava" % "guava" % "16.0.1",
       "org.apache.thrift" % "libthrift" % "0.8.0"))
 
   lazy val backend = Project(

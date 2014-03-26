@@ -35,6 +35,9 @@ class UserProcessor(mailer: ActorRef) extends ExtendedProcessor {
     case DebugDump =>
       log.info("state: {}", manager())
 
+    case QueryActorStats =>
+      sender ! manager()
+
     // ------------------------------------------------------------------------------------------------
     // Non-persistent requests
     case Login(email, password) =>

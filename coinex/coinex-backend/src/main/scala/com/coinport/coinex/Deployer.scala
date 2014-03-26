@@ -26,7 +26,7 @@ import scala.collection.mutable.ListBuffer
 
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
-  val paths = new ListBuffer[ActorPath]
+  val paths = new ListBuffer[String]
 
   def deploy(routers: LocalRouters) = {
     import LocalRouters._
@@ -62,13 +62,13 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
         terminationMessage = PoisonPill,
         role = Some(name)),
         name = name)
-      paths += actor.path
+      paths += actor.path.toString + "/singleton"
     }
 
   private def deployView(props: Props, name: String) =
     if (cluster.selfRoles.contains(name)) {
       val actor = system.actorOf(props, name)
-      paths += actor.path
+      paths += actor.path.toString
     }
 
   private def deployMailer(name: String) = {
@@ -77,7 +77,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       val handler = new MandrillMailHandler(mandrilApiKey)
       val props = Props(new Mailer(handler))
       val actor = system.actorOf(FromConfig.props(props), name)
-      paths += actor.path
+      paths += actor.path.toString
     }
   }
 

@@ -43,7 +43,7 @@ class MarketProcessor(
       log.info("state: {}", manager())
 
     case QueryActorStats =>
-      sender ! ActorStats(Map("num_of_pending_orders" -> manager().orderMap.size.toString))
+      sender ! manager()
 
     // ------------------------------------------------------------------------------------------------
     // Commands

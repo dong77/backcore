@@ -18,6 +18,7 @@ package com.coinport.coinex.users
 import com.coinport.coinex.data._
 import com.coinport.coinex.common.StateManager
 import com.coinport.coinex.util._
+import com.google.common.io.BaseEncoding
 
 class UserManager extends StateManager[UserState] {
   initWithDefaultState(UserState())
@@ -29,8 +30,8 @@ class UserManager extends StateManager[UserState] {
   def regulate(s: String) = s.trim.toLowerCase
   def emailToId(email: String) = Hash.murmur3(regulate(email))
 
-  private def computePasswordHash(profile: UserProfile, password: String, salt: Long) = {
-    Hash.sha256("%s\n%s\n%d".format(profile.email, password, salt))
+  private def computePasswordHash(email: String, password: String, salt: Long) = {
+    BaseEncoding.base64.encode(Hash.sha256("%s\n%s\n%d".format(email, password, salt)))
   }
 
   def registerUser(profile: UserProfile, password: String, seed: Long): Either[RegisterationFailureReason, UserProfile] = {
@@ -51,7 +52,7 @@ class UserManager extends StateManager[UserState] {
           status = UserStatus.Normal,
           salt = Some(salt))
 
-        val passwordHash = computePasswordHash(updatedProfile, password, salt)
+        val passwordHash = computePasswordHash(email, password, salt)
         val profileWithPassword = updatedProfile.copy(passwordHash = Some(passwordHash))
 
         state = state.addUserProfile(profileWithPassword).addVerificationToken(verificationToken, id)
@@ -65,7 +66,9 @@ class UserManager extends StateManager[UserState] {
     state.profileMap.get(id) match {
       case None => Left(LoginFailureReason.UserNotExist)
       case Some(profile) =>
-        val passwordHash = computePasswordHash(profile, password, profile.salt.get)
+        val passwordHash = computePasswordHash(profile.email, password, profile.salt.get)
+        println("------- hash" + passwordHash)
+        println("-------old hash:" + profile.passwordHash)
         if (Some(passwordHash) == profile.passwordHash) Right(profile)
         else Left(LoginFailureReason.PasswordNotMatch)
     }
@@ -94,7 +97,7 @@ class UserManager extends StateManager[UserState] {
 
       case Some(profile) if profile.passwordResetToken == passwordResetToken =>
         profile.passwordResetToken foreach { token => state = state.deletePasswordResetToken(token) }
-        val passwordHash = computePasswordHash(profile, password, profile.salt.get)
+        val passwordHash = computePasswordHash(profile.email, password, profile.salt.get)
         val updatedProfile = profile.copy(passwordHash = Some(passwordHash), passwordResetToken = None)
         state = state.updateUserProfile(id)(_ => updatedProfile)
         Right(updatedProfile)

@@ -30,7 +30,7 @@ import com.coinport.coinex.data._
 /**
  * TODO(d): finish this class.
  */
-class Monitor(actorPaths: List[ActorPath]) extends Actor with HttpService with spray.httpx.SprayJsonSupport {
+class Monitor(actorPaths: List[String]) extends Actor with HttpService with spray.httpx.SprayJsonSupport {
   val actorRefFactory = context
   implicit def executionContext = context.dispatcher
   implicit val formats = native.Serialization.formats(NoTypeHints)
@@ -42,8 +42,7 @@ class Monitor(actorPaths: List[ActorPath]) extends Actor with HttpService with s
     get {
       pathSingleSlash {
         val lists = actorPaths.map { path =>
-          val s = path.toString
-          "<li><a href=\"/stats/actor?path=%s\">%s</a></li>".format(s, s)
+          "<li><a href=\"/stats/actor?path=%s\">%s</a></li>".format(path, path)
         }.mkString
 
         val html = "<html><body><ui>" + lists + "</ui></body></html>"
