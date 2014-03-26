@@ -53,12 +53,12 @@ object CoinexApp extends App {
     else if (args(2) == "*") ALL_ROLES
     else args(2).split(",").map(_.stripMargin).filter(_.nonEmpty).map("\"" + _ + "\"").mkString(",")
 
-  val hostName =
+  val hostname =
     if (args.length < 4) InetAddress.getLocalHost.getHostAddress
     else args(3)
 
   val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0))
-    .withFallback(ConfigFactory.parseString("akka.remote.netty.tcp.hostname=" + hostName))
+    .withFallback(ConfigFactory.parseString("akka.remote.netty.tcp.hostname=" + hostname))
     .withFallback(ConfigFactory.parseString("akka.cluster.roles=[" + roles + "]"))
     .withFallback(ConfigFactory.parseString("akka.cluster.seed-nodes=[" + seedNodes + "]"))
     .withFallback(ConfigFactory.load())
@@ -70,12 +70,12 @@ object CoinexApp extends App {
   val markets = Seq(Btc ~> Rmb)
 
   val routers = new LocalRouters(markets)
-  val deployer = new Deployer(config, markets)
+  val deployer = new Deployer(config, hostname, markets)
   deployer.deploy(routers)
 
   Thread.sleep(5000)
   val summary = "============= Akka Node Ready =============\n" +
-    "with hostname: " + hostName + "\n" +
+    "with hostname: " + hostname + "\n" +
     "with roles: " + roles + "\n" +
     "with seeds: " + seedNodes + "\n"
 

@@ -8,8 +8,13 @@
 
 package com.coinport.coinex.data
 
+// TODO(d): put all these classes into thrift file.
 case object DebugDump
 
 case object TakeSnapshotNow
 
 case object QueryRobotMetrics
+
+case object QueryActorStats
+
+case class ActorStats(items: Map[String, String] = Map.empty[String, String])

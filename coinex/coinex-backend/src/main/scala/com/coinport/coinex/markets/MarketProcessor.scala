@@ -42,6 +42,9 @@ class MarketProcessor(
     case DebugDump =>
       log.info("state: {}", manager())
 
+    case QueryActorStats =>
+      sender ! ActorStats(Map("num_of_pending_orders" -> manager().orderMap.size.toString))
+
     // ------------------------------------------------------------------------------------------------
     // Commands
     case p @ Persistent(DoCancelOrder(side, orderId, userId), seq) =>

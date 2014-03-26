@@ -144,5 +144,5 @@ val time = Calendar.getInstance().getTime().toString
 val structs = extractStructsFromFile("coinex-client/src/main/thrift/messages.thrift")
 
 generateSerializerCode(structs, "coinex-client/src/main/scala/com/coinport/coinex/serializers/EventSerializer.scala", time)
-generateJsonProtocol(structs, "coinex-client/src/main/scala/com/coinport/coinex/serializers/MessageJsonProtocol.scala", time)
-// generateStructSerializationConfig(structs, "coinex-client/src/main/resources/serialization.conf", time)
+// generateJsonProtocol(structs, "coinex-client/src/main/scala/com/coinport/coinex/serializers/MessageJsonProtocol.scala", time)
+generateStructSerializationConfig(structs, "coinex-client/src/main/resources/serialization.conf", time)

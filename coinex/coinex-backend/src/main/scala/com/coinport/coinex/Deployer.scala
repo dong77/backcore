@@ -17,10 +17,13 @@ import com.coinport.coinex.markets._
 import com.coinport.coinex.robot._
 import com.coinport.coinex.users._
 import com.coinport.coinex.mail._
-import Implicits._
+import com.coinport.coinex.monitoring._
+import akka.io.IO
+import spray.can.Http
 import com.typesafe.config.Config
+import Implicits._
 
-class Deployer(config: Config, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
+class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
 
   def deploy(routers: LocalRouters) = {
@@ -45,6 +48,8 @@ class Deployer(config: Config, markets: Seq[MarketSide])(implicit cluster: Clust
     deployMailer(MAILER)
 
     deployView(Props(classOf[RobotMetricsView]), ROBOT_METRICS_VIEW)
+
+    deployMonitor(routers)
   }
 
   private def deployProcessor(props: Props, name: String) =
@@ -69,5 +74,12 @@ class Deployer(config: Config, markets: Seq[MarketSide])(implicit cluster: Clust
       val props = Props(new Mailer(handler))
       system.actorOf(FromConfig.props(props), name)
     }
+  }
+
+  private def deployMonitor(routers: LocalRouters) = {
+    val service = system.actorOf(Props(new Monitor(routers)), "monitor-service")
+    val port = config.getInt("akka.monitor.http-port")
+    IO(Http) ! Http.Bind(service, hostname, port)
+    println("Started HTTP server: http://" + hostname + ":" + port)
   }
 }

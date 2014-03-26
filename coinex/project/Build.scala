@@ -91,6 +91,7 @@ object CoinexBuild extends Build {
         "org.apache.commons" % "commons-lang3" % "3.1",
         "ch.qos.logback" % "logback-classic" % "1.0.13",
         "io.spray" % "spray-can" % sprayVersion,
+        "io.spray" % "spray-routing" % sprayVersion,
         "io.spray" % "spray-client" % sprayVersion,
         "io.spray" % "spray-http" % sprayVersion)
       /*
