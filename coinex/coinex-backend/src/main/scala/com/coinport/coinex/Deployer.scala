@@ -27,6 +27,7 @@ import scala.collection.mutable.ListBuffer
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
   val paths = new ListBuffer[String]
+  val clusterAwareRouters = new ListBuffer[ActorRef]
 
   def deploy(routers: LocalRouters) = {
     import LocalRouters._
@@ -52,6 +53,9 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployView(Props(classOf[RobotMetricsView]), ROBOT_METRICS_VIEW)
 
     deployMonitor(routers)
+
+    // Restart all cluster-aware routers to workaround circular dependency issue.
+    clusterAwareRouters foreach { _ ! PoisonPill }
   }
 
   private def deployProcessor(props: Props, name: String) =
@@ -69,6 +73,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     if (cluster.selfRoles.contains(name)) {
       val actor = system.actorOf(props, name)
       paths += actor.path.toString
+      clusterAwareRouters += actor
     }
 
   private def deployMailer(name: String) = {
