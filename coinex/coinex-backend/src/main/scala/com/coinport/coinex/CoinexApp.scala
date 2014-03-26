@@ -79,4 +79,16 @@ object CoinexApp extends App {
     "with seeds: " + seedNodes + "\n"
 
   println(summary)
+
+  val coinport = """
+              _                             _         
+             (_)                           | |        
+   ___  ___   _  _ __   _ __    ___   _ __ | |_ __  __
+  / __|/ _ \ | || '_ \ | '_ \  / _ \ | '__|| __|\ \/ /
+ | (__| (_) || || | | || |_) || (_) || |   | |_  >  < 
+  \___|\___/ |_||_| |_|| .__/  \___/ |_|    \__|/_/\_\
+                       | |                            
+                       |_|                            
+"""
+  println(coinport)
 }
