@@ -22,9 +22,11 @@ import akka.io.IO
 import spray.can.Http
 import com.typesafe.config.Config
 import Implicits._
+import scala.collection.mutable.ListBuffer
 
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
+  val paths = new ListBuffer[ActorPath]
 
   def deploy(routers: LocalRouters) = {
     import LocalRouters._
@@ -54,17 +56,19 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
   private def deployProcessor(props: Props, name: String) =
     if (cluster.selfRoles.contains(name)) {
-      system.actorOf(ClusterSingletonManager.props(
+      val actor = system.actorOf(ClusterSingletonManager.props(
         singletonProps = props,
         singletonName = "singleton",
         terminationMessage = PoisonPill,
         role = Some(name)),
         name = name)
+      paths += actor.path
     }
 
   private def deployView(props: Props, name: String) =
     if (cluster.selfRoles.contains(name)) {
-      system.actorOf(props, name)
+      val actor = system.actorOf(props, name)
+      paths += actor.path
     }
 
   private def deployMailer(name: String) = {
@@ -72,12 +76,13 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       val mandrilApiKey = config.getString("akka.mailer.mandrill-api-key")
       val handler = new MandrillMailHandler(mandrilApiKey)
       val props = Props(new Mailer(handler))
-      system.actorOf(FromConfig.props(props), name)
+      val actor = system.actorOf(FromConfig.props(props), name)
+      paths += actor.path
     }
   }
 
   private def deployMonitor(routers: LocalRouters) = {
-    val service = system.actorOf(Props(new Monitor(routers)), "monitor-service")
+    val service = system.actorOf(Props(new Monitor(paths.toList)), "monitor-service")
     val port = config.getInt("akka.monitor.http-port")
     IO(Http) ! Http.Bind(service, hostname, port)
     println("Started HTTP server: http://" + hostname + ":" + port)
