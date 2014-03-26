@@ -51,32 +51,32 @@ class UserProcessor(mailer: ActorRef) extends ExtendedProcessor {
 
     // ------------------------------------------------------------------------------------------------
     // Commands
-    case p @ Persistent(DoRegisterUser(userProfile, password), _) =>
-      manager.registerUser(userProfile, password) match {
+    case p @ Persistent(DoRegisterUser(userProfile, password), seqNr) =>
+      manager.registerUser(userProfile, password, seqNr) match {
         case Left(reason) =>
           sender ! RegisterUserFailed(reason, None)
         case Right(profile) =>
           sender ! RegisterUserSucceeded(profile)
 
           mailer ! SendMailRequest(profile.email, EmailType.RegisterVerify, Map(
-            "NAME" -> profile.realName,
+            "NAME" -> profile.realName.getOrElse(profile.email),
             "LANG" -> "CHINESE",
             "TOKEN" -> profile.verificationToken.get))
       }
 
-    case p @ DoRequestPasswordReset(email, newToken) =>
-      manager.requestPasswordReset(email, newToken) match {
+    case p @ Persistent(DoRequestPasswordReset(email), seqNr) =>
+      manager.requestPasswordReset(email, seqNr) match {
         case Left(reason) => sender ! RequestPasswordResetFailed(reason)
         case Right(profile) =>
           sender ! RequestPasswordResetSucceeded(profile.id, profile.email, profile.passwordResetToken.get)
 
           mailer ! SendMailRequest(profile.email, EmailType.PasswordResetToken, Map(
-            "NAME" -> profile.realName,
+            "NAME" -> profile.realName.getOrElse(profile.email),
             "LANG" -> "CHINESE",
             "TOKEN" -> profile.passwordResetToken.get))
       }
 
-    case p @ DoResetPassword(email, password, token) =>
+    case p @ Persistent(DoResetPassword(email, password, token), _) =>
       manager.resetPassword(email, password, token) match {
         case Left(reason) => sender ! ResetPasswordFailed(reason)
         case Right(profile) => sender ! ResetPasswordSucceeded(profile.id, profile.email)

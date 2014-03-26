@@ -74,8 +74,8 @@ enum EmailType {
 struct UserProfile {
     1: i64 id
     2: string email
-    3: string realName
-    4: string nationalId
+    3: optional string realName
+    4: optional string nationalId
     5: optional list<byte> passwordHash
     6: bool emailVerified
     8: optional string mobile
@@ -84,6 +84,7 @@ struct UserProfile {
     11: optional string verificationToken
     12: optional string loginToken
     14: UserStatus status
+    15: optional i64 salt
 }
 
 enum ChartTimeDimension {
@@ -250,7 +251,7 @@ struct SendMailRequest{1: string email, 2: EmailType emailType, 3: map<string, s
 
 // UserProcessor commands
 struct DoRegisterUser{1: UserProfile userProfile, 2: string password}
-struct DoRequestPasswordReset{1: string email, 2: string passwordResetToken}
+struct DoRequestPasswordReset{1: string email}
 struct DoResetPassword{1: string email, 2: string password, 3: optional string passwordResetToken}
 
 // AccountProcessor commands

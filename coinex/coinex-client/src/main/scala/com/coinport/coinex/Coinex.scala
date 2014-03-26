@@ -18,6 +18,14 @@ final class Coinex(routers: LocalRouters) extends Actor {
   def receive = {
     LoggingReceive {
       //-------------------------------------------------------------------------
+      // User Proceessor
+      case m: DoRegisterUser => routers.userProcessor forward Persistent(m)
+      case m: DoRequestPasswordReset => routers.userProcessor forward Persistent(m)
+      case m: DoResetPassword => routers.userProcessor forward Persistent(m)
+      case m: Login => routers.userProcessor forward m
+      case m: ValidatePasswordResetToken => routers.userProcessor forward m
+
+      //-------------------------------------------------------------------------
       // Account Processor
       case m: DoDepositCash => routers.accountProcessor forward Persistent(m)
       case m: DoRequestCashWithdrawal => routers.accountProcessor forward Persistent(m)
