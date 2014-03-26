@@ -36,6 +36,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       deployView(Props(new MarketDepthView(m)), MARKET_DEPTH_VIEW(m))
       deployView(Props(new CandleDataView(m)), CANDLE_DATA_VIEW(m))
       deployView(Props(new TransactionDataView(m)), TRANSACTION_DATA_VIEW(m))
+      deployView(Props(new UserTransactionView(m)), USER_TRANSACTION_VIEW(m))
     }
 
     deployView(Props(classOf[UserView]), USER_VIEW)
