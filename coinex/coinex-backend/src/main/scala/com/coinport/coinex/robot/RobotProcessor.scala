@@ -27,38 +27,6 @@ class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor {
   val activateRobotsInterval = 5 second
   private var cancellable: Cancellable = null
   private val manager = new RobotManager()
-  /*
-  val brain = Map(
-    "START" -> """
-      var r = robot.setPayload("START", Some(10))
-      (r -> "STATE_A", None)
-    """,
-
-    "STATE_A" -> """
-      val times = robot.getPayload[Int]("START")
-      val r = robot.setPayload("START", times map { _ - 1 })
-      if (times.get != 1) {
-        (r -> "STATE_A", Some(0))
-      } else {
-        (r -> "DONE", Some(1))
-      }
-    """
-  )
-  */
-  /*
-  val brain = Map(
-    "START" -> """
-      var r = robot.setPayload("START", Some(10))
-      (r -> "STATE_A", None)
-    """,
-
-    "STATE_A" -> """
-      (robot -> "DONE", Some(DoSubmitOrder(MarketSide(Btc, Rmb), Order(1, 1, 2, Some(3429.0)))))
-    """
-  )
-  var robot = new DRobot(1, 1, 1, brain)
-  manager.addRobot(robot)
-  */
 
   implicit def executionContext = context.dispatcher
   implicit val timeout: Timeout = 1 second
@@ -111,7 +79,6 @@ class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor {
     if (cancellable != null && !cancellable.isCancelled) cancellable.cancel()
 
   private def activateRobots() {
-    println(manager())
     manager().getRobotPool.map(robot => robot.action(Some(manager().metrics))) foreach { res =>
       res match {
         case (newRobot, action) =>
