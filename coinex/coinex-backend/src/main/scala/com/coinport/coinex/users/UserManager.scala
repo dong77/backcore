@@ -67,8 +67,6 @@ class UserManager extends StateManager[UserState] {
       case None => Left(LoginFailureReason.UserNotExist)
       case Some(profile) =>
         val passwordHash = computePasswordHash(profile.email, password, profile.salt.get)
-        println("------- hash" + passwordHash)
-        println("-------old hash:" + profile.passwordHash)
         if (Some(passwordHash) == profile.passwordHash) Right(profile)
         else Left(LoginFailureReason.PasswordNotMatch)
     }
