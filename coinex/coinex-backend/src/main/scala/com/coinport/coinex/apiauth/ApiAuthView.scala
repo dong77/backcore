@@ -89,13 +89,13 @@ class ApiAuthManager(initialSeed: String) extends StateManager[ApiSecretState] {
   }
 
   private def generateNewSecret(): (String, String) = {
-    val x1 = Hash.sha256(state.seed)
-    val x2 = Hash.sha256(x1)
-    val x3 = Hash.sha256(x2)
+    val x1 = Hash.sha256Base64(state.seed)
+    val x2 = Hash.sha256Base64(x1)
+    val x3 = Hash.sha256Base64(x2)
 
     val identifier = Math.abs(Hash.murmur3(x1)).toString
     val secret = "%x%x".format(Hash.murmur3(x2), Hash.murmur3(x3))
-    state = state.copy(seed = Hash.sha256(x3))
+    state = state.copy(seed = Hash.sha256Base64(x3))
     (identifier, secret)
   }
 }

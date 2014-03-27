@@ -33,8 +33,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     import LocalRouters._
 
     val secret = config.getString("akka.exchange.secret")
-    val userManagerSecret = util.Hash.sha256(secret + "userProcessorSecret")
-    val apiAuthSecret = util.Hash.sha256(secret + "apiAuthSecret")
+    val userManagerSecret = util.Hash.sha256Base64(secret + "userProcessorSecret")
+    val apiAuthSecret = util.Hash.sha256Base64(secret + "apiAuthSecret")
 
     deployMailer(MAILER)
 

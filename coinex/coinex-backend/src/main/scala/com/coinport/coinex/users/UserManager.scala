@@ -93,22 +93,22 @@ class UserManager(secret: String = "") extends StateManager[UserState] {
 
   private def regulate(s: String) = s.trim.toLowerCase
 
-  private val userIdSecret = Hash.sha256(secret + "userIdSecret")
-  private val passwordSecret = Hash.sha256(secret + "passwordSecret")
-  private val hexTokenSecret = Hash.sha256(secret + "hexTokenSecret")
-  private val numericTokenSecret = Hash.sha256(secret + "numericTokenSecret")
+  private val userIdSecret = Hash.sha256Base64(secret + "userIdSecret")
+  private val passwordSecret = Hash.sha256Base64(secret + "passwordSecret")
+  private val hexTokenSecret = Hash.sha256Base64(secret + "hexTokenSecret")
+  private val numericTokenSecret = Hash.sha256Base64(secret + "numericTokenSecret")
 
   private def computeUserId(email: String): Long = Hash.sha256ThenMurmur3(email + userIdSecret)
 
   private def computePassword(userId: Long, email: String, password: String) =
-    Hash.sha256(email + passwordSecret + Hash.sha256(userId + password.trim + passwordSecret))
+    Hash.sha256Base64(email + passwordSecret + Hash.sha256Base64(userId + password.trim + passwordSecret))
 
   private def newHexToken(salt: Long, email: String): String =
-    Hash.sha256(email + salt + hexTokenSecret)
+    Hash.sha256Base32(email + salt + hexTokenSecret).substring(0, 40)
 
   private def newNumericToken(salt: Long, email: String): String = {
     val num = Hash.sha256ThenMurmur3(email + salt + numericTokenSecret)
-    "%04d".format(Math.abs(num)).substring(0, 4)
+    "%04d".format(Math.abs(num)).substring(0, 6)
 
   }
 }
