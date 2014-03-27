@@ -13,7 +13,7 @@ import Implicits._
 
 class TransactionDataView(market: MarketSide) extends ExtendedView {
   override def processorId = "coinex_mup"
-  override val viewId = "transaction_data_view"
+  override val viewId = "tx_data_view"
   private val manager = new TransactionDataManager(market)
 
   def receive = LoggingReceive {

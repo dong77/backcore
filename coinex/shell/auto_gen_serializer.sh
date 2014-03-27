@@ -102,9 +102,11 @@ object MessageJsonProtocol extends DefaultJsonProtocol {
 // Auto-generate EventSerializer code
 def extractStructsFromFile(file: String): Seq[(String, Int)] = {
   val lines = scala.io.Source.fromFile(file).mkString
-  structNameExtractor.findAllIn(lines).matchData.toSeq.map { item => 
+  val structs = structNameExtractor.findAllIn(lines).matchData.toSeq.map { item => 
     (item.group(1), structFieldCounter.findAllIn(item.group(2)).size)
   }
+	
+	structs.sortWith((a, b) => a._1 < b._1)
 }
 
 def generateSerializerCode(structs: Seq[(String, Int)], outputFile: String, time: String) = {

@@ -17,6 +17,7 @@ import com.coinport.coinex.markets._
 import com.coinport.coinex.robot._
 import com.coinport.coinex.users._
 import com.coinport.coinex.mail._
+import com.coinport.coinex.apiauth._
 import com.coinport.coinex.monitoring._
 import akka.io.IO
 import spray.can.Http
@@ -43,6 +44,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployView(Props(classOf[AccountView]), ACCOUNT_VIEW)
     deployView(Props(classOf[UserOrdersView]), USER_ORDERS_VIEW)
     deployView(Props(classOf[RobotMetricsView]), ROBOT_METRICS_VIEW)
+    deployView(Props(classOf[ApiAuthView]), API_AUTH_VIEW)
 
     deployMailer(MAILER)
 
@@ -58,6 +60,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployProcessor(Props(new UserProcessor(routers.mailer, config.getString("akka.user-manager.secret"))), USER_PROCESSOR)
     deployProcessor(Props(new AccountProcessor(routers.marketProcessors)), ACCOUNT_PROCESSOR)
     deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
+    deployProcessor(Props(new ApiAuthProcessor()), API_AUTH_PROCESSOR)
 
     // Deploy other stuff
     deployMonitor(routers)

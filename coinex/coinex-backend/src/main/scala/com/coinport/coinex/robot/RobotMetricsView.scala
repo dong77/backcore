@@ -14,6 +14,7 @@ import Implicits._
 
 class RobotMetricsView extends ExtendedView {
   override def processorId = "coinex_mup"
+  override val viewId = "metrics_view"
 
   val manager = new RobotMetricsManager()
 
