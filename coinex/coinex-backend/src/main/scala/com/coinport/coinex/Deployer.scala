@@ -55,7 +55,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       deployProcessor(props, MARKET_PROCESSOR(m))
     }
 
-    deployProcessor(Props(new UserProcessor(routers.mailer)), USER_PROCESSOR)
+    deployProcessor(Props(new UserProcessor(routers.mailer, config.getString("akka.user-manager.secret"))), USER_PROCESSOR)
     deployProcessor(Props(new AccountProcessor(routers.marketProcessors)), ACCOUNT_PROCESSOR)
     deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
 

@@ -13,15 +13,13 @@ import com.coinport.coinex.common.ExtendedProcessor
 import RegisterationFailureReason._
 import akka.event.LoggingReceive
 
-class UserProcessor(mailer: ActorRef) extends ExtendedProcessor {
+class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends ExtendedProcessor {
   override val processorId = "coinex_up"
 
-  val manager = new UserManager()
+  val manager = new UserManager(userManagerSecret)
 
   def receive = LoggingReceive {
     // ------------------------------------------------------------------------------------------------
-    // Snapshots
-    // TODO(c) add global flag to indicate if is snapshoting
     case TakeSnapshotNow => saveSnapshot(manager())
 
     case SaveSnapshotSuccess(metadata) =>

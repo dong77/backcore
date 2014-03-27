@@ -84,7 +84,6 @@ struct UserProfile {
     11: optional string verificationToken
     12: optional string loginToken
     14: UserStatus status
-    15: optional i64 salt
 }
 
 enum ChartTimeDimension {

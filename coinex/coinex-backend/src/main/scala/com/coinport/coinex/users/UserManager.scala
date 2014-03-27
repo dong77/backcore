@@ -20,28 +20,16 @@ import com.coinport.coinex.common.StateManager
 import com.coinport.coinex.util._
 import com.google.common.io.BaseEncoding
 
-class UserManager extends StateManager[UserState] {
+class UserManager(secret: String = "") extends StateManager[UserState] {
   initWithDefaultState(UserState())
 
-  val SALT_SUGER = -8431060239719927652L
-  val HEX_TOKEN_SUGER = 91735161L
-  val NUMERIC_TOKEN_SUGER = 49838196L
-
-  def regulate(s: String) = s.trim.toLowerCase
-  def emailToId(email: String) = Hash.murmur3(regulate(email))
-
-  private def computePasswordHash(email: String, password: String, salt: Long) = {
-    BaseEncoding.base64.encode(Hash.sha256("%s\n%s\n%d".format(email, password, salt)))
-  }
-
-  def registerUser(profile: UserProfile, password: String, seed: Long): Either[RegisterationFailureReason, UserProfile] = {
+  def registerUser(profile: UserProfile, password: String, salt: Long): Either[RegisterationFailureReason, UserProfile] = {
     val email = regulate(profile.email)
-    val id = emailToId(email)
-    val salt = seed ^ SALT_SUGER
+    val id = computeUserId(email)
     state.profileMap.get(id) match {
       case Some(_) => Left(RegisterationFailureReason.EmailAlreadyRegistered)
       case None =>
-        val verificationToken = newHexToken(seed, email)
+        val verificationToken = newHexToken(salt, email)
         val updatedProfile: UserProfile = profile.copy(
           id = id,
           email = email,
@@ -49,10 +37,9 @@ class UserManager extends StateManager[UserState] {
           passwordResetToken = None,
           verificationToken = Some(verificationToken),
           loginToken = None,
-          status = UserStatus.Normal,
-          salt = Some(salt))
+          status = UserStatus.Normal)
 
-        val passwordHash = computePasswordHash(email, password, salt)
+        val passwordHash = computePassword(id, email, password)
         val profileWithPassword = updatedProfile.copy(passwordHash = Some(passwordHash))
 
         state = state.addUserProfile(profileWithPassword).addVerificationToken(verificationToken, id)
@@ -61,27 +48,27 @@ class UserManager extends StateManager[UserState] {
   }
 
   def checkLogin(email: String, password: String): Either[LoginFailureReason, UserProfile] = {
-    val id = emailToId(regulate(email))
+    val id = computeUserId(regulate(email))
 
     state.profileMap.get(id) match {
       case None => Left(LoginFailureReason.UserNotExist)
       case Some(profile) =>
-        val passwordHash = computePasswordHash(profile.email, password, profile.salt.get)
+        val passwordHash = computePassword(profile.id, profile.email, password)
         if (Some(passwordHash) == profile.passwordHash) Right(profile)
         else Left(LoginFailureReason.PasswordNotMatch)
     }
   }
 
-  def requestPasswordReset(email: String, seed: Long): Either[RequestPasswordResetFailureReason, UserProfile] = {
+  def requestPasswordReset(email: String, salt: Long): Either[RequestPasswordResetFailureReason, UserProfile] = {
     val e = regulate(email)
-    val id = emailToId(e)
+    val id = computeUserId(e)
     state.profileMap.get(id) match {
       case None => Left(RequestPasswordResetFailureReason.UserNotExist)
       case Some(profile) if profile.email != e => Left(RequestPasswordResetFailureReason.TokenNotUnique)
       case Some(profile) if profile.passwordResetToken.isDefined => Right(profile)
       case Some(profile) if profile.passwordResetToken.isEmpty =>
 
-        val token = newHexToken(seed, e)
+        val token = newHexToken(salt, e)
         val updatedProfile = profile.copy(passwordResetToken = Some(token))
         state = state.updateUserProfile(id)(_ => updatedProfile).addPasswordResetToken(token, id)
         Right(updatedProfile)
@@ -89,13 +76,13 @@ class UserManager extends StateManager[UserState] {
   }
 
   def resetPassword(email: String, password: String, passwordResetToken: Option[String]): Either[ResetPasswordFailureReason, UserProfile] = {
-    val id = emailToId(regulate(email))
+    val id = computeUserId(regulate(email))
     state.profileMap.get(id) match {
       case None => Left(ResetPasswordFailureReason.UserNotExist)
 
       case Some(profile) if profile.passwordResetToken == passwordResetToken =>
         profile.passwordResetToken foreach { token => state = state.deletePasswordResetToken(token) }
-        val passwordHash = computePasswordHash(profile.email, password, profile.salt.get)
+        val passwordHash = computePassword(profile.id, profile.email, password)
         val updatedProfile = profile.copy(passwordHash = Some(passwordHash), passwordResetToken = None)
         state = state.updateUserProfile(id)(_ => updatedProfile)
         Right(updatedProfile)
@@ -104,13 +91,27 @@ class UserManager extends StateManager[UserState] {
     }
   }
 
-  private def newHexToken(seed: Long, email: String): String = {
-    val rand = new scala.util.Random((seed + HEX_TOKEN_SUGER) ^ Hash.murmur3(email))
-    rand.nextLong.toHexString + rand.nextLong.toHexString
-  }
+  private def regulate(s: String) = s.trim.toLowerCase
 
-  private def newNumericToken(seed: Long, email: String): String = {
-    val rand = new scala.util.Random((seed + NUMERIC_TOKEN_SUGER) ^ Hash.murmur3(email))
-    Math.abs((rand.nextLong % 1000000)).toString
+  private def sha256Of(text: String): String = BaseEncoding.base64.encode(Hash.sha256(text))
+  private def sha256ThenMurmur3(text: String): Long = Hash.murmur3(BaseEncoding.base64.encode(Hash.sha256(text)))
+
+  private val userIdSecret = sha256Of(secret + "userIdSecret")
+  private val passwordSecret = sha256Of(secret + "passwordSecret")
+  private val hexTokenSecret = sha256Of(secret + "hexTokenSecret")
+  private val numericTokenSecret = sha256Of(secret + "numericTokenSecret")
+
+  private def computeUserId(email: String): Long = sha256ThenMurmur3(email + userIdSecret)
+
+  private def computePassword(userId: Long, email: String, password: String) =
+    sha256Of(email + passwordSecret + sha256Of(userId + password.trim + passwordSecret))
+
+  private def newHexToken(salt: Long, email: String): String =
+    sha256Of(email + salt + hexTokenSecret)
+
+  private def newNumericToken(salt: Long, email: String): String = {
+    val num = sha256ThenMurmur3(email + salt + numericTokenSecret)
+    "%04d".format(Math.abs(num)).substring(0, 4)
+
   }
 }
