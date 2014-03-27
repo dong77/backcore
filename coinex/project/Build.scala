@@ -10,13 +10,14 @@ import com.typesafe.sbt.SbtAtmos.{ Atmos, atmosSettings }
 //import NativePackagerKeys._
 
 object CoinexBuild extends Build {
+  val coinexVersion = "1.0.3-SNAPSHOT"
   val akkaVersion = "2.3.1"
   val bijectionVersion = "0.6.2"
   val sprayVersion = "1.3.1"
 
   val sharedSettings = Seq(
     organization := "com.coinport",
-    version := "1.0.2-SNAPSHOT",
+    version := coinexVersion,
     scalaVersion := "2.10.3",
     crossScalaVersions := Seq("2.10.3"),
     initialCommands in console := """
