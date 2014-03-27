@@ -19,6 +19,7 @@ object LocalRouters {
   val MARKET_UPDATE_PROCESSOR = "marke_update_processor"
   val API_AUTH_PROCESSOR = "api_auth_processor"
   def MARKET_PROCESSOR(side: MarketSide) = "market_processor_" + side.asString
+  val ROBOT_PROCESSOR = "robot_processor"
 
   val USER_VIEW = "user_view"
   val ACCOUNT_VIEW = "account_view"
@@ -47,6 +48,8 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
   val marketProcessors = bidirection(Map(markets map { m =>
     m -> routerForSingleton(MARKET_PROCESSOR(m))
   }: _*))
+
+  val robotProcessor = routerForSingleton(ROBOT_PROCESSOR)
 
   val userView = routerFor(USER_VIEW)
   val accountView = routerFor(ACCOUNT_VIEW)

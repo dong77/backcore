@@ -24,6 +24,7 @@ object CoinexBuild extends Build {
       import com.coinport.coinex.Client
       import com.coinport.coinex.data._
       import com.coinport.coinex.data.Currency._
+      import com.coinport.coinex.robot.sample._
     """,
     scalacOptions ++= Seq("-encoding", "utf8"),
     scalacOptions += "-deprecation",
@@ -64,6 +65,7 @@ object CoinexBuild extends Build {
       "io.spray" %%  "spray-json" % "1.2.5",
       "org.json4s" %% "json4s-native" % "3.2.7",
       "com.google.guava" % "guava" % "16.0.1",
+      "com.twitter" %% "util-eval" % "6.12.1",
       "org.apache.thrift" % "libthrift" % "0.8.0"))
 
   lazy val backend = Project(

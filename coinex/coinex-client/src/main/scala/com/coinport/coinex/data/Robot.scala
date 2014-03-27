@@ -3,18 +3,18 @@
  * Author: c@coinport.com (Chao Ma)
  */
 
-package com.coinport.coinex.robot
+package com.coinport.coinex.data
 
-import org.slf4s.Logging
-
+import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.data._
 
 object State extends Enumeration {
   val START, DONE = Value
 }
 
-abstract class Robot(robotId: Long) extends Object with Logging {
-  val rid = robotId
+// TODO(c) store the "data" of the robot and inflate the runnable rubot from the data
+abstract class Robot(
+    val robotId: Long, val userId: Long = COINPORT_UID, val timestamp: Long = 0) extends Serializable {
 
   import State._
   type Enum = Enumeration#Value

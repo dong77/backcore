@@ -13,6 +13,7 @@ import com.coinport.coinex.data.TakeSnapshotNow
 
 trait ExtendedProcessor extends Processor with ActorLogging {
   val snapshotInterval = 3 minute
+  // val snapshotInterval = 30 second
 
   implicit val ec = context.system.dispatcher
   private var cancellable: Cancellable = null

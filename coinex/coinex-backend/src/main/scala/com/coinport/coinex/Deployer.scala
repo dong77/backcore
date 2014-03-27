@@ -65,6 +65,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployProcessor(Props(new AccountProcessor(routers.marketProcessors)), ACCOUNT_PROCESSOR)
     deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
     deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret)), API_AUTH_PROCESSOR)
+    deployProcessor(Props(new RobotProcessor(routers)), ROBOT_PROCESSOR)
 
     // Deploy monitor at last
     deployMonitor(routers)

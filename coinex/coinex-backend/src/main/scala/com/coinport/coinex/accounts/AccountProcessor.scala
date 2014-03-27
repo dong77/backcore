@@ -51,7 +51,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
     case p @ Persistent(DoConfirmCashWithdrawalFailed(userId, currency, amount), seq) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
-    case p @ Persistent(DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _)), seq) =>
+    case p @ Persistent(DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _)), seq) =>
       if (quantity <= 0) sender ! AccountOperationResult(InvalidAmount, null)
       else manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
         case AccountOperationResult(Ok, _) =>

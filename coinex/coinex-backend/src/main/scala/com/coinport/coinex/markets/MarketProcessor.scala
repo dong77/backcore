@@ -70,6 +70,5 @@ class MarketProcessor(
         channelToMarketUpdateProcessor ! Deliver(p.withPayload(orderSubmitted), marketUpdateProcessoressorPath)
       }
       log.info("state: {}", manager())
-
   }
 }

@@ -16,3 +16,9 @@ case object TakeSnapshotNow
 case object QueryRobotMetrics
 
 case object QueryActorStats
+
+case object ActivateRobotsNow
+
+case class DoSubmitRobot(robot: DRobot)
+
+case class DoCancelRobot(id: Long)

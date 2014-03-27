@@ -39,7 +39,7 @@ class RobotSpec extends Specification {
       }
 
       val robot = new TestRobot(1)
-      robot.rid mustEqual 1
+      robot.robotId mustEqual 1
       robot.action(None) mustEqual Some(1)
       robot.isDone mustEqual false
       robot.action(None) mustEqual Some(2)
@@ -87,7 +87,7 @@ class RobotSpec extends Specification {
       }
 
       val robot = new TestRobot(2)
-      robot.rid mustEqual 2
+      robot.robotId mustEqual 2
       robot.action(metricsImpl) mustEqual Some(0)
       robot.action(metricsImpl) mustEqual Some(1)
       robot.action(None) mustEqual Some(2)
