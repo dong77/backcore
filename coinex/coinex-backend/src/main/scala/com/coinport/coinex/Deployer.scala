@@ -32,6 +32,12 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
   def deploy() = {
     import LocalRouters._
 
+    val secret = config.getString("akka.exchange.secret")
+    val userManagerSecret = util.Hash.sha256(secret + "userProcessorSecret")
+    val apiAuthSecret = util.Hash.sha256(secret + "apiAuthSecret")
+
+    deployMailer(MAILER)
+
     // Deploy views first 
     markets foreach { m =>
       deployView(Props(new MarketDepthView(m)), MARKET_DEPTH_VIEW(m))
@@ -44,9 +50,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployView(Props(classOf[AccountView]), ACCOUNT_VIEW)
     deployView(Props(classOf[UserOrdersView]), USER_ORDERS_VIEW)
     deployView(Props(classOf[RobotMetricsView]), ROBOT_METRICS_VIEW)
-    deployView(Props(classOf[ApiAuthView]), API_AUTH_VIEW)
-
-    deployMailer(MAILER)
+    deployView(Props(new ApiAuthView(apiAuthSecret)), API_AUTH_VIEW)
 
     // Then deploy routers
     val routers = new LocalRouters(markets)
@@ -57,12 +61,12 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       deployProcessor(props, MARKET_PROCESSOR(m))
     }
 
-    deployProcessor(Props(new UserProcessor(routers.mailer, config.getString("akka.user-manager.secret"))), USER_PROCESSOR)
+    deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret)), USER_PROCESSOR)
     deployProcessor(Props(new AccountProcessor(routers.marketProcessors)), ACCOUNT_PROCESSOR)
     deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
-    deployProcessor(Props(new ApiAuthProcessor()), API_AUTH_PROCESSOR)
+    deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret)), API_AUTH_PROCESSOR)
 
-    // Deploy other stuff
+    // Deploy monitor at last
     deployMonitor(routers)
   }
 
@@ -85,7 +89,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
   private def deployMailer(name: String) = {
     if (cluster.selfRoles.contains(name)) {
-      val mandrilApiKey = config.getString("akka.mailer.mandrill-api-key")
+      val mandrilApiKey = config.getString("akka.exchange.mailer.mandrill-api-key")
       val handler = new MandrillMailHandler(mandrilApiKey)
       val props = Props(new Mailer(handler))
       val actor = system.actorOf(FromConfig.props(props), name)
@@ -95,7 +99,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
   private def deployMonitor(routers: LocalRouters) = {
     val service = system.actorOf(Props(new Monitor(paths.toList)), "monitor-service")
-    val port = config.getInt("akka.monitor.http-port")
+    val port = config.getInt("akka.exchange.monitor.http-port")
     IO(Http) ! Http.Bind(service, hostname, port)
     println("Started HTTP server: http://" + hostname + ":" + port)
   }

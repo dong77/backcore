@@ -93,24 +93,21 @@ class UserManager(secret: String = "") extends StateManager[UserState] {
 
   private def regulate(s: String) = s.trim.toLowerCase
 
-  private def sha256Of(text: String): String = BaseEncoding.base64.encode(Hash.sha256(text))
-  private def sha256ThenMurmur3(text: String): Long = Hash.murmur3(BaseEncoding.base64.encode(Hash.sha256(text)))
+  private val userIdSecret = Hash.sha256(secret + "userIdSecret")
+  private val passwordSecret = Hash.sha256(secret + "passwordSecret")
+  private val hexTokenSecret = Hash.sha256(secret + "hexTokenSecret")
+  private val numericTokenSecret = Hash.sha256(secret + "numericTokenSecret")
 
-  private val userIdSecret = sha256Of(secret + "userIdSecret")
-  private val passwordSecret = sha256Of(secret + "passwordSecret")
-  private val hexTokenSecret = sha256Of(secret + "hexTokenSecret")
-  private val numericTokenSecret = sha256Of(secret + "numericTokenSecret")
-
-  private def computeUserId(email: String): Long = sha256ThenMurmur3(email + userIdSecret)
+  private def computeUserId(email: String): Long = Hash.sha256ThenMurmur3(email + userIdSecret)
 
   private def computePassword(userId: Long, email: String, password: String) =
-    sha256Of(email + passwordSecret + sha256Of(userId + password.trim + passwordSecret))
+    Hash.sha256(email + passwordSecret + Hash.sha256(userId + password.trim + passwordSecret))
 
   private def newHexToken(salt: Long, email: String): String =
-    sha256Of(email + salt + hexTokenSecret)
+    Hash.sha256(email + salt + hexTokenSecret)
 
   private def newNumericToken(salt: Long, email: String): String = {
-    val num = sha256ThenMurmur3(email + salt + numericTokenSecret)
+    val num = Hash.sha256ThenMurmur3(email + salt + numericTokenSecret)
     "%04d".format(Math.abs(num)).substring(0, 4)
 
   }

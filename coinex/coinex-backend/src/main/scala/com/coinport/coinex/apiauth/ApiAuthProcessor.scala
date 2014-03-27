@@ -10,36 +10,28 @@ import com.coinport.coinex.data._
 import akka.actor._
 import akka.persistence._
 import com.coinport.coinex.common.ExtendedProcessor
+import com.coinport.coinex.common.StateManager
+import com.coinport.coinex.util.Hash
+import com.google.common.io.BaseEncoding
 import RegisterationFailureReason._
 import akka.event.LoggingReceive
 
-class ApiAuthProcessor extends ExtendedProcessor {
+class ApiAuthProcessor(seed: String) extends ExtendedProcessor {
   override val processorId = "coinex_aap"
 
+  val manager = new ApiAuthManager(seed)
+
   def receive = LoggingReceive {
-    // ------------------------------------------------------------------------------------------------
-    // case TakeSnapshotNow => saveSnapshot(manager())
+    case p @ Persistent(DoAddNewApiSecret(userId), _) =>
+      manager.addNewSecret(userId) match {
+        case Left(code) => sender ! ApiSecretOperationResult(code, manager.getUserSecrets(userId))
+        case Right(_) => sender ! ApiSecretOperationResult(ApiSecretOperationResultCode.Ok, manager.getUserSecrets(userId))
+      }
 
-    case SaveSnapshotSuccess(metadata) =>
-
-    case SaveSnapshotFailure(metadata, reason) =>
-
-    case SnapshotOffer(meta, snapshot) =>
-      log.info("Loaded snapshot {}", meta)
-    // manager.reset(snapshot.asInstanceOf[UserState])
-
-    case DebugDump =>
-    // log.info("state: {}", manager())
-
-    case QueryActorStats =>
-    //  sender ! manager()
-
-    // ------------------------------------------------------------------------------------------------
-    // Commands
-    case p @ Persistent(DoAddNewApiSecret, _) =>
-    case p @ Persistent(DoDeleteApiSecret, _) =>
-
-    case p @ Persistent(something, _) =>
-      throw new IllegalArgumentException(s"ApiAuthProcessor doesn't handle event: Persistent($something.getClass.getSimpleName)")
+    case p @ Persistent(DoDeleteApiSecret(secret), _) =>
+      manager.deleteSecret(secret) match {
+        case Left(code) => sender ! ApiSecretOperationResult(code, Nil)
+        case Right(_) => sender ! ApiSecretOperationResult(ApiSecretOperationResultCode.Ok, Nil)
+      }
   }
 }
