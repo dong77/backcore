@@ -86,10 +86,12 @@ class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor {
           manager.removeRobot(newRobot.robotId)
           if (!newRobot.isDone)
             manager.addRobot(newRobot)
-          action match {
-            case Some(m: DoSubmitOrder) => routers.accountProcessor forward Persistent(m)
-            case None => None
-            case m => log.warning("Robot can't send this message: " + m.getClass.getCanonicalName)
+          if (recoveryFinished) {
+            action match {
+              case Some(m: DoSubmitOrder) => routers.accountProcessor forward Persistent(m)
+              case None => None
+              case m => log.warning("Robot can't send this message: " + m.getClass.getCanonicalName)
+            }
           }
         case _ =>
       }

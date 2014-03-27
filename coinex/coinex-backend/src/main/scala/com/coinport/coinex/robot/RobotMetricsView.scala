@@ -31,7 +31,6 @@ class RobotMetricsView extends ExtendedView {
         }
       }
     case QueryRobotMetrics =>
-      log.info("state: {}", manager())
       sender() ! manager()
   }
 }
