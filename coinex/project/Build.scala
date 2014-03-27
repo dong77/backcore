@@ -54,6 +54,7 @@ object CoinexBuild extends Build {
     .settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
+      "com.typesafe.akka" %% "akka-contrib" % akkaVersion,
       "com.typesafe.akka" %% "akka-persistence-experimental" % akkaVersion,
       "com.twitter" %% "bijection-scrooge" % bijectionVersion,
       "com.twitter" %% "scrooge-core" % "3.12.3",
@@ -81,7 +82,6 @@ object CoinexBuild extends Build {
       libraryDependencies ++= Seq(
         "com.typesafe.akka" %% "akka-remote" % akkaVersion,
         "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
-        "com.typesafe.akka" %% "akka-contrib" % akkaVersion,
         "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
         "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
         "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion,

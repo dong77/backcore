@@ -8,7 +8,7 @@ package com.coinport.coinex
 import akka.actor._
 import akka.cluster.routing._
 import akka.routing._
-import com.coinport.coinex.common.ClusterSingletonProxy
+import akka.contrib.pattern.ClusterSingletonProxy
 import com.coinport.coinex.data._
 import Implicits._
 import akka.cluster.Cluster
