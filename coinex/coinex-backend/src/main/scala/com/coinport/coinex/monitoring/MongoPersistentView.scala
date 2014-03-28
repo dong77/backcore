@@ -41,6 +41,7 @@ class MongoPersistentView(mongoUri: String, pid: String) extends ExtendedView {
 
       val builder = MongoDBObject.newBuilder
       builder += "_id" -> state.index
+      builder += "snapshot" -> state.snapshot
       builder += event -> JSON.parse(data)
       builder += "prehash" -> state.hash
 
