@@ -9,29 +9,46 @@ import com.coinport.coinex.serializers.ThriftJsonSerializer
 import Implicits._
 import com.mongodb.util.JSON
 import com.mongodb.casbah.Imports._
+import com.mongodb.casbah.{ MongoURI }
 
-class MongoPersistentView(pid: String) extends ExtendedView {
+class MongoPersistentView(mongoUri: String, pid: String) extends ExtendedView {
   override val processorId = pid
   override val viewId = pid + "_mongop"
 
   val serializer = new ThriftJsonSerializer
-  val mongoConn = MongoConnection("localhost", 27017)
-  val mongoColl = mongoConn("coinex_export")(pid)
+  val uri = MongoURI(mongoUri)
+  val mongo = MongoConnection(uri)
+  val database = mongo(uri.database.getOrElse("coinex_export"))
+  val collection = database(pid + "_events")
 
   case class State(index: Long, hash: String)
 
-  var state = State(0, "0" * 40)
+  var state = State(0, "0" * 32)
 
   def receive = LoggingReceive {
-    case TakeSnapshotNow => saveSnapshot(state)
-    case SnapshotOffer(meta, snapshot) => state = snapshot.asInstanceOf[State]
+    case TakeSnapshotNow => {
+      saveSnapshot(state)
+      postSnapshot(state)
+    }
+    case SnapshotOffer(meta, snapshot) => state =
+      snapshot.asInstanceOf[State]
 
     case Persistent(m: AnyRef, _) =>
       val data = new String(serializer.toBinary(m))
-      val hash = Hash.sha1Base32(data)
-      val obj = MongoDBObject("_id" -> state.index, "prehash" -> state.hash, "hash" -> hash, "data" -> JSON.parse(data))
-      mongoColl += obj
+      val event = m.getClass.getName.replace("com.coinport.coinex.data.", "").replace("$Immutable", "")
+
+      val builder = MongoDBObject.newBuilder
+      builder += "_id" -> state.index
+      builder += event -> JSON.parse(data)
+      builder += "prehash" -> state.hash
+
+      val hash = Hash.sha1Base32(builder.result.toString)
+      builder += "hash" -> hash
+
+      collection += builder.result
       state = State(state.index + 1, hash)
   }
+
+  def postSnapshot(state: State) = {}
 }
 

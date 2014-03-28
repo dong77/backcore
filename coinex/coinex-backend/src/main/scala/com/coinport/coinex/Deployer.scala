@@ -35,6 +35,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     val secret = config.getString("akka.exchange.secret")
     val userManagerSecret = util.Hash.sha256Base64(secret + "userProcessorSecret")
     val apiAuthSecret = util.Hash.sha256Base64(secret + "apiAuthSecret")
+    val mongoUri = config.getString("akka.exchange.export-persistent-view.mongo-uri")
 
     deployMailer(MAILER)
 
@@ -44,6 +45,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       deployView(Props(new CandleDataView(m)), CANDLE_DATA_VIEW(m))
       deployView(Props(new TransactionDataView(m)), TRANSACTION_DATA_VIEW(m))
       deployView(Props(new UserTransactionView(m)), USER_TRANSACTION_VIEW(m))
+      deployView(Props(new MongoPersistentView(mongoUri, "coinex_mp_" + m.asString)), MARKET_PROCESSOR_MPV(m))
     }
 
     deployView(Props(classOf[UserView]), USER_VIEW)
@@ -51,6 +53,9 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployView(Props(classOf[UserOrdersView]), USER_ORDERS_VIEW)
     deployView(Props(classOf[RobotMetricsView]), ROBOT_METRICS_VIEW)
     deployView(Props(new ApiAuthView(apiAuthSecret)), API_AUTH_VIEW)
+
+    deployView(Props(new MongoPersistentView(mongoUri, "coinex_up")), USER_PROCESSOR_MPV)
+    deployView(Props(new MongoPersistentView(mongoUri, "coinex_ap")), ACCOUNT_PROCESSOR_MPV)
 
     // Then deploy routers
     val routers = new LocalRouters(markets)
@@ -62,8 +67,6 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     }
 
     deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
-    deployView(Props(new MongoPersistentView("coinex_mup")), MARKET_UPDATE_MONGO_PERSISTENT_VIEW)
-
     deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret)), USER_PROCESSOR)
     deployProcessor(Props(new AccountProcessor(routers.marketProcessors)), ACCOUNT_PROCESSOR)
     deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret)), API_AUTH_PROCESSOR)

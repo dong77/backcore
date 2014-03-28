@@ -26,7 +26,9 @@ object LocalRouters {
   val USER_ORDERS_VIEW = "user_orders_view"
   val ROBOT_METRICS_VIEW = "robot_metrics_view"
   val API_AUTH_VIEW = "api_auth_view"
-  val MARKET_UPDATE_MONGO_PERSISTENT_VIEW = "market_update_mongop_view"
+  def MARKET_PROCESSOR_MPV(side: MarketSide) = "market_processor_mpv_" + side.asString
+  val USER_PROCESSOR_MPV = "user_processor_mpv"
+  val ACCOUNT_PROCESSOR_MPV = "account_processor_mpv"
 
   def CANDLE_DATA_VIEW(side: MarketSide) = "candle_data_view_" + side.asString
   def MARKET_DEPTH_VIEW(side: MarketSide) = "market_depth_view_" + side.asString

@@ -48,7 +48,9 @@ object CoinexApp extends App {
     api_auth_processor,
     api_auth_view,
     robot_processor,
-    market_update_mongop_view,
+    user_processor_mpv,
+    account_processor_mpv,
+    market_processor_mpv_btc_rmb,
     """
 
   val seedNodes = args(1).split(",").map(_.stripMargin).filter(_.nonEmpty).map("\"akka.tcp://coinex@" + _ + "\"").mkString(",")
