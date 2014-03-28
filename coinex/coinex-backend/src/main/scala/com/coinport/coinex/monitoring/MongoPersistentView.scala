@@ -36,19 +36,24 @@ class MongoPersistentView(mongoUri: String, pid: String) extends ExtendedView {
       snapshot.asInstanceOf[State]
 
     case Persistent(m: AnyRef, _) =>
-      val data = new String(serializer.toBinary(m))
+      val data = JSON.parse(new String(serializer.toBinary(m)))
       val event = m.getClass.getName.replace("com.coinport.coinex.data.", "").replace("$Immutable", "")
 
-      val builder = MongoDBObject.newBuilder
-      builder += "_id" -> state.index
-      builder += "snapshot" -> state.snapshot
-      builder += event -> JSON.parse(data)
-      builder += "prehash" -> state.hash
+      val json = MongoDBObject(
+        "_id" -> state.index,
+        "snapshot" -> state.snapshotIndex,
+        "prehash" -> state.hash,
+        event -> data)
 
-      val hash = Hash.sha1Base32(builder.result.toString)
-      builder += "hash" -> hash
+      val hash = Hash.sha1Base32(json.toString)
+      val jsonWithHash = MongoDBObject(
+        "_id" -> state.index,
+        "snapshot" -> state.snapshotIndex,
+        "prehash" -> state.hash,
+        "hash" -> hash,
+        event -> data)
 
-      collection += builder.result
+      collection += jsonWithHash
       state = state.copy(index = state.index + 1, hash = hash)
   }
 
