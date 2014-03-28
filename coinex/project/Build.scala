@@ -70,6 +70,7 @@ object CoinexBuild extends Build {
       "io.spray" %%  "spray-json" % "1.2.5",
       "org.json4s" %% "json4s-native" % "3.2.7",
       "com.google.guava" % "guava" % "16.0.1",
+      "org.mongodb" %% "casbah" % "2.6.5",
       "com.twitter" %% "util-eval" % "6.12.1",
       "org.apache.thrift" % "libthrift" % "0.8.0"))
 

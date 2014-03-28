@@ -61,9 +61,11 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       deployProcessor(props, MARKET_PROCESSOR(m))
     }
 
+    deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
+    deployView(Props(new MongoPersistentView("coinex_mup")), MARKET_UPDATE_MONGO_PERSISTENT_VIEW)
+
     deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret)), USER_PROCESSOR)
     deployProcessor(Props(new AccountProcessor(routers.marketProcessors)), ACCOUNT_PROCESSOR)
-    deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
     deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret)), API_AUTH_PROCESSOR)
     deployProcessor(Props(new RobotProcessor(routers)), ROBOT_PROCESSOR)
 
