@@ -1,15 +1,61 @@
 #!/bin/sh
 exec scala "$0" "$@"
 !#
-
 import scala.util.matching.Regex
 import java.io.File
 import java.util.Calendar
+object Generator {
 
-val structNameExtractor = """\s+struct\s+(\w+)\s*\{([^}]*)}""".r
-val structFieldCounter = """\d+\w*:\w*""".r
+  val structNameExtractor = """\s+struct\s+(\w+)\s*\{""".r
+  val structFieldCounter = """\d+\w*:\w*""".r
 
-val SERIALIZER_CODE_TEMPLATE = """
+  // Do the generation and replace existing files
+  val time = Calendar.getInstance().getTime().toString
+  val structs = extractStructsFromFile("coinex-client/src/main/thrift/messages.thrift")
+
+  def apply() = {
+    generateSerializerFile("ThriftBinarySerializer", 607870725, "BinaryScalaCodec", structs,
+      "coinex-client/src/main/scala/com/coinport/coinex/serializers/ThriftJsonSerializer.scala", time)
+
+    generateSerializerFile("ThriftJsonSerializer", 607100416, "JsonScalaCodec", structs,
+      "coinex-client/src/main/scala/com/coinport/coinex/serializers/ThriftBinarySerializer.scala", time)
+
+    generateConfigFile("ThriftBinarySerializer", structs,
+      "coinex-client/src/main/resources/serialization.conf", time)
+  }
+
+  // Auto-generate EventSerializer code
+  def extractStructsFromFile(file: String): Seq[String] = {
+    val lines = scala.io.Source.fromFile(file).mkString
+    val structs = structNameExtractor.findAllIn(lines).matchData.toSeq.map(_.group(1))
+    structs.sortWith((a, b) => a < b)
+  }
+
+  def generateSerializerFile(className: String, id: Int, codec: String, structs: Seq[String], outputFile: String, time: String) = {
+    val code = SERIALIZER_CODE_TEMPLATE.format(time, className, id,
+      structs.zipWithIndex.map { case (struct, idx) => codecClause(idx, codec, struct) }.mkString("\n"),
+      structs.zipWithIndex.map { case (struct, idx) => toBinaryClauses(idx, struct) }.mkString("\n"),
+      structs.zipWithIndex.map { case (struct, idx) => fromBinaryClause(idx, struct) }.mkString("\n"))
+    writeToFile(code, outputFile)
+  }
+
+  def codecClause(idx: Int, codec: String, struct: String) = s"  lazy val s_${idx} = ${codec}(${struct})"
+  def toBinaryClauses(idx: Int, struct: String) = s"    case m: $struct => s_${idx}(m)"
+  def fromBinaryClause(idx: Int, struct: String) = s"    case Some(c) if c == classOf[${struct}.Immutable] => s_${idx}.invert(bytes).get"
+
+  // Auto-generate Akka serialization configuration file
+  def generateConfigFileEntry(struct: String) = "      \"com.coinport.coinex.data.%s\" = event".format(struct)
+  def generateConfigFile(className: String, structs: Seq[String], outputFile: String, time: String) = {
+    val configs = SERIALIZATION_CONFIG_TEMPLATE.format(time, className, structs.map(generateConfigFileEntry).mkString("\n"))
+    writeToFile(configs, outputFile)
+  }
+
+  def writeToFile(content: String, file: String) = {
+    val pw = new java.io.PrintWriter(new File(file))
+    try pw.write(content) finally pw.close()
+  }
+
+  val SERIALIZER_CODE_TEMPLATE = """
 /**
  * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
  *
@@ -22,9 +68,9 @@ import akka.serialization.Serializer
 import com.twitter.bijection.scrooge.BinaryScalaCodec
 import com.coinport.coinex.data._
 
-class EventSerializer extends Serializer {
+class %s extends Serializer {
   val includeManifest: Boolean = true
-  val identifier = 870725
+  val identifier = %d
 %s
 
   def toBinary(obj: AnyRef): Array[Byte] = obj match {
@@ -38,12 +84,12 @@ class EventSerializer extends Serializer {
 %s
 
     case Some(c) => throw new IllegalArgumentException("Cannot deserialize class: " + c.getCanonicalName)
-    case None => throw new IllegalArgumentException("No class found in EventSerializer when deserializing array: " + bytes.mkString(""))
+    case None => throw new IllegalArgumentException("No class found in EventSerializer when deserializing array: " + bytes.mkString("").take(100))
   }
 }
 """
 
-val SERIALIZATION_CONFIG_TEMPLATE = """
+  val SERIALIZATION_CONFIG_TEMPLATE = """
 #
 # Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
 #
@@ -60,7 +106,7 @@ akka {
       akka-pubsub = "akka.contrib.pattern.protobuf.DistributedPubSubMessageSerializer"
       akka-persistence-snapshot = "akka.persistence.serialization.SnapshotSerializer"
       akka-persistence-message = "akka.persistence.serialization.MessageSerializer"
-      event = "com.coinport.coinex.serializers.EventSerializer"
+      event = "com.coinport.coinex.serializers.%s"
     }
     serialization-bindings {
       "[B" = bytes
@@ -80,8 +126,7 @@ akka {
 }
 """
 
-
-val JSON_PROTOCOL_TEMPLATE = """
+  val JSON_PROTOCOL_TEMPLATE = """
 
 /**
  * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
@@ -98,53 +143,6 @@ object MessageJsonProtocol extends DefaultJsonProtocol {
 %s
 }
 """
-
-// Auto-generate EventSerializer code
-def extractStructsFromFile(file: String): Seq[(String, Int)] = {
-  val lines = scala.io.Source.fromFile(file).mkString
-  val structs = structNameExtractor.findAllIn(lines).matchData.toSeq.map { item => 
-    (item.group(1), structFieldCounter.findAllIn(item.group(2)).size)
-  }
-	
-	structs.sortWith((a, b) => a._1 < b._1)
 }
 
-def generateSerializerCode(structs: Seq[(String, Int)], outputFile: String, time: String) = {
-  val code = generateSerializerClassCode(
-    time,
-    structs.zipWithIndex.map { case (struct, idx) => generateCodecClauses(idx, struct._1) }.mkString("\n"),
-    structs.zipWithIndex.map { case (struct, idx) => generateToBinaryClauses(idx, struct._1) }.mkString("\n"),
-    structs.zipWithIndex.map { case (struct, idx) => generateFromBinaryClauses(idx, struct._1) }.mkString("\n"))
-  val pw = new java.io.PrintWriter(new File(outputFile))
-  try pw.write(code) finally pw.close()
-}
-
-def generateCodecClauses(idx: Int, struct: String) = "  lazy val s_%d = BinaryScalaCodec(%s)".format(idx, struct)
-def generateToBinaryClauses(idx: Int, struct: String) = "    case m: %s => s_%d(m)".format(struct, idx)
-def generateFromBinaryClauses(idx: Int, struct: String) = "    case Some(c) if c == classOf[%s.Immutable] => s_%d.invert(bytes).get".format(struct, idx)
-def generateSerializerClassCode(time: String, serializers: String, to: String, from: String) = SERIALIZER_CODE_TEMPLATE.format(time, serializers, to, from)
-
-// Auto-generate Akka serialization configuration file
-def generateStructSerializationConfigEntry(struct: (String, Int)) = "      \"com.coinport.coinex.data.%s\" = event".format(struct._1)
-def generateStructSerializationConfig(structs: Seq[(String, Int)], outputFile: String, time: String) = {
-  val configs = SERIALIZATION_CONFIG_TEMPLATE.format(time, structs.map(generateStructSerializationConfigEntry).mkString("\n"))
-  val pw = new java.io.PrintWriter(new File(outputFile))
-  try pw.write(configs) finally pw.close()
-}
-
-// Auto-generate Spray-based Json protocol
-def generateJsonFormat(struct: String, numOfFields: Int) = "  implicit val format%s = jsonFormat%d(%s.apply)".format(struct, numOfFields, struct)
-def generateJsonProtocol(structs: Seq[(String, Int)], outputFile: String, time: String) = {
-  val protocol = JSON_PROTOCOL_TEMPLATE.format(time, structs.map(x => generateJsonFormat(x._1, x._2)).mkString("\n"))
-  val pw = new java.io.PrintWriter(new File(outputFile))
-  try pw.write(protocol) finally pw.close()
-}
-
-
-// Do the generation and replace existing files
-val time = Calendar.getInstance().getTime().toString
-val structs = extractStructsFromFile("coinex-client/src/main/thrift/messages.thrift")
-
-generateSerializerCode(structs, "coinex-client/src/main/scala/com/coinport/coinex/serializers/EventSerializer.scala", time)
-// generateJsonProtocol(structs, "coinex-client/src/main/scala/com/coinport/coinex/serializers/MessageJsonProtocol.scala", time)
-generateStructSerializationConfig(structs, "coinex-client/src/main/resources/serialization.conf", time)
+Generator()
