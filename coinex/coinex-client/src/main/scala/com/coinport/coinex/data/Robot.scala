@@ -5,62 +5,63 @@
 
 package com.coinport.coinex.data
 
+import com.twitter.util.Eval
+
 import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.data._
 
-object State extends Enumeration {
-  val START, DONE = Value
-}
+// TODO(c) use cache for state handler instead of inflating it from string every time
+// we need change 'robot' in user's code to r inorder to hide the immutable such as:
+// if user wrote: robot.setPayload("A", "1") we need change to r = robot.setPayload("A", "1")
+case class Robot(
+    robotId: Long, userId: Long = COINPORT_UID, timestamp: Long = 0,
+    states: Map[String, String] = Map.empty[String, String],
+    statesPayload: Map[String, Option[Any]] = Map.empty[String, Option[Any]],
+    currentState: String = "START") {
 
-// TODO(c) store the "data" of the robot and inflate the runnable rubot from the data
-abstract class Robot(
-    val robotId: Long, val userId: Long = COINPORT_UID, val timestamp: Long = 0) extends Serializable {
-
-  import State._
-  type Enum = Enumeration#Value
   // Option[Any] is the actual action of the robot, such as DoDepositCash.
   // This could be restrained from outter processor
   // TODO(c): try to make RobotMetrics as T
-  type Action = (Option[RobotMetrics]) => (Option[Any], Enum)
+  type Action = (Robot, Option[RobotMetrics]) => (Robot, Option[Any])
 
-  private var states = Map.empty[Enum, Action]
-  private var statesPayload = Map.empty[Enum, Option[Any]]
-  private var currentState: Enum = START
+  private val START = "START"
+  private val DONE = "DONE"
+  private val HEADER = """
+    import com.coinport.coinex.data._
+    import com.coinport.coinex.data.Currency._
+    (robot: Robot, metrics: Option[RobotMetrics]) =>
 
-  addHandler(START) { _ => (None, firstState) }
-  addHandler(DONE) { _ => (None, DONE) }
-  inflate
-  action(None)
+  """
 
   // invoked by outter processor
-  def action(metrics: Option[RobotMetrics] = None): Option[Any] = {
-    val (actualAction, to) = states(currentState)(metrics)
-    transitTo(to)
-    actualAction
+  def action(metrics: Option[RobotMetrics] = None): (Robot, Option[Any]) = {
+    // TODO(c): check existance
+    if (currentState == DONE)
+      (this, None)
+    else {
+      val function = inflate(HEADER + states(currentState))
+      function(this, metrics)
+    }
   }
 
   def isDone = currentState == DONE
 
-  protected def firstState: Enum
-
-  protected def inflate: Unit
-
-  protected def addHandler(state: Enum)(handler: Action) {
+  def addHandler(state: String)(handler: String): Robot = {
     require(!states.contains(state), "can't set multiple handlers to one state")
     require(state != null)
-    states += (state -> handler)
+    copy(states = states + (state -> handler))
   }
 
-  protected def addPayload(state: Enum, payload: Option[Any]) {
-    statesPayload += (state -> payload)
+  def getPayload[T](state: String) =
+    Option(statesPayload.getOrElse(state, None).getOrElse(null).asInstanceOf[T])
+
+  def setPayload(state: String, payload: Option[Any]): Robot = {
+    copy(statesPayload = statesPayload + (state -> payload))
   }
 
-  protected def getPayload[T]() =
-    Option(statesPayload.getOrElse(currentState, None).getOrElse(null).asInstanceOf[T])
+  def ->(state: String): Robot = { copy(currentState = state) }
 
-  protected def setPayload(payload: Option[Any]) {
-    statesPayload += (currentState -> payload)
+  private def inflate(source: String): Action = {
+    (new Eval()(source)).asInstanceOf[Action]
   }
-
-  private def transitTo(state: Enum) = { currentState = state }
 }

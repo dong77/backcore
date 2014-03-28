@@ -57,7 +57,7 @@ players foreach { uid =>
       """.format(risk(uid))
     )
 
-    val robot = DRobot(uid, uid, uid, brain)
+    val robot = Robot(uid, uid, uid, brain)
 
     /*val (robot2, res) = robot.action(None)*/
 

@@ -8,23 +8,23 @@ package com.coinport.coinex.data
 import scala.collection.immutable.SortedSet
 
 object RobotState {
-  implicit val ordering = new Ordering[DRobot] {
-    def compare(lhs: DRobot, rhs: DRobot) = if (lhs.robotId < rhs.robotId) -1 else if (lhs.robotId > rhs.robotId) 1 else 0
+  implicit val ordering = new Ordering[Robot] {
+    def compare(lhs: Robot, rhs: Robot) = if (lhs.robotId < rhs.robotId) -1 else if (lhs.robotId > rhs.robotId) 1 else 0
   }
 
-  val EmptyRobotPool = SortedSet.empty[DRobot]
+  val EmptyRobotPool = SortedSet.empty[Robot]
 }
 
 case class RobotState(
-    robotPool: SortedSet[DRobot] = RobotState.EmptyRobotPool,
-    robotMap: Map[Long, DRobot] = Map.empty[Long, DRobot],
+    robotPool: SortedSet[Robot] = RobotState.EmptyRobotPool,
+    robotMap: Map[Long, Robot] = Map.empty[Long, Robot],
     metrics: RobotMetrics = RobotMetrics()) {
 
-  def getRobot(id: Long): Option[DRobot] = robotMap.get(id)
+  def getRobot(id: Long): Option[Robot] = robotMap.get(id)
 
   def getRobotPool = robotPool
 
-  def addRobot(robot: DRobot): RobotState = {
+  def addRobot(robot: Robot): RobotState = {
     copy(robotPool = robotPool + robot, robotMap = robotMap + (robot.robotId -> robot))
   }
 

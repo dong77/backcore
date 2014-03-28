@@ -19,6 +19,6 @@ case object QueryActorStats
 
 case object ActivateRobotsNow
 
-case class DoSubmitRobot(robot: DRobot)
+case class DoSubmitRobot(robot: Robot)
 
 case class DoCancelRobot(id: Long)

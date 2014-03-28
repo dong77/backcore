@@ -12,11 +12,11 @@ import Implicits._
 class RobotManager extends StateManager[RobotState] {
   initWithDefaultState(RobotState())
 
-  def addRobot(robot: DRobot) {
+  def addRobot(robot: Robot) {
     state = state.addRobot(robot)
   }
 
-  def removeRobot(id: Long): Option[DRobot] = {
+  def removeRobot(id: Long): Option[Robot] = {
     val robot = state.getRobot(id)
     robot foreach {
       _ => state = state.removeRobot(id)
