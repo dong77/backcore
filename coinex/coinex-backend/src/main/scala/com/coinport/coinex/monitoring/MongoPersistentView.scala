@@ -21,15 +21,17 @@ class MongoPersistentView(mongoUri: String, pid: String) extends ExtendedView {
   val database = mongo(uri.database.getOrElse("coinex_export"))
   val collection = database(pid + "_events")
 
-  case class State(index: Long, hash: String)
+  case class State(snapshotIndex: Long, index: Long, hash: String)
 
-  var state = State(0, "0" * 32)
+  var state = State(0, 0, "0" * 32)
 
   def receive = LoggingReceive {
     case TakeSnapshotNow => {
       saveSnapshot(state)
       postSnapshot(state)
+      state = state.copy(snapshotIndex = state.snapshotIndex + 1)
     }
+
     case SnapshotOffer(meta, snapshot) => state =
       snapshot.asInstanceOf[State]
 
@@ -46,7 +48,7 @@ class MongoPersistentView(mongoUri: String, pid: String) extends ExtendedView {
       builder += "hash" -> hash
 
       collection += builder.result
-      state = State(state.index + 1, hash)
+      state = state.copy(index = state.index + 1, hash = hash)
   }
 
   def postSnapshot(state: State) = {}
