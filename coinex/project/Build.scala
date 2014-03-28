@@ -25,6 +25,11 @@ object CoinexBuild extends Build {
       import com.coinport.coinex.data._
       import com.coinport.coinex.data.Currency._
       import com.coinport.coinex.robot.sample._
+      import akka.pattern.ask
+      import akka.util.Timeout
+      import scala.concurrent.duration._
+
+      implicit val timeout = Timeout(2 seconds)
     """,
     scalacOptions ++= Seq("-encoding", "utf8"),
     scalacOptions += "-deprecation",

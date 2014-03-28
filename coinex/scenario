@@ -11,3 +11,58 @@ Client.backend ! DoSubmitOrder(MarketSide(Btc, Rmb), Order(1, 1, 2, Some(3429.0)
 Client.backend ! DoSubmitOrder(MarketSide(Rmb, Btc), Order(1, 2, 5000 * 3, Some(1.0 / 5000), Some(3)))
 // check robot metrics
 Client.backend ! QueryRobotMetrics
+
+
+// adds robots for gofv
+
+val wd = -245561917658914311L
+val c = -6771488127296557565L
+val lcm = 877800447188483646L
+val cx = 91990591289398244L
+val lwc = 5742988204510593740L
+
+val players = List(wd, c, lcm, cx, lwc)
+val risk = Map(wd -> 10.0, c -> 30.0, lcm -> 50.0, cx -> 70.0, lwc -> 90.0)
+
+players foreach { uid =>
+    Client.backend ! DoDepositCash(uid, Btc, 10000 * 1000)
+    Client.backend ! DoDepositCash(uid, Rmb, 1000000 * 100)
+
+    val brain = Map(
+      "START" -> """
+        (robot -> "LOOP", None)
+      """,
+
+      "LOOP" -> """
+        import scala.util.Random
+        val btcSide = MarketSide(Btc, Rmb)
+        val rmbSide = MarketSide(Rmb, Btc)
+        val side = List(btcSide, rmbSide)(Random.nextInt(2))
+        val price = metrics match {
+          case None => if (side == btcSide) 3000.0 else 1 / 3000.0
+          case Some(m) => m.marketByMetrics.get(side) match {
+            case Some(mbm) => mbm.price
+            case _ => if (side == btcSide) 3000.0 else 1 / 3000.0
+          }
+        }
+
+        val range = %f - Random.nextInt(100)
+        val orderPrice = price * (1 + range / 100.0)
+        var quantity = 10 * (1 + range / 100.0)
+        if (side == rmbSide) quantity /= orderPrice
+        val action = Some(DoSubmitOrder(side,
+          Order(robot.userId, 0, quantity.toLong, price = Some(orderPrice), robotId = Some(robot.robotId))))
+
+        (robot -> "LOOP", action)
+      """.format(risk(uid))
+    )
+
+    val robot = DRobot(uid, uid, uid, brain)
+
+    /*val (robot2, res) = robot.action(None)*/
+
+
+    Client.backend ! DoSubmitRobot(robot)
+}
+
+
