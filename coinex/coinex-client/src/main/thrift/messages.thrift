@@ -10,7 +10,9 @@
 
 namespace java com.coinport.coinex.data
 
-//---------------------------------------------------------------------
+////////////////////////////////////////////////////////////////
+////////////////////// PERSISTENT ENUMS ////////////////////////
+////////////////////////////////////////////////////////////////
 // Data and Structs
 enum Currency {
     UNKNOWN = 0
@@ -28,36 +30,6 @@ enum OrderStatus {
     MARKET_AUTO_PARTIALLY_CANCELLED = 5
 }
 
-enum AccountOperationCode {
-    OK = 0
-    INSUFFICIENT_FUND = 1
-    INVALID_AMOUNT = 2
-}
-
-enum OrderSubmissionFailReason {
-    PRICE_OUT_OF_RANGE = 1
-}
-
-enum RegisterationFailureReason {
-    EMAIL_ALREADY_REGISTERED = 1
-    MISSING_INFORMATION = 2
-}
-
-enum LoginFailureReason {
-    USER_NOT_EXIST = 1
-    PASSWORD_NOT_MATCH = 2
-}
-
-enum ResetPasswordFailureReason {
-    USER_NOT_EXIST = 1
-    TOKEN_NOT_MATCH = 2
-}
-
-enum RequestPasswordResetFailureReason {
-    USER_NOT_EXIST = 1
-    TOKEN_NOT_UNIQUE = 2
-}
-
 enum UserStatus {
     NORMAL = 0
     SUSPENDED = 1
@@ -67,29 +39,6 @@ enum EmailType {
     REGISTER_VERIFY = 1
     LOGIN_TOKEN = 2
     PASSWORD_RESET_TOKEN = 3
-}
-
-enum ApiSecretOperationResultCode {
-    OK = 0
-    TOO_MANY_SECRETS = 1
-    INVALID_SECRET = 2
-}
-
-//---------------------------------------------------------------------
-// User profile related
-struct UserProfile {
-    1: i64 id
-    2: string email
-    3: optional string realName
-    4: optional string nationalId
-    5: optional string passwordHash
-    6: bool emailVerified
-    8: optional string mobile
-    9: bool mobileVerified
-    10: optional string passwordResetToken
-    11: optional string verificationToken
-    12: optional string loginToken
-    14: UserStatus status
 }
 
 enum ChartTimeDimension {
@@ -106,6 +55,25 @@ enum ChartTimeDimension {
     ONE_DAY = 11
     THREE_DAYS = 12
     ONE_WEEK = 13
+}
+
+////////////////////////////////////////////////////////////////
+/////////////////////// PERSISTENT DATA ////////////////////////
+////////////////////////////////////////////////////////////////
+// User profile related
+struct UserProfile {
+    1:  i64 id
+    2:  string email
+    3:  optional string realName
+    4:  optional string nationalId
+    5:  optional string passwordHash
+    6:  bool emailVerified
+    8:  optional string mobile
+    9:  bool mobileVerified
+    10: optional string passwordResetToken
+    11: optional string verificationToken
+    12: optional string loginToken
+    14: UserStatus status
 }
 
 struct MarketSide {
@@ -219,94 +187,136 @@ struct ApiSecret {
 }
 
 struct ApiSecretState {
-	1: map<string, ApiSecret> identifierLookupMap // key is identifier
-	2: map<i64, list<ApiSecret>> userSecretMap // key is userId
-	3: string seed
+    1: map<string, ApiSecret> identifierLookupMap // key is identifier
+    2: map<i64, list<ApiSecret>> userSecretMap // key is userId
+    3: string seed
 }
 
-// ------------------------------------------------------------------------------------------------
-// Non-persistent message.
-struct RegisterUserFailed{1: RegisterationFailureReason reason, 2: optional UserProfile userProfile}
-struct RegisterUserSucceeded{1: UserProfile userProfile}
+////////////////////////////////////////////////////////////////
+///////////////////////// ERROR CODES //////////////////////////
+////////////////////////////////////////////////////////////////
 
-struct Login{1: string email, 2: string password}
-struct LoginFailed{1: LoginFailureReason reason}
-struct LoginSucceeded{1: i64 id, 2: string email}
+enum ErrorCode {
+    OK = 0
 
-struct RequestPasswordResetFailed{1: RequestPasswordResetFailureReason reason}
-struct RequestPasswordResetSucceeded{1: i64 id, 2: string email, 3: string passwordResetToken}
+    // User related
+    EMAIL_ALREADY_REGISTERED         = 1001
+    MISSING_INFORMATION              = 1002
+    USER_NOT_EXIST                   = 1003
+    PASSWORD_NOT_MATCH               = 1004
+    TOKEN_NOT_MATCH                  = 1005
+    TOKEN_NOT_UNIQUE                 = 1006
+    
+    // Account related
+    PRICE_OUT_OF_RANGE               = 2001
+    INSUFFICIENT_FUND                = 2002
+    INVALID_AMOUNT                   = 2003
 
-struct ValidatePasswordResetToken{1: string passwordResetToken}
-struct ValidatePasswordResetTokenResult{1: optional UserProfile userProfile}
+    // Market related
 
-struct ResetPasswordFailed{1: ResetPasswordFailureReason reason}
-struct ResetPasswordSucceeded{1: i64 id, 2: string email}
+    // Api Auth related
+    TOO_MANY_SECRETS                 = 5001
+    INVALID_SECRET                   = 5002
+}
 
-struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
-struct OrderSubmissionDone{1: MarketSide side, 2: Order order, 3: list<Transaction> txs}
+////////////////////////////////////////////////////////////////
+///////////////////// PROCESSOR MESSAGES ///////////////////////
+////////////////////////////////////////////////////////////////
+// 'C' stands for external command,
+// 'P' stands for persistent event derived from a external command,
+// 'Q' for query,
+// 'I' stands for inter-processor commands
+// 'R+' stands for response to sender on command success,
+// 'R-' stands for response to sender on command failure,
+// 'R' stands for response to sender regardless of failure or success.
 
-struct QueryUserOrders{1: i64 userId, 2: optional i32 numOrders, 3: optional i32 skipOrders, 4: optional OrderStatus status}
-struct QueryUserOrdersResult{1: i64 userId, 2: list<OrderInfo> orders}
+////////// Admin
+/* R    */ struct AdminCommandResult                  {1: ErrorCode error = ErrorCode.OK}
 
-struct QueryAccount{1: i64 userId}
-struct QueryAccountResult{1: UserAccount userAccount}
+////////// UserProcessor
+/* C,P  */ struct DoRegisterUser                      {1: UserProfile userProfile, 2: string password}
+/* R-   */ struct RegisterUserFailed                  {1: ErrorCode error}
+/* R+   */ struct RegisterUserSucceeded               {1: UserProfile userProfile}
 
-struct QueryMarket{1: MarketSide side, 2: i32 maxDepth}
-struct QueryMarketResult{1: MarketDepth marketDepth}
-struct QueryMarketUnsupportedMarketFailure{1: MarketSide side}
+/* C,P  */ struct DoRequestPasswordReset              {1: string email}
+/* R-   */ struct RequestPasswordResetFailed          {1: ErrorCode error}
+/* R+   */ struct RequestPasswordResetSucceeded       {1: i64 id, 2: string email, 3: string passwordResetToken}
 
-struct QueryCandleData{1: MarketSide side, 2: ChartTimeDimension dimension, 3: i64 from, 4: i64 to}
-struct QueryCandleDataResult{1: CandleData candleData}
+/* C,P  */ struct DoResetPassword                     {1: string email, 2: string password, 3: optional string passwordResetToken}
+/* R-   */ struct ResetPasswordFailed                 {1: ErrorCode error}
+/* R+   */ struct ResetPasswordSucceeded              {1: i64 id, 2: string email}
 
-struct QueryTransactionData{1: MarketSide side, 2: i64 from, 3: i32 num}
-struct QueryTransactionDataResult{1: TransactionData transactionData}
+/* C    */ struct Login                               {1: string email, 2: string password} // TODO: this may also be a persistent command
+/* R-   */ struct LoginFailed                         {1: ErrorCode error}
+/* R+   */ struct LoginSucceeded                      {1: i64 id, 2: string email}
 
-struct QueryUserTransaction{1: MarketSide side, 2: i64 userId, 3: i64 orderId, 4: i64 from, 5: i32 num}
-struct QueryUserTransactionResult{1: TransactionData transactionData}
+/* Q    */ struct ValidatePasswordResetToken          {1: string passwordResetToken}
+/* R    */ struct PasswordResetTokenValidationResult  {1: optional UserProfile userProfile}
 
-struct OrderSubmissionInProgross{1: MarketSide side, 2: Order order}
+/* C,P  */ struct DoRequestCashDeposit                {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* R-   */ struct RequestCashDepositFailed            {1: ErrorCode error}
+/* R+   */ struct RequestCashDepositSucceeded         {1: i64 userId, 2: Currency currency, 3: i64 amount}
 
-struct SendMailRequest{1: string email, 2: EmailType emailType, 3: map<string, string> params}
+/* C,P  */ struct DoRequestCashWithdrawal             {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* R-   */ struct RequestCashWithdrawalFailed         {1: ErrorCode error}
+/* R+   */ struct RequestCashWithdrawalSucceeded      {1: i64 userId, 2: Currency currency, 3: i64 amount}
 
-struct QueryApiSecrets{1: i64 userId, 2: optional string identifier}
-struct QueryApiSecretsResult{1: i64 userId, 2:list<ApiSecret> secrets}
+/* C,P  */ struct AdminConfirmCashDepositFailure      {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:ErrorCode error}
+/* C,P  */ struct AdminConfirmCashDepositSuccess      {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* C,P  */ struct AdminConfirmCashWithdrawalFailure   {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:ErrorCode error}
+/* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: i64 userId, 2: Currency currency, 3: i64 amount}
 
-// ----------------------------------------------------------------------------
-// Persistent Commands - all commands are sent by outside world.
-// Please name all commands starting with "Do"
-
-// UserProcessor commands
-struct DoRegisterUser{1: UserProfile userProfile, 2: string password}
-struct DoRequestPasswordReset{1: string email}
-struct DoResetPassword{1: string email, 2: string password, 3: optional string passwordResetToken}
-
-// AccountProcessor commands
-struct DoSubmitOrder{1: MarketSide side, 2: Order order}
-struct DoDepositCash{1: i64 userId, 2: Currency currency, 3: i64 amount}
-struct DoRequestCashWithdrawal{1: i64 userId, 2: Currency currency, 3: i64 amount}
-struct DoConfirmCashWithdrawalSuccess{1: i64 userId, 2: Currency currency, 3: i64 amount}
-struct DoConfirmCashWithdrawalFailed{1: i64 userId, 2: Currency currency, 3: i64 amount}
-
-// MarketProcessor commands
-struct DoCancelOrder{1: MarketSide side, 2: i64 id, 3: i64 userId}
-
-// ApiAuthProcessor commands
-struct DoAddNewApiSecret{1: i64 userId}
-struct DoDeleteApiSecret{1: ApiSecret secret}
-struct ApiSecretOperationResult{1: ApiSecretOperationResultCode code, 2: list<ApiSecret> secrets}
-
-// RobotProcessor commands
-struct DoUpdateMetrics{1: RobotMetrics metrics}
+/* C,P  */ struct DoSubmitOrder                       {1: MarketSide side, 2: Order order}
+/* I,R- */ struct SubmitOrderFailed                   {1: MarketSide side, 2: Order order, 3: ErrorCode error}
+/* I,R+ */ struct OrderFundFrozen                     {1: MarketSide side, 2: Order order}
 
 
-// ------------------------------------------------------------------------------------------------
-// Persistent Events. All events are generated by a certain processor and handeled by another processor.
-// For each event, we'll comment it in the form of "origin -> handler".
+////////// ApiAuthProcessor
+/* C,P  */ struct DoAddNewApiSecret                   {1: i64 userId}
+/* C,P  */ struct DoDeleteApiSecret                   {1: ApiSecret secret}
+/* R    */ struct ApiSecretOperationResult            {1: ErrorCode error, 2: list<ApiSecret> secrets}
 
-// AccountProcessor -> MarketProcessor events
-struct OrderCashLocked{1: MarketSide side, 2: Order order}
+/* Q    */ struct QueryApiSecrets                     {1: i64 userId, 2: optional string identifier}
+/* R    */ struct QueryApiSecretsResult               {1: i64 userId, 2: list<ApiSecret> secrets}
 
-// MarketProcessor -> AccountProcessor/MarketUpdateProcessor events
-struct OrderCancelled{1: MarketSide side, 2: Order order}
-struct OrderSubmissionFailed{1: MarketSide side, 2: Order order, 3: OrderSubmissionFailReason reason}
-struct OrderSubmitted{1: OrderInfo originOrderInfo, 2: list<Transaction> txs}
+
+////////// MarketProcessor
+/* C,P  */ struct DoCancelOrder                       {1: MarketSide side, 2: i64 id, 3: i64 userId}
+/* R-   */ struct CancelOrderFailed                   {1: ErrorCode error}
+
+/* I    */ struct OrderSubmitted                      {1: OrderInfo originOrderInfo, 2: list<Transaction> txs}
+/* I,R+ */ struct OrderCancelled                      {1: MarketSide side, 2: Order order}
+
+////////// RobotProcessor commands
+/* C,P  */ struct DoUpdateMetrics                     {1: RobotMetrics metrics}
+
+////////// Mailer
+/* C    */ struct DoSendEmail                         {1: string email, 2: EmailType emailType, 3: map<string, string> params}
+
+////////////////////////////////////////////////////////////////
+//////////////////////// VIEW MESSAGES /////////////////////////
+////////////////////////////////////////////////////////////////
+
+////////// AccountView
+/* Q    */ struct QueryAccount                        {1: i64 userId}
+/* R    */ struct QueryAccountResult                  {1: UserAccount userAccount}
+
+////////// MarketDepthView
+/* Q    */ struct QueryMarketDepth                    {1: MarketSide side, 2: i32 maxDepth}
+/* R    */ struct QueryMarketDepthResult              {1: MarketDepth marketDepth}
+
+////////// CandleDataView
+/* Q    */ struct QueryCandleData                     {1: MarketSide side, 2: ChartTimeDimension dimension, 3: i64 from, 4: i64 to}
+/* R    */ struct QueryCandleDataResult               {1: CandleData candleData}
+
+////////// UserTransactionView
+/* Q    */ struct QueryUserTransaction                {1: MarketSide side, 2: i64 userId, 3: i64 orderId, 4: i64 from, 5: i32 num}
+/* R    */ struct QueryUserTransactionResult          {1: TransactionData transactionData}
+
+////////// UserOrdersView
+/* Q    */ struct QueryUserOrders                     {1: i64 userId, 2: optional i32 numOrders, 3: optional i32 skipOrders, 4: optional OrderStatus status}
+/* R    */ struct QueryUserOrdersResult               {1: i64 userId, 2: list<OrderInfo> orders}
+
+////////// TransactionDataView
+/* Q    */ struct QueryTransactionData                {1: MarketSide side, 2: i64 from, 3: i32 num}
+/* R    */ struct QueryTransactionDataResult          {1: TransactionData transactionData}

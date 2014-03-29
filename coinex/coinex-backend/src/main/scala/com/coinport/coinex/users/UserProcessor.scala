@@ -10,7 +10,7 @@ import com.coinport.coinex.data._
 import akka.actor._
 import akka.persistence._
 import com.coinport.coinex.common.ExtendedProcessor
-import RegisterationFailureReason._
+import ErrorCode._
 import akka.event.LoggingReceive
 
 class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends ExtendedProcessor {
@@ -24,7 +24,7 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Extende
 
     case SaveSnapshotSuccess(metadata) =>
 
-    case SaveSnapshotFailure(metadata, reason) =>
+    case SaveSnapshotFailure(metadata, error) =>
 
     case SnapshotOffer(meta, snapshot) =>
       log.info("Loaded snapshot {}", meta)
@@ -40,26 +40,26 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Extende
     // Non-persistent requests
     case Login(email, password) =>
       manager.checkLogin(email, password) match {
-        case Left(reason) => sender ! LoginFailed(reason)
+        case Left(error) => sender ! LoginFailed(error)
         case Right(profile) => sender ! LoginSucceeded(profile.id, profile.email)
       }
 
     case ValidatePasswordResetToken(token) =>
       manager().passwordResetTokenMap.get(token) match {
-        case Some(id) => sender ! ValidatePasswordResetTokenResult(manager().profileMap.get(id))
-        case None => ValidatePasswordResetTokenResult(None)
+        case Some(id) => sender ! PasswordResetTokenValidationResult(manager().profileMap.get(id))
+        case None => PasswordResetTokenValidationResult(None)
       }
 
     // ------------------------------------------------------------------------------------------------
     // Commands
     case p @ Persistent(DoRegisterUser(userProfile, password), seqNr) =>
       manager.registerUser(userProfile, password, seqNr) match {
-        case Left(reason) =>
-          sender ! RegisterUserFailed(reason, None)
+        case Left(error) =>
+          sender ! RegisterUserFailed(error)
         case Right(profile) =>
           sender ! RegisterUserSucceeded(profile)
 
-          mailer ! SendMailRequest(profile.email, EmailType.RegisterVerify, Map(
+          mailer ! DoSendEmail(profile.email, EmailType.RegisterVerify, Map(
             "NAME" -> profile.realName.getOrElse(profile.email),
             "LANG" -> "CHINESE",
             "TOKEN" -> profile.verificationToken.get))
@@ -67,11 +67,11 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Extende
 
     case p @ Persistent(DoRequestPasswordReset(email), seqNr) =>
       manager.requestPasswordReset(email, seqNr) match {
-        case Left(reason) => sender ! RequestPasswordResetFailed(reason)
+        case Left(error) => sender ! RequestPasswordResetFailed(error)
         case Right(profile) =>
           sender ! RequestPasswordResetSucceeded(profile.id, profile.email, profile.passwordResetToken.get)
 
-          mailer ! SendMailRequest(profile.email, EmailType.PasswordResetToken, Map(
+          mailer ! DoSendEmail(profile.email, EmailType.PasswordResetToken, Map(
             "NAME" -> profile.realName.getOrElse(profile.email),
             "LANG" -> "CHINESE",
             "TOKEN" -> profile.passwordResetToken.get))
@@ -79,7 +79,7 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Extende
 
     case p @ Persistent(DoResetPassword(email, password, token), _) =>
       manager.resetPassword(email, password, token) match {
-        case Left(reason) => sender ! ResetPasswordFailed(reason)
+        case Left(error) => sender ! ResetPasswordFailed(error)
         case Right(profile) => sender ! ResetPasswordSucceeded(profile.id, profile.email)
       }
   }

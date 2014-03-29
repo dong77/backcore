@@ -27,8 +27,7 @@ object Generator {
   // Auto-generate EventSerializer code
   def extractStructsFromFile(file: String): Seq[String] = {
     val lines = scala.io.Source.fromFile(file).mkString
-    val structs = structNameExtractor.findAllIn(lines).matchData.toSeq.map(_.group(1))
-    structs.sortWith((a, b) => a < b)
+    structNameExtractor.findAllIn(lines).matchData.toSeq.map(_.group(1))
   }
 
   def generateSerializerFile(className: String, id: Int, codec: String, structs: Seq[String], outputFile: String, time: String) = {

@@ -29,13 +29,13 @@ class ApiAuthView(seed: String) extends ExtendedView {
     case p @ Persistent(DoAddNewApiSecret(userId), _) =>
       manager.addNewSecret(userId) match {
         case Left(code) => sender ! ApiSecretOperationResult(code, manager.getUserSecrets(userId))
-        case Right(_) => sender ! ApiSecretOperationResult(ApiSecretOperationResultCode.Ok, manager.getUserSecrets(userId))
+        case Right(_) => sender ! ApiSecretOperationResult(ErrorCode.Ok, manager.getUserSecrets(userId))
       }
 
     case p @ Persistent(DoDeleteApiSecret(secret), _) =>
       manager.deleteSecret(secret) match {
         case Left(code) => sender ! ApiSecretOperationResult(code, Nil)
-        case Right(_) => sender ! ApiSecretOperationResult(ApiSecretOperationResultCode.Ok, Nil)
+        case Right(_) => sender ! ApiSecretOperationResult(ErrorCode.Ok, Nil)
       }
   }
 }
@@ -56,10 +56,10 @@ class ApiAuthManager(initialSeed: String) extends StateManager[ApiSecretState] {
     }
   }
 
-  def addNewSecret(userId: Long): Either[ApiSecretOperationResultCode, ApiSecret] = {
+  def addNewSecret(userId: Long): Either[ErrorCode, ApiSecret] = {
     val existing = state.userSecretMap.getOrElse(userId, Nil)
     if (existing.size >= MAX_SECRETS_PER_USER) {
-      Left(ApiSecretOperationResultCode.TooManySecrets)
+      Left(ErrorCode.TooManySecrets)
     } else {
       val (identifier, secret) = generateNewSecret()
       val identifierLookupMap = state.identifierLookupMap + (identifier -> ApiSecret(secret, None, Some(userId)))
@@ -72,9 +72,9 @@ class ApiAuthManager(initialSeed: String) extends StateManager[ApiSecretState] {
     }
   }
 
-  def deleteSecret(secret: ApiSecret): Either[ApiSecretOperationResultCode, ApiSecret] = {
+  def deleteSecret(secret: ApiSecret): Either[ErrorCode, ApiSecret] = {
     if (secret.userId.isEmpty || secret.identifier.isEmpty) {
-      Left(ApiSecretOperationResultCode.InvalidSecret)
+      Left(ErrorCode.InvalidSecret)
     } else {
       val userId = secret.userId.get
       val identifier = secret.identifier.get

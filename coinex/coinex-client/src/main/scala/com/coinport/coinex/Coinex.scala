@@ -27,10 +27,10 @@ final class Coinex(routers: LocalRouters) extends Actor {
 
       //-------------------------------------------------------------------------
       // Account Processor
-      case m: DoDepositCash => routers.accountProcessor forward Persistent(m)
+      case m: DoRequestCashDeposit => routers.accountProcessor forward Persistent(m)
       case m: DoRequestCashWithdrawal => routers.accountProcessor forward Persistent(m)
-      case m: DoConfirmCashWithdrawalSuccess => routers.accountProcessor forward Persistent(m)
-      case m: DoConfirmCashWithdrawalFailed => routers.accountProcessor forward Persistent(m)
+      case m: AdminConfirmCashWithdrawalSuccess => routers.accountProcessor forward Persistent(m)
+      case m: AdminConfirmCashWithdrawalFailure => routers.accountProcessor forward Persistent(m)
       case m: DoSubmitOrder => routers.accountProcessor forward Persistent(m)
 
       // Market Processors
@@ -45,7 +45,7 @@ final class Coinex(routers: LocalRouters) extends Actor {
       case m: QueryAccount => routers.accountView forward m
 
       // MarketDepthViews
-      case m @ QueryMarket(side, _) =>
+      case m @ QueryMarketDepth(side, _) =>
         routers.marketDepthViews(side) forward m
 
       // UserOrdersView
@@ -55,7 +55,7 @@ final class Coinex(routers: LocalRouters) extends Actor {
       case m @ QueryCandleData(side, _, _, _) => routers.candleDataView(side) forward m
 
       // Mailer
-      case m: SendMailRequest =>
+      case m: DoSendEmail =>
         routers.mailer forward m
 
       // RobotMetricsView

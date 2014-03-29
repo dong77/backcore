@@ -13,7 +13,7 @@ import akka.event.LoggingReceive
 class Mailer(handler: MailHandler) extends Actor with ActorLogging {
 
   def receive = LoggingReceive {
-    case request @ SendMailRequest(email, emailType, params) =>
+    case request @ DoSendEmail(email, emailType, params) =>
       log.info("{}", request)
       emailType match {
         case EmailType.RegisterVerify =>
