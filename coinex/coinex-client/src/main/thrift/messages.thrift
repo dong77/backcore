@@ -207,7 +207,10 @@ struct ApiSecretState {
 }
 
 // ======================================================================================================
-// 'C' stands for command,  'P' stands for persistent event; 'Q' for query.
+// 'C' stands for external command,
+// 'P' stands for persistent event derived from a external command,
+// 'Q' for query,
+// 'I' stands for inter-processor commands
 // 'R+' stands for response to sender on command success,
 // 'R-' stands for response to sender on command failure,
 // 'R' stands for response to sender regardless of failure or success.
@@ -222,59 +225,60 @@ enum ErrorCode {
     PASSWORD_NOT_MATCH = 1004
     TOKEN_NOT_MATCH = 1005
     TOKEN_NOT_UNIQUE = 1006
+    
+    // Account related
+    PRICE_OUT_OF_RANGE = 1
 }
 
-/* R   */ struct AdminCommandResult{1: ErrorCode error = ErrorCode.OK}
+/* R    */ struct AdminCommandResult{1: ErrorCode error = ErrorCode.OK}
+//////////////// PROCESSORS MESSAGES /////////////////////
+// ====== UserProcessor
+/* C,P  */ struct DoRegisterUser                      {1: UserProfile userProfile, 2: string password}
+/* R-   */ struct RegisterUserFailed                  {1: ErrorCode error}
+/* R+   */ struct RegisterUserSucceeded               {1: UserProfile userProfile}
 
-// ====== UserProcessor messages
-/* C,P */ struct DoRegisterUser                      {1: UserProfile userProfile, 2: string password}
-/* R-  */ struct RegisterUserFailed                  {1: ErrorCode error}
-/* R+  */ struct RegisterUserSucceeded               {1: UserProfile userProfile}
+/* C,P  */ struct DoRequestPasswordReset              {1: string email}
+/* R-   */ struct RequestPasswordResetFailed          {1: ErrorCode error}
+/* R+   */ struct RequestPasswordResetSucceeded       {1: i64 id, 2: string email, 3: string passwordResetToken}
 
-/* C,P */ struct DoRequestPasswordReset              {1: string email}
-/* R-  */ struct RequestPasswordResetFailed          {1: ErrorCode error}
-/* R+  */ struct RequestPasswordResetSucceeded       {1: i64 id, 2: string email, 3: string passwordResetToken}
+/* C,P  */ struct DoResetPassword                     {1: string email, 2: string password, 3: optional string passwordResetToken}
+/* R-   */ struct ResetPasswordFailed                 {1: ErrorCode error}
+/* R+   */ struct ResetPasswordSucceeded              {1: i64 id, 2: string email}
 
-/* C,P */ struct DoResetPassword                     {1: string email, 2: string password, 3: optional string passwordResetToken}
-/* R-  */ struct ResetPasswordFailed                 {1: ErrorCode error}
-/* R+  */ struct ResetPasswordSucceeded              {1: i64 id, 2: string email}
+/* C    */ struct Login                               {1: string email, 2: string password} // TODO: this may also be a persistent command
+/* R-   */ struct LoginFailed                         {1: ErrorCode error}
+/* R+   */ struct LoginSucceeded                      {1: i64 id, 2: string email}
 
-/* C   */ struct Login                               {1: string email, 2: string password} // TODO: this may also be a persistent command
-/* R-  */ struct LoginFailed                         {1: ErrorCode error}
-/* R+  */ struct LoginSucceeded                      {1: i64 id, 2: string email}
+/* Q    */ struct ValidatePasswordResetToken          {1: string passwordResetToken}
+/* R    */ struct PasswordResetTokenValidationResult  {1: optional UserProfile userProfile}
 
-/* Q   */ struct ValidatePasswordResetToken          {1: string passwordResetToken}
-/* R   */ struct PasswordResetTokenValidationResult  {1: optional UserProfile userProfile}
+// AccountProcessor
+/* C,P  */ struct DoRequestCashDeposit                {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* R-   */ struct RequestCashDepositFailed            {1: ErrorCode error}
+/* R+   */ struct RequestCashDepositSucceeded         {1: i64 userId, 2: Currency currency, 3: i64 amount}
 
-// AccountProcessor messages
-/* C,P */ struct DoRequestCashDeposit                {1: i64 userId, 2: Currency currency, 3: i64 amount}
-/* R-  */ struct RequestCashDepositFailed            {1: ErrorCode error}
-/* R+  */ struct RequestCashDepositSucceeded         {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* C,P  */ struct DoRequestCashWithdrawal             {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* R-   */ struct RequestCashWithdrawalFailed         {1: ErrorCode error}
+/* R+   */ struct RequestCashWithdrawalSucceeded      {1: i64 userId, 2: Currency currency, 3: i64 amount}
 
-/* C,P */ struct DoRequestCashWithdrawal             {1: i64 userId, 2: Currency currency, 3: i64 amount}
-/* R-  */ struct RequestCashWithdrawalFailed         {1: ErrorCode error}
-/* R+  */ struct RequestCashWithdrawalSucceeded      {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* C,P  */ struct AdminConfirmCashDepositFailure      {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:ErrorCode error}
+/* C,P  */ struct AdminConfirmCashDepositSuccess      {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* C,P  */ struct AdminConfirmCashWithdrawalFailure   {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:ErrorCode error}
+/* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: i64 userId, 2: Currency currency, 3: i64 amount}
 
-/* C,P */ struct AdminConfirmCashDepositFailure      {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:ErrorCode error}
-/* C,P */ struct AdminConfirmCashDepositSuccess      {1: i64 userId, 2: Currency currency, 3: i64 amount}
-/* C,P */ struct AdminConfirmCashWithdrawalFailure   {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:ErrorCode error}
-/* C,P */ struct AdminConfirmCashWithdrawalSuccess   {1: i64 userId, 2: Currency currency, 3: i64 amount}
-
+/* C,P  */ struct DoSubmitOrder                       {1: MarketSide side, 2: Order order}
+/* I,R- */ struct SubmitOrderFailed                   {1: MarketSide side, 2: Order order, 3: ErrorCode error}
+/* I,R+ */ struct OrderFundFrozen                     {1: MarketSide side, 2: Order order}
 
 
-struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
-
-struct OrderCancelled{1: MarketSide side, 2: Order order}
-struct OrderSubmissionFailed{1: MarketSide side, 2: Order order, 3: OrderSubmissionFailReason error}
-struct OrderSubmitted{1: OrderInfo originOrderInfo, 2: list<Transaction> txs}
-struct DoSubmitOrder{1: MarketSide side, 2: Order order}
-struct QueryAccount{1: i64 userId}
-struct QueryAccountResult{1: UserAccount userAccount}
 
 
 // MarketProcessor commands
 struct DoCancelOrder{1: MarketSide side, 2: i64 id, 3: i64 userId}
 struct OrderCashLocked{1: MarketSide side, 2: Order order}
+
+/* I    */ struct OrderSubmitted    {1: OrderInfo originOrderInfo, 2: list<Transaction> txs}
+struct OrderCancelled{1: MarketSide side, 2: Order order}
 
 // UserTransactionView
 struct QueryUserTransaction{1: MarketSide side, 2: i64 userId, 3: i64 orderId, 4: i64 from, 5: i32 num}
@@ -312,3 +316,16 @@ struct QueryTransactionDataResult{1: TransactionData transactionData}
 
 // RobotProcessor commands
 struct DoUpdateMetrics{1: RobotMetrics metrics}
+
+
+struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
+
+
+//////////////// VIEWS MESSAGES /////////////////////
+
+// AccountView
+/* Q    */ struct QueryAccount                        {1: i64 userId}
+/* R    */ struct QueryAccountResult                  {1: UserAccount userAccount}
+
+
+

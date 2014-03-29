@@ -56,14 +56,14 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
       else manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
         case AccountOperationResult(Ok, _) =>
           val orderWithId = order.copy(id = manager.getAndIncreaseOrderId)
-          channelToMarketProcessors forward Deliver(p.withPayload(OrderCashLocked(side, orderWithId)), getProcessorPath(side))
+          channelToMarketProcessors forward Deliver(p.withPayload(OrderFundFrozen(side, orderWithId)), getProcessorPath(side))
         case m: AccountOperationResult => sender ! m
       }
       log.info("state: {}", manager())
 
     // ------------------------------------------------------------------------------------------------
     // From Channel
-    case p @ ConfirmablePersistent(OrderSubmissionFailed(side, order, _), seq, _) =>
+    case p @ ConfirmablePersistent(SubmitOrderFailed(side, order, _), seq, _) =>
       p.confirm()
       manager.conditionalRefund(true)(side.outCurrency, order)
 

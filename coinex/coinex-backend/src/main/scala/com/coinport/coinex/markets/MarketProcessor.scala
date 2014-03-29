@@ -57,10 +57,10 @@ class MarketProcessor(
 
     // ------------------------------------------------------------------------------------------------
     // Events
-    case p @ ConfirmablePersistent(OrderCashLocked(side, order: Order), seq, _) =>
+    case p @ ConfirmablePersistent(OrderFundFrozen(side, order: Order), seq, _) =>
       p.confirm()
       if (!manager.isOrderPriceInGoodRange(side, order.price)) {
-        val event = OrderSubmissionFailed(side, order, OrderSubmissionFailReason.PriceOutOfRange)
+        val event = SubmitOrderFailed(side, order, ErrorCode.PriceOutOfRange)
         sender ! event
         channelToAccountProcessor ! Deliver(p.withPayload(event), accountProcessorPath)
       } else {
