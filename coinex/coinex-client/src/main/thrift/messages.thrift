@@ -330,3 +330,7 @@ enum ErrorCode {
 ////////// TransactionDataView
 /* Q    */ struct QueryTransactionData                {1: MarketSide side, 2: i64 from, 3: i32 num}
 /* R    */ struct QueryTransactionDataResult          {1: TransactionData transactionData}
+
+////////// OrderDataView
+/* Q    */ struct QueryOrderData                      {1: MarketSide side, 2: optional i64 orderId, 4: i64 from, 5: i64 to}
+/* R    */ struct QueryOrderDataResult                {1: list<OrderInfo> orderInfos}
