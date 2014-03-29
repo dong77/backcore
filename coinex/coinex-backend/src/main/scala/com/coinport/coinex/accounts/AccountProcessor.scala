@@ -12,7 +12,6 @@ import akka.persistence._
 import akka.event.LoggingReceive
 import com.coinport.coinex.common.ExtendedProcessor
 import Implicits._
-import AccountOperationCode._
 
 class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends ExtendedProcessor {
   override val processorId = "coinex_ap"
@@ -52,12 +51,12 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
     case p @ Persistent(DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _)), seq) =>
-      if (quantity <= 0) sender ! AccountOperationResult(InvalidAmount, null)
+      if (quantity <= 0) sender ! SubmitOrderFailed(side, order, ErrorCode.InvalidAmount)
       else manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
-        case AccountOperationResult(Ok, _) =>
+        case Some(error) => sender ! SubmitOrderFailed(side, order, error)
+        case None =>
           val orderWithId = order.copy(id = manager.getAndIncreaseOrderId)
           channelToMarketProcessors forward Deliver(p.withPayload(OrderFundFrozen(side, orderWithId)), getProcessorPath(side))
-        case m: AccountOperationResult => sender ! m
       }
       log.info("state: {}", manager())
 

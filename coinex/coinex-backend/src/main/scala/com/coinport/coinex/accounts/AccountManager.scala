@@ -18,7 +18,6 @@ package com.coinport.coinex.accounts
 import com.coinport.coinex.data._
 import com.coinport.coinex.common.StateManager
 import Implicits._
-import AccountOperationCode._
 
 class AccountManager extends StateManager[AccountState] {
   initWithDefaultState(AccountState())
@@ -32,19 +31,19 @@ class AccountManager extends StateManager[AccountState] {
     if (condition && order.quantity > 0) refund(order.userId, currency, order.quantity)
   }
 
-  def refund(uid: Long, currency: Currency, quantity: Long): AccountOperationResult = {
+  def refund(uid: Long, currency: Currency, quantity: Long): Option[ErrorCode] = {
     updateCashAccount(uid, CashAccount(currency, quantity, -quantity, 0))
   }
 
-  def updateCashAccount(userId: Long, adjustment: CashAccount) = {
+  def updateCashAccount(userId: Long, adjustment: CashAccount): Option[ErrorCode] = {
     val current = state.getUserCashAccount(userId, adjustment.currency)
     val updated = current + adjustment
 
     if (updated.isValid) {
       state = state.setUserCashAccount(userId, updated)
-      AccountOperationResult(Ok, updated)
+      None
     } else {
-      AccountOperationResult(InsufficientFund, current)
+      Some(ErrorCode.InsufficientFund)
     }
   }
 

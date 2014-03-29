@@ -59,7 +59,7 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Extende
         case Right(profile) =>
           sender ! RegisterUserSucceeded(profile)
 
-          mailer ! SendMailRequest(profile.email, EmailType.RegisterVerify, Map(
+          mailer ! DoSendEmail(profile.email, EmailType.RegisterVerify, Map(
             "NAME" -> profile.realName.getOrElse(profile.email),
             "LANG" -> "CHINESE",
             "TOKEN" -> profile.verificationToken.get))
@@ -71,7 +71,7 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Extende
         case Right(profile) =>
           sender ! RequestPasswordResetSucceeded(profile.id, profile.email, profile.passwordResetToken.get)
 
-          mailer ! SendMailRequest(profile.email, EmailType.PasswordResetToken, Map(
+          mailer ! DoSendEmail(profile.email, EmailType.PasswordResetToken, Map(
             "NAME" -> profile.realName.getOrElse(profile.email),
             "LANG" -> "CHINESE",
             "TOKEN" -> profile.passwordResetToken.get))

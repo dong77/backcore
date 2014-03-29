@@ -55,7 +55,7 @@ final class Coinex(routers: LocalRouters) extends Actor {
       case m @ QueryCandleData(side, _, _, _) => routers.candleDataView(side) forward m
 
       // Mailer
-      case m: SendMailRequest =>
+      case m: DoSendEmail =>
         routers.mailer forward m
 
       // RobotMetricsView
