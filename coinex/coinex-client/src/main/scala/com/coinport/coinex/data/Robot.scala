@@ -20,7 +20,7 @@ case class Robot(
     statesPayload: Map[String, Option[Any]] = Map.empty[String, Option[Any]],
     currentState: String = "START") extends Object with Logging {
 
-  // Option[Any] is the actual action of the robot, such as DoDepositCash.
+  // Option[Any] is the actual action of the robot, such as DoRequestCashDeposit.
   // This could be restrained from outter processor
   // TODO(c): try to make RobotMetrics as T
   type Action = (Robot, Option[RobotMetrics]) => (Robot, Option[Any])

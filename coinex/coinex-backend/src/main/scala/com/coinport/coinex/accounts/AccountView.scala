@@ -20,16 +20,16 @@ class AccountView extends ExtendedView {
     case DebugDump =>
       log.info("state: {}", manager())
 
-    case Persistent(DoDepositCash(userId, currency, amount), _) =>
+    case Persistent(DoRequestCashDeposit(userId, currency, amount), _) =>
       manager.updateCashAccount(userId, CashAccount(currency, amount, 0, 0))
 
     case Persistent(DoRequestCashWithdrawal(userId, currency, amount), _) =>
       manager.updateCashAccount(userId, CashAccount(currency, -amount, 0, amount))
 
-    case Persistent(DoConfirmCashWithdrawalSuccess(userId, currency, amount), _) =>
+    case Persistent(AdminConfirmCashWithdrawalSuccess(userId, currency, amount), _) =>
       manager.updateCashAccount(userId, CashAccount(currency, 0, 0, -amount))
 
-    case Persistent(DoConfirmCashWithdrawalFailed(userId, currency, amount), _) =>
+    case Persistent(AdminConfirmCashWithdrawalFailure(userId, currency, amount, error), _) =>
       manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
     case Persistent(DoSubmitOrder(side: MarketSide, Order(userId, _, quantity, _, _, _, _)), _) =>

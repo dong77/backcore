@@ -38,17 +38,17 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
 
     // ------------------------------------------------------------------------------------------------
     // Commands
-    case p @ Persistent(DoDepositCash(userId, currency, amount), seq) =>
+    case p @ Persistent(DoRequestCashDeposit(userId, currency, amount), seq) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, 0))
       log.info("state: {}", manager())
 
     case p @ Persistent(DoRequestCashWithdrawal(userId, currency, amount), seq) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, -amount, 0, amount))
 
-    case p @ Persistent(DoConfirmCashWithdrawalSuccess(userId, currency, amount), seq) =>
+    case p @ Persistent(AdminConfirmCashWithdrawalSuccess(userId, currency, amount), seq) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, 0, 0, -amount))
 
-    case p @ Persistent(DoConfirmCashWithdrawalFailed(userId, currency, amount), seq) =>
+    case p @ Persistent(AdminConfirmCashWithdrawalFailure(userId, currency, amount, error), seq) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
     case p @ Persistent(DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _)), seq) =>
