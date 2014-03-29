@@ -13,31 +13,14 @@ import com.coinport.coinex.common.ExtendedProcessor
 import ErrorCode._
 import akka.event.LoggingReceive
 
-class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends ExtendedProcessor {
+class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends EventsourcedProcessor {
   override val processorId = "coinex_up"
 
   val manager = new UserManager(userManagerSecret)
 
-  def receive = LoggingReceive {
-    // ------------------------------------------------------------------------------------------------
-    case TakeSnapshotNow => saveSnapshot(manager())
+  def receiveRecover = PartialFunction.empty[Any, Unit]
 
-    case SaveSnapshotSuccess(metadata) =>
-
-    case SaveSnapshotFailure(metadata, error) =>
-
-    case SnapshotOffer(meta, snapshot) =>
-      log.info("Loaded snapshot {}", meta)
-      manager.reset(snapshot.asInstanceOf[UserState])
-
-    case DebugDump =>
-      log.info("state: {}", manager())
-
-    case QueryActorStats =>
-      sender ! manager()
-
-    // ------------------------------------------------------------------------------------------------
-    // Non-persistent requests
+  def receiveCommand = LoggingReceive {
     case Login(email, password) =>
       manager.checkLogin(email, password) match {
         case Left(error) => sender ! LoginFailed(error)
@@ -47,13 +30,18 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Extende
     case ValidatePasswordResetToken(token) =>
       manager().passwordResetTokenMap.get(token) match {
         case Some(id) => sender ! PasswordResetTokenValidationResult(manager().profileMap.get(id))
-        case None => PasswordResetTokenValidationResult(None)
+        case None => sender ! PasswordResetTokenValidationResult(None)
       }
 
-    // ------------------------------------------------------------------------------------------------
-    // Commands
-    case p @ Persistent(DoRegisterUser(userProfile, password), seqNr) =>
-      manager.registerUser(userProfile, password, seqNr) match {
+    case m @ DoRegisterUser(userProfile, password) => persist(m)(updateState)
+    case m @ DoRequestPasswordReset(email) => persist(m)(updateState)
+    case m @ DoResetPassword(email, password, token) => persist(m)(updateState)
+
+  }
+
+  def updateState(event: Any) = event match {
+    case DoRegisterUser(userProfile, password) =>
+      manager.registerUser(userProfile, password, lastSequenceNr) match {
         case Left(error) =>
           sender ! RegisterUserFailed(error)
         case Right(profile) =>
@@ -65,8 +53,8 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Extende
             "TOKEN" -> profile.verificationToken.get))
       }
 
-    case p @ Persistent(DoRequestPasswordReset(email), seqNr) =>
-      manager.requestPasswordReset(email, seqNr) match {
+    case DoRequestPasswordReset(email) =>
+      manager.requestPasswordReset(email, lastSequenceNr) match {
         case Left(error) => sender ! RequestPasswordResetFailed(error)
         case Right(profile) =>
           sender ! RequestPasswordResetSucceeded(profile.id, profile.email, profile.passwordResetToken.get)
@@ -77,10 +65,11 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Extende
             "TOKEN" -> profile.passwordResetToken.get))
       }
 
-    case p @ Persistent(DoResetPassword(email, password, token), _) =>
+    case DoResetPassword(email, password, token) =>
       manager.resetPassword(email, password, token) match {
         case Left(error) => sender ! ResetPasswordFailed(error)
         case Right(profile) => sender ! ResetPasswordSucceeded(profile.id, profile.email)
       }
   }
+
 }

@@ -16,13 +16,11 @@
 package com.coinport.coinex.users
 
 import com.coinport.coinex.data._
-import com.coinport.coinex.common.StateManager
+import com.coinport.coinex.common.Manager
 import com.coinport.coinex.util._
 import com.google.common.io.BaseEncoding
 
-class UserManager(secret: String = "") extends StateManager[UserState] {
-  initWithDefaultState(UserState())
-
+class UserManager(secret: String = "") extends Manager[UserState](UserState()) {
   def registerUser(profile: UserProfile, password: String, salt: Long): Either[ErrorCode, UserProfile] = {
     val email = regulate(profile.email)
     val id = computeUserId(email)

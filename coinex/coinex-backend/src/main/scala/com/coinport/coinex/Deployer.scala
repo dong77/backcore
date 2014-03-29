@@ -24,6 +24,7 @@ import spray.can.Http
 import com.typesafe.config.Config
 import Implicits._
 import scala.collection.mutable.ListBuffer
+import com.coinport.coinex.common.EventCommonProcessing
 
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
@@ -67,7 +68,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     }
 
     deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
-    deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret)), USER_PROCESSOR)
+    deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with EventCommonProcessing[UserState, UserManager]), USER_PROCESSOR)
     deployProcessor(Props(new AccountProcessor(routers.marketProcessors)), ACCOUNT_PROCESSOR)
     deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret)), API_AUTH_PROCESSOR)
     deployProcessor(Props(new RobotProcessor(routers)), ROBOT_PROCESSOR)
