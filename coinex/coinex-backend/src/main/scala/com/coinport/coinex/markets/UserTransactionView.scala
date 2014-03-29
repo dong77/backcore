@@ -43,8 +43,8 @@ class UserTransactionManager(market: MarketSide) extends StateManager[UserTransa
       val (taker, tOrderId) = (t.takerUpdate.current.userId, t.takerUpdate.current.id)
       val (maker, mOrderId) = (t.makerUpdate.current.userId, t.makerUpdate.current.id)
 
-      val item = TransactionItem(t.timestamp, price, amount, reverseAmount, taker, maker, sameSide)
-      val reverseItem = TransactionItem(t.timestamp, reversePrice, reverseAmount, amount, taker, maker, sameSide)
+      val item = TransactionItem(t.timestamp, price, amount, reverseAmount, taker, maker, sameSide, tOrderId, mOrderId)
+      val reverseItem = TransactionItem(t.timestamp, reversePrice, reverseAmount, amount, taker, maker, sameSide, tOrderId, mOrderId)
 
       if (sameSide) {
         state = state.addItem(taker, tOrderId, item)
@@ -60,7 +60,7 @@ class UserTransactionManager(market: MarketSide) extends StateManager[UserTransa
     }
   }
 
-  def getUserTransaction(sameSide: Boolean, userId: Long, orderId: Long, from: Long, num: Int): TransactionData = {
+  def getUserTransaction(sameSide: Boolean, userId: Long, orderId: Option[Long], from: Long, num: Int): TransactionData = {
     if (sameSide) TransactionData(state.getItems(userId, orderId, from, num))
     else TransactionData(state.getReverseItems(userId, orderId, from, num))
   }

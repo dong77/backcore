@@ -174,6 +174,8 @@ struct TransactionItem {
     5: i64 taker
     6: i64 maker
     7: bool sameSide
+    8: i64 tOrder
+    9: i64 mOrder
 }
 
 struct TransactionData {
@@ -310,7 +312,7 @@ enum ErrorCode {
 /* R    */ struct QueryCandleDataResult               {1: CandleData candleData}
 
 ////////// UserTransactionView
-/* Q    */ struct QueryUserTransaction                {1: MarketSide side, 2: i64 userId, 3: i64 orderId, 4: i64 from, 5: i32 num}
+/* Q    */ struct QueryUserTransaction                {1: MarketSide side, 2: i64 userId, 3: optional i64 orderId, 4: i64 from, 5: i32 num}
 /* R    */ struct QueryUserTransactionResult          {1: TransactionData transactionData}
 
 ////////// UserOrdersView

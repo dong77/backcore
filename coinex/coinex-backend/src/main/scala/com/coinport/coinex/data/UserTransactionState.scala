@@ -37,23 +37,25 @@ case class UserTransactionState(
     copy(itemReverseMap = map + (userId -> generateUserTransaction(itemReverseMap, userId, orderId, item)))
   }
 
-  def getItems(userId: Long, orderId: Long, from: Long, num: Int): Seq[TransactionItem] = {
+  def getItems(userId: Long, orderId: Option[Long], from: Long, num: Int): Seq[TransactionItem] = {
     itemMap.get(userId) match {
       case Some(userTrans) =>
-        userTrans._2.get(orderId) match {
+        if (!orderId.isDefined) userTrans._1.reverse.slice(from.toInt, from.toInt + num)
+        else userTrans._2.get(orderId.get) match {
           case Some(items) => items.reverse.slice(from.toInt, from.toInt + num)
-          case None => userTrans._1.reverse.slice(from.toInt, from.toInt + num)
+          case None => Nil
         }
       case None => Nil
     }
   }
 
-  def getReverseItems(userId: Long, orderId: Long, from: Long, num: Int): Seq[TransactionItem] = {
+  def getReverseItems(userId: Long, orderId: Option[Long], from: Long, num: Int): Seq[TransactionItem] = {
     itemReverseMap.get(userId) match {
       case Some(userTrans) =>
-        userTrans._2.get(orderId) match {
+        if (!orderId.isDefined) userTrans._1.reverse.slice(from.toInt, from.toInt + num)
+        else userTrans._2.get(orderId.get) match {
           case Some(items) => items.reverse.slice(from.toInt, from.toInt + num)
-          case None => userTrans._1.reverse.slice(from.toInt, from.toInt + num)
+          case None => Nil
         }
       case None => Nil
     }

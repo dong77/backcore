@@ -31,15 +31,15 @@ class UserTransactionManagerSpec extends Specification {
 
       manager.addItem(orderInfo, txs)
 
-      manager.getUserTransaction(true, 555, -1, 0, 100) mustEqual
-        TransactionData(List(TransactionItem(2, 3000.0, 1, 3000, 888, 555, true),
-          TransactionItem(1, 3000.0, 1, 3000, 888, 555, true),
-          TransactionItem(0, 3000.0, 1, 3000, 888, 555, true)))
+      manager.getUserTransaction(true, 555, None, 0, 100) mustEqual
+        TransactionData(List(TransactionItem(2, 3000.0, 1, 3000, 888, 555, true, 4, 2),
+          TransactionItem(1, 3000.0, 1, 3000, 888, 555, true, 2, 1),
+          TransactionItem(0, 3000.0, 1, 3000, 888, 555, true, 0, 0)))
 
-      manager.getUserTransaction(true, 888, -1, 0, 100) mustEqual
-        TransactionData(List(TransactionItem(2, 3000.0, 1, 3000, 888, 555, true),
-          TransactionItem(1, 3000.0, 1, 3000, 888, 555, true),
-          TransactionItem(0, 3000.0, 1, 3000, 888, 555, true)))
+      manager.getUserTransaction(true, 888, None, 0, 100) mustEqual
+        TransactionData(List(TransactionItem(2, 3000.0, 1, 3000, 888, 555, true, 4, 2),
+          TransactionItem(1, 3000.0, 1, 3000, 888, 555, true, 2, 1),
+          TransactionItem(0, 3000.0, 1, 3000, 888, 555, true, 0, 0)))
     }
   }
 }

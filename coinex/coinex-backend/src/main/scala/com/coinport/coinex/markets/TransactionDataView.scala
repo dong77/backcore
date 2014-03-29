@@ -38,18 +38,17 @@ class TransactionDataManager(market: MarketSide) extends StateManager[Transactio
     val reversePrice = amount.toDouble / reverseAmount.toDouble
     val price = 1 / reversePrice
 
-    val taker = t.takerUpdate.current.userId
-    val maker = t.makerUpdate.current.userId
+    val (taker, tOrderId) = (t.takerUpdate.current.userId, t.takerUpdate.current.id)
+    val (maker, mOrderId) = (t.makerUpdate.current.userId, t.makerUpdate.current.id)
+
+    val item = TransactionItem(t.timestamp, price, amount, reverseAmount, taker, maker, sameSide, tOrderId, mOrderId)
+    val reverseItem = TransactionItem(t.timestamp, reversePrice, reverseAmount, amount, taker, maker, sameSide, tOrderId, mOrderId)
 
     if (sameSide) {
-      var item = TransactionItem(t.timestamp, price, amount, reverseAmount, taker, maker, sameSide)
       state = state.addItem(item)
-      item = TransactionItem(t.timestamp, reversePrice, reverseAmount, amount, taker, maker, sameSide)
-      state = state.addReverseItem(item)
+      state = state.addReverseItem(reverseItem)
     } else {
-      var item = TransactionItem(t.timestamp, reversePrice, reverseAmount, amount, taker, maker, sameSide)
-      state = state.addItem(item)
-      item = TransactionItem(t.timestamp, price, amount, reverseAmount, taker, maker, sameSide)
+      state = state.addItem(reverseItem)
       state = state.addReverseItem(item)
     }
   }
