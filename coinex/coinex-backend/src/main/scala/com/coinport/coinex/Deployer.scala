@@ -39,7 +39,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     deployMailer(MAILER)
 
-    // Deploy views first 
+    // Deploy views first
     markets foreach { m =>
       deployView(Props(new MarketDepthView(m)), MARKET_DEPTH_VIEW(m))
       deployView(Props(new CandleDataView(m)), CANDLE_DATA_VIEW(m))

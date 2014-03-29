@@ -118,9 +118,9 @@ akka {
       "akka.contrib.pattern.DistributedPubSubMessage" = akka-pubsub
       "akka.persistence.serialization.Snapshot" = akka-persistence-snapshot
       "akka.persistence.serialization.Message" = akka-persistence-message
-      
+
 %s
-    }  
+    }
   }
 }
 """

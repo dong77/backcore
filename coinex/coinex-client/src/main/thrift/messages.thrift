@@ -189,9 +189,17 @@ struct ApiSecret {
 }
 
 struct ApiSecretState {
-    1: map<string, ApiSecret> identifierLookupMap // key is identifier
-    2: map<i64, list<ApiSecret>> userSecretMap // key is userId
-    3: string seed
+	1: map<string, ApiSecret> identifierLookupMap // key is identifier
+	2: map<i64, list<ApiSecret>> userSecretMap // key is userId
+	3: string seed
+}
+
+struct Fee {
+    1: i64 payer
+    2: i64 payee
+    3: Currency currency
+    4: i64 amount
+    5: optional string basis
 }
 
 ////////////////////////////////////////////////////////////////

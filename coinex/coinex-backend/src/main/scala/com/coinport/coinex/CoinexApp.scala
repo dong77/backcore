@@ -43,7 +43,7 @@ object CoinexApp extends App {
     candle_data_view_btc_rmb,
     mailer,
     robot_metrics_view,
-	transaction_data_view_btc_rmb,
+    transaction_data_view_btc_rmb,
     user_transaction_view_btc_rmb,
     api_auth_processor,
     api_auth_view,
@@ -87,14 +87,14 @@ object CoinexApp extends App {
   println(summary)
 
   val coinport = """
-                                            _         
-             (_)                           | |        
+                                            _
+             (_)                           | |
    ___  ___   _  _ __   _ __    ___   _ __ | |_ __  __
   / __|/ _ \ | || '_ \ | '_ \  / _ \ | '__|| __|\ \/ /
- | (__| (_) || || | | || |_) || (_) || |   | |_  >  < 
+ | (__| (_) || || | | || |_) || (_) || |   | |_  >  <
   \___|\___/ |_||_| |_|| .__/  \___/ |_|    \__|/_/\_\
-                       | |                            
-                       |_|                            
+                       | |
+                       |_|
 """
   println(coinport)
 }
