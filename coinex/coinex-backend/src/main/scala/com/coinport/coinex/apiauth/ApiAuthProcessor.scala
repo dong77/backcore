@@ -13,7 +13,7 @@ import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.StateManager
 import com.coinport.coinex.util.Hash
 import com.google.common.io.BaseEncoding
-import RegisterationFailureReason._
+import ErrorCode._
 import akka.event.LoggingReceive
 
 class ApiAuthProcessor(seed: String) extends ExtendedProcessor {

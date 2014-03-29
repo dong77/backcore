@@ -23,11 +23,11 @@ import com.google.common.io.BaseEncoding
 class UserManager(secret: String = "") extends StateManager[UserState] {
   initWithDefaultState(UserState())
 
-  def registerUser(profile: UserProfile, password: String, salt: Long): Either[RegisterationFailureReason, UserProfile] = {
+  def registerUser(profile: UserProfile, password: String, salt: Long): Either[ErrorCode, UserProfile] = {
     val email = regulate(profile.email)
     val id = computeUserId(email)
     state.profileMap.get(id) match {
-      case Some(_) => Left(RegisterationFailureReason.EmailAlreadyRegistered)
+      case Some(_) => Left(ErrorCode.EmailAlreadyRegistered)
       case None =>
         val verificationToken = newHexToken(salt, email)
         val updatedProfile: UserProfile = profile.copy(
@@ -47,24 +47,24 @@ class UserManager(secret: String = "") extends StateManager[UserState] {
     }
   }
 
-  def checkLogin(email: String, password: String): Either[LoginFailureReason, UserProfile] = {
+  def checkLogin(email: String, password: String): Either[ErrorCode, UserProfile] = {
     val id = computeUserId(regulate(email))
 
     state.profileMap.get(id) match {
-      case None => Left(LoginFailureReason.UserNotExist)
+      case None => Left(ErrorCode.UserNotExist)
       case Some(profile) =>
         val passwordHash = computePassword(profile.id, profile.email, password)
         if (Some(passwordHash) == profile.passwordHash) Right(profile)
-        else Left(LoginFailureReason.PasswordNotMatch)
+        else Left(ErrorCode.PasswordNotMatch)
     }
   }
 
-  def requestPasswordReset(email: String, salt: Long): Either[RequestPasswordResetFailureReason, UserProfile] = {
+  def requestPasswordReset(email: String, salt: Long): Either[ErrorCode, UserProfile] = {
     val e = regulate(email)
     val id = computeUserId(e)
     state.profileMap.get(id) match {
-      case None => Left(RequestPasswordResetFailureReason.UserNotExist)
-      case Some(profile) if profile.email != e => Left(RequestPasswordResetFailureReason.TokenNotUnique)
+      case None => Left(ErrorCode.UserNotExist)
+      case Some(profile) if profile.email != e => Left(ErrorCode.TokenNotUnique)
       case Some(profile) if profile.passwordResetToken.isDefined => Right(profile)
       case Some(profile) if profile.passwordResetToken.isEmpty =>
 
@@ -75,10 +75,10 @@ class UserManager(secret: String = "") extends StateManager[UserState] {
     }
   }
 
-  def resetPassword(email: String, password: String, passwordResetToken: Option[String]): Either[ResetPasswordFailureReason, UserProfile] = {
+  def resetPassword(email: String, password: String, passwordResetToken: Option[String]): Either[ErrorCode, UserProfile] = {
     val id = computeUserId(regulate(email))
     state.profileMap.get(id) match {
-      case None => Left(ResetPasswordFailureReason.UserNotExist)
+      case None => Left(ErrorCode.UserNotExist)
 
       case Some(profile) if profile.passwordResetToken == passwordResetToken =>
         profile.passwordResetToken foreach { token => state = state.deletePasswordResetToken(token) }
@@ -87,7 +87,7 @@ class UserManager(secret: String = "") extends StateManager[UserState] {
         state = state.updateUserProfile(id)(_ => updatedProfile)
         Right(updatedProfile)
 
-      case _ => Left(ResetPasswordFailureReason.TokenNotMatch)
+      case _ => Left(ErrorCode.TokenNotMatch)
     }
   }
 

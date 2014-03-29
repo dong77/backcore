@@ -38,25 +38,7 @@ enum OrderSubmissionFailReason {
     PRICE_OUT_OF_RANGE = 1
 }
 
-enum RegisterationFailureReason {
-    EMAIL_ALREADY_REGISTERED = 1
-    MISSING_INFORMATION = 2
-}
 
-enum LoginFailureReason {
-    USER_NOT_EXIST = 1
-    PASSWORD_NOT_MATCH = 2
-}
-
-enum ResetPasswordFailureReason {
-    USER_NOT_EXIST = 1
-    TOKEN_NOT_MATCH = 2
-}
-
-enum RequestPasswordResetFailureReason {
-    USER_NOT_EXIST = 1
-    TOKEN_NOT_UNIQUE = 2
-}
 
 enum UserStatus {
     NORMAL = 0
@@ -224,31 +206,44 @@ struct ApiSecretState {
 	3: string seed
 }
 
-// ------------------------------------------------------------------------------------------------
+// ======================================================================================================
+// 'C' stands for command,  'P' stands for persistent event; 'Q' for query.
+// 'R+' stands for response to sender on command success,
+// 'R-' stands for response to sender on command failure,
+// 'R' stands for response to sender regardless of failure or success.
 
-// UserProcessor commands
-struct DoRegisterUser{1: UserProfile userProfile, 2: string password}
-struct DoRequestPasswordReset{1: string email}
-struct DoResetPassword{1: string email, 2: string password, 3: optional string passwordResetToken}
-struct RegisterUserFailed{1: RegisterationFailureReason reason, 2: optional UserProfile userProfile}
-struct RegisterUserSucceeded{1: UserProfile userProfile}
+enum ErrorCode {
+    OK = 0
 
-struct Login{1: string email, 2: string password}
-struct LoginFailed{1: LoginFailureReason reason}
-struct LoginSucceeded{1: i64 id, 2: string email}
+    // User related
+    EMAIL_ALREADY_REGISTERED = 1001
+    MISSING_INFORMATION = 1002
+    USER_NOT_EXIST = 1003
+    PASSWORD_NOT_MATCH = 1004
+    TOKEN_NOT_MATCH = 1005
+    TOKEN_NOT_UNIQUE = 1006
+}
 
-struct RequestPasswordResetFailed{1: RequestPasswordResetFailureReason reason}
-struct RequestPasswordResetSucceeded{1: i64 id, 2: string email, 3: string passwordResetToken}
+// ====== UserProcessor commands
 
-struct ValidatePasswordResetToken{1: string passwordResetToken}
-struct ValidatePasswordResetTokenResult{1: optional UserProfile userProfile}
+/* C,P */ struct DoRegisterUser{1: UserProfile userProfile, 2: string password}
+/* R-  */ struct RegisterUserFailed{1: ErrorCode error}
+/* R+  */ struct RegisterUserSucceeded{1: UserProfile userProfile}
 
-struct ResetPasswordFailed{1: ResetPasswordFailureReason reason}
-struct ResetPasswordSucceeded{1: i64 id, 2: string email}
+/* C,P */ struct DoRequestPasswordReset{1: string email}
+/* R-  */ struct RequestPasswordResetFailed{1: ErrorCode error}
+/* R+  */ struct RequestPasswordResetSucceeded{1: i64 id, 2: string email, 3: string passwordResetToken}
 
-// UserOrdersView
-struct QueryUserOrders{1: i64 userId, 2: optional i32 numOrders, 3: optional i32 skipOrders, 4: optional OrderStatus status}
-struct QueryUserOrdersResult{1: i64 userId, 2: list<OrderInfo> orders}
+/* C,P */ struct DoResetPassword{1: string email, 2: string password, 3: optional string passwordResetToken}
+/* R-  */ struct ResetPasswordFailed{1: ErrorCode error}
+/* R+  */ struct ResetPasswordSucceeded{1: i64 id, 2: string email}
+
+/* C   */ struct Login{1: string email, 2: string password} // TODO: this may also be a persistent command
+/* R-  */ struct LoginFailed{1: ErrorCode error}
+/* R+  */ struct LoginSucceeded{1: i64 id, 2: string email}
+
+/* Q   */ struct ValidatePasswordResetToken{1: string passwordResetToken}
+/* R   */ struct PasswordResetTokenValidationResult{1: optional UserProfile userProfile}
 
 // AccountProcessor commands
 struct DoSubmitOrder{1: MarketSide side, 2: Order order}
@@ -259,7 +254,7 @@ struct DoConfirmCashWithdrawalFailed{1: i64 userId, 2: Currency currency, 3: i64
 struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
 
 struct OrderCancelled{1: MarketSide side, 2: Order order}
-struct OrderSubmissionFailed{1: MarketSide side, 2: Order order, 3: OrderSubmissionFailReason reason}
+struct OrderSubmissionFailed{1: MarketSide side, 2: Order order, 3: OrderSubmissionFailReason error}
 struct OrderSubmitted{1: OrderInfo originOrderInfo, 2: list<Transaction> txs}
 
 struct QueryAccount{1: i64 userId}
@@ -292,6 +287,12 @@ struct SendMailRequest{1: string email, 2: EmailType emailType, 3: map<string, s
 // CandleDataView
 struct QueryCandleData{1: MarketSide side, 2: ChartTimeDimension dimension, 3: i64 from, 4: i64 to}
 struct QueryCandleDataResult{1: CandleData candleData}
+
+
+// UserOrdersView
+struct QueryUserOrders{1: i64 userId, 2: optional i32 numOrders, 3: optional i32 skipOrders, 4: optional OrderStatus status}
+struct QueryUserOrdersResult{1: i64 userId, 2: list<OrderInfo> orders}
+
 
 // TransactionDataView
 struct QueryTransactionData{1: MarketSide side, 2: i64 from, 3: i32 num}
