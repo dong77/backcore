@@ -34,12 +34,6 @@ enum AccountOperationCode {
     INVALID_AMOUNT = 2
 }
 
-enum OrderSubmissionFailReason {
-    PRICE_OUT_OF_RANGE = 1
-}
-
-
-
 enum UserStatus {
     NORMAL = 0
     SUSPENDED = 1
@@ -50,13 +44,6 @@ enum EmailType {
     LOGIN_TOKEN = 2
     PASSWORD_RESET_TOKEN = 3
 }
-
-enum ApiSecretOperationResultCode {
-    OK = 0
-    TOO_MANY_SECRETS = 1
-    INVALID_SECRET = 2
-}
-
 //---------------------------------------------------------------------
 // User profile related
 struct UserProfile {
@@ -219,15 +206,19 @@ enum ErrorCode {
     OK = 0
 
     // User related
-    EMAIL_ALREADY_REGISTERED = 1001
-    MISSING_INFORMATION = 1002
-    USER_NOT_EXIST = 1003
-    PASSWORD_NOT_MATCH = 1004
-    TOKEN_NOT_MATCH = 1005
-    TOKEN_NOT_UNIQUE = 1006
+    EMAIL_ALREADY_REGISTERED         = 1001
+    MISSING_INFORMATION              = 1002
+    USER_NOT_EXIST                   = 1003
+    PASSWORD_NOT_MATCH               = 1004
+    TOKEN_NOT_MATCH                  = 1005
+    TOKEN_NOT_UNIQUE                 = 1006
     
     // Account related
-    PRICE_OUT_OF_RANGE = 1
+    PRICE_OUT_OF_RANGE               = 2001
+
+    // ApiAuth
+    TOO_MANY_SECRETS                 = 4001
+    INVALID_SECRET                   = 4002
 }
 
 /* R    */ struct AdminCommandResult{1: ErrorCode error = ErrorCode.OK}
@@ -253,6 +244,8 @@ enum ErrorCode {
 /* R    */ struct PasswordResetTokenValidationResult  {1: optional UserProfile userProfile}
 
 // AccountProcessor
+/*????????*/ struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
+
 /* C,P  */ struct DoRequestCashDeposit                {1: i64 userId, 2: Currency currency, 3: i64 amount}
 /* R-   */ struct RequestCashDepositFailed            {1: ErrorCode error}
 /* R+   */ struct RequestCashDepositSucceeded         {1: i64 userId, 2: Currency currency, 3: i64 amount}
@@ -271,54 +264,33 @@ enum ErrorCode {
 /* I,R+ */ struct OrderFundFrozen                     {1: MarketSide side, 2: Order order}
 
 
+// ApiAuthProcessor
+/* C,P  */ struct DoAddNewApiSecret                   {1: i64 userId}
+/* C,P  */ struct DoDeleteApiSecret                   {1: ApiSecret secret}
+/* R    */ struct ApiSecretOperationResult            {1: ErrorCode error, 2: list<ApiSecret> secrets}
+
+/* Q    */ struct QueryApiSecrets                     {1: i64 userId, 2: optional string identifier}
+/* R    */ struct QueryApiSecretsResult               {1: i64 userId, 2: list<ApiSecret> secrets}
 
 
-// MarketProcessor commands
-struct DoCancelOrder{1: MarketSide side, 2: i64 id, 3: i64 userId}
-struct OrderCashLocked{1: MarketSide side, 2: Order order}
+// MarketProcessor
+/* C,P  */ struct DoCancelOrder                       {1: MarketSide side, 2: i64 id, 3: i64 userId}
+/* R-   */ struct CancelOrderFailed                   {1: ErrorCode error}
 
-/* I    */ struct OrderSubmitted    {1: OrderInfo originOrderInfo, 2: list<Transaction> txs}
-struct OrderCancelled{1: MarketSide side, 2: Order order}
+/* I    */ struct OrderSubmitted                      {1: OrderInfo originOrderInfo, 2: list<Transaction> txs}
+/* I,R+ */ struct OrderCancelled                      {1: MarketSide side, 2: Order order}
 
-// UserTransactionView
-struct QueryUserTransaction{1: MarketSide side, 2: i64 userId, 3: i64 orderId, 4: i64 from, 5: i32 num}
-struct QueryUserTransactionResult{1: TransactionData transactionData}
 
-// ApiAuthProcessor commands
-struct DoAddNewApiSecret{1: i64 userId}
-struct DoDeleteApiSecret{1: ApiSecret secret}
-struct ApiSecretOperationResult{1: ApiSecretOperationResultCode code, 2: list<ApiSecret> secrets}
-
-struct QueryApiSecrets{1: i64 userId, 2: optional string identifier}
-struct QueryApiSecretsResult{1: i64 userId, 2:list<ApiSecret> secrets}
-
-struct QueryMarket{1: MarketSide side, 2: i32 maxDepth}
-struct QueryMarketResult{1: MarketDepth marketDepth}
-struct QueryMarketUnsupportedMarketFailure{1: MarketSide side}
 
 // Mailer
 struct SendMailRequest{1: string email, 2: EmailType emailType, 3: map<string, string> params}
 
-// CandleDataView
-struct QueryCandleData{1: MarketSide side, 2: ChartTimeDimension dimension, 3: i64 from, 4: i64 to}
-struct QueryCandleDataResult{1: CandleData candleData}
-
-
-// UserOrdersView
-struct QueryUserOrders{1: i64 userId, 2: optional i32 numOrders, 3: optional i32 skipOrders, 4: optional OrderStatus status}
-struct QueryUserOrdersResult{1: i64 userId, 2: list<OrderInfo> orders}
-
-
-// TransactionDataView
-struct QueryTransactionData{1: MarketSide side, 2: i64 from, 3: i32 num}
-struct QueryTransactionDataResult{1: TransactionData transactionData}
 
 
 // RobotProcessor commands
 struct DoUpdateMetrics{1: RobotMetrics metrics}
 
 
-struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
 
 
 //////////////// VIEWS MESSAGES /////////////////////
@@ -327,5 +299,22 @@ struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashA
 /* Q    */ struct QueryAccount                        {1: i64 userId}
 /* R    */ struct QueryAccountResult                  {1: UserAccount userAccount}
 
+// MarketDepthView
+/* Q    */ struct QueryMarketDepth                    {1: MarketSide side, 2: i32 maxDepth}
+/* R    */ struct QueryMarketDepthResult              {1: MarketDepth marketDepth}
 
+// CandleDataView
+/* Q    */ struct QueryCandleData                     {1: MarketSide side, 2: ChartTimeDimension dimension, 3: i64 from, 4: i64 to}
+/* R    */ struct QueryCandleDataResult               {1: CandleData candleData}
 
+// UserTransactionView
+/* Q    */ struct QueryUserTransaction                {1: MarketSide side, 2: i64 userId, 3: i64 orderId, 4: i64 from, 5: i32 num}
+/* R    */ struct QueryUserTransactionResult          {1: TransactionData transactionData}
+
+// UserOrdersView
+/* Q    */ struct QueryUserOrders                     {1: i64 userId, 2: optional i32 numOrders, 3: optional i32 skipOrders, 4: optional OrderStatus status}
+/* R    */ struct QueryUserOrdersResult               {1: i64 userId, 2: list<OrderInfo> orders}
+
+// TransactionDataView
+/* Q    */ struct QueryTransactionData                {1: MarketSide side, 2: i64 from, 3: i32 num}
+/* R    */ struct QueryTransactionDataResult          {1: TransactionData transactionData}

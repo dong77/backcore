@@ -25,13 +25,13 @@ class ApiAuthProcessor(seed: String) extends ExtendedProcessor {
     case p @ Persistent(DoAddNewApiSecret(userId), _) =>
       manager.addNewSecret(userId) match {
         case Left(code) => sender ! ApiSecretOperationResult(code, manager.getUserSecrets(userId))
-        case Right(_) => sender ! ApiSecretOperationResult(ApiSecretOperationResultCode.Ok, manager.getUserSecrets(userId))
+        case Right(_) => sender ! ApiSecretOperationResult(ErrorCode.Ok, manager.getUserSecrets(userId))
       }
 
     case p @ Persistent(DoDeleteApiSecret(secret), _) =>
       manager.deleteSecret(secret) match {
         case Left(code) => sender ! ApiSecretOperationResult(code, Nil)
-        case Right(_) => sender ! ApiSecretOperationResult(ApiSecretOperationResultCode.Ok, Nil)
+        case Right(_) => sender ! ApiSecretOperationResult(ErrorCode.Ok, Nil)
       }
   }
 }
