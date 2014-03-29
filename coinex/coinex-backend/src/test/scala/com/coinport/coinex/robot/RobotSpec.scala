@@ -95,5 +95,70 @@ class RobotSpec extends Specification {
       val (robot6, res6) = robot5.action(None)
       res6 mustEqual None
     }
+
+    "robot go to bad state" in {
+      var robot = Robot(1, 1, 1)
+      robot = robot.addHandler("START") {
+        """(robot -> "STATE_A", None)"""
+      }
+      robot = robot.addHandler("STATE_A") {
+        """(robot -> "STATE_D", Some(1))"""
+      }
+      robot = robot.addHandler("STATE_B") {
+        """(robot -> "STATE_C", Some(2))"""
+      }
+      robot = robot.addHandler("STATE_C") {
+        """(robot -> "DONE", Some(3))"""
+      }
+      val (robot1, res1) = robot.action(None)
+      res1 mustEqual None
+      robot1.isDone mustEqual false
+      val (robot2, res2) = robot1.action(None)
+      res2 mustEqual Some(1)
+      robot2.isDone mustEqual false
+      val (robot3, res3) = robot2.action(None)
+      res3 mustEqual None
+      robot3.isDone mustEqual true
+      val (robot4, res4) = robot3.action(None)
+      res4 mustEqual None
+      robot4.isDone mustEqual true
+      val (robot5, res5) = robot4.action(None)
+      res5 mustEqual None
+      robot5.isDone mustEqual true
+    }
+
+    "robot throw Exception in handler" in {
+      var robot = Robot(1, 1, 1)
+      robot = robot.addHandler("START") {
+        """(robot -> "STATE_A", None)"""
+      }
+      robot = robot.addHandler("STATE_A") {
+        """
+          throw new Exception()
+          (robot -> "STATE_D", Some(1))
+        """
+      }
+      robot = robot.addHandler("STATE_B") {
+        """(robot -> "STATE_C", Some(2))"""
+      }
+      robot = robot.addHandler("STATE_C") {
+        """(robot -> "DONE", Some(3))"""
+      }
+      val (robot1, res1) = robot.action(None)
+      res1 mustEqual None
+      robot1.isDone mustEqual false
+      val (robot2, res2) = robot1.action(None)
+      res2 mustEqual None
+      robot2.isDone mustEqual true
+      val (robot3, res3) = robot2.action(None)
+      res3 mustEqual None
+      robot3.isDone mustEqual true
+      val (robot4, res4) = robot3.action(None)
+      res4 mustEqual None
+      robot4.isDone mustEqual true
+      val (robot5, res5) = robot4.action(None)
+      res5 mustEqual None
+      robot5.isDone mustEqual true
+    }
   }
 }

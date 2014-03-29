@@ -6,6 +6,7 @@
 package com.coinport.coinex.data
 
 import com.twitter.util.Eval
+import org.slf4s.Logging
 
 import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.data._
@@ -17,7 +18,7 @@ case class Robot(
     robotId: Long, userId: Long = COINPORT_UID, timestamp: Long = 0,
     states: Map[String, String] = Map.empty[String, String],
     statesPayload: Map[String, Option[Any]] = Map.empty[String, Option[Any]],
-    currentState: String = "START") {
+    currentState: String = "START") extends Object with Logging {
 
   // Option[Any] is the actual action of the robot, such as DoDepositCash.
   // This could be restrained from outter processor
@@ -35,12 +36,23 @@ case class Robot(
 
   // invoked by outter processor
   def action(metrics: Option[RobotMetrics] = None): (Robot, Option[Any]) = {
-    // TODO(c): check existance
-    if (currentState == DONE)
+    if (currentState == DONE) {
       (this, None)
-    else {
-      val function = inflate(HEADER + states(currentState))
-      function(this, metrics)
+    } else {
+      if (!states.contains(currentState)) {
+        log.error("robot #%d doesn't contain the state %s" format (this.robotId, currentState))
+        (this -> DONE, None)
+      } else {
+        val function = inflate(HEADER + states(currentState))
+        val result = try {
+          function(this, metrics)
+        } catch {
+          case ex: Throwable =>
+            log.error("exception occur in #%d robot's state %s handler" format (this.robotId, currentState), ex)
+            (this -> DONE, None)
+        }
+        result
+      }
     }
   }
 
