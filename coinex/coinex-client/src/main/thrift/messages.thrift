@@ -225,7 +225,11 @@ struct ApiSecretState {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Non-persistent message.
+
+// UserProcessor commands
+struct DoRegisterUser{1: UserProfile userProfile, 2: string password}
+struct DoRequestPasswordReset{1: string email}
+struct DoResetPassword{1: string email, 2: string password, 3: optional string passwordResetToken}
 struct RegisterUserFailed{1: RegisterationFailureReason reason, 2: optional UserProfile userProfile}
 struct RegisterUserSucceeded{1: UserProfile userProfile}
 
@@ -242,43 +246,9 @@ struct ValidatePasswordResetTokenResult{1: optional UserProfile userProfile}
 struct ResetPasswordFailed{1: ResetPasswordFailureReason reason}
 struct ResetPasswordSucceeded{1: i64 id, 2: string email}
 
-struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
-struct OrderSubmissionDone{1: MarketSide side, 2: Order order, 3: list<Transaction> txs}
-
+// UserOrdersView
 struct QueryUserOrders{1: i64 userId, 2: optional i32 numOrders, 3: optional i32 skipOrders, 4: optional OrderStatus status}
 struct QueryUserOrdersResult{1: i64 userId, 2: list<OrderInfo> orders}
-
-struct QueryAccount{1: i64 userId}
-struct QueryAccountResult{1: UserAccount userAccount}
-
-struct QueryMarket{1: MarketSide side, 2: i32 maxDepth}
-struct QueryMarketResult{1: MarketDepth marketDepth}
-struct QueryMarketUnsupportedMarketFailure{1: MarketSide side}
-
-struct QueryCandleData{1: MarketSide side, 2: ChartTimeDimension dimension, 3: i64 from, 4: i64 to}
-struct QueryCandleDataResult{1: CandleData candleData}
-
-struct QueryTransactionData{1: MarketSide side, 2: i64 from, 3: i32 num}
-struct QueryTransactionDataResult{1: TransactionData transactionData}
-
-struct QueryUserTransaction{1: MarketSide side, 2: i64 userId, 3: i64 orderId, 4: i64 from, 5: i32 num}
-struct QueryUserTransactionResult{1: TransactionData transactionData}
-
-struct OrderSubmissionInProgross{1: MarketSide side, 2: Order order}
-
-struct SendMailRequest{1: string email, 2: EmailType emailType, 3: map<string, string> params}
-
-struct QueryApiSecrets{1: i64 userId, 2: optional string identifier}
-struct QueryApiSecretsResult{1: i64 userId, 2:list<ApiSecret> secrets}
-
-// ----------------------------------------------------------------------------
-// Persistent Commands - all commands are sent by outside world.
-// Please name all commands starting with "Do"
-
-// UserProcessor commands
-struct DoRegisterUser{1: UserProfile userProfile, 2: string password}
-struct DoRequestPasswordReset{1: string email}
-struct DoResetPassword{1: string email, 2: string password, 3: optional string passwordResetToken}
 
 // AccountProcessor commands
 struct DoSubmitOrder{1: MarketSide side, 2: Order order}
@@ -286,27 +256,47 @@ struct DoDepositCash{1: i64 userId, 2: Currency currency, 3: i64 amount}
 struct DoRequestCashWithdrawal{1: i64 userId, 2: Currency currency, 3: i64 amount}
 struct DoConfirmCashWithdrawalSuccess{1: i64 userId, 2: Currency currency, 3: i64 amount}
 struct DoConfirmCashWithdrawalFailed{1: i64 userId, 2: Currency currency, 3: i64 amount}
+struct AccountOperationResult{1: AccountOperationCode code, 2: CashAccount cashAccount}
+
+struct OrderCancelled{1: MarketSide side, 2: Order order}
+struct OrderSubmissionFailed{1: MarketSide side, 2: Order order, 3: OrderSubmissionFailReason reason}
+struct OrderSubmitted{1: OrderInfo originOrderInfo, 2: list<Transaction> txs}
+
+struct QueryAccount{1: i64 userId}
+struct QueryAccountResult{1: UserAccount userAccount}
+
 
 // MarketProcessor commands
 struct DoCancelOrder{1: MarketSide side, 2: i64 id, 3: i64 userId}
+struct OrderCashLocked{1: MarketSide side, 2: Order order}
+
+// UserTransactionView
+struct QueryUserTransaction{1: MarketSide side, 2: i64 userId, 3: i64 orderId, 4: i64 from, 5: i32 num}
+struct QueryUserTransactionResult{1: TransactionData transactionData}
 
 // ApiAuthProcessor commands
 struct DoAddNewApiSecret{1: i64 userId}
 struct DoDeleteApiSecret{1: ApiSecret secret}
 struct ApiSecretOperationResult{1: ApiSecretOperationResultCode code, 2: list<ApiSecret> secrets}
 
+struct QueryApiSecrets{1: i64 userId, 2: optional string identifier}
+struct QueryApiSecretsResult{1: i64 userId, 2:list<ApiSecret> secrets}
+
+struct QueryMarket{1: MarketSide side, 2: i32 maxDepth}
+struct QueryMarketResult{1: MarketDepth marketDepth}
+struct QueryMarketUnsupportedMarketFailure{1: MarketSide side}
+
+// Mailer
+struct SendMailRequest{1: string email, 2: EmailType emailType, 3: map<string, string> params}
+
+// CandleDataView
+struct QueryCandleData{1: MarketSide side, 2: ChartTimeDimension dimension, 3: i64 from, 4: i64 to}
+struct QueryCandleDataResult{1: CandleData candleData}
+
+// TransactionDataView
+struct QueryTransactionData{1: MarketSide side, 2: i64 from, 3: i32 num}
+struct QueryTransactionDataResult{1: TransactionData transactionData}
+
+
 // RobotProcessor commands
 struct DoUpdateMetrics{1: RobotMetrics metrics}
-
-
-// ------------------------------------------------------------------------------------------------
-// Persistent Events. All events are generated by a certain processor and handeled by another processor.
-// For each event, we'll comment it in the form of "origin -> handler".
-
-// AccountProcessor -> MarketProcessor events
-struct OrderCashLocked{1: MarketSide side, 2: Order order}
-
-// MarketProcessor -> AccountProcessor/MarketUpdateProcessor events
-struct OrderCancelled{1: MarketSide side, 2: Order order}
-struct OrderSubmissionFailed{1: MarketSide side, 2: Order order, 3: OrderSubmissionFailReason reason}
-struct OrderSubmitted{1: OrderInfo originOrderInfo, 2: list<Transaction> txs}
