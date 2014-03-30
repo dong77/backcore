@@ -189,9 +189,9 @@ struct ApiSecret {
 }
 
 struct ApiSecretState {
-	1: map<string, ApiSecret> identifierLookupMap // key is identifier
-	2: map<i64, list<ApiSecret>> userSecretMap // key is userId
-	3: string seed
+    1: map<string, ApiSecret> identifierLookupMap // key is identifier
+    2: map<i64, list<ApiSecret>> userSecretMap // key is userId
+    3: string seed
 }
 
 struct Fee {
@@ -216,7 +216,7 @@ enum ErrorCode {
     PASSWORD_NOT_MATCH               = 1004
     TOKEN_NOT_MATCH                  = 1005
     TOKEN_NOT_UNIQUE                 = 1006
-    
+
     // Account related
     PRICE_OUT_OF_RANGE               = 2001
     INSUFFICIENT_FUND                = 2002

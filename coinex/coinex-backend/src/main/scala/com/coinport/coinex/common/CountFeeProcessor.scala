@@ -6,26 +6,38 @@
 package com.coinport.coinex.common
 
 import akka.event.LoggingReceive
+import akka.persistence._
 
-import com.coinport.coinex.data.Fee
-import com.coinport.coinex.fee.FeeMaker
+import com.coinport.coinex.data._
+import com.coinport.coinex.fee._
+import com.coinport.coinex.fee.rules.FeeRules
+import Constants._
 
 trait CountFeeProcessor extends ExtendedProcessor {
+
+  val configMap: Map[String, FeeRules]
+
+  val feeMakers = Map(
+    TRANSACTION_FEE_MAKER -> new TransactionFeeMaker(configMap(TRANSACTION_FEE_MAKER)),
+    WITHDRAWAL -> new WithdrawalFeeMaker(configMap(WITHDRAWAL))
+  )
 
   type FeeReceive = PartialFunction[(Any, List[Fee]), Unit]
 
   abstract override def receive = LoggingReceive {
-    case e => tryToCountFee(null, e)
+    case p @ ConfirmablePersistent(OrderSubmitted(originOrderInfo, txs), seq, _) =>
+      txs map { tx =>
+      }
   }
 
   private def tryToCountFee[T](feeMaker: FeeMaker[T], m: T) = {
     if (feeMaker != null) {
-      val (event, fees) = feeMaker.tipping(m)
+      val (event, fees) = feeMaker.count(m)
       if (fees != Nil)
         handleFee(fees)
     }
     super.receive(m)
   }
 
-  def handleFee(fees: List[Fee])
+  def handleFee(fees: Fee)
 }

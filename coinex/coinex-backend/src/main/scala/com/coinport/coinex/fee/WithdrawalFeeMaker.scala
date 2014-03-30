@@ -9,9 +9,8 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.common.Constants.COINPORT_UID
 import com.coinport.coinex.fee.rules.FeeRules
 
-// TODO(c): consider the type of the user
-class TransactionFeeMaker(rules: FeeRules) extends FeeMaker[Transaction] {
-  override def count(serviceTakeItem: Transaction): (Transaction, Fee) = {
+class WithdrawalFeeMaker(rules: FeeRules) extends FeeMaker[AdminConfirmCashWithdrawalSuccess] {
+  override def count(serviceTakeItem: AdminConfirmCashWithdrawalSuccess) = {
     (null, null)
   }
 }

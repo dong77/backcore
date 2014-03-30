@@ -7,4 +7,6 @@ package com.coinport.coinex.common
 
 object Constants {
   val COINPORT_UID = 3142141421L
+  val TRANSACTION_FEE_MAKER = "translactionFeeMaker"
+  val WITHDRAWAL = "withdrawal"
 }

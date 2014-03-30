@@ -8,5 +8,5 @@ package com.coinport.coinex.fee
 import com.coinport.coinex.data.Fee
 
 trait FeeMaker[T] {
-  def tipping(feeEvent: T): (T, List[Fee])
+  def count(feeEvent: T): (T, Fee)
 }
