@@ -23,6 +23,7 @@ import Implicits._
 import OrderStatus._
 
 class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends Manager[MarketState](MarketState(headSide)) {
+  val MAX_TX_GROUP_SIZE = 10000
   def isOrderPriceInGoodRange(sellSide: MarketSide, price: Option[Double]): Boolean = {
     if (price.isEmpty) true
     else if (price.get <= 0) false
@@ -32,12 +33,12 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
     else false
   }
 
-  def addOrder(sellSide: MarketSide, order: Order): OrderSubmitted = {
+  def addOrder(sellSide: MarketSide, order: Order, txGroupId: Long): OrderSubmitted = {
     val orderWithTime = order.copy(timestamp = Some(now()))
     val txsBuffer = new ListBuffer[Transaction]
 
     val (totalOutAmount, totalInAmount, sellOrder, newMarket) =
-      addOrderRec(sellSide.reverse, sellSide, orderWithTime, state, 0, 0, txsBuffer)
+      addOrderRec(sellSide.reverse, sellSide, orderWithTime, state, 0, 0, txsBuffer, txGroupId * MAX_TX_GROUP_SIZE)
     state = newMarket
 
     val status =
@@ -64,7 +65,8 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
 
   @tailrec
   private final def addOrderRec(buySide: MarketSide, sellSide: MarketSide, sellOrder: Order,
-    market: MarketState, totalOutAmount: Long, totalInAmount: Long, txsBuffer: ListBuffer[Transaction]): ( /*totalOutAmount*/ Long, /*totalInAmount*/ Long, /*updatedSellOrder*/ Order, /*after order match*/ MarketState) = {
+    market: MarketState, totalOutAmount: Long, totalInAmount: Long, txsBuffer: ListBuffer[Transaction],
+    txId: Long): ( /*totalOutAmount*/ Long, /*totalInAmount*/ Long, /*updatedSellOrder*/ Order, /*after order match*/ MarketState) = {
     val buyOrderOption = market.orderPool(buySide).headOption
     if (buyOrderOption == None || buyOrderOption.get.vprice * sellOrder.vprice > 1) {
       // Return point. Market-price order doesn't pending
@@ -80,7 +82,7 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
         quantity = sellOrder.quantity - outAmount, takeLimit = sellOrder.takeLimit.map(_ - inAmount))
       val updatedBuyOrder = buyOrder.copy(
         quantity = buyOrder.quantity - inAmount, takeLimit = buyOrder.takeLimit.map(_ - outAmount))
-      txsBuffer += Transaction(now(), sellOrder --> updatedSellOrder, buyOrder --> updatedBuyOrder)
+      txsBuffer += Transaction(txId, now(), sellOrder --> updatedSellOrder, buyOrder --> updatedBuyOrder)
 
       val leftMarket = market.removeOrder(buySide, buyOrder.id)
       if (updatedSellOrder.isFullyExecuted) {
@@ -90,7 +92,7 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
       } else {
         // return point
         addOrderRec(buySide, sellSide, updatedSellOrder, leftMarket,
-          totalOutAmount + outAmount, totalInAmount + inAmount, txsBuffer)
+          totalOutAmount + outAmount, totalInAmount + inAmount, txsBuffer, txId + 1)
       }
     }
   }

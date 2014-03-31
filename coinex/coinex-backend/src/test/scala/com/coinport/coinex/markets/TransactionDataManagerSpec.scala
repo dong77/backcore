@@ -20,7 +20,7 @@ class TransactionDataManagerSpec extends Specification {
         val makerCurrent = Order(userId = 555, id = 2, price = Some(1.0 / 3000), quantity = 0, takeLimit = None, timestamp = Some(0))
         val takerPrevious = Order(userId = 888, id = 3, price = Some(3000), quantity = 0, timestamp = Some(0))
         val takerCurrent = Order(userId = 888, id = 4, price = Some(3000), quantity = 1, timestamp = Some(0))
-        Transaction(i, OrderUpdate(takerPrevious, takerCurrent), OrderUpdate(makerPrevious, makerCurrent))
+        Transaction(i, i, OrderUpdate(takerPrevious, takerCurrent), OrderUpdate(makerPrevious, makerCurrent))
       }
 
       txs.foreach(t => manager.addItem(t, true))

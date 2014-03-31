@@ -25,7 +25,7 @@ class RobotMetricsView extends ExtendedView {
     case e @ Persistent(OrderSubmitted(orderInfo, txs), _) =>
       val sellSide = orderInfo.side.reverse
       txs.lastOption foreach { tx =>
-        val Transaction(_, _, makerOrderUpdate) = tx
+        val Transaction(_, _, _, makerOrderUpdate) = tx
         makerOrderUpdate.current.price foreach { price =>
           manager.updatePrice(sellSide, price)
         }

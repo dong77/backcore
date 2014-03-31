@@ -21,7 +21,7 @@ class CandleDataManagerSpec extends Specification {
       val takerPrevious = Order(userId = 888, id = 3, price = Some(3000), quantity = 0, timestamp = Some(0))
       val takerCurrent = Order(userId = 888, id = 4, price = Some(3000), quantity = 1, timestamp = Some(0))
 
-      val t = Transaction(1000000, OrderUpdate(takerPrevious, takerCurrent), OrderUpdate(makerPrevious, makerCurrent))
+      val t = Transaction(1L, 1000000, OrderUpdate(takerPrevious, takerCurrent), OrderUpdate(makerPrevious, makerCurrent))
 
       manager.addItem(t, true)
 

@@ -9,6 +9,33 @@
 // WARNING: all structs must have at least 1 parameters, otherwise serialization fails.
 
 namespace java com.coinport.coinex.data
+////////////////////////////////////////////////////////////////
+///////////////////////// ERROR CODES //////////////////////////
+////////////////////////////////////////////////////////////////
+
+enum ErrorCode {
+    OK = 0
+
+    // User related
+    EMAIL_ALREADY_REGISTERED         = 1001
+    MISSING_INFORMATION              = 1002
+    USER_NOT_EXIST                   = 1003
+    PASSWORD_NOT_MATCH               = 1004
+    TOKEN_NOT_MATCH                  = 1005
+    TOKEN_NOT_UNIQUE                 = 1006
+
+    // Account related
+    PRICE_OUT_OF_RANGE               = 2001
+    INSUFFICIENT_FUND                = 2002
+    INVALID_AMOUNT                   = 2003
+
+    // Market related
+
+    // Api Auth related
+    TOO_MANY_SECRETS                 = 5001
+    INVALID_SECRET                   = 5002
+}
+
 
 ////////////////////////////////////////////////////////////////
 ////////////////////// PERSISTENT ENUMS ////////////////////////
@@ -104,9 +131,10 @@ struct OrderUpdate {
 }
 
 struct Transaction{
-    1: i64 timestamp
-    2: OrderUpdate takerUpdate
-    3: OrderUpdate makerUpdate
+    1: i64 id
+    2: i64 timestamp
+    3: OrderUpdate takerUpdate
+    4: OrderUpdate makerUpdate
 }
 
 struct CashAccount{
@@ -200,32 +228,6 @@ struct Fee {
     5: optional string basis
 }
 
-////////////////////////////////////////////////////////////////
-///////////////////////// ERROR CODES //////////////////////////
-////////////////////////////////////////////////////////////////
-
-enum ErrorCode {
-    OK = 0
-
-    // User related
-    EMAIL_ALREADY_REGISTERED         = 1001
-    MISSING_INFORMATION              = 1002
-    USER_NOT_EXIST                   = 1003
-    PASSWORD_NOT_MATCH               = 1004
-    TOKEN_NOT_MATCH                  = 1005
-    TOKEN_NOT_UNIQUE                 = 1006
-
-    // Account related
-    PRICE_OUT_OF_RANGE               = 2001
-    INSUFFICIENT_FUND                = 2002
-    INVALID_AMOUNT                   = 2003
-
-    // Market related
-
-    // Api Auth related
-    TOO_MANY_SECRETS                 = 5001
-    INVALID_SECRET                   = 5002
-}
 
 ////////////////////////////////////////////////////////////////
 ///////////////////// PROCESSOR MESSAGES ///////////////////////

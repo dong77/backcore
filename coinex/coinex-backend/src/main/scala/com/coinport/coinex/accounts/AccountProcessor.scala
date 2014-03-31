@@ -67,7 +67,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
     case OrderSubmitted(originOrderInfo, txs) =>
       val side = originOrderInfo.side
       txs foreach { tx =>
-        val Transaction(_, takerOrderUpdate, makerOrderUpdate) = tx
+        val Transaction(_, _, takerOrderUpdate, makerOrderUpdate) = tx
         manager.sendCash(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
         manager.sendCash(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
         manager.conditionalRefund(takerOrderUpdate.current.hitTakeLimit)(side.outCurrency, takerOrderUpdate.current)

@@ -45,7 +45,7 @@ class MarketProcessor(
         sender ! event
         channelToAccountProcessor ! Deliver(p.withPayload(event), accountProcessorPath)
       } else {
-        val orderSubmitted = manager.addOrder(side, order)
+        val orderSubmitted = manager.addOrder(side, order, lastSequenceNr)
         sender ! orderSubmitted
         channelToAccountProcessor ! Deliver(p.withPayload(orderSubmitted), accountProcessorPath)
         channelToMarketUpdateProcessor ! Deliver(p.withPayload(orderSubmitted), marketUpdateProcessoressorPath)
