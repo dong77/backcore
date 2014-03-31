@@ -10,53 +10,61 @@ import com.coinport.coinex.data._
 import akka.actor._
 import akka.persistence._
 import akka.event.LoggingReceive
-import com.coinport.coinex.common.ExtendedProcessor
+import com.coinport.coinex.common._
 import Implicits._
 
-class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends ExtendedProcessor with ActorLogging {
+class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
+    extends EventsourcedProcessor with ChannelSupport with ActorLogging {
   override val processorId = "coinex_ap"
   val channelToMarketProcessors = createChannelTo("mps") // DO NOT CHANGE
 
   val manager = new AccountManager()
 
-  def receive = LoggingReceive {
-    // ------------------------------------------------------------------------------------------------
-    // Commands
-    case p @ Persistent(DoRequestCashDeposit(userId, currency, amount), seq) =>
-      sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, 0))
-      log.info("state: {}", manager())
+  def receiveRecover = PartialFunction.empty[Any, Unit]
 
-    case p @ Persistent(DoRequestCashWithdrawal(userId, currency, amount), seq) =>
+  def receiveCommand = LoggingReceive {
+
+    case m: DoRequestCashDeposit => persist(m)(updateState)
+    case m: DoRequestCashWithdrawal => persist(m)(updateState)
+    case m: AdminConfirmCashWithdrawalSuccess => persist(m)(updateState)
+    case m: AdminConfirmCashWithdrawalFailure => persist(m)(updateState)
+
+    case m @ DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _)) =>
+      if (quantity <= 0) sender ! SubmitOrderFailed(side, order, ErrorCode.InvalidAmount)
+      else persist(m)(updateState)
+
+    case p @ ConfirmablePersistent(event @ OrderSubmitted, seq, _) =>
+      persist(event) { event => p.confirm(); updateState(event) }
+
+    case p @ ConfirmablePersistent(event @ OrderCancelled, seq, _) =>
+      persist(event) { event => p.confirm(); updateState(event) }
+
+    case p @ ConfirmablePersistent(event @ SubmitOrderFailed, seq, _) =>
+      persist(event) { event => p.confirm(); updateState(event) }
+  }
+
+  def updateState(event: Any): Unit = event match {
+    case m @ DoRequestCashDeposit(userId, currency, amount) =>
+      sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, 0))
+
+    case m @ DoRequestCashWithdrawal(userId, currency, amount) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, -amount, 0, amount))
 
-    case p @ Persistent(AdminConfirmCashWithdrawalSuccess(userId, currency, amount), seq) =>
+    case m @ AdminConfirmCashWithdrawalSuccess(userId, currency, amount) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, 0, 0, -amount))
 
-    case p @ Persistent(AdminConfirmCashWithdrawalFailure(userId, currency, amount, error), seq) =>
+    case m @ AdminConfirmCashWithdrawalFailure(userId, currency, amount, error) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
-    case p @ Persistent(DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _)), seq) =>
-      if (quantity <= 0) sender ! SubmitOrderFailed(side, order, ErrorCode.InvalidAmount)
-      else manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
+    case m @ DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _)) =>
+      manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
         case Some(error) => sender ! SubmitOrderFailed(side, order, error)
         case None =>
           val orderWithId = order.copy(id = manager.getAndIncreaseOrderId)
-          channelToMarketProcessors forward Deliver(p.withPayload(OrderFundFrozen(side, orderWithId)), getProcessorPath(side))
+          channelToMarketProcessors forward Deliver(Persistent(OrderFundFrozen(side, orderWithId)), getProcessorPath(side))
       }
-      log.info("state: {}", manager())
 
-    // ------------------------------------------------------------------------------------------------
-    // From Channel
-    case p @ ConfirmablePersistent(SubmitOrderFailed(side, order, _), seq, _) =>
-      p.confirm()
-      manager.conditionalRefund(true)(side.outCurrency, order)
-
-    case p @ ConfirmablePersistent(OrderCancelled(side, order), seq, _) =>
-      p.confirm()
-      manager.conditionalRefund(true)(side.outCurrency, order)
-
-    case p @ ConfirmablePersistent(OrderSubmitted(originOrderInfo, txs), seq, _) =>
-      p.confirm()
+    case OrderSubmitted(originOrderInfo, txs) =>
       val side = originOrderInfo.side
       txs foreach { tx =>
         val Transaction(_, takerOrderUpdate, makerOrderUpdate) = tx
@@ -72,6 +80,12 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends Exte
           manager.refund(order.userId, side.outCurrency, order.quantity - originOrderInfo.outAmount)
         case _ =>
       }
+
+    case OrderCancelled(side, order) =>
+      manager.conditionalRefund(true)(side.outCurrency, order)
+
+    case SubmitOrderFailed(side, order, _) =>
+      manager.conditionalRefund(true)(side.outCurrency, order)
   }
 
   private def getProcessorPath(side: MarketSide): ActorPath = {

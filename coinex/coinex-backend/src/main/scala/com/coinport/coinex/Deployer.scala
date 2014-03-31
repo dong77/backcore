@@ -69,7 +69,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
     deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with Eventsourced[UserState, UserManager]), USER_PROCESSOR)
-    deployProcessor(Props(new AccountProcessor(routers.marketProcessors) with Commandsourced[AccountState, AccountManager]), ACCOUNT_PROCESSOR)
+    deployProcessor(Props(new AccountProcessor(routers.marketProcessors) with Eventsourced[AccountState, AccountManager]), ACCOUNT_PROCESSOR)
     deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret) with Commandsourced[ApiSecretState, ApiAuthManager]), API_AUTH_PROCESSOR)
     deployProcessor(Props(new RobotProcessor(routers) with Commandsourced[RobotState, RobotManager]), ROBOT_PROCESSOR)
 

@@ -9,7 +9,6 @@ import akka.persistence.SnapshotOffer
 import com.coinport.coinex.data._
 import akka.actor._
 import akka.persistence._
-import com.coinport.coinex.common.ExtendedProcessor
 import ErrorCode._
 import akka.event.LoggingReceive
 
