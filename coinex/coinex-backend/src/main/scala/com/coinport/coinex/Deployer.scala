@@ -50,6 +50,10 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     val mongo = MongoConnection(mongoUri)
     val db = mongo(mongoUri.database.getOrElse("coinex_export"))
 
+    val mongoUriView = MongoURI(config.getString("akka.exchange.export-persistent-view.mongo-view-uri"))
+    val mongoView = MongoConnection(mongoUriView)
+    val viewDB = mongoView(mongoUriView.database.getOrElse("coinex_view"))
+
     val feeConfig = loadFeeConfig(config.getString("akka.exchange.fee-rules-path"))
 
     deployMailer(MAILER)
@@ -58,14 +62,13 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     markets foreach { m =>
       deployView(Props(new MarketDepthView(m)), MARKET_DEPTH_VIEW(m))
       deployView(Props(new CandleDataView(m)), CANDLE_DATA_VIEW(m))
-      deployView(Props(new TransactionDataView(m)), TRANSACTION_DATA_VIEW(m))
-      deployView(Props(new UserTransactionView(m)), USER_TRANSACTION_VIEW(m))
+      deployView(Props(new TransactionView(m, viewDB)), TRANSACTION_VIEW(m))
+      deployView(Props(new OrderView(m, viewDB)), ORDER_VIEW(m))
       deployView(Props(new EventExportToMongoView(db, "coinex_mp_" + m.asString)), MARKET_PROCESSOR_MPV(m))
     }
 
     deployView(Props(classOf[UserView]), USER_VIEW)
     deployView(Props(new AccountView(feeConfig)), ACCOUNT_VIEW)
-    deployView(Props(classOf[UserOrdersView]), USER_ORDERS_VIEW)
     deployView(Props(classOf[MetricsView]), ROBOT_METRICS_VIEW)
     deployView(Props(new ApiAuthView(apiAuthSecret)), API_AUTH_VIEW)
 

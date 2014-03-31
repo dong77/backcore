@@ -33,8 +33,8 @@ object LocalRouters {
 
   def CANDLE_DATA_VIEW(side: MarketSide) = "candle_data_view_" + side.asString
   def MARKET_DEPTH_VIEW(side: MarketSide) = "market_depth_view_" + side.asString
-  def TRANSACTION_DATA_VIEW(side: MarketSide) = "transaction_data_view_" + side.asString
-  def USER_TRANSACTION_VIEW(side: MarketSide) = "user_transaction_view_" + side.asString
+  def TRANSACTION_VIEW(side: MarketSide) = "transaction_view_" + side.asString
+  def ORDER_VIEW(side: MarketSide) = "order_view_" + side.asString
 
   def MAILER = "mailer"
 
@@ -58,7 +58,6 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
 
   val userView = routerFor(USER_VIEW)
   val accountView = routerFor(ACCOUNT_VIEW)
-  val userOrdersView = routerFor(USER_ORDERS_VIEW)
   val apiAuthView = routerFor(API_AUTH_VIEW)
 
   val candleDataView = bidirection(Map(markets map { m =>
@@ -69,12 +68,12 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
     m -> routerFor(MARKET_DEPTH_VIEW(m))
   }: _*))
 
-  val transactionDataView = bidirection(Map(markets map { m =>
-    m -> routerFor(TRANSACTION_DATA_VIEW(m))
+  val transactionView = bidirection(Map(markets map { m =>
+    m -> routerFor(TRANSACTION_VIEW(m))
   }: _*))
 
-  val userTransactionView = bidirection(Map(markets map { m =>
-    m -> routerFor(USER_TRANSACTION_VIEW(m))
+  val orderView = bidirection(Map(markets map { m =>
+    m -> routerFor(ORDER_VIEW(m))
   }: _*))
 
   val mailer = routerFor(MAILER)

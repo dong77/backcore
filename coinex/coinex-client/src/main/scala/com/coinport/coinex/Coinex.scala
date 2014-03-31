@@ -52,9 +52,6 @@ final class Coinex(routers: LocalRouters) extends Actor {
       case m @ QueryMarketDepth(side, _) =>
         routers.marketDepthViews(side) forward m
 
-      // UserOrdersView
-      case m: QueryUserOrders => routers.userOrdersView forward m
-
       // CandleDataView
       case m @ QueryCandleData(side, _, _, _) => routers.candleDataView(side) forward m
 
@@ -66,10 +63,10 @@ final class Coinex(routers: LocalRouters) extends Actor {
       case QueryRobotMetrics => routers.robotMetricsView forward QueryRobotMetrics
 
       // TransactionDataView
-      case m @ QueryTransactionData(side, _, _) => routers.transactionDataView(side) forward m
+      case m @ QueryTransaction(side, _, _, _, _, _, _) => routers.transactionView(side) forward m
 
-      // UserTransactionView
-      case m @ QueryUserTransaction(side, _, _, _, _) => routers.userTransactionView(side) forward m
+      // TransactionDataView
+      case m @ QueryOrder(side, _, _, _, _, _, _) => routers.orderView(side) forward m
 
       // ApiAuthProcessor and View
       case m: DoAddNewApiSecret => routers.apiAuthProcessor forward Persistent(m)

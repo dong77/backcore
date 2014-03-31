@@ -231,22 +231,6 @@ struct Metrics {
     1: map<MarketSide, MarketByMetrics> marketByMetrics
 }
 
-struct TransactionItem {
-    1: i64 timestamp
-    2: double price
-    3: i64 volumn
-    4: i64 amount
-    5: i64 taker
-    6: i64 maker
-    7: bool sameSide
-    8: i64 tOrder
-    9: i64 mOrder
-}
-
-struct TransactionData {
-    1: list<TransactionItem> items
-}
-
 struct ApiSecret {
     1: string secret
     2: optional string identifier
@@ -281,6 +265,35 @@ struct Withdrawal {
     7: optional i64 updated
     8: optional ErrorCode reason
     9: optional Fee fee
+}
+
+struct Cursor {
+    1: i32 skip
+    2: i32 limit
+}
+
+struct OrderItem {
+    1: i64 oid
+    2: i64 uid
+    3: i64 inAmount
+    4: i64 outAmount
+    5: Order originOrder
+    6: bool sameSide
+    7: i32 status
+    8: i64 timestamp
+}
+
+struct TransactionItem{
+    1: i64 tid
+    2: double price
+    3: i64 volume
+    4: i64 amount
+    5: i64 taker
+    6: i64 maker
+    7: i64 tOrder
+    8: i64 mOrder
+    9: bool sameSide
+    10: i64 timestamp
 }
 
 ////////////////////////////////////////////////////////////////
@@ -373,18 +386,10 @@ struct Withdrawal {
 /* Q    */ struct QueryCandleData                     {1: MarketSide side, 2: ChartTimeDimension dimension, 3: i64 from, 4: i64 to}
 /* R    */ struct QueryCandleDataResult               {1: CandleData candleData}
 
-////////// UserTransactionView
-/* Q    */ struct QueryUserTransaction                {1: MarketSide side, 2: i64 userId, 3: optional i64 orderId, 4: i64 from, 5: i32 num}
-/* R    */ struct QueryUserTransactionResult          {1: TransactionData transactionData}
+////////// OrderView
+/* Q    */ struct QueryOrder                          {1: MarketSide side, 2: optional i64 uid, 3: optional i64 oid, 4:optional i32 status, 5:optional bool sameSide, 6: Cursor cursor, 7: bool getCount}
+/* R    */ struct QueryOrderResult                    {1: list<OrderItem> orderItems, 2: i64 count}
 
-////////// UserOrdersView
-/* Q    */ struct QueryUserOrders                     {1: i64 userId, 2: optional i32 numOrders, 3: optional i32 skipOrders, 4: optional OrderStatus status}
-/* R    */ struct QueryUserOrdersResult               {1: i64 userId, 2: list<OrderInfo> orders}
-
-////////// TransactionDataView
-/* Q    */ struct QueryTransactionData                {1: MarketSide side, 2: i64 from, 3: i32 num}
-/* R    */ struct QueryTransactionDataResult          {1: TransactionData transactionData}
-
-////////// OrderDataView
-/* Q    */ struct QueryOrderData                      {1: MarketSide side, 2: optional i64 orderId, 4: i64 from, 5: i64 to}
-/* R    */ struct QueryOrderDataResult                {1: list<OrderInfo> orderInfos}
+////////// TransactionView
+/* Q    */ struct QueryTransaction                    {1: MarketSide side, 2: optional i64 tid, 3: optional i64 uid, 4: optional i64 oid, 5:optional bool sameSide, 6: Cursor cursor, 7: bool getCount}
+/* R    */ struct QueryTransactionResult              {1: list<TransactionItem> transactionItems, 3: i64 count}
