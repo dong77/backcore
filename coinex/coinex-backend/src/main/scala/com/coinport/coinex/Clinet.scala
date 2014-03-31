@@ -21,4 +21,5 @@ object Client {
   private val routers = new LocalRouters(markets)
 
   val backend = system.actorOf(Props(new Coinex(routers)), name = "backend")
+  println("Example: Client.backend ! SomeMessage()")
 }
