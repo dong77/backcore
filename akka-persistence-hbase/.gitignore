@@ -1,0 +1,10 @@
+.idea*
+*.log
+*.iml
+project/project
+project/target
+target/
+src/test/resources/.gitkeep
+
+# local snapshots
+snapshots
