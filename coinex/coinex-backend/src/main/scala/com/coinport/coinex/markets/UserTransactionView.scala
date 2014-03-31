@@ -4,7 +4,7 @@
  */
 package com.coinport.coinex.markets
 
-import com.coinport.coinex.common.{ StateManager, ExtendedView }
+import com.coinport.coinex.common._
 import akka.event.LoggingReceive
 import com.coinport.coinex.data._
 import akka.persistence.Persistent
@@ -27,8 +27,7 @@ class UserTransactionView(market: MarketSide) extends ExtendedView {
   }
 }
 
-class UserTransactionManager(market: MarketSide) extends StateManager[UserTransactionState] {
-  initWithDefaultState(UserTransactionState())
+class UserTransactionManager(market: MarketSide) extends Manager[UserTransactionState](UserTransactionState()) {
 
   def addItem(orderInfo: OrderInfo, txs: Seq[Transaction]) {
     val sameSide = orderInfo.side == market

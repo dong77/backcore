@@ -5,7 +5,7 @@
 
 package com.coinport.coinex.markets
 
-import com.coinport.coinex.common.{ StateManager, ExtendedView }
+import com.coinport.coinex.common._
 import akka.event.LoggingReceive
 import com.coinport.coinex.data._
 import akka.persistence.Persistent
@@ -28,8 +28,7 @@ class TransactionDataView(market: MarketSide) extends ExtendedView {
   }
 }
 
-class TransactionDataManager(market: MarketSide) extends StateManager[TransactionDataState] {
-  initWithDefaultState(TransactionDataState())
+class TransactionDataManager(market: MarketSide) extends Manager[TransactionDataState](TransactionDataState()) {
 
   def addItem(t: Transaction, sameSide: Boolean) {
     val amount = Math.abs(t.takerUpdate.current.quantity - t.takerUpdate.previous.quantity)

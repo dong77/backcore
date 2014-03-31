@@ -9,8 +9,7 @@ import akka.persistence.SnapshotOffer
 import com.coinport.coinex.data._
 import akka.actor._
 import akka.persistence._
-import com.coinport.coinex.common.ExtendedProcessor
-import com.coinport.coinex.common.StateManager
+import com.coinport.coinex.common._
 import com.coinport.coinex.util.Hash
 import com.google.common.io.BaseEncoding
 import ErrorCode._

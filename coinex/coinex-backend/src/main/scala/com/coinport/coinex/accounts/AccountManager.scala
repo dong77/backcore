@@ -16,11 +16,10 @@
 package com.coinport.coinex.accounts
 
 import com.coinport.coinex.data._
-import com.coinport.coinex.common.StateManager
+import com.coinport.coinex.common.Manager
 import Implicits._
 
-class AccountManager extends StateManager[AccountState] {
-  initWithDefaultState(AccountState())
+class AccountManager extends Manager[AccountState](AccountState()) {
 
   def sendCash(from: Long, to: Long, currency: Currency, amount: Long) = {
     updateCashAccount(from, CashAccount(currency, 0, -amount, 0))

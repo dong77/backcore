@@ -5,12 +5,11 @@
 
 package com.coinport.coinex.robot
 
-import com.coinport.coinex.common.StateManager
+import com.coinport.coinex.common.Manager
 import com.coinport.coinex.data._
 import Implicits._
 
-class RobotMetricsManager extends StateManager[RobotMetrics] {
-  initWithDefaultState(RobotMetrics())
+class RobotMetricsManager extends Manager[RobotMetrics](RobotMetrics()) {
 
   def updatePrice(side: MarketSide, p: Double) {
     val metricsByMarket = state.marketByMetrics.get(side).getOrElse(MarketByMetrics(side, p))

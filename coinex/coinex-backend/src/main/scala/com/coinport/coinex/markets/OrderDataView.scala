@@ -5,7 +5,7 @@
 
 package com.coinport.coinex.markets
 
-import com.coinport.coinex.common.{ StateManager, ExtendedView }
+import com.coinport.coinex.common._
 import akka.event.LoggingReceive
 import com.coinport.coinex.data._
 import akka.persistence.Persistent
@@ -45,8 +45,7 @@ class OrderDataView(market: MarketSide) extends ExtendedView {
   }
 }
 
-class OrderDataManager(side: MarketSide) extends StateManager[OrderDataState] {
-  initWithDefaultState(OrderDataState())
+class OrderDataManager(side: MarketSide) extends Manager[OrderDataState](OrderDataState()) {
 
   def getOrders(orderId: Option[Long], from: Long, to: Long): Seq[OrderInfo] = {
     state.getItem(orderId, from, to)

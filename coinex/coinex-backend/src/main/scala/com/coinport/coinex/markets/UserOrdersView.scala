@@ -8,8 +8,7 @@ package com.coinport.coinex.markets
 import akka.event.LoggingReceive
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
-import com.coinport.coinex.common.ExtendedView
-import com.coinport.coinex.common.StateManager
+import com.coinport.coinex.common._
 import Implicits._
 
 class UserOrdersView extends ExtendedView {
@@ -46,8 +45,7 @@ class UserOrdersView extends ExtendedView {
   }
 }
 
-class UserOrdersManager extends StateManager[UserLogsState] {
-  initWithDefaultState(UserLogsState())
+class UserOrdersManager extends Manager[UserLogsState](UserLogsState()) {
 
   def getOrders(param: QueryUserOrders): Seq[OrderInfo] = {
     def eval(orderInfo: OrderInfo) = (param.status.isEmpty || param.status.get == orderInfo.status)

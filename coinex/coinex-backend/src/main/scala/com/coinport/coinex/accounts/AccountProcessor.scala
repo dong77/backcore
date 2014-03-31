@@ -13,28 +13,13 @@ import akka.event.LoggingReceive
 import com.coinport.coinex.common.ExtendedProcessor
 import Implicits._
 
-class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends ExtendedProcessor {
+class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef]) extends ExtendedProcessor with ActorLogging {
   override val processorId = "coinex_ap"
   val channelToMarketProcessors = createChannelTo("mps") // DO NOT CHANGE
 
   val manager = new AccountManager()
 
   def receive = LoggingReceive {
-    // ------------------------------------------------------------------------------------------------
-    // Snapshots
-    case TakeSnapshotNow => saveSnapshot(manager())
-
-    case SaveSnapshotSuccess(metadata) =>
-
-    case SaveSnapshotFailure(metadata, reason) =>
-
-    case SnapshotOffer(meta, snapshot) =>
-      log.info("Loaded snapshot {}", meta)
-      manager.reset(snapshot.asInstanceOf[AccountState])
-
-    case DebugDump =>
-      log.info("state: {}", manager())
-
     // ------------------------------------------------------------------------------------------------
     // Commands
     case p @ Persistent(DoRequestCashDeposit(userId, currency, amount), seq) =>

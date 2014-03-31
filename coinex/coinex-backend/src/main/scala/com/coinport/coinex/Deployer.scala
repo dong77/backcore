@@ -24,7 +24,7 @@ import spray.can.Http
 import com.typesafe.config.Config
 import Implicits._
 import scala.collection.mutable.ListBuffer
-import com.coinport.coinex.common.EventCommonProcessing
+import com.coinport.coinex.common._
 
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
@@ -63,15 +63,15 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     // Finally deploy processors
     markets foreach { m =>
-      val props = Props(new MarketProcessor(m, routers.accountProcessor.path, routers.marketUpdateProcessor.path))
+      val props = Props(new MarketProcessor(m, routers.accountProcessor.path, routers.marketUpdateProcessor.path) with Commandsourced[MarketState, MarketManager])
       deployProcessor(props, MARKET_PROCESSOR(m))
     }
 
     deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
-    deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with EventCommonProcessing[UserState, UserManager]), USER_PROCESSOR)
-    deployProcessor(Props(new AccountProcessor(routers.marketProcessors)), ACCOUNT_PROCESSOR)
-    deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret)), API_AUTH_PROCESSOR)
-    deployProcessor(Props(new RobotProcessor(routers)), ROBOT_PROCESSOR)
+    deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with Eventsourced[UserState, UserManager]), USER_PROCESSOR)
+    deployProcessor(Props(new AccountProcessor(routers.marketProcessors) with Commandsourced[AccountState, AccountManager]), ACCOUNT_PROCESSOR)
+    deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret) with Commandsourced[ApiSecretState, ApiAuthManager]), API_AUTH_PROCESSOR)
+    deployProcessor(Props(new RobotProcessor(routers) with Commandsourced[RobotState, RobotManager]), ROBOT_PROCESSOR)
 
     // Deploy monitor at last
     deployMonitor(routers)

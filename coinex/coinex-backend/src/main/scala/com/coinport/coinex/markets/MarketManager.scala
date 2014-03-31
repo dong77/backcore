@@ -16,14 +16,13 @@
 package com.coinport.coinex.markets
 
 import com.coinport.coinex.data._
-import com.coinport.coinex.common.StateManager
+import com.coinport.coinex.common.Manager
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import Implicits._
 import OrderStatus._
 
-class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends StateManager[MarketState] {
-  initWithDefaultState(MarketState(headSide))
+class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends Manager[MarketState](MarketState(headSide)) {
   def isOrderPriceInGoodRange(sellSide: MarketSide, price: Option[Double]): Boolean = {
     if (price.isEmpty) true
     else if (price.get <= 0) false

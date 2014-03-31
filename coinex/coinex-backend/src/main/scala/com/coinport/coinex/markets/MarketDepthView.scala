@@ -8,8 +8,7 @@ package com.coinport.coinex.markets
 import akka.event.LoggingReceive
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
-import com.coinport.coinex.common.ExtendedView
-import com.coinport.coinex.common.StateManager
+import com.coinport.coinex.common._
 import Implicits._
 
 class MarketDepthView(market: MarketSide) extends ExtendedView {
@@ -34,8 +33,7 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
   }
 }
 
-class MarketDepthManager(market: MarketSide) extends StateManager[MarketDepthState] {
-  initWithDefaultState(MarketDepthState())
+class MarketDepthManager(market: MarketSide) extends Manager[MarketDepthState](MarketDepthState()) {
 
   def adjustAmount(side: MarketSide, order: Order, addOrRemove: Boolean /*true for increase, false for reduce*/ ) {
     def adjust(amount: Long) = if (addOrRemove) amount else -amount

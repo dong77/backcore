@@ -4,7 +4,7 @@
  */
 package com.coinport.coinex.accounts
 
-import com.coinport.coinex.common.{ StateManager, ExtendedView }
+import com.coinport.coinex.common._
 import com.coinport.coinex.data._
 import akka.event.LoggingReceive
 import akka.persistence.Persistent
@@ -38,8 +38,7 @@ class AccountHistoryView(side: MarketSide) extends ExtendedView {
   }
 }
 
-class AccountHistoryManager extends StateManager[AccountHistoryState] {
-  initWithDefaultState(AccountHistoryState())
+class AccountHistoryManager extends Manager[AccountHistoryState](AccountHistoryState()) {
 
   //  def sendCash(from: Long, to: Long, currency: Currency, amount: Long) = {
   //    updateCashAccount(from, CashAccount(currency, 0, -amount, 0))

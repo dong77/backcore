@@ -26,7 +26,7 @@ class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor {
   // TODO(c): put activateRobotsInterval to the config file
   val activateRobotsInterval = 5 second
   private var cancellable: Cancellable = null
-  private val manager = new RobotManager()
+  val manager = new RobotManager()
 
   implicit def executionContext = context.dispatcher
   implicit val timeout: Timeout = 1 second
@@ -38,18 +38,6 @@ class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor {
   }
 
   def receive = LoggingReceive {
-    case TakeSnapshotNow => saveSnapshot(manager())
-
-    case SaveSnapshotSuccess(metadata) =>
-
-    case SaveSnapshotFailure(metadata, reason) =>
-
-    case SnapshotOffer(meta, snapshot) =>
-      log.info("Loaded snapshot {}", meta)
-      manager.reset(snapshot.asInstanceOf[RobotState])
-
-    case DebugDump =>
-      log.info("state: {}", manager())
 
     case Persistent(DoUpdateMetrics(metrics), _) =>
       manager.updateMetrics(metrics)

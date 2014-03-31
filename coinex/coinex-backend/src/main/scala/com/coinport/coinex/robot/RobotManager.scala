@@ -6,11 +6,10 @@
 package com.coinport.coinex.robot
 
 import com.coinport.coinex.data._
-import com.coinport.coinex.common.StateManager
+import com.coinport.coinex.common.Manager
 import Implicits._
 
-class RobotManager extends StateManager[RobotState] {
-  initWithDefaultState(RobotState())
+class RobotManager extends Manager[RobotState](RobotState()) {
 
   def addRobot(robot: Robot) {
     state = state.addRobot(robot)

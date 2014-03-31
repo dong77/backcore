@@ -3,6 +3,9 @@ package com.coinport.coinex.common
 import akka.persistence.EventsourcedProcessor
 import akka.persistence.SnapshotOffer
 import com.coinport.coinex.data.TakeSnapshotNow
+import akka.persistence.Processor
+import akka.actor.Actor
+import akka.persistence.Channel
 
 abstract class Manager[T](s: T) {
   protected var state = s
@@ -10,7 +13,7 @@ abstract class Manager[T](s: T) {
   def apply(s: T) = state = s
 }
 
-trait EventCommonProcessing[T, M <: Manager[T]] extends EventsourcedProcessor {
+trait Eventsourced[T, M <: Manager[T]] extends EventsourcedProcessor {
   val manager: M
   def updateState(event: Any): Unit
 
@@ -23,3 +26,21 @@ trait EventCommonProcessing[T, M <: Manager[T]] extends EventsourcedProcessor {
     case TakeSnapshotNow => saveSnapshot(manager())
   }
 }
+
+trait Commandsourced[T, M <: Manager[T]] extends Processor {
+  val manager: M
+
+  abstract override def receive = super.receive orElse {
+    case SnapshotOffer(_, snapshot) => manager(snapshot.asInstanceOf[T])
+  }
+}
+
+trait ChannelSupport { self: Actor =>
+  def processorId: String
+
+  protected def createChannelTo(dest: String) = {
+    val channelName = processorId + "_2_" + dest
+    context.actorOf(Channel.props(channelName), channelName)
+  }
+}
+

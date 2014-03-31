@@ -8,8 +8,7 @@ package com.coinport.coinex.markets
 import akka.event.LoggingReceive
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
-import com.coinport.coinex.common.ExtendedView
-import com.coinport.coinex.common.StateManager
+import com.coinport.coinex.common._
 import Implicits._
 
 class CandleDataView(market: MarketSide) extends ExtendedView {
@@ -29,8 +28,7 @@ class CandleDataView(market: MarketSide) extends ExtendedView {
   }
 }
 
-class CandleDataManager(market: MarketSide) extends StateManager[CandleDataState] {
-  initWithDefaultState(CandleDataState())
+class CandleDataManager(market: MarketSide) extends Manager[CandleDataState](CandleDataState()) {
 
   def addItem(t: Transaction, sameSide: Boolean) {
     val amount = Math.abs(t.takerUpdate.current.quantity - t.takerUpdate.previous.quantity)

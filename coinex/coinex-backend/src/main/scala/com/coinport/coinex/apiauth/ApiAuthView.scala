@@ -6,8 +6,7 @@
 package com.coinport.coinex.apiauth
 
 import akka.event.LoggingReceive
-import com.coinport.coinex.common.ExtendedView
-import com.coinport.coinex.common.StateManager
+import com.coinport.coinex.common._
 import com.coinport.coinex.data._
 import com.coinport.coinex.util.Hash
 import com.google.common.io.BaseEncoding
@@ -40,8 +39,7 @@ class ApiAuthView(seed: String) extends ExtendedView {
   }
 }
 
-class ApiAuthManager(initialSeed: String) extends StateManager[ApiSecretState] {
-  initWithDefaultState(ApiSecretState(seed = initialSeed))
+class ApiAuthManager(initialSeed: String) extends Manager[ApiSecretState](ApiSecretState(seed = initialSeed)) {
   val MAX_SECRETS_PER_USER = 50
 
   def getUserSecrets(userId: Long) = {

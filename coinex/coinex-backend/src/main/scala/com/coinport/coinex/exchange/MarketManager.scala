@@ -15,7 +15,7 @@
 
 package com.coinport.coinex.exchange
 
-import com.coinport.coinex.common.StateManager
+import com.coinport.coinex.common.Manager
 import BuyOrSell._
 import MarketOrLimit._
 
@@ -25,8 +25,7 @@ object MarketManager {
   matchCondition += (SELL -> ((taker: OrderData, maker: OrderData) => taker.price <= maker.price))
 }
 
-class MarketManager(buySide: MarketSide) extends StateManager[MarketState] {
-  initWithDefaultState(MarketState(buySide))
+class MarketManager(buySide: MarketSide) extends Manager[MarketState](MarketState(buySide)) {
 
   private def getRemaining(order: OrderData, another: OrderData, price: Long) = {
     (order.marketOrLimit, order.buyOrSell) match {

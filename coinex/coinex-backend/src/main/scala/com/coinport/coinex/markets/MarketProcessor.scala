@@ -27,25 +27,6 @@ class MarketProcessor(
 
   def receive = LoggingReceive {
     // ------------------------------------------------------------------------------------------------
-    // Snapshots
-    // TODO(c) add global flag to indicate if is snapshoting
-    case TakeSnapshotNow => saveSnapshot(manager())
-
-    case SaveSnapshotSuccess(metadata) =>
-
-    case SaveSnapshotFailure(metadata, reason) =>
-
-    case SnapshotOffer(meta, snapshot) =>
-      log.info("Loaded snapshot {}", meta)
-      manager.reset(snapshot.asInstanceOf[MarketState])
-
-    case DebugDump =>
-      log.info("state: {}", manager())
-
-    case QueryActorStats =>
-      sender ! manager()
-
-    // ------------------------------------------------------------------------------------------------
     // Commands
     case p @ Persistent(DoCancelOrder(side, orderId, userId), seq) =>
       manager.removeOrder(side, orderId, userId) foreach { order =>

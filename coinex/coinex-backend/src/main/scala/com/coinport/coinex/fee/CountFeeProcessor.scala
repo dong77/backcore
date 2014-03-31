@@ -3,15 +3,15 @@
  * Author: c@coinport.com (Chao Ma)
  */
 
-package com.coinport.coinex.common
+package com.coinport.coinex.fee
 
 import akka.event.LoggingReceive
 import akka.persistence._
-
 import com.coinport.coinex.data._
 import com.coinport.coinex.fee._
 import com.coinport.coinex.fee.rules.FeeRules
-import Constants._
+import com.coinport.coinex.common.Constants._
+import com.coinport.coinex.common.ExtendedProcessor
 
 trait CountFeeProcessor extends ExtendedProcessor {
 

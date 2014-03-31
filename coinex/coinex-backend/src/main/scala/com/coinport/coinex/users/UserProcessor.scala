@@ -13,7 +13,7 @@ import com.coinport.coinex.common.ExtendedProcessor
 import ErrorCode._
 import akka.event.LoggingReceive
 
-class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends EventsourcedProcessor {
+class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends EventsourcedProcessor with ActorLogging {
   override val processorId = "coinex_up"
 
   val manager = new UserManager(userManagerSecret)
