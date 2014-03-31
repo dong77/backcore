@@ -1,7 +1,6 @@
 package akka.persistence.hbase.journal
 
 import com.typesafe.config.Config
-import org.apache.hadoop.conf.Configuration
 
 /**
  *

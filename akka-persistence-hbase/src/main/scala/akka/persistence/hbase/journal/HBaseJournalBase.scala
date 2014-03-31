@@ -1,17 +1,9 @@
 package akka.persistence.hbase.journal
 
-import org.apache.hadoop.hbase.util.Bytes
-import HBaseJournalInit._
 import akka.actor.{Actor, ActorLogging}
-import org.hbase.async.{HBaseClient, PutRequest, DeleteRequest, KeyValue}
+import org.hbase.async.{HBaseClient, KeyValue}
 import java.util. { ArrayList => JArrayList }
-import scala.collection.mutable
-import java.{ util => ju }
-import com.typesafe.config.Config
-import org.apache.hadoop.hbase.util.Bytes._
-import scala.concurrent.Future
-import scala.Array
-import akka.persistence.hbase.common.{AsyncBaseUtils, Columns, DeferredConversions, HBaseSerialization}
+import akka.persistence.hbase.common.{AsyncBaseUtils, HBaseSerialization}
 import org.apache.hadoop.conf.Configuration
 
 // todo split into one API classes and register the impls as extensions

@@ -1,5 +1,6 @@
 HBase plugin for Akka Persistence
 ==================================
+Original [project home](https://github.com/ktoso/akka-persistence-hbase/)
 
 A replicated _fully asynchronous_ [Akka Persistence](http://doc.akka.io/docs/akka/snapshot/scala/persistence.html) journal and snapshot store backed by [Apache HBase](http://hbase.apache.org).
 

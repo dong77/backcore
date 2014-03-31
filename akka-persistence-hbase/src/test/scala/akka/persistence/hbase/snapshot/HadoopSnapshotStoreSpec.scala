@@ -1,8 +1,8 @@
 package akka.persistence.hbase.snapshot
 
-import akka.testkit.{TestKit, ImplicitSender, TestProbe}
+import akka.testkit.{TestKit, TestProbe}
 import akka.actor.{ActorLogging, Props, ActorRef, ActorSystem}
-import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, DoNotDiscover}
+import org.scalatest.{BeforeAndAfterAll, FlatSpecLike}
 import akka.persistence._
 import akka.persistence.hbase.journal.{HBaseClientFactory, HBaseJournalInit}
 import org.apache.hadoop.hbase.client.HBaseAdmin
@@ -11,6 +11,8 @@ import akka.persistence.SaveSnapshotFailure
 import akka.persistence.SaveSnapshotSuccess
 import akka.persistence.SnapshotMetadata
 import com.typesafe.config.{ConfigFactory, Config}
+import org.apache.hadoop.fs.{Path, FileSystem}
+import org.apache.hadoop.conf.Configuration
 
 object HadoopSnapshotStoreSpec {
   class SnapshottingActor(probe: ActorRef, override val processorId: String) extends Processor with ActorLogging {
@@ -130,11 +132,16 @@ trait HadoopSnapshotBehavior {
   }
 }
 
+/*
+* The following two spec cann't be execute concurrently, comment one and execute another,
+* the to be executed one should config correspond "hadoop-snapshot-store.impl" value
+ */
 class HdfsSnapshotStoreSpec extends TestKit(ActorSystem("hdfs-test")) with FlatSpecLike with BeforeAndAfterAll
   with HadoopSnapshotBehavior {
 
   behavior of "HdfsSnapshotStore"
 
+  // This operation not work
   def config: Config = ConfigFactory.parseString(
     s"""hadoop-snapshot-store.impl = "${classOf[HdfsSnapshotter].getCanonicalName}" """
   ).withFallback(system.settings.config)
@@ -145,10 +152,18 @@ class HdfsSnapshotStoreSpec extends TestKit(ActorSystem("hdfs-test")) with FlatS
     system.shutdown()
   }
 
+  override protected def beforeAll() {
+    val conf = new Configuration
+    conf.set("fs.default.name", config.getString("hadoop-snapshot-store.hdfs-default-name"))
+    val fs = FileSystem.get(conf)
+    fs.delete(new Path(config.getString("hadoop-snapshot-store.snapshot-dir")), true)
+    fs.mkdirs(new Path(config.getString("hadoop-snapshot-store.snapshot-dir")))
+    fs.close()
+  }
+
   it should behave like hadoopSnapshotStore
 
 }
-
 
 class HBaseSnapshotStoreSpec extends TestKit(ActorSystem("hbase-test")) with FlatSpecLike with BeforeAndAfterAll
   with HadoopSnapshotBehavior {
@@ -157,7 +172,7 @@ class HBaseSnapshotStoreSpec extends TestKit(ActorSystem("hbase-test")) with Fla
 
   override protected def beforeAll() {
     val tableName = config.getString("hadoop-snapshot-store.table")
-        val admin = new HBaseAdmin(HBaseJournalInit.getHBaseConfig(config, "hadoop-snapshot-store"))
+    val admin = new HBaseAdmin(HBaseJournalInit.getHBaseConfig(config, "hadoop-snapshot-store"))
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName)
       admin.deleteTable(tableName)
@@ -171,6 +186,7 @@ class HBaseSnapshotStoreSpec extends TestKit(ActorSystem("hbase-test")) with Fla
     system.shutdown()
   }
 
+  // This operation not work
   def config: Config = ConfigFactory.parseString(
     s"""hadoop-snapshot-store.impl = "${classOf[HBaseSnapshotter].getCanonicalName}" """
   ).withFallback(system.settings.config)

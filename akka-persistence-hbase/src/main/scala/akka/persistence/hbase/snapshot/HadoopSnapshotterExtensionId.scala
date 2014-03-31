@@ -1,7 +1,7 @@
 package akka.persistence.hbase.snapshot
 
 import akka.actor._
-import akka.persistence.hbase.journal.{PluginPersistenceSettings, HBaseClientFactory, HBaseJournalInit}
+import akka.persistence.hbase.journal.{PluginPersistenceSettings, HBaseClientFactory}
 import akka.persistence.PersistenceSettings
 import akka.persistence.hbase.common.Const._
 import scala.Predef._
