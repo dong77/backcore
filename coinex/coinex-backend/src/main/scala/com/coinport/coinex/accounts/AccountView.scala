@@ -26,7 +26,7 @@ class AccountView extends ExtendedView {
     case Persistent(DoRequestCashWithdrawal(userId, currency, amount), _) =>
       manager.updateCashAccount(userId, CashAccount(currency, -amount, 0, amount))
 
-    case Persistent(AdminConfirmCashWithdrawalSuccess(userId, currency, amount), _) =>
+    case Persistent(AdminConfirmCashWithdrawalSuccess(userId, currency, amount, _), _) =>
       manager.updateCashAccount(userId, CashAccount(currency, 0, 0, -amount))
 
     case Persistent(AdminConfirmCashWithdrawalFailure(userId, currency, amount, error), _) =>
@@ -41,7 +41,7 @@ class AccountView extends ExtendedView {
     case Persistent(m: OrderSubmitted, _) =>
       val side = m.originOrderInfo.side
       m.txs foreach { tx =>
-        val Transaction(_, _, _, takerOrderUpdate, makerOrderUpdate) = tx
+        val Transaction(_, _, _, takerOrderUpdate, makerOrderUpdate, _) = tx
         manager.sendCashFromLocked(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
         manager.sendCashFromLocked(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
         manager.conditionalRefund(takerOrderUpdate.current.hitTakeLimit)(side.outCurrency, takerOrderUpdate.current)

@@ -11,9 +11,7 @@ import akka.cluster.routing._
 import akka.contrib.pattern.ClusterSingletonManager
 import akka.io.IO
 import akka.routing._
-import com.twitter.util.Eval
 import com.typesafe.config.Config
-import java.io.File
 import org.slf4s.Logging
 import scala.collection.mutable.ListBuffer
 import spray.can.Http
@@ -22,7 +20,6 @@ import com.coinport.coinex.accounts._
 import com.coinport.coinex.apiauth._
 import com.coinport.coinex.common._
 import com.coinport.coinex.data._
-import com.coinport.coinex.fee.rules.FeeRules
 import com.coinport.coinex.mail._
 import com.coinport.coinex.markets._
 import com.coinport.coinex.monitoring._
@@ -73,8 +70,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
     deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with Eventsourced[UserState, UserManager]), USER_PROCESSOR)
-    deployProcessor(Props(new AccountProcessor(routers.marketProcessors,
-      getFeeRules(config.getString("akka.exchange.fee-rules-path"))) with Eventsourced[AccountState, AccountManager]), ACCOUNT_PROCESSOR)
+    deployProcessor(Props(new AccountProcessor(routers.marketProcessors) with Eventsourced[AccountState, AccountManager]), ACCOUNT_PROCESSOR)
     deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret) with Commandsourced[ApiSecretState, ApiAuthManager]), API_AUTH_PROCESSOR)
     deployProcessor(Props(new RobotProcessor(routers) with Commandsourced[RobotState, RobotManager]), ROBOT_PROCESSOR)
 
@@ -114,10 +110,5 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     val port = config.getInt("akka.exchange.monitor.http-port")
     IO(Http) ! Http.Bind(service, hostname, port)
     println("Started HTTP server: http://" + hostname + ":" + port)
-  }
-
-  private def getFeeRules(configPath: String): Map[String, FeeRules] = {
-    val fullPath = classOf[Deployer].getClassLoader().getResource(configPath).getPath()
-    (new Eval()(new File(fullPath))).asInstanceOf[Map[String, FeeRules]]
   }
 }

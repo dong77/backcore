@@ -15,7 +15,7 @@ class WithdrawalFeeMaker(r: FeeRules) extends FeeMaker {
   override def count[AdminConfirmCashWithdrawalSuccess](
     serviceTakeItem: AdminConfirmCashWithdrawalSuccess): List[Fee] = {
     serviceTakeItem match {
-      case AdminConfirmCashWithdrawalSuccess(uid, currency, amount) =>
+      case AdminConfirmCashWithdrawalSuccess(uid, currency, amount, _) =>
         rules.items.getOrElse(currency, null) match {
           case null => Nil
           case item =>

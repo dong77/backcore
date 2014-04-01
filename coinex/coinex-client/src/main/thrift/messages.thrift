@@ -147,6 +147,7 @@ struct Transaction {
     3: MarketSide side
     4: OrderUpdate takerUpdate
     5: OrderUpdate makerUpdate
+    6: optional list<Fee> fees
 }
 
 struct CashAccount {
@@ -278,7 +279,7 @@ struct ApiSecretState {
 /* C,P  */ struct AdminConfirmCashDepositFailure      {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:ErrorCode error}
 /* C,P  */ struct AdminConfirmCashDepositSuccess      {1: i64 userId, 2: Currency currency, 3: i64 amount}
 /* C,P  */ struct AdminConfirmCashWithdrawalFailure   {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:ErrorCode error}
-/* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:optional list<Fee> fees}
 
 /* C,P  */ struct DoSubmitOrder                       {1: MarketSide side, 2: Order order}
 /* I,R- */ struct SubmitOrderFailed                   {1: MarketSide side, 2: Order order, 3: ErrorCode error}

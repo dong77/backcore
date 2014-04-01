@@ -16,7 +16,7 @@ class TransactionFeeMaker(r: FeeRules) extends FeeMaker {
 
   override def count[Transaction](serviceTakeItem: Transaction): List[Fee] = {
     serviceTakeItem match {
-      case Transaction(_, _, side, takerUpdate, makerUpdate) =>
+      case Transaction(_, _, side, takerUpdate, makerUpdate, _) =>
         val takerInAmount = makerUpdate.previous.quantity - makerUpdate.current.quantity
         val makerInAmount = takerUpdate.previous.quantity - takerUpdate.current.quantity
         val takerRobotType = takerUpdate.current.robotType.getOrElse(-1)
