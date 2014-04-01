@@ -1,22 +1,32 @@
 /**
  * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
  *
+ * TODO(c): change to put fee into event
  */
 
 package com.coinport.coinex.accounts
 
-import akka.persistence.SnapshotOffer
-import com.coinport.coinex.data._
 import akka.actor._
-import akka.persistence._
 import akka.event.LoggingReceive
+import akka.persistence.SnapshotOffer
+import akka.persistence._
+
+import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.common._
+import com.coinport.coinex.data._
+import com.coinport.coinex.fee.rules._
+import com.coinport.coinex.fee._
 import Implicits._
 
-class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
+class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef], feeRulesMap: Map[String, FeeRules])
     extends EventsourcedProcessor with ChannelSupport with ActorLogging {
   override val processorId = "coinex_ap"
   val channelToMarketProcessors = createChannelTo("mps") // DO NOT CHANGE
+
+  val feeMakers = Map(
+    TRANSACTION -> new TransactionFeeMaker(feeRulesMap(TRANSACTION)),
+    WITHDRAWAL -> new WithdrawalFeeMaker(feeRulesMap(WITHDRAWAL))
+  )
 
   val manager = new AccountManager()
 
@@ -51,7 +61,12 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
       sender ! manager.updateCashAccount(userId, CashAccount(currency, -amount, 0, amount))
 
     case m @ AdminConfirmCashWithdrawalSuccess(userId, currency, amount) =>
-      sender ! manager.updateCashAccount(userId, CashAccount(currency, 0, 0, -amount))
+      val fees = feeMakers(WITHDRAWAL).count(m)
+      val amounts = fees map { f =>
+        manager.sendCashFromWithsrawal(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
+        f.amount
+      }
+      sender ! manager.updateCashAccount(userId, CashAccount(currency, 0, 0, (0L /: amounts)(_ + _) - amount))
 
     case m @ AdminConfirmCashWithdrawalFailure(userId, currency, amount, error) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
@@ -68,8 +83,12 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
       val side = originOrderInfo.side
       txs foreach { tx =>
         val Transaction(_, _, _, takerOrderUpdate, makerOrderUpdate) = tx
-        manager.sendCash(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
-        manager.sendCash(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
+        val fees = feeMakers(TRANSACTION).count(tx)
+        manager.sendCashFromLocked(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
+        manager.sendCashFromLocked(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
+        fees foreach { f =>
+          manager.sendCashFromValid(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
+        }
         manager.conditionalRefund(takerOrderUpdate.current.hitTakeLimit)(side.outCurrency, takerOrderUpdate.current)
         manager.conditionalRefund(makerOrderUpdate.current.hitTakeLimit)(side.inCurrency, makerOrderUpdate.current)
       }

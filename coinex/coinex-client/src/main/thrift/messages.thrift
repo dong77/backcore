@@ -139,7 +139,7 @@ struct OrderUpdate {
     2: Order current
 }
 
-struct Transaction{
+struct Transaction {
     1: i64 id
     2: i64 timestamp
     3: MarketSide side
@@ -147,7 +147,7 @@ struct Transaction{
     5: OrderUpdate makerUpdate
 }
 
-struct CashAccount{
+struct CashAccount {
     1: Currency currency
     2: i64 available
     3: i64 locked

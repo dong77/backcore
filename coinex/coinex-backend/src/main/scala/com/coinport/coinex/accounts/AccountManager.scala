@@ -21,8 +21,18 @@ import Implicits._
 
 class AccountManager extends Manager[AccountState](AccountState()) {
 
-  def sendCash(from: Long, to: Long, currency: Currency, amount: Long) = {
+  def sendCashFromLocked(from: Long, to: Long, currency: Currency, amount: Long) = {
     updateCashAccount(from, CashAccount(currency, 0, -amount, 0))
+    updateCashAccount(to, CashAccount(currency, amount, 0, 0))
+  }
+
+  def sendCashFromValid(from: Long, to: Long, currency: Currency, amount: Long) = {
+    updateCashAccount(from, CashAccount(currency, -amount, 0, 0))
+    updateCashAccount(to, CashAccount(currency, amount, 0, 0))
+  }
+
+  def sendCashFromWithsrawal(from: Long, to: Long, currency: Currency, amount: Long) = {
+    updateCashAccount(from, CashAccount(currency, 0, 0, -amount))
     updateCashAccount(to, CashAccount(currency, amount, 0, 0))
   }
 
