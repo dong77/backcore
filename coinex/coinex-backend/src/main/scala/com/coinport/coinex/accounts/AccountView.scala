@@ -6,8 +6,10 @@
 package com.coinport.coinex.accounts
 
 import akka.event.LoggingReceive
-import com.coinport.coinex.common.ExtendedView
 import akka.persistence.Persistent
+
+import com.coinport.coinex.common.Constants._
+import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.data._
 import Implicits._
 
@@ -26,8 +28,12 @@ class AccountView extends ExtendedView {
     case Persistent(DoRequestCashWithdrawal(userId, currency, amount), _) =>
       manager.updateCashAccount(userId, CashAccount(currency, -amount, 0, amount))
 
-    case Persistent(AdminConfirmCashWithdrawalSuccess(userId, currency, amount, _), _) =>
-      manager.updateCashAccount(userId, CashAccount(currency, 0, 0, -amount))
+    case Persistent(AdminConfirmCashWithdrawalSuccess(userId, currency, amount, fees), _) =>
+      val amounts = fees.getOrElse(Nil) map { f =>
+        manager.sendCashFromWithsrawal(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
+        f.amount
+      }
+      manager.updateCashAccount(userId, CashAccount(currency, 0, 0, (0L /: amounts)(_ + _) - amount))
 
     case Persistent(AdminConfirmCashWithdrawalFailure(userId, currency, amount, error), _) =>
       manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
@@ -41,9 +47,12 @@ class AccountView extends ExtendedView {
     case Persistent(m: OrderSubmitted, _) =>
       val side = m.originOrderInfo.side
       m.txs foreach { tx =>
-        val Transaction(_, _, _, takerOrderUpdate, makerOrderUpdate, _) = tx
+        val Transaction(_, _, _, takerOrderUpdate, makerOrderUpdate, fees) = tx
         manager.sendCashFromLocked(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
         manager.sendCashFromLocked(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
+        fees.getOrElse(Nil) foreach { f =>
+          manager.sendCashFromValid(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
+        }
         manager.conditionalRefund(takerOrderUpdate.current.hitTakeLimit)(side.outCurrency, takerOrderUpdate.current)
         manager.conditionalRefund(makerOrderUpdate.current.hitTakeLimit)(side.inCurrency, makerOrderUpdate.current)
       }

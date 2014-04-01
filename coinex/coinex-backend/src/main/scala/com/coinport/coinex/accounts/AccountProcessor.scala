@@ -59,7 +59,6 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
         manager.sendCashFromWithsrawal(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
         f.amount
       }
-      println(manager())
       sender ! manager.updateCashAccount(userId, CashAccount(currency, 0, 0, (0L /: amounts)(_ + _) - amount))
 
     case m @ AdminConfirmCashWithdrawalFailure(userId, currency, amount, error) =>
@@ -92,7 +91,6 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
           manager.refund(order.userId, side.outCurrency, order.quantity - originOrderInfo.outAmount)
         case _ =>
       }
-      println(manager())
 
     case OrderCancelled(side, order) =>
       manager.conditionalRefund(true)(side.outCurrency, order)
