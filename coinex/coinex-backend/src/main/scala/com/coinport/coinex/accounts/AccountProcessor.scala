@@ -33,7 +33,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
     case m: AdminConfirmCashWithdrawalSuccess => persist(countFee(m))(updateState)
     case m: AdminConfirmCashWithdrawalFailure => persist(m)(updateState)
 
-    case m @ DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _, _)) =>
+    case m @ DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _, _, _)) =>
       if (quantity <= 0) sender ! SubmitOrderFailed(side, order, ErrorCode.InvalidAmount)
       else persist(m)(updateState)
 
@@ -64,7 +64,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
     case m @ AdminConfirmCashWithdrawalFailure(userId, currency, amount, error) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
-    case m @ DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _, _)) =>
+    case m @ DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _, _, _)) =>
       manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
         case Some(error) => sender ! SubmitOrderFailed(side, order, error)
         case None =>

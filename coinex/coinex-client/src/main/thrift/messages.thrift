@@ -125,6 +125,7 @@ struct Order {
     6: optional i64 timestamp
     7: optional i32 robotType
     8: optional i64 robotId
+    9: optional bool onlyTaker
 }
 
 struct OrderInfo {

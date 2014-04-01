@@ -44,9 +44,9 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
     val status =
       if (sellOrder.isFullyExecuted) OrderStatus.FullyExecuted
       else if (totalOutAmount > 0) {
-        if (sellOrder.price == None) OrderStatus.MarketAutoPartiallyCancelled
+        if (sellOrder.price == None || sellOrder.onlyTaker.getOrElse(false)) OrderStatus.MarketAutoPartiallyCancelled
         else OrderStatus.PartiallyExecuted
-      } else if (sellOrder.price == None) OrderStatus.MarketAutoCancelled
+      } else if (sellOrder.price == None || sellOrder.onlyTaker.getOrElse(false)) OrderStatus.MarketAutoCancelled
       else OrderStatus.Pending
 
     val txs = txsBuffer.toSeq

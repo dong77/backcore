@@ -38,10 +38,10 @@ class AccountView extends ExtendedView {
     case Persistent(AdminConfirmCashWithdrawalFailure(userId, currency, amount, error), _) =>
       manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
-    case Persistent(DoSubmitOrder(side: MarketSide, Order(userId, _, quantity, _, _, _, _, _)), _) =>
+    case Persistent(DoSubmitOrder(side: MarketSide, Order(userId, _, quantity, _, _, _, _, _, _)), _) =>
       manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0))
 
-    case Persistent(OrderCancelled(side, Order(userId, _, quantity, _, _, _, _, _)), _) =>
+    case Persistent(OrderCancelled(side, Order(userId, _, quantity, _, _, _, _, _, _)), _) =>
       manager.updateCashAccount(userId, CashAccount(side.outCurrency, quantity, -quantity, 0))
 
     case Persistent(m: OrderSubmitted, _) =>
