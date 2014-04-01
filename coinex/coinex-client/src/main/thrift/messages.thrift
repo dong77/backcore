@@ -45,6 +45,8 @@ enum Currency {
     RMB = 1
     USD = 2
     BTC = 1000
+    LTC = 2000
+    PTS = 3000
 }
 
 enum OrderStatus {
