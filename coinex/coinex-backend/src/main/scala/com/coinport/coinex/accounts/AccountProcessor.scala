@@ -43,13 +43,13 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef], feeRulesMap:
       if (quantity <= 0) sender ! SubmitOrderFailed(side, order, ErrorCode.InvalidAmount)
       else persist(m)(updateState)
 
-    case p @ ConfirmablePersistent(event @ OrderSubmitted, seq, _) =>
+    case p @ ConfirmablePersistent(event: OrderSubmitted, seq, _) =>
       persist(event) { event => p.confirm(); updateState(event) }
 
-    case p @ ConfirmablePersistent(event @ OrderCancelled, seq, _) =>
+    case p @ ConfirmablePersistent(event: OrderCancelled, seq, _) =>
       persist(event) { event => p.confirm(); updateState(event) }
 
-    case p @ ConfirmablePersistent(event @ SubmitOrderFailed, seq, _) =>
+    case p @ ConfirmablePersistent(event: SubmitOrderFailed, seq, _) =>
       persist(event) { event => p.confirm(); updateState(event) }
   }
 
@@ -66,6 +66,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef], feeRulesMap:
         manager.sendCashFromWithsrawal(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
         f.amount
       }
+      println(manager())
       sender ! manager.updateCashAccount(userId, CashAccount(currency, 0, 0, (0L /: amounts)(_ + _) - amount))
 
     case m @ AdminConfirmCashWithdrawalFailure(userId, currency, amount, error) =>
@@ -99,6 +100,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef], feeRulesMap:
           manager.refund(order.userId, side.outCurrency, order.quantity - originOrderInfo.outAmount)
         case _ =>
       }
+      println(manager())
 
     case OrderCancelled(side, order) =>
       manager.conditionalRefund(true)(side.outCurrency, order)

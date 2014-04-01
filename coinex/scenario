@@ -4,11 +4,11 @@
  */
 
 // deposit
-Client.backend ! DoDepositCash(1, Btc, 10)
-Client.backend ! DoDepositCash(1, Rmb, 100000)
+Client.backend ! DoRequestCashDeposit(1, Btc, 100000)
+Client.backend ! DoRequestCashDeposit(1, Rmb, 1000000000)
 // submit order
-Client.backend ! DoSubmitOrder(MarketSide(Btc, Rmb), Order(1, 1, 2, Some(3429.0)))
-Client.backend ! DoSubmitOrder(MarketSide(Rmb, Btc), Order(1, 2, 5000 * 3, Some(1.0 / 5000), Some(3)))
+Client.backend ! DoSubmitOrder(MarketSide(Btc, Rmb), Order(1, 1, 2000, Some(3429.0)))
+Client.backend ! DoSubmitOrder(MarketSide(Rmb, Btc), Order(1, 2, 5000 * 3000, Some(1.0 / 5000), Some(3000)))
 // check robot metrics
 Client.backend ! QueryRobotMetrics
 
@@ -25,8 +25,8 @@ val players = List(wd, c, lcm, cx, lwc)
 val risk = Map(wd -> 10.0, c -> 30.0, lcm -> 50.0, cx -> 70.0, lwc -> 90.0)
 
 players foreach { uid =>
-    Client.backend ! DoDepositCash(uid, Btc, 10000 * 1000)
-    Client.backend ! DoDepositCash(uid, Rmb, 1000000 * 100)
+    Client.backend ! DoRequestCashDeposit(uid, Btc, 10000 * 1000)
+    Client.backend ! DoRequestCashDeposit(uid, Rmb, 1000000 * 100)
 
     val brain = Map(
       "START" -> """
