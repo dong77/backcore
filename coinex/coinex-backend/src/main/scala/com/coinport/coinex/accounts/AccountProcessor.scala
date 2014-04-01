@@ -29,7 +29,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
     case m: AdminConfirmCashWithdrawalSuccess => persist(m)(updateState)
     case m: AdminConfirmCashWithdrawalFailure => persist(m)(updateState)
 
-    case m @ DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _)) =>
+    case m @ DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _, _)) =>
       if (quantity <= 0) sender ! SubmitOrderFailed(side, order, ErrorCode.InvalidAmount)
       else persist(m)(updateState)
 
@@ -56,7 +56,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
     case m @ AdminConfirmCashWithdrawalFailure(userId, currency, amount, error) =>
       sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 
-    case m @ DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _)) =>
+    case m @ DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _, _)) =>
       manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
         case Some(error) => sender ! SubmitOrderFailed(side, order, error)
         case None =>
@@ -67,7 +67,7 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
     case OrderSubmitted(originOrderInfo, txs) =>
       val side = originOrderInfo.side
       txs foreach { tx =>
-        val Transaction(_, _, takerOrderUpdate, makerOrderUpdate) = tx
+        val Transaction(_, _, _, takerOrderUpdate, makerOrderUpdate) = tx
         manager.sendCash(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
         manager.sendCash(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
         manager.conditionalRefund(takerOrderUpdate.current.hitTakeLimit)(side.outCurrency, takerOrderUpdate.current)

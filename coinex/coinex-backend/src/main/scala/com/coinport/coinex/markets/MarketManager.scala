@@ -82,7 +82,7 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
         quantity = sellOrder.quantity - outAmount, takeLimit = sellOrder.takeLimit.map(_ - inAmount))
       val updatedBuyOrder = buyOrder.copy(
         quantity = buyOrder.quantity - inAmount, takeLimit = buyOrder.takeLimit.map(_ - outAmount))
-      txsBuffer += Transaction(txId, now(), sellOrder --> updatedSellOrder, buyOrder --> updatedBuyOrder)
+      txsBuffer += Transaction(txId, now(), sellSide, sellOrder --> updatedSellOrder, buyOrder --> updatedBuyOrder)
 
       val leftMarket = market.removeOrder(buySide, buyOrder.id)
       if (updatedSellOrder.isFullyExecuted) {

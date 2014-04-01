@@ -18,7 +18,7 @@ trait CountFeeProcessor extends ExtendedProcessor {
   val configMap: Map[String, FeeRules]
 
   val feeMakers = Map(
-    TRANSACTION_FEE_MAKER -> new TransactionFeeMaker(configMap(TRANSACTION_FEE_MAKER)),
+    TRANSACTION -> new TransactionFeeMaker(configMap(TRANSACTION)),
     WITHDRAWAL -> new WithdrawalFeeMaker(configMap(WITHDRAWAL))
   )
 
@@ -30,14 +30,14 @@ trait CountFeeProcessor extends ExtendedProcessor {
       }
   }
 
-  private def tryToCountFee[T](feeMaker: FeeMaker[T], m: T) = {
+  private def tryToCountFee[T](feeMaker: FeeMaker, m: T) = {
     if (feeMaker != null) {
-      val (event, fees) = feeMaker.count(m)
+      val fees = feeMaker.count(m)
       if (fees != Nil)
         handleFee(fees)
     }
     super.receive(m)
   }
 
-  def handleFee(fees: Fee)
+  def handleFee(fees: List[Fee])
 }

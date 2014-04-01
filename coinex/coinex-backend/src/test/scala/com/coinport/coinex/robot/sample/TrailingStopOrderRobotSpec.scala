@@ -27,7 +27,8 @@ class TrailingStopOrderRobotSpec extends Specification {
       val (robot4, res4) = robot3.action(
         Some(RobotMetrics(Map((Btc ~> Rmb) -> MarketByMetrics((Btc ~> Rmb), 3600.0))))
       )
-      res4 mustEqual Some(DoSubmitOrder((Btc ~> Rmb), Order(2, 1, 2, Some(3429.0), robotId = Some(1))))
+      res4 mustEqual Some(DoSubmitOrder((Btc ~> Rmb),
+        Order(2, 1, 2, Some(3429.0), robotId = Some(1), robotType = Some(2))))
       robot4.isDone mustEqual true
     }
 
@@ -53,7 +54,8 @@ class TrailingStopOrderRobotSpec extends Specification {
       val (robot6, res6) = robot5.action(
         Some(RobotMetrics(Map((Btc ~> Rmb) -> MarketByMetrics((Btc ~> Rmb), 4500.0))))
       )
-      res6 mustEqual Some(DoSubmitOrder((Btc ~> Rmb), Order(2, 1, 2, Some(3429.0), robotId = Some(1))))
+      res6 mustEqual Some(DoSubmitOrder((Btc ~> Rmb),
+        Order(2, 1, 2, Some(3429.0), robotId = Some(1), robotType = Some(2))))
       robot6.isDone mustEqual true
     }
 
@@ -71,7 +73,8 @@ class TrailingStopOrderRobotSpec extends Specification {
       val (robot4, res4) = robot3.action(
         Some(RobotMetrics(Map((Rmb ~> Btc) -> MarketByMetrics((Rmb ~> Btc), 1 / 5000.0))))
       )
-      res4 mustEqual Some(DoSubmitOrder((Rmb ~> Btc), Order(2, 1, 2 * 4200, Some(1 / 4200.0), robotId = Some(1))))
+      res4 mustEqual Some(DoSubmitOrder((Rmb ~> Btc),
+        Order(2, 1, 2 * 4200, Some(1 / 4200.0), robotId = Some(1), robotType = Some(2))))
       robot4.isDone mustEqual true
     }
 
@@ -98,7 +101,8 @@ class TrailingStopOrderRobotSpec extends Specification {
       val (robot6, res6) = robot5.action(
         Some(RobotMetrics(Map((Rmb ~> Btc) -> MarketByMetrics((Rmb ~> Btc), 1 / 2500.0))))
       )
-      res6 mustEqual Some(DoSubmitOrder((Rmb ~> Btc), Order(2, 1, 2 * 10000, Some(1 / 10000.0), robotId = Some(1))))
+      res6 mustEqual Some(DoSubmitOrder((Rmb ~> Btc),
+        Order(2, 1, 2 * 10000, Some(1 / 10000.0), robotId = Some(1), robotType = Some(2))))
       robot6.isDone mustEqual true
     }
   }

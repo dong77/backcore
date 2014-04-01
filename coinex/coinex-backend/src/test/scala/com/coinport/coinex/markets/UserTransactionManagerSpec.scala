@@ -22,7 +22,7 @@ class UserTransactionManagerSpec extends Specification {
           val makerCurrent = Order(userId = 555, id = i, price = Some(1.0 / 3000), quantity = 0, takeLimit = None, timestamp = Some(0))
           val takerPrevious = Order(userId = 888, id = 2 * i, price = Some(3000), quantity = 0, timestamp = Some(0))
           val takerCurrent = Order(userId = 888, id = 2 * i, price = Some(3000), quantity = 1, timestamp = Some(0))
-          Transaction(i, i, OrderUpdate(takerPrevious, takerCurrent), OrderUpdate(makerPrevious, makerCurrent))
+          Transaction(i, i, market, OrderUpdate(takerPrevious, takerCurrent), OrderUpdate(makerPrevious, makerCurrent))
       }
 
       val orderInfo = OrderInfo(market,

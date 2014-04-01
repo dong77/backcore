@@ -106,6 +106,14 @@ struct MarketSide {
     2: Currency inCurrency
 }
 
+struct Fee {
+    1: i64 payer
+    2: optional i64 payee  // pay to coinport if None
+    3: Currency currency
+    4: i64 amount
+    5: optional string basis
+}
+
 struct Order {
     1: i64 userId
     2: i64 id
@@ -113,7 +121,8 @@ struct Order {
     4: optional double price
     5: optional i64 takeLimit
     6: optional i64 timestamp
-    7: optional i64 robotId
+    7: optional i32 robotType
+    8: optional i64 robotId
 }
 
 struct OrderInfo {
@@ -133,8 +142,9 @@ struct OrderUpdate {
 struct Transaction{
     1: i64 id
     2: i64 timestamp
-    3: OrderUpdate takerUpdate
-    4: OrderUpdate makerUpdate
+    3: MarketSide side
+    4: OrderUpdate takerUpdate
+    5: OrderUpdate makerUpdate
 }
 
 struct CashAccount{
@@ -218,14 +228,6 @@ struct ApiSecretState {
     1: map<string, ApiSecret> identifierLookupMap // key is identifier
     2: map<i64, list<ApiSecret>> userSecretMap // key is userId
     3: string seed
-}
-
-struct Fee {
-    1: i64 payer
-    2: i64 payee
-    3: Currency currency
-    4: i64 amount
-    5: optional string basis
 }
 
 

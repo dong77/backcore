@@ -47,7 +47,7 @@ class MarketDepthManager(market: MarketSide) extends Manager[MarketDepthState](M
   }
 
   def reductAmount(side: MarketSide, tx: Transaction) = {
-    val Transaction(_, _, taker, maker) = tx
+    val Transaction(_, _, _, taker, maker) = tx
     val (ask, bid) = if (side == market) (taker, maker) else (maker, taker)
 
     if (ask.previous.price.isDefined) {

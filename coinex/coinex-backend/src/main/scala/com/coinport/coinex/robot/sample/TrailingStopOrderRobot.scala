@@ -34,7 +34,8 @@ object TrailingStopOrderRobot {
           case Some(m) => m.marketByMetrics.get(side) match {
             case Some(mbm) =>
               if (mbm.price <= stopPercentage * basePrice) {
-                val action = Some(DoSubmitOrder(side, order.copy(userId = robot.userId, robotId = Some(robot.robotId))))
+                val action = Some(DoSubmitOrder(side,
+                  order.copy(userId = robot.userId, robotId = Some(robot.robotId), robotType = Some(%d))))
                 (robot -> "DONE", action)
               } else {
                 val r = if (mbm.price <= basePrice) robot else robot.setPayload("BP", Some(mbm.price))
@@ -45,7 +46,7 @@ object TrailingStopOrderRobot {
           }
           case _ => (robot -> "LISTENING", None)
         }
-      """
+      """.format(TRAILING_STOP_ORDER_ROBOT_TYPE)
     )
 
     Robot(robotId, userId, timestamp, brain)

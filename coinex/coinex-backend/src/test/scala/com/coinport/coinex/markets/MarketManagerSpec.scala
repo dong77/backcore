@@ -43,8 +43,8 @@ class MarketManagerSpec extends Specification {
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 12, 50000, PartiallyExecuted, Some(0)),
         Seq(
-          Transaction(50000, 0, taker --> taker.copy(quantity = 98), lpo1 --> updatedLpo1),
-          Transaction(50001, 0, taker.copy(quantity = 98) --> taker.copy(quantity = 88), lpo2 --> updatedLpo2)))
+          Transaction(50000, 0, takerSide, taker --> taker.copy(quantity = 98), lpo1 --> updatedLpo1),
+          Transaction(50001, 0, takerSide, taker.copy(quantity = 98) --> taker.copy(quantity = 88), lpo2 --> updatedLpo2)))
     }
   }
 
@@ -62,7 +62,7 @@ class MarketManagerSpec extends Specification {
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 10, 45000, FullyExecuted, Some(100000)),
-        Seq(Transaction(20000, 100000, taker --> updatedTaker, maker --> updatedMaker)))
+        Seq(Transaction(20000, 100000, takerSide, taker --> updatedTaker, maker --> updatedMaker)))
 
       manager().orderMap mustEqual Map(1 -> updatedMaker)
       manager().orderPool(makerSide) mustEqual SortedSet(updatedMaker)
@@ -86,8 +86,8 @@ class MarketManagerSpec extends Specification {
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 4, 19500, PartiallyExecuted, Some(0)),
         Seq(
-          Transaction(30000, 0, taker --> taker.copy(quantity = 7), maker2 --> updatedMaker2),
-          Transaction(30001, 0, taker.copy(quantity = 7) --> updatedTaker, maker1 --> updatedMaker1)))
+          Transaction(30000, 0, takerSide, taker --> taker.copy(quantity = 7), maker2 --> updatedMaker2),
+          Transaction(30001, 0, takerSide, taker.copy(quantity = 7) --> updatedTaker, maker1 --> updatedMaker1)))
 
       manager().orderMap mustEqual Map(3 -> taker.copy(quantity = 6))
       manager().orderPool(takerSide) mustEqual SortedSet(updatedTaker)
@@ -151,7 +151,7 @@ class MarketManagerSpec extends Specification {
         result mustEqual OrderSubmitted(
           OrderInfo(takerSide, taker.copy(timestamp = Some(1002)), 100, 100, FullyExecuted, Some(1003)),
           Seq(
-            Transaction(20000, 1003,
+            Transaction(20000, 1003, takerSide,
               taker.copy(timestamp = Some(1002)) --> updatedTaker,
               maker.copy(timestamp = Some(1001)) --> updatedMaker)))
 
@@ -177,7 +177,7 @@ class MarketManagerSpec extends Specification {
 
         result mustEqual OrderSubmitted(
           OrderInfo(takerSide, taker.copy(timestamp = Some(1002)), 10, 10, FullyExecuted, Some(1003)),
-          Seq(Transaction(20000, 1003,
+          Seq(Transaction(20000, 1003, takerSide,
             taker.copy(timestamp = Some(1002)) --> updatedTaker,
             maker.copy(timestamp = Some(1001)) --> updatedMaker)))
 
@@ -201,7 +201,7 @@ class MarketManagerSpec extends Specification {
 
         result mustEqual OrderSubmitted(
           OrderInfo(takerSide, taker, 10, 10, MarketAutoPartiallyCancelled, Some(0)),
-          Seq(Transaction(20000, 0, taker --> updatedTaker, maker --> updatedMaker)))
+          Seq(Transaction(20000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker)))
 
         manager().orderMap mustEqual Map()
         manager().orderPool(makerSide) mustEqual EmptyOrderPool
@@ -229,8 +229,8 @@ class MarketManagerSpec extends Specification {
         result mustEqual OrderSubmitted(
           OrderInfo(takerSide, taker, 120, 170, FullyExecuted, Some(1005)),
           Seq(
-            Transaction(30000, 1004, taker --> taker.copy(quantity = 70), maker2 --> updatedMaker2),
-            Transaction(30001, 1005, taker.copy(quantity = 70) --> updatedTaker, maker1 --> updatedMaker1)))
+            Transaction(30000, 1004, takerSide, taker --> taker.copy(quantity = 70), maker2 --> updatedMaker2),
+            Transaction(30001, 1005, takerSide, taker.copy(quantity = 70) --> updatedTaker, maker1 --> updatedMaker1)))
 
         manager().orderMap mustEqual Map(1 -> updatedMaker1) //  100 x 0.5 + 100 x 1 - 120 = 30
         manager().orderPool(makerSide) mustEqual SortedSet(updatedMaker1)
@@ -255,8 +255,8 @@ class MarketManagerSpec extends Specification {
         result mustEqual OrderSubmitted(
           OrderInfo(takerSide, taker, 70, 120, MarketAutoPartiallyCancelled, Some(0)),
           Seq(
-            Transaction(30000, 0, taker --> taker.copy(quantity = 70), maker2 --> updatedMaker2),
-            Transaction(30001, 0, taker.copy(quantity = 70) --> updatedTaker, maker1 --> updatedMaker1)))
+            Transaction(30000, 0, takerSide, taker --> taker.copy(quantity = 70), maker2 --> updatedMaker2),
+            Transaction(30001, 0, takerSide, taker.copy(quantity = 70) --> updatedTaker, maker1 --> updatedMaker1)))
 
         manager().orderMap mustEqual Map()
 
@@ -281,7 +281,7 @@ class MarketManagerSpec extends Specification {
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 10, 20, FullyExecuted, Some(0)),
-        Seq(Transaction(30000, 0, taker --> updatedTaker, maker2 --> updatedMaker2)))
+        Seq(Transaction(30000, 0, takerSide, taker --> updatedTaker, maker2 --> updatedMaker2)))
 
       manager().orderMap mustEqual Map(1 -> maker1, 2 -> updatedMaker2)
       manager().orderPool(makerSide) mustEqual SortedSet(maker1, updatedMaker2)
@@ -305,8 +305,8 @@ class MarketManagerSpec extends Specification {
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 60, 110, FullyExecuted, Some(0)),
         Seq(
-          Transaction(30000, 0, taker --> taker.copy(quantity = 10), maker2 --> updatedMaker2),
-          Transaction(30001, 0, taker.copy(quantity = 10) --> updatedTaker, maker1 --> updatedMaker1)))
+          Transaction(30000, 0, takerSide, taker --> taker.copy(quantity = 10), maker2 --> updatedMaker2),
+          Transaction(30001, 0, takerSide, taker.copy(quantity = 10) --> updatedTaker, maker1 --> updatedMaker1)))
 
       manager().orderMap mustEqual Map(1 -> maker1.copy(quantity = 10))
       manager().orderPool(makerSide) mustEqual SortedSet(maker1.copy(quantity = 10))
@@ -330,8 +330,8 @@ class MarketManagerSpec extends Specification {
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 50, 120, PartiallyExecuted, Some(0)),
         Seq(
-          Transaction(30000, 0, taker --> taker.copy(quantity = 50), maker2 --> updatedMaker2),
-          Transaction(30001, 0, taker.copy(quantity = 50) --> updatedTaker, maker1 --> updatedMaker1)))
+          Transaction(30000, 0, takerSide, taker --> taker.copy(quantity = 50), maker2 --> updatedMaker2),
+          Transaction(30001, 0, takerSide, taker.copy(quantity = 50) --> updatedTaker, maker1 --> updatedMaker1)))
 
       manager().orderMap mustEqual Map(10 -> updatedTaker) // 90 - 100x0.4 - 20x0.5
       manager().orderPool(makerSide) mustEqual EmptyOrderPool
@@ -375,7 +375,7 @@ class MarketManagerSpec extends Specification {
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 500, 1, MarketAutoPartiallyCancelled, Some(0)),
-        Seq(Transaction(20000, 0, taker --> updatedTaker, maker --> updatedMaker)))
+        Seq(Transaction(20000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker)))
     }
 
     "be able to handle dust when price is really small" in {
@@ -391,7 +391,7 @@ class MarketManagerSpec extends Specification {
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 150, 1000, MarketAutoPartiallyCancelled, Some(0)),
-        Seq(Transaction(20000, 0, taker --> updatedTaker, maker --> updatedMaker)))
+        Seq(Transaction(20000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker)))
     }
   }
 }

@@ -26,13 +26,14 @@ object StopOrderRobot {
         metrics match {
           case Some(m) => m.marketByMetrics.get(side) match {
             case Some(mbm) if (mbm.price <= stopPrice) =>
-              val action = Some(DoSubmitOrder(side, order.copy(userId = robot.userId, robotId = Some(robot.robotId))))
+              val action = Some(DoSubmitOrder(side,
+                order.copy(userId = robot.userId, robotId = Some(robot.robotId), robotType = Some(%d))))
               (robot -> "DONE", action)
             case _ => (robot -> "LISTENING", None)
           }
           case _ => (robot -> "LISTENING", None)
         }
-      """
+      """.format(STOP_ORDER_ROBOT_TYPE)
     )
 
     Robot(robotId, userId, timestamp, brain)

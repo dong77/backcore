@@ -7,6 +7,6 @@ package com.coinport.coinex.fee
 
 import com.coinport.coinex.data.Fee
 
-trait FeeMaker[T] {
-  def count(feeEvent: T): (T, Fee)
+trait FeeMaker {
+  def count[T](feeEvent: T): List[Fee]
 }

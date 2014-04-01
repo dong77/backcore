@@ -7,8 +7,7 @@ package com.coinport.coinex.fee.rules
 
 import FeeRuleTypeEnum._
 
-class TransactionFeeItem {
-  var kind: FeeRuleType = PERCENTAGE
-  var percentage: Double = 0.0
-  var amount: Long = 0
-}
+case class FeeRuleItem(
+  kind: FeeRuleType = PERCENTAGE,
+  percentage: Double = 0.0,
+  amount: Long = 0)

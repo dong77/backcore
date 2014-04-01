@@ -7,6 +7,6 @@ package com.coinport.coinex.fee.rules
 
 import com.coinport.coinex.data.MarketSide
 
-class TransactionFeeRules extends FeeRules {
-  var rules = Map.empty[MarketSide, TransactionFeeItem]
+class TransactionFeeRules(val marketItems: Map[MarketSide, FeeRuleItem],
+    val robotItems: Map[Int, FeeRuleItem]) extends FeeRules {
 }
