@@ -45,6 +45,9 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
 
     case p @ ConfirmablePersistent(event: SubmitOrderFailed, seq, _) =>
       persist(event) { event => p.confirm(); updateState(event) }
+
+    case p @ ConfirmablePersistent(AdminConfirmCashDepositSuccess(deposit), seq, _) =>
+      p.confirm()
   }
 
   def updateState(event: Any): Unit = event match {

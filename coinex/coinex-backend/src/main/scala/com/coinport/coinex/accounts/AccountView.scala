@@ -21,13 +21,7 @@ class AccountView extends ExtendedView {
   def receive = LoggingReceive {
     case DebugDump =>
       log.info("state: {}", manager())
-
-    case Persistent(DoRequestCashDeposit(userId, currency, amount), _) =>
-      manager.updateCashAccount(userId, CashAccount(currency, amount, 0, 0))
-
-    case Persistent(DoRequestCashWithdrawal(userId, currency, amount), _) =>
-      manager.updateCashAccount(userId, CashAccount(currency, -amount, 0, amount))
-
+    /*
     case Persistent(AdminConfirmCashWithdrawalSuccess(userId, currency, amount, fees), _) =>
       val amounts = fees.getOrElse(Nil) map { f =>
         manager.sendCashFromWithsrawal(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
@@ -37,7 +31,7 @@ class AccountView extends ExtendedView {
 
     case Persistent(AdminConfirmCashWithdrawalFailure(userId, currency, amount, error), _) =>
       manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
-
+*/
     case Persistent(DoSubmitOrder(side: MarketSide, Order(userId, _, quantity, _, _, _, _, _, _)), _) =>
       manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0))
 

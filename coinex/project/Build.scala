@@ -14,6 +14,7 @@ object CoinexBuild extends Build {
   val akkaVersion = "2.3.1"
   val bijectionVersion = "0.6.2"
   val sprayVersion = "1.3.1"
+  val scroogeVersion = "3.13.0"
 
   val sharedSettings = Seq(
     organization := "com.coinport",
@@ -64,8 +65,10 @@ object CoinexBuild extends Build {
       "com.typesafe.akka" %% "akka-contrib" % akkaVersion,
       "com.typesafe.akka" %% "akka-persistence-experimental" % akkaVersion,
       "com.twitter" %% "bijection-scrooge" % bijectionVersion,
-      "com.twitter" %% "scrooge-core" % "3.12.3",
-      "com.twitter" %% "scrooge-serializer" % "3.12.3",
+      "com.twitter" %% "bijection-json4s" % bijectionVersion,
+      "com.twitter" %% "bijection-json" % bijectionVersion,
+      "com.twitter" %% "scrooge-core" % scroogeVersion,
+      "com.twitter" %% "scrooge-serializer" % scroogeVersion,
       "org.slf4s" %% "slf4s-api" % "1.7.6",
       "io.spray" %%  "spray-json" % "1.2.5",
       "org.json4s" %% "json4s-native" % "3.2.7",

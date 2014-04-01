@@ -34,6 +34,11 @@ enum ErrorCode {
     // Api Auth related
     TOO_MANY_SECRETS                 = 5001
     INVALID_SECRET                   = 5002
+    
+    // Deposit/Withdrawal
+    ALREADY_CONFIRMED                = 6001
+    DEPOSIT_NOT_EXIST                = 6002
+    WITHDRAWAL_NOT_EXIST             = 6003
 }
 
 
@@ -89,6 +94,12 @@ enum Direction {
     UP = 1
     DOWN = 2
     KEEP = 3
+}
+
+enum TransferStatus {
+    PENDING = 0
+    SUCCEEDED = 1
+    FAILED = 2
 }
 
 ////////////////////////////////////////////////////////////////
@@ -248,6 +259,35 @@ struct ApiSecretState {
     3: string seed
 }
 
+struct Fee {
+    1: i64 payer
+    2: i64 payee
+    3: Currency currency
+    4: i64 amount
+    5: optional string basis
+}
+
+struct Deposit {
+    1: i64 id
+    2: i64 userId
+    3: Currency currency
+    4: i64 amount
+    5: TransferStatus status
+    6: optional i64 created
+    7: optional i64 updated
+    8: optional ErrorCode reason
+}
+
+struct Withdrawal {
+    1: i64 id
+    2: i64 userId
+    3: Currency currency
+    4: i64 amount
+    5: TransferStatus status
+    6: optional i64 created
+    7: optional i64 updated
+    8: optional ErrorCode reason
+}
 
 ////////////////////////////////////////////////////////////////
 ///////////////////// PROCESSOR MESSAGES ///////////////////////
@@ -283,18 +323,18 @@ struct ApiSecretState {
 /* Q    */ struct ValidatePasswordResetToken          {1: string passwordResetToken}
 /* R    */ struct PasswordResetTokenValidationResult  {1: optional UserProfile userProfile}
 
-/* C,P  */ struct DoRequestCashDeposit                {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* C,P  */ struct DoRequestCashDeposit                {1: Deposit deposit}
 /* R-   */ struct RequestCashDepositFailed            {1: ErrorCode error}
-/* R+   */ struct RequestCashDepositSucceeded         {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* R+   */ struct RequestCashDepositSucceeded         {1: Deposit deposit}
 
-/* C,P  */ struct DoRequestCashWithdrawal             {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* C,P  */ struct DoRequestCashWithdrawal             {2: Withdrawal withdrawal}
 /* R-   */ struct RequestCashWithdrawalFailed         {1: ErrorCode error}
-/* R+   */ struct RequestCashWithdrawalSucceeded      {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* R+   */ struct RequestCashWithdrawalSucceeded      {1: Withdrawal withdrawal}
 
-/* C,P  */ struct AdminConfirmCashDepositFailure      {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:ErrorCode error}
-/* C,P  */ struct AdminConfirmCashDepositSuccess      {1: i64 userId, 2: Currency currency, 3: i64 amount}
-/* C,P  */ struct AdminConfirmCashWithdrawalFailure   {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:ErrorCode error}
-/* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:optional list<Fee> fees}
+/* C,P  */ struct AdminConfirmCashDepositFailure      {1: Deposit deposit, 2:ErrorCode error}
+/* C,P  */ struct AdminConfirmCashDepositSuccess      {1: Deposit deposit}
+/* C,P  */ struct AdminConfirmCashWithdrawalFailure   {1: Withdrawal withdrawal, 2: ErrorCode error}
+/* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: Withdrawal withdrawal, 2: optional list<Fee> fees}
 
 /* C,P  */ struct DoSubmitOrder                       {1: MarketSide side, 2: Order order}
 /* I,R- */ struct SubmitOrderFailed                   {1: MarketSide side, 2: Order order, 3: ErrorCode error}

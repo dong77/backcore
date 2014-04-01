@@ -15,7 +15,6 @@ import com.typesafe.config.Config
 import org.slf4s.Logging
 import scala.collection.mutable.ListBuffer
 import spray.can.Http
-
 import com.coinport.coinex.accounts._
 import com.coinport.coinex.apiauth._
 import com.coinport.coinex.common._
@@ -26,6 +25,9 @@ import com.coinport.coinex.metrics._
 import com.coinport.coinex.monitoring._
 import com.coinport.coinex.robot._
 import com.coinport.coinex.users._
+import scala.collection.mutable.ListBuffer
+import com.coinport.coinex.common._
+import com.mongodb.casbah._
 import Implicits._
 
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
@@ -38,7 +40,9 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     val secret = config.getString("akka.exchange.secret")
     val userManagerSecret = util.Hash.sha256Base64(secret + "userProcessorSecret")
     val apiAuthSecret = util.Hash.sha256Base64(secret + "apiAuthSecret")
-    val mongoUri = config.getString("akka.exchange.export-persistent-view.mongo-uri")
+    val mongoUri = MongoURI(config.getString("akka.exchange.export-persistent-view.mongo-uri"))
+    val mongo = MongoConnection(mongoUri)
+    val db = mongo(mongoUri.database.getOrElse("coinex_export"))
 
     deployMailer(MAILER)
 
@@ -48,7 +52,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       deployView(Props(new CandleDataView(m)), CANDLE_DATA_VIEW(m))
       deployView(Props(new TransactionDataView(m)), TRANSACTION_DATA_VIEW(m))
       deployView(Props(new UserTransactionView(m)), USER_TRANSACTION_VIEW(m))
-      deployView(Props(new MongoPersistentView(mongoUri, "coinex_mp_" + m.asString)), MARKET_PROCESSOR_MPV(m))
+      deployView(Props(new MongoPersistentView(db, "coinex_mp_" + m.asString)), MARKET_PROCESSOR_MPV(m))
     }
 
     deployView(Props(classOf[UserView]), USER_VIEW)
@@ -57,8 +61,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployView(Props(classOf[MetricsView]), ROBOT_METRICS_VIEW)
     deployView(Props(new ApiAuthView(apiAuthSecret)), API_AUTH_VIEW)
 
-    deployView(Props(new MongoPersistentView(mongoUri, "coinex_up")), USER_PROCESSOR_MPV)
-    deployView(Props(new MongoPersistentView(mongoUri, "coinex_ap")), ACCOUNT_PROCESSOR_MPV)
+    deployView(Props(new MongoPersistentView(db, "coinex_up")), USER_PROCESSOR_MPV)
+    deployView(Props(new MongoPersistentView(db, "coinex_ap")), ACCOUNT_PROCESSOR_MPV)
 
     // Then deploy routers
     val routers = new LocalRouters(markets)

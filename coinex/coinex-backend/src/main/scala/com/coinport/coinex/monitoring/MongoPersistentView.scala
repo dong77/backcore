@@ -9,17 +9,13 @@ import com.coinport.coinex.serializers.ThriftJsonSerializer
 import Implicits._
 import com.mongodb.util.JSON
 import com.mongodb.casbah.Imports._
-import com.mongodb.casbah.{ MongoURI }
 
-class MongoPersistentView(mongoUri: String, pid: String) extends ExtendedView {
+class MongoPersistentView(db: MongoDB, pid: String) extends ExtendedView {
   override val processorId = pid
   override val viewId = pid + "_mongop"
 
   val serializer = new ThriftJsonSerializer
-  val uri = MongoURI(mongoUri)
-  val mongo = MongoConnection(uri)
-  val database = mongo(uri.database.getOrElse("coinex_export"))
-  val collection = database(pid + "_events")
+  val collection = db(pid + "_events")
 
   case class State(snapshotIndex: Long, index: Long, hash: String)
 
