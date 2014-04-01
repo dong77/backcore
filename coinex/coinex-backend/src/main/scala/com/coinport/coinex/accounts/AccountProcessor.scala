@@ -17,11 +17,14 @@ import com.coinport.coinex.fee.rules._
 import com.coinport.coinex.fee._
 import Implicits._
 
-class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
-    extends EventsourcedProcessor with ChannelSupport with CountFeeSupport with ActorLogging {
+class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef], feeRulesMap: Map[String, FeeRules])
+  extends EventsourcedProcessor with ChannelSupport with ActorLogging {
   override val processorId = "coinex_ap"
   val channelToMarketProcessors = createChannelTo("mps") // DO NOT CHANGE
 
+  val feeMakers = Map(
+    TRANSACTION -> new TransactionFeeMaker(feeRulesMap(TRANSACTION)),
+    WITHDRAWAL -> new WithdrawalFeeMaker(feeRulesMap(WITHDRAWAL)))
   val manager = new AccountManager()
 
   def receiveRecover = PartialFunction.empty[Any, Unit]
@@ -33,8 +36,9 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
     case m: AdminConfirmCashWithdrawalSuccess => persist(countFee(m))(updateState)
     case m: AdminConfirmCashWithdrawalFailure => persist(m)(updateState)
 
-    case m @ DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _, _, _)) =>
-      if (quantity <= 0) sender ! SubmitOrderFailed(side, order, ErrorCode.InvalidAmount)
+
+    case m @ DoSubmitOrder(side: MarketSide, order) =>
+      if (order.quantity <= 0) sender ! SubmitOrderFailed(side, order, ErrorCode.InvalidAmount)
       else persist(m)(updateState)
 
     case p @ ConfirmablePersistent(event: OrderSubmitted, seq, _) =>
@@ -51,24 +55,22 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
   }
 
   def updateState(event: Any): Unit = event match {
-    case m @ DoRequestCashDeposit(userId, currency, amount) =>
-      sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, 0))
+    case m @ DoRequestCashWithdrawal(withdrawal) =>
+      sender ! manager.updateCashAccount(withdrawal.userId, CashAccount(withdrawal.currency, -withdrawal.amount, 0, withdrawal.amount))
 
-    case m @ DoRequestCashWithdrawal(userId, currency, amount) =>
-      sender ! manager.updateCashAccount(userId, CashAccount(currency, -amount, 0, amount))
-
-    case m @ AdminConfirmCashWithdrawalSuccess(userId, currency, amount, fees) =>
+    case m @ AdminConfirmCashWithdrawalSuccess(withdrawal, fees) =>
       val amounts = fees.getOrElse(Nil) map { f =>
         manager.sendCashFromWithsrawal(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
         f.amount
       }
-      sender ! manager.updateCashAccount(userId, CashAccount(currency, 0, 0, (0L /: amounts)(_ + _) - amount))
+      sender ! manager.updateCashAccount(withdrawal.userId, CashAccount(withdrawal.currency, 0, 0, (0L /: amounts)(_ + _) - withdrawal.amount))
 
-    case m @ AdminConfirmCashWithdrawalFailure(userId, currency, amount, error) =>
-      sender ! manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
+    case AdminConfirmCashWithdrawalFailure(withdrawal, error) =>
+      sender ! manager.updateCashAccount(withdrawal.userId, CashAccount(withdrawal.currency, withdrawal.amount, 0, -withdrawal.amount))
 
-    case m @ DoSubmitOrder(side: MarketSide, order @ Order(userId, _, quantity, _, _, _, _, _, _)) =>
-      manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0)) match {
+
+    case m @ DoSubmitOrder(side: MarketSide, order) =>
+      manager.updateCashAccount(order.userId, CashAccount(side.outCurrency, -order.quantity, order.quantity, 0)) match {
         case Some(error) => sender ! SubmitOrderFailed(side, order, error)
         case None =>
           val orderWithId = order.copy(id = manager.getAndIncreaseOrderId)
@@ -78,7 +80,8 @@ class AccountProcessor(marketProcessors: Map[MarketSide, ActorRef])
     case OrderSubmitted(originOrderInfo, txs) =>
       val side = originOrderInfo.side
       txs foreach { tx =>
-        val Transaction(_, _, _, takerOrderUpdate, makerOrderUpdate, fees) = tx
+        val (takerOrderUpdate, makerOrderUpdate) = (tx.takerUpdate, tx.makerUpdate)
+        val fees = feeMakers(TRANSACTION).count(tx)
         manager.sendCashFromLocked(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
         manager.sendCashFromLocked(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
         fees.getOrElse(Nil) foreach { f =>

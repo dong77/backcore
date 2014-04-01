@@ -32,16 +32,17 @@ class AccountView extends ExtendedView {
     case Persistent(AdminConfirmCashWithdrawalFailure(userId, currency, amount, error), _) =>
       manager.updateCashAccount(userId, CashAccount(currency, amount, 0, -amount))
 */
-    case Persistent(DoSubmitOrder(side: MarketSide, Order(userId, _, quantity, _, _, _, _, _, _)), _) =>
-      manager.updateCashAccount(userId, CashAccount(side.outCurrency, -quantity, quantity, 0))
+    case Persistent(DoSubmitOrder(side: MarketSide, order), _) =>
+      manager.updateCashAccount(order.userId, CashAccount(side.outCurrency, -order.quantity, order.quantity, 0))
 
-    case Persistent(OrderCancelled(side, Order(userId, _, quantity, _, _, _, _, _, _)), _) =>
-      manager.updateCashAccount(userId, CashAccount(side.outCurrency, quantity, -quantity, 0))
+    case Persistent(OrderCancelled(side, order), _) =>
+      manager.updateCashAccount(order.userId, CashAccount(side.outCurrency, order.quantity, -order.quantity, 0))
+
 
     case Persistent(m: OrderSubmitted, _) =>
       val side = m.originOrderInfo.side
       m.txs foreach { tx =>
-        val Transaction(_, _, _, takerOrderUpdate, makerOrderUpdate, fees) = tx
+        val (takerOrderUpdate, makerOrderUpdate) = (tx.takerUpdate, tx.makerUpdate)
         manager.sendCashFromLocked(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
         manager.sendCashFromLocked(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
         fees.getOrElse(Nil) foreach { f =>

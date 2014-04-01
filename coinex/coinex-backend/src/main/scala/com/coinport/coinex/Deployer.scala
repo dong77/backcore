@@ -15,6 +15,7 @@ import com.typesafe.config.Config
 import org.slf4s.Logging
 import scala.collection.mutable.ListBuffer
 import spray.can.Http
+
 import com.coinport.coinex.accounts._
 import com.coinport.coinex.apiauth._
 import com.coinport.coinex.common._
@@ -25,10 +26,10 @@ import com.coinport.coinex.metrics._
 import com.coinport.coinex.monitoring._
 import com.coinport.coinex.robot._
 import com.coinport.coinex.users._
+import Implicits._
 import scala.collection.mutable.ListBuffer
 import com.coinport.coinex.common._
 import com.mongodb.casbah._
-import Implicits._
 
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
