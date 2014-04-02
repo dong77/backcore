@@ -324,7 +324,7 @@ struct Withdrawal {
 /* R+   */ struct RequestCashWithdrawalSucceeded      {1: Withdrawal withdrawal}
 
 /* C,P  */ struct AdminConfirmCashDepositFailure      {1: Deposit deposit, 2:ErrorCode error}
-/* C,P  */ struct AdminConfirmCashDepositSuccess      {1: Deposit deposit}
+/* C,P  */ struct AdminConfirmCashDepositSuccess      {1: Deposit deposit, 2: optional list<Fee> fees}
 
 /* C,P  */ struct AdminConfirmCashWithdrawalFailure   {1: Withdrawal withdrawal, 2: ErrorCode error}
 /* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: Withdrawal withdrawal, 2: optional list<Fee> fees}
