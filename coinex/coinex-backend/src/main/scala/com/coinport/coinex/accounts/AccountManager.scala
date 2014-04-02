@@ -21,17 +21,17 @@ import Implicits._
 
 class AccountManager extends Manager[AccountState](AccountState()) {
 
-  def sendCashFromLocked(from: Long, to: Long, currency: Currency, amount: Long) = {
+  def transferFundFromLocked(from: Long, to: Long, currency: Currency, amount: Long) = {
     updateCashAccount(from, CashAccount(currency, 0, -amount, 0))
     updateCashAccount(to, CashAccount(currency, amount, 0, 0))
   }
 
-  def sendCashFromValid(from: Long, to: Long, currency: Currency, amount: Long) = {
+  def transferFundFromAvailable(from: Long, to: Long, currency: Currency, amount: Long) = {
     updateCashAccount(from, CashAccount(currency, -amount, 0, 0))
     updateCashAccount(to, CashAccount(currency, amount, 0, 0))
   }
 
-  def sendCashFromWithsrawal(from: Long, to: Long, currency: Currency, amount: Long) = {
+  def transferFundFromPendingWithdrawal(from: Long, to: Long, currency: Currency, amount: Long) = {
     updateCashAccount(from, CashAccount(currency, 0, 0, -amount))
     updateCashAccount(to, CashAccount(currency, amount, 0, 0))
   }
@@ -40,24 +40,19 @@ class AccountManager extends Manager[AccountState](AccountState()) {
     if (condition && order.quantity > 0) refund(order.userId, currency, order.quantity)
   }
 
-  def refund(uid: Long, currency: Currency, quantity: Long): Option[ErrorCode] = {
+  def refund(uid: Long, currency: Currency, quantity: Long) = {
     updateCashAccount(uid, CashAccount(currency, quantity, -quantity, 0))
   }
 
-  def updateCashAccount(userId: Long, adjustment: CashAccount): Option[ErrorCode] = {
+  def canUpdateCashAccount(userId: Long, adjustment: CashAccount) = {
     val current = state.getUserCashAccount(userId, adjustment.currency)
-    val updated = current + adjustment
-
-    if (updated.isValid) {
-      state = state.setUserCashAccount(userId, updated)
-      None
-    } else {
-      Some(ErrorCode.InsufficientFund)
-    }
+    (current + adjustment).isValid
   }
 
-  def getAndIncreaseOrderId(): Long = {
-    state = state.increaselLastOrderId()
-    state.lastOrderId
+  def updateCashAccount(userId: Long, adjustment: CashAccount) = {
+    val current = state.getUserCashAccount(userId, adjustment.currency)
+    val updated = current + adjustment
+    assert(updated.isValid)
+    state = state.setUserCashAccount(userId, updated)
   }
 }

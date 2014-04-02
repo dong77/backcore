@@ -20,6 +20,7 @@ object LocalRouters {
   val API_AUTH_PROCESSOR = "api_auth_processor"
   def MARKET_PROCESSOR(side: MarketSide) = "market_processor_" + side.asString
   val ROBOT_PROCESSOR = "robot_processor"
+  val DEPOSIT_WITHDRAWAL_PROCESSOR = "dw_processor"
 
   val USER_VIEW = "user_view"
   val ACCOUNT_VIEW = "account_view"
@@ -53,6 +54,7 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
   }: _*))
 
   val robotProcessor = routerForSingleton(ROBOT_PROCESSOR)
+  val depositWithdrawProcessor = routerForSingleton(DEPOSIT_WITHDRAWAL_PROCESSOR)
 
   val userView = routerFor(USER_VIEW)
   val accountView = routerFor(ACCOUNT_VIEW)

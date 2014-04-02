@@ -5,6 +5,7 @@
 
 package com.coinport.coinex.common
 
+// TODO(c): make these case objects
 object Constants {
   val COINPORT_UID = 3142141421L
   val TRANSACTION = "translaction"

@@ -29,8 +29,6 @@ final class Coinex(routers: LocalRouters) extends Actor {
       // Account Processor
       case m: DoRequestCashDeposit => routers.accountProcessor forward m
       case m: DoRequestCashWithdrawal => routers.accountProcessor forward m
-      case m: AdminConfirmCashWithdrawalSuccess => routers.accountProcessor forward m
-      case m: AdminConfirmCashWithdrawalFailure => routers.accountProcessor forward m
       case m: DoSubmitOrder => routers.accountProcessor forward m
 
       // Market Processors
@@ -39,6 +37,12 @@ final class Coinex(routers: LocalRouters) extends Actor {
       // Robot Processor
       case m: DoSubmitRobot => routers.robotProcessor forward Persistent(m)
       case m: DoCancelRobot => routers.robotProcessor forward Persistent(m)
+
+      // DepoistWithdraw Processor
+      case m: AdminConfirmCashDepositFailure => routers.depositWithdrawProcessor forward m
+      case m: AdminConfirmCashDepositSuccess => routers.depositWithdrawProcessor forward m
+      case m: AdminConfirmCashWithdrawalFailure => routers.depositWithdrawProcessor forward m
+      case m: AdminConfirmCashWithdrawalSuccess => routers.depositWithdrawProcessor forward m
 
       //-------------------------------------------------------------------------
       // AccountView

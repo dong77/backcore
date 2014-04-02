@@ -30,10 +30,16 @@ enum ErrorCode {
     INVALID_AMOUNT                   = 2003
 
     // Market related
+    ORDER_NOT_EXIST                  = 3001
 
     // Api Auth related
     TOO_MANY_SECRETS                 = 5001
     INVALID_SECRET                   = 5002
+    
+    // Deposit/Withdrawal
+    ALREADY_CONFIRMED                = 6001
+    DEPOSIT_NOT_EXIST                = 6002
+    WITHDRAWAL_NOT_EXIST             = 6003
 }
 
 
@@ -44,9 +50,9 @@ enum Currency {
     UNKNOWN = 0
     RMB = 1
     USD = 2
-    BTC = 1000
-    LTC = 2000
-    PTS = 3000
+    BTC = 1001
+    LTC = 1002
+    PTS = 1003
 }
 
 enum OrderStatus {
@@ -89,6 +95,12 @@ enum Direction {
     UP = 1
     DOWN = 2
     KEEP = 3
+}
+
+enum TransferStatus {
+    PENDING = 0
+    SUCCEEDED = 1
+    FAILED = 2
 }
 
 ////////////////////////////////////////////////////////////////
@@ -170,8 +182,7 @@ struct UserAccount {
 }
 
 struct PersistentAccountState {
-    1: i64 lastOrderId
-    2: map<i64, UserAccount> userAccountsMap
+    1: map<i64, UserAccount> userAccountsMap
 }
 
 struct UserLogsState {
@@ -248,6 +259,29 @@ struct ApiSecretState {
     3: string seed
 }
 
+struct Deposit {
+    1: i64 id
+    2: i64 userId
+    3: Currency currency
+    4: i64 amount
+    5: TransferStatus status
+    6: optional i64 created
+    7: optional i64 updated
+    8: optional ErrorCode reason
+    9: optional Fee fee
+}
+
+struct Withdrawal {
+    1: i64 id
+    2: i64 userId
+    3: Currency currency
+    4: i64 amount
+    5: TransferStatus status
+    6: optional i64 created
+    7: optional i64 updated
+    8: optional ErrorCode reason
+    9: optional Fee fee
+}
 
 ////////////////////////////////////////////////////////////////
 ///////////////////// PROCESSOR MESSAGES ///////////////////////
@@ -283,23 +317,23 @@ struct ApiSecretState {
 /* Q    */ struct ValidatePasswordResetToken          {1: string passwordResetToken}
 /* R    */ struct PasswordResetTokenValidationResult  {1: optional UserProfile userProfile}
 
-/* C,P  */ struct DoRequestCashDeposit                {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* C,P  */ struct DoRequestCashDeposit                {1: Deposit deposit}
 /* R-   */ struct RequestCashDepositFailed            {1: ErrorCode error}
-/* R+   */ struct RequestCashDepositSucceeded         {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* R+   */ struct RequestCashDepositSucceeded         {1: Deposit deposit}
 
-/* C,P  */ struct DoRequestCashWithdrawal             {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* C,P  */ struct DoRequestCashWithdrawal             {2: Withdrawal withdrawal}
 /* R-   */ struct RequestCashWithdrawalFailed         {1: ErrorCode error}
-/* R+   */ struct RequestCashWithdrawalSucceeded      {1: i64 userId, 2: Currency currency, 3: i64 amount}
+/* R+   */ struct RequestCashWithdrawalSucceeded      {1: Withdrawal withdrawal}
 
-/* C,P  */ struct AdminConfirmCashDepositFailure      {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:ErrorCode error}
-/* C,P  */ struct AdminConfirmCashDepositSuccess      {1: i64 userId, 2: Currency currency, 3: i64 amount}
-/* C,P  */ struct AdminConfirmCashWithdrawalFailure   {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:ErrorCode error}
-/* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: i64 userId, 2: Currency currency, 3: i64 amount, 4:optional list<Fee> fees}
+/* C,P  */ struct AdminConfirmCashDepositFailure      {1: Deposit deposit, 2:ErrorCode error}
+/* C,P  */ struct AdminConfirmCashDepositSuccess      {1: Deposit deposit}
+
+/* C,P  */ struct AdminConfirmCashWithdrawalFailure   {1: Withdrawal withdrawal, 2: ErrorCode error}
+/* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: Withdrawal withdrawal}
 
 /* C,P  */ struct DoSubmitOrder                       {1: MarketSide side, 2: Order order}
-/* I,R- */ struct SubmitOrderFailed                   {1: MarketSide side, 2: Order order, 3: ErrorCode error}
-/* I,R+ */ struct OrderFundFrozen                     {1: MarketSide side, 2: Order order}
-
+/* R-   */ struct SubmitOrderFailed                   {1: MarketSide side, 2: Order order, 3: ErrorCode error}
+/* I    */ struct OrderFundFrozen                     {1: MarketSide side, 2: Order order}
 
 ////////// ApiAuthProcessor
 /* C,P  */ struct DoAddNewApiSecret                   {1: i64 userId}
@@ -314,7 +348,7 @@ struct ApiSecretState {
 /* C,P  */ struct DoCancelOrder                       {1: MarketSide side, 2: i64 id, 3: i64 userId}
 /* R-   */ struct CancelOrderFailed                   {1: ErrorCode error}
 
-/* I    */ struct OrderSubmitted                      {1: OrderInfo originOrderInfo, 2: list<Transaction> txs}
+/* I,R+ */ struct OrderSubmitted                      {1: OrderInfo originOrderInfo, 2: list<Transaction> txs}
 /* I,R+ */ struct OrderCancelled                      {1: MarketSide side, 2: Order order}
 
 ////////// RobotProcessor commands

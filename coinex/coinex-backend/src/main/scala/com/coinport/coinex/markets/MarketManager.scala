@@ -22,76 +22,77 @@ import scala.collection.mutable.ListBuffer
 import Implicits._
 import OrderStatus._
 
-class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends Manager[MarketState](MarketState(headSide)) {
+class MarketManager(headSide: MarketSide) extends Manager[MarketState](MarketState(headSide)) {
   val MAX_TX_GROUP_SIZE = 10000
-  def isOrderPriceInGoodRange(sellSide: MarketSide, price: Option[Double]): Boolean = {
+  def isOrderPriceInGoodRange(takerSide: MarketSide, price: Option[Double]): Boolean = {
     if (price.isEmpty) true
     else if (price.get <= 0) false
-    else if (state.priceRestriction.isEmpty || state.orderPool(sellSide).isEmpty) true
-    else if (price.get / state.orderPool(sellSide).headOption.get.price.get - 1.0 <=
+    else if (state.priceRestriction.isEmpty || state.orderPool(takerSide).isEmpty) true
+    else if (price.get / state.orderPool(takerSide).headOption.get.price.get - 1.0 <=
       state.priceRestriction.get) true
     else false
   }
 
-  def addOrder(sellSide: MarketSide, order: Order, txGroupId: Long): OrderSubmitted = {
-    val orderWithTime = order.copy(timestamp = Some(now()))
+  def orderExist(orderId: Long) = state.getOrder(orderId).isDefined
+
+  def addOrder(takerSide: MarketSide, order: Order): OrderSubmitted = {
     val txsBuffer = new ListBuffer[Transaction]
 
-    val (totalOutAmount, totalInAmount, sellOrder, newMarket) =
-      addOrderRec(sellSide.reverse, sellSide, orderWithTime, state, 0, 0, txsBuffer, txGroupId * MAX_TX_GROUP_SIZE)
+    val (totalOutAmount, totalInAmount, takerOrder, newMarket) =
+      addOrderRec(takerSide.reverse, takerSide, order, state, 0, 0, txsBuffer, order.id * MAX_TX_GROUP_SIZE)
     state = newMarket
 
     val status =
-      if (sellOrder.isFullyExecuted) OrderStatus.FullyExecuted
+      if (takerOrder.isFullyExecuted) OrderStatus.FullyExecuted
       else if (totalOutAmount > 0) {
-        if (sellOrder.price == None || sellOrder.onlyTaker.getOrElse(false)) OrderStatus.MarketAutoPartiallyCancelled
+        if (takerOrder.price == None || takerOrder.onlyTaker.getOrElse(false)) OrderStatus.MarketAutoPartiallyCancelled
         else OrderStatus.PartiallyExecuted
-      } else if (sellOrder.price == None || sellOrder.onlyTaker.getOrElse(false)) OrderStatus.MarketAutoCancelled
+      } else if (takerOrder.price == None || takerOrder.onlyTaker.getOrElse(false)) OrderStatus.MarketAutoCancelled
       else OrderStatus.Pending
 
     val txs = txsBuffer.toSeq
-    val orderInfo = OrderInfo(sellSide, orderWithTime, totalOutAmount, totalInAmount,
+    val orderInfo = OrderInfo(takerSide, order, totalOutAmount, totalInAmount,
       status, txs.lastOption.map(_.timestamp))
 
     OrderSubmitted(orderInfo, txs)
   }
 
-  def removeOrder(side: MarketSide, id: Long, userId: Long): Option[Order] = {
-    state.getOrder(id) match {
-      case Some(order) if order.userId == userId => Some(order)
-      case _ => None
-    }
+  def removeOrder(side: MarketSide, id: Long, userId: Long): Order = {
+    val order = state.getOrder(id).get
+    state = state.removeOrder(side, id)
+    order
   }
 
   @tailrec
-  private final def addOrderRec(buySide: MarketSide, sellSide: MarketSide, sellOrder: Order,
+  private final def addOrderRec(makerSide: MarketSide, takerSide: MarketSide, takerOrder: Order,
     market: MarketState, totalOutAmount: Long, totalInAmount: Long, txsBuffer: ListBuffer[Transaction],
     txId: Long): ( /*totalOutAmount*/ Long, /*totalInAmount*/ Long, /*updatedSellOrder*/ Order, /*after order match*/ MarketState) = {
-    val buyOrderOption = market.orderPool(buySide).headOption
-    if (buyOrderOption == None || buyOrderOption.get.vprice * sellOrder.vprice > 1) {
+    val makerOrderOption = market.orderPool(makerSide).headOption
+    if (makerOrderOption == None || makerOrderOption.get.vprice * takerOrder.vprice > 1) {
       // Return point. Market-price order doesn't pending
-      (totalOutAmount, totalInAmount, sellOrder, if (!sellOrder.isFullyExecuted && sellOrder.price != None &&
-        !sellOrder.onlyTaker.getOrElse(false)) market.addOrder(sellSide, sellOrder) else market)
+      (totalOutAmount, totalInAmount, takerOrder, if (!takerOrder.isFullyExecuted && takerOrder.price != None &&
+        !takerOrder.onlyTaker.getOrElse(false)) market.addOrder(takerSide, takerOrder) else market)
     } else {
-      val buyOrder = buyOrderOption.get
-      val price = 1 / buyOrder.vprice
-      val outAmount = Math.min(sellOrder.maxOutAmount(price), buyOrder.maxInAmount(1 / price))
+      val makerOrder = makerOrderOption.get
+      val price = 1 / makerOrder.vprice
+      val outAmount = Math.min(takerOrder.maxOutAmount(price), makerOrder.maxInAmount(1 / price))
       val inAmount = Math.round(outAmount * price)
 
-      val updatedSellOrder = sellOrder.copy(
-        quantity = sellOrder.quantity - outAmount, takeLimit = sellOrder.takeLimit.map(_ - inAmount))
-      val updatedBuyOrder = buyOrder.copy(
-        quantity = buyOrder.quantity - inAmount, takeLimit = buyOrder.takeLimit.map(_ - outAmount))
-      txsBuffer += Transaction(txId, now(), sellSide, sellOrder --> updatedSellOrder, buyOrder --> updatedBuyOrder)
+      val updatedSellOrder = takerOrder.copy(
+        quantity = takerOrder.quantity - outAmount, takeLimit = takerOrder.takeLimit.map(_ - inAmount))
+      val updatedBuyOrder = makerOrder.copy(
+        quantity = makerOrder.quantity - inAmount, takeLimit = makerOrder.takeLimit.map(_ - outAmount))
+      txsBuffer += Transaction(txId, takerOrder.timestamp.getOrElse(0), takerSide,
+        takerOrder --> updatedSellOrder, makerOrder --> updatedBuyOrder)
 
-      val leftMarket = market.removeOrder(buySide, buyOrder.id)
+      val leftMarket = market.removeOrder(makerSide, makerOrder.id)
       if (updatedSellOrder.isFullyExecuted) {
         // return point
         (totalOutAmount + outAmount, totalInAmount + inAmount, updatedSellOrder, if (!updatedBuyOrder.isFullyExecuted)
-          leftMarket.addOrder(buySide, updatedBuyOrder) else leftMarket)
+          leftMarket.addOrder(makerSide, updatedBuyOrder) else leftMarket)
       } else {
         // return point
-        addOrderRec(buySide, sellSide, updatedSellOrder, leftMarket,
+        addOrderRec(makerSide, takerSide, updatedSellOrder, leftMarket,
           totalOutAmount + outAmount, totalInAmount + inAmount, txsBuffer, txId + 1)
       }
     }
