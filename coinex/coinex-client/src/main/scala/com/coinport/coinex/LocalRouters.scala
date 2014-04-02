@@ -24,7 +24,7 @@ object LocalRouters {
   val USER_VIEW = "user_view"
   val ACCOUNT_VIEW = "account_view"
   val USER_ORDERS_VIEW = "user_orders_view"
-  val ROBOT_METRICS_VIEW = "robot_metrics_view"
+  val ROBOT_METRICS_VIEW = "metrics_view"
   val API_AUTH_VIEW = "api_auth_view"
   def MARKET_PROCESSOR_MPV(side: MarketSide) = "market_processor_mpv_" + side.asString
   val USER_PROCESSOR_MPV = "user_processor_mpv"

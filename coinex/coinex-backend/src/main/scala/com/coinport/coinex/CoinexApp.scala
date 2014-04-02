@@ -42,7 +42,7 @@ object CoinexApp extends App {
     user_orders_view,
     candle_data_view_btc_rmb,
     mailer,
-    robot_metrics_view,
+    metrics_view,
     transaction_data_view_btc_rmb,
     user_transaction_view_btc_rmb,
     api_auth_processor,
