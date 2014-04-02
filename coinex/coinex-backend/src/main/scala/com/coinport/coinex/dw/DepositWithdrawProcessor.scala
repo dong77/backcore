@@ -6,7 +6,7 @@ import com.coinport.coinex.common.ChannelSupport
 import akka.event.LoggingReceive
 import com.coinport.coinex.data._
 import ErrorCode._
-import com.coinport.coinex.common.SimpleMongoCollection
+import com.coinport.coinex.common.SimpleJsonMongoCollection
 import com.mongodb.casbah.MongoDB
 
 // TODO(d): Count fees
@@ -88,12 +88,12 @@ class DepositWithdrawProcessor(db: MongoDB, accountProcessorPath: ActorPath)
   private def deliverToAccountManager(event: Any) =
     channelToAccountProcessor forward Deliver(Persistent(event), accountProcessorPath)
 
-  private val deposits = new SimpleMongoCollection[Deposit, Deposit.Immutable] {
+  private val deposits = new SimpleJsonMongoCollection[Deposit, Deposit.Immutable] {
     val coll = db("deposits")
     def extractId(deposit: Deposit) = deposit.id
   }
 
-  private val withdrawals = new SimpleMongoCollection[Withdrawal, Withdrawal.Immutable] {
+  private val withdrawals = new SimpleJsonMongoCollection[Withdrawal, Withdrawal.Immutable] {
     val coll = db("withdrawal")
     def extractId(withdrawal: Withdrawal) = withdrawal.id
   }
