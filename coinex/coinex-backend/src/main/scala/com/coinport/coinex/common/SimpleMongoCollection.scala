@@ -26,7 +26,7 @@ abstract class SimpleJsonMongoCollection[T <: AnyRef, S <: T](implicit man: Mani
 abstract class SimpleBinaryMongoCollection[T <: AnyRef, S <: T](implicit man: Manifest[S]) extends SimpleMongoCollection[T] {
   val serializer = new ThriftBinarySerializer
   def get(id: Long) = coll.findOne(MongoDBObject(ID -> id)) map { json =>
-    serializer.fromBinary(json.get(DATA).asInstanceOf[Array[Byte]], Some(man.erasure)).asInstanceOf[T]
+    serializer.fromBinary(json.get(DATA).asInstanceOf[Array[Byte]], Some(man.runtimeClass)).asInstanceOf[T]
   }
   def put(data: T) = coll += MongoDBObject(ID -> extractId(data), DATA -> serializer.toBinary(data))
 }

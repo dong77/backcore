@@ -106,14 +106,10 @@ object CoinexBuild extends Build {
         "io.spray" % "spray-can" % sprayVersion,
         "io.spray" % "spray-routing" % sprayVersion,
         "io.spray" % "spray-client" % sprayVersion,
-        "io.spray" % "spray-http" % sprayVersion)
-      /*
-      // make sure that MultiJvm test are compiled by the default test compilation
+        "io.spray" % "spray-http" % sprayVersion),
+      
       compile in MultiJvm <<= (compile in MultiJvm) triggeredBy (compile in Test),
-      // disable parallel tests
       parallelExecution in Test := false,
-      // make sure that MultiJvm tests are executed by the default test target,
-      // and combine the results from ordinary test and multi-jvm tests
       executeTests in Test <<= (executeTests in Test, executeTests in MultiJvm) map {
         case (testResults, multiNodeResults)  =>
           val overall =
@@ -125,7 +121,7 @@ object CoinexBuild extends Build {
             testResults.events ++ multiNodeResults.events,
             testResults.summaries ++ multiNodeResults.summaries)
       }
-      */
     )
-    .dependsOn(client) configs (MultiJvm)
+    .dependsOn(client)
+    .configs(MultiJvm)
 }
