@@ -30,6 +30,7 @@ enum ErrorCode {
     INVALID_AMOUNT                   = 2003
 
     // Market related
+    ORDER_NOT_EXIST                  = 3001
 
     // Api Auth related
     TOO_MANY_SECRETS                 = 5001
@@ -331,9 +332,8 @@ struct Withdrawal {
 /* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: Withdrawal withdrawal}
 
 /* C,P  */ struct DoSubmitOrder                       {1: MarketSide side, 2: Order order}
-/* I,R- */ struct SubmitOrderFailed                   {1: MarketSide side, 2: Order order, 3: ErrorCode error}
-/* I,R+ */ struct OrderFundFrozen                     {1: MarketSide side, 2: Order order}
-
+/* R-   */ struct SubmitOrderFailed                   {1: MarketSide side, 2: Order order, 3: ErrorCode error}
+/* I    */ struct OrderFundFrozen                     {1: MarketSide side, 2: Order order}
 
 ////////// ApiAuthProcessor
 /* C,P  */ struct DoAddNewApiSecret                   {1: i64 userId}
@@ -348,7 +348,7 @@ struct Withdrawal {
 /* C,P  */ struct DoCancelOrder                       {1: MarketSide side, 2: i64 id, 3: i64 userId}
 /* R-   */ struct CancelOrderFailed                   {1: ErrorCode error}
 
-/* I    */ struct OrderSubmitted                      {1: OrderInfo originOrderInfo, 2: list<Transaction> txs}
+/* I,R+ */ struct OrderSubmitted                      {1: OrderInfo originOrderInfo, 2: list<Transaction> txs}
 /* I,R+ */ struct OrderCancelled                      {1: MarketSide side, 2: Order order}
 
 ////////// RobotProcessor commands

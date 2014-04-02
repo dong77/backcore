@@ -66,7 +66,7 @@ class AccountProcessor(
     case p @ ConfirmablePersistent(m: AdminConfirmCashDepositSuccess) =>
       persist(m) { event => p.confirm(); updateState(event) }
 
-    case m @ DoSubmitOrder(side: MarketSide, order) =>
+    case m @ DoSubmitOrder(side, order) =>
       if (order.quantity <= 0) {
         sender ! SubmitOrderFailed(side, order, ErrorCode.InvalidAmount)
       } else {
@@ -74,9 +74,11 @@ class AccountProcessor(
         if (!manager.canUpdateCashAccount(order.userId, adjustment)) {
           sender ! SubmitOrderFailed(side, order, ErrorCode.InsufficientFund)
         } else {
-          val orderWithId = order.copy(id = lastSequenceNr)
-          channelToMarketProcessors forward Deliver(Persistent(OrderFundFrozen(side, order)), getProcessorPath(side))
-          persist(m.copy(order = orderWithId))(updateState)
+          val updated = order.copy(id = lastSequenceNr, timestamp = Some(System.currentTimeMillis))
+          persist(m.copy(order = updated)) { event =>
+            channelToMarketProcessors forward Deliver(Persistent(OrderFundFrozen(side, updated)), getProcessorPath(side))
+            updateState(event)
+          }
         }
       }
 
@@ -84,9 +86,6 @@ class AccountProcessor(
       persist(countFee(event)) { event => p.confirm(); updateState(event) }
 
     case p @ ConfirmablePersistent(event: OrderCancelled, seq, _) =>
-      persist(event) { event => p.confirm(); updateState(event) }
-
-    case p @ ConfirmablePersistent(event: SubmitOrderFailed, seq, _) =>
       persist(event) { event => p.confirm(); updateState(event) }
 
     case p @ ConfirmablePersistent(AdminConfirmCashDepositSuccess(deposit), seq, _) =>
@@ -125,9 +124,6 @@ class AccountProcessor(
       }
 
     case OrderCancelled(side, order) =>
-      manager.conditionalRefund(true)(side.outCurrency, order)
-
-    case SubmitOrderFailed(side, order, _) =>
       manager.conditionalRefund(true)(side.outCurrency, order)
   }
 
