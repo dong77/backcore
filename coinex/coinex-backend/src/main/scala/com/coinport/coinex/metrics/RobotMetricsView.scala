@@ -3,7 +3,7 @@
  * Author: c@coinport.com (Chao Ma)
  */
 
-package com.coinport.coinex.robot
+package com.coinport.coinex.metrics
 
 import akka.event.LoggingReceive
 import akka.persistence.Persistent
@@ -12,11 +12,11 @@ import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.data._
 import Implicits._
 
-class RobotMetricsView extends ExtendedView {
+class MetricsView extends ExtendedView {
   override def processorId = "coinex_mup"
   override val viewId = "metrics_view"
 
-  val manager = new RobotMetricsManager()
+  val manager = new MetricsManager()
 
   def receive = LoggingReceive {
     case DebugDump =>

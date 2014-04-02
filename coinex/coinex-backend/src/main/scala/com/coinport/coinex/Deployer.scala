@@ -22,6 +22,7 @@ import com.coinport.coinex.common._
 import com.coinport.coinex.data._
 import com.coinport.coinex.mail._
 import com.coinport.coinex.markets._
+import com.coinport.coinex.metrics._
 import com.coinport.coinex.monitoring._
 import com.coinport.coinex.robot._
 import com.coinport.coinex.users._
@@ -53,7 +54,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployView(Props(classOf[UserView]), USER_VIEW)
     deployView(Props(classOf[AccountView]), ACCOUNT_VIEW)
     deployView(Props(classOf[UserOrdersView]), USER_ORDERS_VIEW)
-    deployView(Props(classOf[RobotMetricsView]), ROBOT_METRICS_VIEW)
+    deployView(Props(classOf[MetricsView]), ROBOT_METRICS_VIEW)
     deployView(Props(new ApiAuthView(apiAuthSecret)), API_AUTH_VIEW)
 
     deployView(Props(new MongoPersistentView(mongoUri, "coinex_up")), USER_PROCESSOR_MPV)
