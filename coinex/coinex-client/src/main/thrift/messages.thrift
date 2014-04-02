@@ -85,6 +85,12 @@ enum ChartTimeDimension {
     ONE_WEEK = 13
 }
 
+enum Direction {
+    UP = 1
+    DOWN = 2
+    KEEP = 3
+}
+
 ////////////////////////////////////////////////////////////////
 /////////////////////// PERSISTENT DATA ////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -199,10 +205,18 @@ struct CandleData {
 
 struct MarketByMetrics {
     1: MarketSide side
-    2: double price
+    2: double price  // 当前价格
+
+    // ------------- 一段时间内（24 小时） ----------
+    3: double low = 0.0
+    4: double high = 0.0
+    5: i64 volume = 0
+    6: double gain = 0.0  // 涨幅百分比
+
+    7: Direction direction = Direction.KEEP
 }
 
-struct RobotMetrics {
+struct Metrics {
     1: map<MarketSide, MarketByMetrics> marketByMetrics
 }
 
@@ -304,7 +318,7 @@ struct ApiSecretState {
 /* I,R+ */ struct OrderCancelled                      {1: MarketSide side, 2: Order order}
 
 ////////// RobotProcessor commands
-/* C,P  */ struct DoUpdateMetrics                     {1: RobotMetrics metrics}
+/* C,P  */ struct DoUpdateMetrics                     {1: Metrics metrics}
 
 ////////// Mailer
 /* C    */ struct DoSendEmail                         {1: string email, 2: EmailType emailType, 3: map<string, string> params}

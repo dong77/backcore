@@ -9,7 +9,7 @@ import com.coinport.coinex.common.Manager
 import com.coinport.coinex.data._
 import Implicits._
 
-class RobotMetricsManager extends Manager[RobotMetrics](RobotMetrics()) {
+class RobotMetricsManager extends Manager[Metrics](Metrics()) {
 
   def updatePrice(side: MarketSide, p: Double) {
     val metricsByMarket = state.marketByMetrics.get(side).getOrElse(MarketByMetrics(side, p))

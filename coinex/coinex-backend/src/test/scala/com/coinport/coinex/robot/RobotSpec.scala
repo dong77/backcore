@@ -43,7 +43,7 @@ class RobotSpec extends Specification {
     }
 
     "robot with state payload" in {
-      val metricsImpl = Some(RobotMetrics(Map(MarketSide(Btc, Rmb) -> MarketByMetrics(MarketSide(Btc, Rmb), 123))))
+      val metricsImpl = Some(Metrics(Map(MarketSide(Btc, Rmb) -> MarketByMetrics(MarketSide(Btc, Rmb), 123))))
       var robot = Robot(2, 1, 1)
       robot = robot.addHandler("START") {
         """
@@ -55,7 +55,7 @@ class RobotSpec extends Specification {
       }
       robot = robot.addHandler("STATE_A") {
         """
-        require(metrics == Some(RobotMetrics(Map(MarketSide(Btc, Rmb) -> MarketByMetrics(MarketSide(Btc, Rmb), 123)))))
+        require(metrics == Some(Metrics(Map(MarketSide(Btc, Rmb) -> MarketByMetrics(MarketSide(Btc, Rmb), 123)))))
         val payload = robot.getPayload[Int]("STATE_A")
         val r = robot.setPayload("STATE_A", payload map { _ - 1 })
         if (payload.get != 1) {

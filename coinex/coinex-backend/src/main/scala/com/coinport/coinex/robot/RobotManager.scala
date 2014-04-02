@@ -23,7 +23,7 @@ class RobotManager extends Manager[RobotState](RobotState()) {
     robot
   }
 
-  def updateMetrics(m: RobotMetrics) {
+  def updateMetrics(m: Metrics) {
     state = state.updateMetrics(m)
   }
 }

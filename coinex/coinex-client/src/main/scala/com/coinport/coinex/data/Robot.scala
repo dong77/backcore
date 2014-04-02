@@ -22,20 +22,20 @@ case class Robot(
 
   // Option[Any] is the actual action of the robot, such as DoRequestCashDeposit.
   // This could be restrained from outter processor
-  // TODO(c): try to make RobotMetrics as T
-  type Action = (Robot, Option[RobotMetrics]) => (Robot, Option[Any])
+  // TODO(c): try to make Metrics as T
+  type Action = (Robot, Option[Metrics]) => (Robot, Option[Any])
 
   private val START = "START"
   private val DONE = "DONE"
   private val HEADER = """
     import com.coinport.coinex.data._
     import com.coinport.coinex.data.Currency._
-    (robot: Robot, metrics: Option[RobotMetrics]) =>
+    (robot: Robot, metrics: Option[Metrics]) =>
 
   """
 
   // invoked by outter processor
-  def action(metrics: Option[RobotMetrics] = None): (Robot, Option[Any]) = {
+  def action(metrics: Option[Metrics] = None): (Robot, Option[Any]) = {
     if (currentState == DONE) {
       (this, None)
     } else {

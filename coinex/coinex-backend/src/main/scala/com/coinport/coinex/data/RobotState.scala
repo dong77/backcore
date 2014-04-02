@@ -18,7 +18,7 @@ object RobotState {
 case class RobotState(
     robotPool: SortedSet[Robot] = RobotState.EmptyRobotPool,
     robotMap: Map[Long, Robot] = Map.empty[Long, Robot],
-    metrics: RobotMetrics = RobotMetrics()) {
+    metrics: Metrics = Metrics()) {
 
   def getRobot(id: Long): Option[Robot] = robotMap.get(id)
 
@@ -36,7 +36,7 @@ case class RobotState(
     }
   }
 
-  def updateMetrics(m: RobotMetrics): RobotState = {
+  def updateMetrics(m: Metrics): RobotState = {
     copy(metrics = m)
   }
 }
