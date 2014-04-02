@@ -70,8 +70,8 @@ class MarketManager(headSide: MarketSide)(implicit val now: () => Long) extends 
     val buyOrderOption = market.orderPool(buySide).headOption
     if (buyOrderOption == None || buyOrderOption.get.vprice * sellOrder.vprice > 1) {
       // Return point. Market-price order doesn't pending
-      (totalOutAmount, totalInAmount, sellOrder, if (!sellOrder.isFullyExecuted && sellOrder.price != None)
-        market.addOrder(sellSide, sellOrder) else market)
+      (totalOutAmount, totalInAmount, sellOrder, if (!sellOrder.isFullyExecuted && sellOrder.price != None &&
+        !sellOrder.onlyTaker.getOrElse(false)) market.addOrder(sellSide, sellOrder) else market)
     } else {
       val buyOrder = buyOrderOption.get
       val price = 1 / buyOrder.vprice

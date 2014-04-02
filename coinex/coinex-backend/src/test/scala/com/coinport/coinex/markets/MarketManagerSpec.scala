@@ -394,4 +394,40 @@ class MarketManagerSpec extends Specification {
         Seq(Transaction(20000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker)))
     }
   }
+
+  "MarketManager" should {
+    "drop order which has onlyTaker flag" in {
+      val manager = new MarketManager(Btc ~> Rmb)(() => 0)
+      val taker = Order(userId = 888L, id = 2, price = Some(3000), quantity = 100, timestamp = Some(0),
+        onlyTaker = Some(true))
+
+      val result = manager.addOrder(takerSide, taker, 2)
+
+      result.txs mustEqual Nil
+
+      manager().orderMap mustEqual Map()
+      manager().orderPool(makerSide) mustEqual EmptyOrderPool
+      manager().orderPool(takerSide) mustEqual EmptyOrderPool
+    }
+
+    "drop order which has onlyTaker flag after match" in {
+      val side = (Btc ~> Rmb)
+      val manager = new MarketManager(side)(() => 0)
+      val maker = Order(userId = 888L, id = 1, price = Some(1.0 / 5000), quantity = 100 * 5000, timestamp = Some(0))
+      val taker = Order(userId = 888L, id = 2, price = Some(3000), quantity = 1000, timestamp = Some(0),
+        onlyTaker = Some(true))
+
+      manager.addOrder(makerSide, maker, 1)
+      val result = manager.addOrder(takerSide, taker, 2)
+
+      result mustEqual OrderSubmitted(
+        OrderInfo(side, taker, 100, 500000, MarketAutoPartiallyCancelled, Some(0)),
+        Seq(Transaction(20000, 0, side, taker --> taker.copy(quantity = 900), maker --> maker.copy(quantity = 0)))
+      )
+
+      manager().orderMap mustEqual Map()
+      manager().orderPool(makerSide) mustEqual EmptyOrderPool
+      manager().orderPool(takerSide) mustEqual EmptyOrderPool
+    }
+  }
 }
