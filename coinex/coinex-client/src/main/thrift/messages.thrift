@@ -49,9 +49,9 @@ enum Currency {
     UNKNOWN = 0
     RMB = 1
     USD = 2
-    BTC = 1000
-    LTC = 2000
-    PTS = 3000
+    BTC = 1001
+    LTC = 1002
+    PTS = 1003
 }
 
 enum OrderStatus {
@@ -259,14 +259,6 @@ struct ApiSecretState {
     3: string seed
 }
 
-struct Fee {
-    1: i64 payer
-    2: i64 payee
-    3: Currency currency
-    4: i64 amount
-    5: optional string basis
-}
-
 struct Deposit {
     1: i64 id
     2: i64 userId
@@ -333,6 +325,7 @@ struct Withdrawal {
 
 /* C,P  */ struct AdminConfirmCashDepositFailure      {1: Deposit deposit, 2:ErrorCode error}
 /* C,P  */ struct AdminConfirmCashDepositSuccess      {1: Deposit deposit}
+
 /* C,P  */ struct AdminConfirmCashWithdrawalFailure   {1: Withdrawal withdrawal, 2: ErrorCode error}
 /* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: Withdrawal withdrawal, 2: optional list<Fee> fees}
 

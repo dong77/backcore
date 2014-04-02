@@ -7,18 +7,21 @@ import com.coinport.coinex.common._
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Currency._
 import com.coinport.coinex.fee.rules._
-import com.coinport.coinex.fee.rules.FeeRuleTypeEnum._
+import com.coinport.coinex.fee.rules._
 import Constants._
 import Implicits._
 
-Map(
-  TRANSACTION -> new TransactionFeeRules(
-    Map((Btc ~> Rmb) -> FeeRuleItem(PERCENTAGE, 0.001),
-      (Rmb ~> Btc) -> FeeRuleItem(PERCENTAGE, 0.001)),
-    Map(TRAILING_STOP_ORDER_ROBOT_TYPE -> FeeRuleItem(PERCENTAGE, 0.003))
-  ),
+FeeConfig(
+  marketFeeRules = Map(
+    (Btc ~> Rmb) -> PercentageFee(0.001),
+    (Rmb ~> Btc) -> PercentageFee(0.001),
+    (Pts ~> Rmb) -> PercentageFee(0.003),
+    (Rmb ~> Pts) -> PercentageFee(0.003)),
+ 
+  robotFeeRules = Map(
+    TRAILING_STOP_ORDER_ROBOT_TYPE -> PercentageFee(0.003),
+    STOP_ORDER_ROBOT_TYPE -> ConstantFee(10)),
 
-  WITHDRAWAL -> new WithdrawalFeeRules(
-    Map(Btc -> FeeRuleItem(CONST_PAY, amount = 1), Rmb -> FeeRuleItem(PERCENTAGE, 0.002))
-  )
-)
+  withdrawalFeeRules = Map(
+    Btc -> ConstantFee(1),
+    Rmb -> PercentageFee(0.002)))

@@ -15,7 +15,6 @@ import com.typesafe.config.Config
 import org.slf4s.Logging
 import scala.collection.mutable.ListBuffer
 import spray.can.Http
-
 import com.coinport.coinex.accounts._
 import com.coinport.coinex.apiauth._
 import com.coinport.coinex.common._
@@ -26,10 +25,15 @@ import com.coinport.coinex.metrics._
 import com.coinport.coinex.monitoring._
 import com.coinport.coinex.robot._
 import com.coinport.coinex.users._
+import com.coinport.coinex.util._
 import Implicits._
 import scala.collection.mutable.ListBuffer
 import com.coinport.coinex.common._
 import com.mongodb.casbah._
+import com.coinport.coinex.fee.FeeConfig
+import com.coinport.coinex.fee.CountFeeSupport
+import com.twitter.util.Eval
+import java.io.File
 
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
@@ -39,11 +43,13 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     import LocalRouters._
 
     val secret = config.getString("akka.exchange.secret")
-    val userManagerSecret = util.Hash.sha256Base64(secret + "userProcessorSecret")
-    val apiAuthSecret = util.Hash.sha256Base64(secret + "apiAuthSecret")
+    val userManagerSecret = Hash.sha256Base64(secret + "userProcessorSecret")
+    val apiAuthSecret = Hash.sha256Base64(secret + "apiAuthSecret")
     val mongoUri = MongoURI(config.getString("akka.exchange.export-persistent-view.mongo-uri"))
     val mongo = MongoConnection(mongoUri)
     val db = mongo(mongoUri.database.getOrElse("coinex_export"))
+
+    val feeConfig = loadFeeConfig(config.getString("akka.exchange.fee-rules-path"))
 
     deployMailer(MAILER)
 
@@ -76,7 +82,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
     deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with Eventsourced[UserState, UserManager]), USER_PROCESSOR)
-    deployProcessor(Props(new AccountProcessor(routers.marketProcessors) with Eventsourced[AccountState, AccountManager]), ACCOUNT_PROCESSOR)
+    deployProcessor(Props(new AccountProcessor(routers.marketProcessors, feeConfig) with Eventsourced[AccountState, AccountManager]), ACCOUNT_PROCESSOR)
     deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret) with Commandsourced[ApiSecretState, ApiAuthManager]), API_AUTH_PROCESSOR)
     deployProcessor(Props(new RobotProcessor(routers) with Commandsourced[RobotState, RobotManager]), ROBOT_PROCESSOR)
 
@@ -116,5 +122,10 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     val port = config.getInt("akka.exchange.monitor.http-port")
     IO(Http) ! Http.Bind(service, hostname, port)
     println("Started HTTP server: http://" + hostname + ":" + port)
+  }
+
+  private def loadFeeConfig(feeConfigPath: String): FeeConfig = {
+    val fullPath = this.getClass.getClassLoader.getResource(feeConfigPath).getPath()
+    (new Eval()(new File(fullPath))).asInstanceOf[FeeConfig]
   }
 }

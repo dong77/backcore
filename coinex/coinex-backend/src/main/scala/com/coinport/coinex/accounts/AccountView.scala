@@ -38,14 +38,13 @@ class AccountView extends ExtendedView {
     case Persistent(OrderCancelled(side, order), _) =>
       manager.updateCashAccount(order.userId, CashAccount(side.outCurrency, order.quantity, -order.quantity, 0))
 
-
     case Persistent(m: OrderSubmitted, _) =>
       val side = m.originOrderInfo.side
       m.txs foreach { tx =>
         val (takerOrderUpdate, makerOrderUpdate) = (tx.takerUpdate, tx.makerUpdate)
         manager.sendCashFromLocked(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
         manager.sendCashFromLocked(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
-        fees.getOrElse(Nil) foreach { f =>
+        tx.fees.getOrElse(Nil) foreach { f =>
           manager.sendCashFromValid(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
         }
         manager.conditionalRefund(takerOrderUpdate.current.hitTakeLimit)(side.outCurrency, takerOrderUpdate.current)
