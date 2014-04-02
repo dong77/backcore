@@ -44,5 +44,7 @@ final class FeeCounter(feeConfig: FeeConfig) {
         case None =>
           Nil
       }
+
+    case w: Deposit => Nil
   }
 }

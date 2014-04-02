@@ -181,8 +181,7 @@ struct UserAccount {
 }
 
 struct PersistentAccountState {
-    1: i64 lastOrderId
-    2: map<i64, UserAccount> userAccountsMap
+    1: map<i64, UserAccount> userAccountsMap
 }
 
 struct UserLogsState {
@@ -268,6 +267,7 @@ struct Deposit {
     6: optional i64 created
     7: optional i64 updated
     8: optional ErrorCode reason
+    9: optional Fee fee
 }
 
 struct Withdrawal {
@@ -279,6 +279,7 @@ struct Withdrawal {
     6: optional i64 created
     7: optional i64 updated
     8: optional ErrorCode reason
+    9: optional Fee fee
 }
 
 ////////////////////////////////////////////////////////////////
@@ -324,10 +325,10 @@ struct Withdrawal {
 /* R+   */ struct RequestCashWithdrawalSucceeded      {1: Withdrawal withdrawal}
 
 /* C,P  */ struct AdminConfirmCashDepositFailure      {1: Deposit deposit, 2:ErrorCode error}
-/* C,P  */ struct AdminConfirmCashDepositSuccess      {1: Deposit deposit, 2: optional list<Fee> fees}
+/* C,P  */ struct AdminConfirmCashDepositSuccess      {1: Deposit deposit}
 
 /* C,P  */ struct AdminConfirmCashWithdrawalFailure   {1: Withdrawal withdrawal, 2: ErrorCode error}
-/* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: Withdrawal withdrawal, 2: optional list<Fee> fees}
+/* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: Withdrawal withdrawal}
 
 /* C,P  */ struct DoSubmitOrder                       {1: MarketSide side, 2: Order order}
 /* I,R- */ struct SubmitOrderFailed                   {1: MarketSide side, 2: Order order, 3: ErrorCode error}

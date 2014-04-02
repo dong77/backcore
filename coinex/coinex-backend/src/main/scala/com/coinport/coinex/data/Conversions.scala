@@ -11,11 +11,11 @@ package com.coinport.coinex.data
 import scala.collection.immutable.Map
 
 class RichPersistentAccountState(raw: PersistentAccountState) {
-  def toPojo = new AccountState(raw.lastOrderId, raw.userAccountsMap.toMap)
+  def toPojo = new AccountState(raw.userAccountsMap.toMap)
 }
 
 class RichAccountState(raw: AccountState) {
-  def toThrift = PersistentAccountState(raw.lastOrderId, raw.userAccountsMap)
+  def toThrift = PersistentAccountState(raw.userAccountsMap)
 }
 
 object Conversions {

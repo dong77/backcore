@@ -6,8 +6,7 @@
 import com.coinport.coinex.common._
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Currency._
-import com.coinport.coinex.fee.rules._
-import com.coinport.coinex.fee.rules._
+import com.coinport.coinex.fee._
 import Constants._
 import Implicits._
 

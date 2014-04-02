@@ -25,6 +25,7 @@ import com.coinport.coinex.metrics._
 import com.coinport.coinex.monitoring._
 import com.coinport.coinex.robot._
 import com.coinport.coinex.users._
+import com.coinport.coinex.dw._
 import com.coinport.coinex.util._
 import Implicits._
 import scala.collection.mutable.ListBuffer
@@ -84,9 +85,10 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
     deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with Eventsourced[UserState, UserManager]), USER_PROCESSOR)
-    deployProcessor(Props(new AccountProcessor(routers.marketProcessors, feeConfig) with Eventsourced[AccountState, AccountManager]), ACCOUNT_PROCESSOR)
+    deployProcessor(Props(new AccountProcessor(routers.marketProcessors, routers.depositWithdrawProcessor.path, feeConfig) with Eventsourced[AccountState, AccountManager]), ACCOUNT_PROCESSOR)
     deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret) with Commandsourced[ApiSecretState, ApiAuthManager]), API_AUTH_PROCESSOR)
     deployProcessor(Props(new RobotProcessor(routers) with Commandsourced[RobotState, RobotManager]), ROBOT_PROCESSOR)
+    deployProcessor(Props(new DepositWithdrawProcessor(db, routers.accountProcessor.path)), DEPOSIT_WITHDRAWAL_PROCESSOR)
 
     // Deploy monitor at last
     deployMonitor(routers)
