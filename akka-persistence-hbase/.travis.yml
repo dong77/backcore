@@ -1,7 +1,0 @@
-language: scala
-scala:
-  - 2.10.2
-before_install:
-  - ./scripts/ci/before-install.sh
-before_script:
-  - ./scripts/ci/before-script.sh
