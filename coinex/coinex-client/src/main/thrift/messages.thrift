@@ -248,7 +248,7 @@ struct Deposit {
     2: i64 userId
     3: Currency currency
     4: i64 amount
-    5: TransferStatus status
+    5: TransferStatus status = TransferStatus.PENDING
     6: optional i64 created
     7: optional i64 updated
     8: optional ErrorCode reason
