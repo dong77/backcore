@@ -6,11 +6,9 @@
 package com.coinport.coinex
 
 import com.typesafe.config.ConfigFactory
-
 import akka.actor._
 import akka.pattern.ask
 import akka.cluster.Cluster
-import data._
 import com.coinport.coinex.data._
 import Implicits._
 import Currency._
@@ -18,6 +16,7 @@ import akka.persistence._
 import scala.concurrent.duration._
 import akka.util.Timeout
 import java.net.InetAddress
+import com.typesafe.config.Config
 
 object CoinexApp extends App {
   if (args.length < 2 || args.length > 4) {
@@ -51,9 +50,10 @@ object CoinexApp extends App {
     user_processor_mpv,
     account_processor_mpv,
     market_processor_mpv_btc_rmb,
+    dw_processor,
     """
 
-  val seedNodes = args(1).split(",").map(_.stripMargin).filter(_.nonEmpty).map("\"akka.tcp://coinex@" + _ + "\"").mkString(",")
+  val seeds = args(1).split(",").map(_.stripMargin).filter(_.nonEmpty).map("\"akka.tcp://coinex@" + _ + "\"").mkString(",")
 
   val roles =
     if (args.length < 3) ""
@@ -67,25 +67,22 @@ object CoinexApp extends App {
   val config = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + args(0))
     .withFallback(ConfigFactory.parseString("akka.remote.netty.tcp.hostname=" + hostname))
     .withFallback(ConfigFactory.parseString("akka.cluster.roles=[" + roles + "]"))
-    .withFallback(ConfigFactory.parseString("akka.cluster.seed-nodes=[" + seedNodes + "]"))
+    .withFallback(ConfigFactory.parseString("akka.cluster.seed-nodes=[" + seeds + "]"))
     .withFallback(ConfigFactory.load())
 
+  val markets = Seq(Btc ~> Rmb)
   implicit val system = ActorSystem("coinex", config)
   implicit val cluster = Cluster(system)
-
-  println("roles: " + cluster.selfRoles)
-  val markets = Seq(Btc ~> Rmb)
 
   new Deployer(config, hostname, markets).deploy()
 
   Thread.sleep(5000)
   val summary = "============= Akka Node Ready =============\n" +
     "with hostname: " + hostname + "\n" +
-    "with seeds: " + seedNodes + "\n" +
+    "with seeds: " + seeds + "\n" +
     "with roles: " + roles + "\n"
 
   println(summary)
-
   val coinport = """
                                             _
              (_)                           | |
@@ -98,3 +95,4 @@ object CoinexApp extends App {
 """
   println(coinport)
 }
+

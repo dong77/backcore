@@ -100,7 +100,7 @@ object CoinexBuild extends Build {
         "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.7",
         "com.github.scullxbones" % "akka-persistence-mongo-casbah_2.10" % "0.0.4",
         "org.specs2" %% "specs2" % "2.3.8" % "test",
-        "org.scalatest" %% "scalatest" % "2.0" % "test",
+        "org.scalatest" %% "scalatest" % "2.0",// % "test",
         "org.apache.commons" % "commons-lang3" % "3.1",
         "ch.qos.logback" % "logback-classic" % "1.0.13",
         "io.spray" % "spray-can" % sprayVersion,
@@ -124,4 +124,17 @@ object CoinexBuild extends Build {
     )
     .dependsOn(client)
     .configs(MultiJvm)
+    
+  lazy val integration = Project(
+      id = "coinex-integration",
+      base = file("coinex-integration"),
+      settings = Project.defaultSettings ++
+        sharedSettings ++
+        scalariformSettings
+      )
+      .settings(
+        libraryDependencies ++= Seq(
+          "org.scalatest" %% "scalatest" % "2.0")
+      )
+      .dependsOn(backend)
 }
