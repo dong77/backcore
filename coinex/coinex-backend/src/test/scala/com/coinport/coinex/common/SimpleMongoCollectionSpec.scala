@@ -3,14 +3,9 @@ package com.coinport.coinex.common
 import org.specs2.mutable._
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Currency._
-import com.coinport.coinex.serializers._
-import com.mongodb.casbah._
 
-// TODO(xi): use in-memory mongod
-class SimpleMongoCollectionSpec extends Specification {
-  val uri = MongoURI("mongodb://localhost:27017/unit_test_coinex_views")
-  val mongo = MongoConnection(uri)
-  val database = mongo(uri.database.get)
+class SimpleMongoCollectionSpec extends Specification with EmbeddedMongoSupport {
+  step(embeddedMongoStartup())
 
   val jsonDeposits = new SimpleJsonMongoCollection[Deposit, Deposit.Immutable]() {
     val coll = database("deposits_json")
@@ -39,4 +34,5 @@ class SimpleMongoCollectionSpec extends Specification {
       binaryDeposits.get(2) mustEqual None
     }
   }
+  step(embeddedMongoShutdown())
 }

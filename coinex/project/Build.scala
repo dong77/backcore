@@ -103,6 +103,7 @@ object CoinexBuild extends Build {
         "org.scalatest" %% "scalatest" % "2.0" % "test",
         "org.apache.commons" % "commons-lang3" % "3.1",
         "ch.qos.logback" % "logback-classic" % "1.0.13",
+        "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "1.42",
         "io.spray" % "spray-can" % sprayVersion,
         "io.spray" % "spray-routing" % sprayVersion,
         "io.spray" % "spray-client" % sprayVersion,
