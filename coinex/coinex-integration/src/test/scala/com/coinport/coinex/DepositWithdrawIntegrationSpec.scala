@@ -5,6 +5,8 @@ import Currency._
 
 import scala.concurrent.duration._
 
+// TODO(d): somehow the depoists are not saved into the right mongodb collectino.
+// TODO(d): compelete the spec.
 class DepositWithdrawIntegrationSpec extends IntegrationTest(new Environment) {
   import env._
   "CoinexApp" must {
