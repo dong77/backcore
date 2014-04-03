@@ -20,7 +20,7 @@ class AccountProcessor(
   marketProcessors: Map[MarketSide, ActorRef],
   depositWithdrawProcessorPath: ActorPath,
   val feeConfig: FeeConfig)
-    extends EventsourcedProcessor with ChannelSupport with CountFeeSupport with ActorLogging {
+    extends EventsourcedProcessor with ChannelSupport with AccountManagerBehavior with ActorLogging {
   override val processorId = "coinex_ap"
   val channelToMarketProcessors = createChannelTo("mps") // DO NOT CHANGE
   val channelToDepositWithdrawalProcessor = createChannelTo("dwp") // DO NOT CHANGE
@@ -92,6 +92,14 @@ class AccountProcessor(
       p.confirm()
   }
 
+  private def getProcessorPath(side: MarketSide): ActorPath = {
+    marketProcessors.getOrElse(side, marketProcessors(side.reverse)).path
+  }
+}
+
+trait AccountManagerBehavior extends CountFeeSupport {
+  val manager: AccountManager
+
   def updateState(event: Any): Unit = event match {
     case m: DoRequestCashDeposit => // do nothing
     case DoRequestCashWithdrawal(w) => manager.updateCashAccount(w.userId, CashAccount(w.currency, -w.amount, 0, w.amount))
@@ -125,9 +133,5 @@ class AccountProcessor(
 
     case OrderCancelled(side, order) =>
       manager.conditionalRefund(true)(side.outCurrency, order)
-  }
-
-  private def getProcessorPath(side: MarketSide): ActorPath = {
-    marketProcessors.getOrElse(side, marketProcessors(side.reverse)).path
   }
 }

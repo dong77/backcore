@@ -64,7 +64,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     }
 
     deployView(Props(classOf[UserView]), USER_VIEW)
-    deployView(Props(classOf[AccountView]), ACCOUNT_VIEW)
+    deployView(Props(new AccountView(feeConfig)), ACCOUNT_VIEW)
     deployView(Props(classOf[UserOrdersView]), USER_ORDERS_VIEW)
     deployView(Props(classOf[MetricsView]), ROBOT_METRICS_VIEW)
     deployView(Props(new ApiAuthView(apiAuthSecret)), API_AUTH_VIEW)

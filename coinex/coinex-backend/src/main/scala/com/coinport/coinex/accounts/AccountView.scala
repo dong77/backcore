@@ -7,17 +7,20 @@ package com.coinport.coinex.accounts
 
 import akka.event.LoggingReceive
 import akka.persistence.Persistent
-
 import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.data._
 import Implicits._
+import com.coinport.coinex.fee.CountFeeSupport
+import com.coinport.coinex.common.Constants._
+import com.coinport.coinex.fee.FeeConfig
 
-class AccountView extends ExtendedView {
+class AccountView(val feeConfig: FeeConfig) extends ExtendedView with AccountManagerBehavior {
   override val processorId = "coinex_ap"
   override val viewId = "coinex_ap_view"
   val manager = new AccountManager()
 
   def receive = LoggingReceive {
-    case _ =>
+    case Persistent(msg, _) => updateState(msg)
+    case QueryAccount(userId) => sender ! QueryAccountResult(manager().getUserAccounts(userId))
   }
 }
