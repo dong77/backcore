@@ -25,19 +25,18 @@ class StackQueue[T](elems: ArrayBuffer[T], var head: Int,
 
   def dequeue(elem: T): StackQueue[T] = {
     front match {
-      case Some(f) if (f == elem) => head += 1
+      case Some(f) if (f == elem) =>
+        head += 1
+        if (elems.length <= head) {
+          elems.clear()
+          head = 0
+        }
       case _ => None
     }
     this
   }
 
-  def front: Option[T] = if (elems.length <= head) {
-    elems.clear()
-    head = 0
-    None
-  } else {
-    Some(elems(head))
-  }
+  def front: Option[T] = if (elems.length == 0) None else Some(elems(head))
 
   def copy = new StackQueue[T](elems.slice(head, elems.length), 0, ordering)
 
