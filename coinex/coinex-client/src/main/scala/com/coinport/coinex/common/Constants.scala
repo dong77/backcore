@@ -5,6 +5,7 @@
 
 package com.coinport.coinex.common
 
+// TODO(c): make these case objects
 object Constants {
   val COINPORT_UID = 3142141421L
   val TRANSACTION = "translaction"
@@ -34,4 +35,12 @@ object Constants {
     market_processor_mpv_btc_rmb,
     dw_processor,
     """
+
+  type MarketEvent = (Option[Double], Option[Long]) // (price, volume)
+
+  val _24_HOURS: Long = 3600 * 24 * 1000
+  val _10_SECONDS: Long = 10 * 1000
+
+  def ascending = (lhs: Double, rhs: Double) => lhs <= rhs
+  def descending = (lhs: Double, rhs: Double) => lhs >= rhs
 }

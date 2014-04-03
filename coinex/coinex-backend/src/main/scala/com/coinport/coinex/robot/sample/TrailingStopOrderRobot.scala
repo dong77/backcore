@@ -31,7 +31,7 @@ object TrailingStopOrderRobot {
         val order = robot.getPayload[Order]("ORDER").get
         val basePrice = robot.getPayload[Double]("BP").getOrElse(-1).asInstanceOf[Double]
         metrics match {
-          case Some(m) => m.marketByMetrics.get(side) match {
+          case Some(m) => m.metricsByMarket.get(side) match {
             case Some(mbm) =>
               if (mbm.price <= stopPercentage * basePrice) {
                 val action = Some(DoSubmitOrder(side,

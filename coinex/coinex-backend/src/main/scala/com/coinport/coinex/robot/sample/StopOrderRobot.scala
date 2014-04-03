@@ -24,7 +24,7 @@ object StopOrderRobot {
         val side = robot.getPayload[MarketSide]("SIDE").get
         val order = robot.getPayload[Order]("ORDER").get
         metrics match {
-          case Some(m) => m.marketByMetrics.get(side) match {
+          case Some(m) => m.metricsByMarket.get(side) match {
             case Some(mbm) if (mbm.price <= stopPrice) =>
               val action = Some(DoSubmitOrder(side,
                 order.copy(userId = robot.userId, robotId = Some(robot.robotId), robotType = Some(%d))))

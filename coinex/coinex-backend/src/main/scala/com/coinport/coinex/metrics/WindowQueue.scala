@@ -14,23 +14,26 @@ class WindowQueue[T](range: Long, interval: Long, elems: Array[T], var head: Int
   require(length == elems.size, "the length of elems must equals to range / interval")
 
   def this(range: Long, interval: Long)(implicit m: Manifest[T]) {
-    this(range, interval, new Array[T]((range / interval).toInt), 0, 0L)
+    this(range, interval, new Array[T]((range / interval).toInt), -1, 0L)
   }
 
   def addAfterTick(elem: T, tick: Long): Array[T] = addAtTick(elem, tick + lastTick)
 
   def addAtTick(elem: T, tick: Long): Array[T] = {
-    val range = (tick - lastTick) / interval
+    val increase = (tick - lastTick) / interval
     lastTick = tick
     val newHead = (tick / interval % length).toInt
-    val emitElems: Array[T] = if ((range / length) > 0) {
+    val emitElems: Array[T] = if ((increase / length) > 0) {
       // entire list is out of date
       val t = (elems.slice(head + 1, length) ++ elems.slice(0, head + 1)).filter(_ != NULL)
       clean(0, length)
       elems(newHead) = elem
       t
     } else if (newHead == head) {
-      null
+      if (elems(newHead) == NULL) {
+        elems(newHead) = elem
+        Array.empty[T]
+      } else null
     } else {
       val t = if (newHead > head) {
         val t = elems.slice(head + 1, newHead + 1).filter(_ != NULL)

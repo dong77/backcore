@@ -11,8 +11,8 @@ class WindowQueueSpec extends Specification {
   "WindowQueue" should {
     "addAtTick" in {
       val wq = new WindowQueue[Int](10, 1)
-      wq.addAtTick(5, 1) mustEqual Array.empty[Int]
-      wq.toList mustEqual List(0, 5, 0, 0, 0, 0, 0, 0, 0, 0)
+      wq.addAtTick(5, 0) mustEqual Array.empty[Int]
+      wq.toList mustEqual List(5, 0, 0, 0, 0, 0, 0, 0, 0, 0)
       wq.addAtTick(2, 6) mustEqual Array.empty[Int]
       wq.addAtTick(3, 7) mustEqual Array.empty[Int]
       wq.addAtTick(4, 9) mustEqual Array.empty[Int]
@@ -49,6 +49,36 @@ class WindowQueueSpec extends Specification {
       wq.toList mustEqual List(0, 0, 0, 0, 0, 107, 0, 0, 0, 0)
       wq.addAfterTick(14, 902) mustEqual Array(107)
       wq.toList mustEqual List(0, 0, 0, 0, 0, 0, 0, 14, 0, 0)
+    }
+  }
+
+  "WindowQueue" should {
+    "addAtTick with 3 interval" in {
+      val wq = new WindowQueue[Int](30, 3)
+      wq.addAtTick(5, 1) mustEqual Array.empty[Int]
+      wq.toList mustEqual List(5, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+      wq.addAtTick(4, 2) mustEqual null
+      wq.toList mustEqual List(5, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+      wq.addAtTick(4, 5) mustEqual Array.empty[Int]
+      wq.toList mustEqual List(5, 4, 0, 0, 0, 0, 0, 0, 0, 0)
+      wq.addAtTick(30, 6) mustEqual Array.empty[Int]
+      wq.toList mustEqual List(5, 4, 30, 0, 0, 0, 0, 0, 0, 0)
+      wq.addAtTick(32, 62) mustEqual Array(5, 4, 30)
+      wq.toList mustEqual List(32, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    }
+
+    "addAfterTick with 3 interval" in {
+      val wq = new WindowQueue[Int](30, 3)
+      wq.addAfterTick(5, 1) mustEqual Array.empty[Int]
+      wq.toList mustEqual List(5, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+      wq.addAfterTick(4, 1) mustEqual null
+      wq.toList mustEqual List(5, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+      wq.addAfterTick(4, 3) mustEqual Array.empty[Int]
+      wq.toList mustEqual List(5, 4, 0, 0, 0, 0, 0, 0, 0, 0)
+      wq.addAfterTick(30, 1) mustEqual Array.empty[Int]
+      wq.toList mustEqual List(5, 4, 30, 0, 0, 0, 0, 0, 0, 0)
+      wq.addAfterTick(32, 56) mustEqual Array(5, 4, 30)
+      wq.toList mustEqual List(32, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     }
   }
 }

@@ -21,11 +21,11 @@ class TrailingStopOrderRobotSpec extends Specification {
       val (robot2, res2) = robot1.action(None)
       res2 mustEqual None
       val (robot3, res3) = robot2.action(
-        Some(Metrics(Map((Btc ~> Rmb) -> MarketByMetrics((Btc ~> Rmb), 3601.0))))
+        Some(Metrics(Map((Btc ~> Rmb) -> MetricsByMarket((Btc ~> Rmb), 3601.0))))
       )
       res3 mustEqual None
       val (robot4, res4) = robot3.action(
-        Some(Metrics(Map((Btc ~> Rmb) -> MarketByMetrics((Btc ~> Rmb), 3600.0))))
+        Some(Metrics(Map((Btc ~> Rmb) -> MetricsByMarket((Btc ~> Rmb), 3600.0))))
       )
       res4 mustEqual Some(DoSubmitOrder((Btc ~> Rmb),
         Order(2, 1, 2, Some(3429.0), robotId = Some(1), robotType = Some(2))))
@@ -40,19 +40,19 @@ class TrailingStopOrderRobotSpec extends Specification {
       val (robot2, res2) = robot1.action(None)
       res2 mustEqual None
       val (robot3, res3) = robot2.action(
-        Some(Metrics(Map((Btc ~> Rmb) -> MarketByMetrics((Btc ~> Rmb), 3601.0))))
+        Some(Metrics(Map((Btc ~> Rmb) -> MetricsByMarket((Btc ~> Rmb), 3601.0))))
       )
       res3 mustEqual None
       val (robot4, res4) = robot3.action(
-        Some(Metrics(Map((Btc ~> Rmb) -> MarketByMetrics((Btc ~> Rmb), 5000.0))))
+        Some(Metrics(Map((Btc ~> Rmb) -> MetricsByMarket((Btc ~> Rmb), 5000.0))))
       )
       res4 mustEqual None
       val (robot5, res5) = robot4.action(
-        Some(Metrics(Map((Btc ~> Rmb) -> MarketByMetrics((Btc ~> Rmb), 4501.0))))
+        Some(Metrics(Map((Btc ~> Rmb) -> MetricsByMarket((Btc ~> Rmb), 4501.0))))
       )
       res5 mustEqual None
       val (robot6, res6) = robot5.action(
-        Some(Metrics(Map((Btc ~> Rmb) -> MarketByMetrics((Btc ~> Rmb), 4500.0))))
+        Some(Metrics(Map((Btc ~> Rmb) -> MetricsByMarket((Btc ~> Rmb), 4500.0))))
       )
       res6 mustEqual Some(DoSubmitOrder((Btc ~> Rmb),
         Order(2, 1, 2, Some(3429.0), robotId = Some(1), robotType = Some(2))))
@@ -67,11 +67,11 @@ class TrailingStopOrderRobotSpec extends Specification {
       val (robot2, res2) = robot1.action(None)
       res2 mustEqual None
       val (robot3, res3) = robot2.action(
-        Some(Metrics(Map((Rmb ~> Btc) -> MarketByMetrics((Rmb ~> Btc), 1 / 4999.0))))
+        Some(Metrics(Map((Rmb ~> Btc) -> MetricsByMarket((Rmb ~> Btc), 1 / 4999.0))))
       )
       res3 mustEqual None
       val (robot4, res4) = robot3.action(
-        Some(Metrics(Map((Rmb ~> Btc) -> MarketByMetrics((Rmb ~> Btc), 1 / 5000.0))))
+        Some(Metrics(Map((Rmb ~> Btc) -> MetricsByMarket((Rmb ~> Btc), 1 / 5000.0))))
       )
       res4 mustEqual Some(DoSubmitOrder((Rmb ~> Btc),
         Order(2, 1, 2 * 4200, Some(1 / 4200.0), robotId = Some(1), robotType = Some(2))))
@@ -87,19 +87,19 @@ class TrailingStopOrderRobotSpec extends Specification {
       val (robot2, res2) = robot1.action(None)
       res2 mustEqual None
       val (robot3, res3) = robot2.action(
-        Some(Metrics(Map((Rmb ~> Btc) -> MarketByMetrics((Rmb ~> Btc), 1 / 4500.0))))
+        Some(Metrics(Map((Rmb ~> Btc) -> MetricsByMarket((Rmb ~> Btc), 1 / 4500.0))))
       )
       res3 mustEqual None
       val (robot4, res4) = robot3.action(
-        Some(Metrics(Map((Rmb ~> Btc) -> MarketByMetrics((Rmb ~> Btc), 1 / 2000.0))))
+        Some(Metrics(Map((Rmb ~> Btc) -> MetricsByMarket((Rmb ~> Btc), 1 / 2000.0))))
       )
       res4 mustEqual None
       val (robot5, res5) = robot4.action(
-        Some(Metrics(Map((Rmb ~> Btc) -> MarketByMetrics((Rmb ~> Btc), 1 / 2499.0))))
+        Some(Metrics(Map((Rmb ~> Btc) -> MetricsByMarket((Rmb ~> Btc), 1 / 2499.0))))
       )
       res5 mustEqual None
       val (robot6, res6) = robot5.action(
-        Some(Metrics(Map((Rmb ~> Btc) -> MarketByMetrics((Rmb ~> Btc), 1 / 2500.0))))
+        Some(Metrics(Map((Rmb ~> Btc) -> MetricsByMarket((Rmb ~> Btc), 1 / 2500.0))))
       )
       res6 mustEqual Some(DoSubmitOrder((Rmb ~> Btc),
         Order(2, 1, 2 * 10000, Some(1 / 10000.0), robotId = Some(1), robotType = Some(2))))

@@ -12,8 +12,8 @@ import Implicits._
 class MetricsManager extends Manager[Metrics](Metrics()) {
 
   def updatePrice(side: MarketSide, p: Double) {
-    val metricsByMarket = state.marketByMetrics.get(side).getOrElse(MarketByMetrics(side, p))
-    state = state.copy(marketByMetrics = state.marketByMetrics +
+    val metricsByMarket = state.metricsByMarket.get(side).getOrElse(MetricsByMarket(side, p))
+    state = state.copy(metricsByMarket = state.metricsByMarket +
       (side -> metricsByMarket.copy(price = p),
         side.reverse -> metricsByMarket.copy(side = side.reverse, price = 1 / p)))
   }
