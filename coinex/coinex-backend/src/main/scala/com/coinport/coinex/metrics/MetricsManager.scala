@@ -9,12 +9,15 @@ import com.coinport.coinex.common.Manager
 import com.coinport.coinex.data._
 import Implicits._
 
-class MetricsManager extends Manager[Metrics](Metrics()) {
+class MetricsManager extends Manager[MetricsState](MetricsState()) {
 
-  def updatePrice(side: MarketSide, p: Double) {
-    val metricsByMarket = state.metricsByMarket.get(side).getOrElse(MetricsByMarket(side, p))
-    state = state.copy(metricsByMarket = state.metricsByMarket +
-      (side -> metricsByMarket.copy(price = p),
-        side.reverse -> metricsByMarket.copy(side = side.reverse, price = 1 / p)))
+  def update(side: MarketSide, price: Double, volume: Long, reverseVolume: Long, tick: Long) {
+    state = state.pushEvent(side, (Some(price), Some(volume)), tick)
+    state = state.pushEvent(side.reverse, (Some(1 / price), Some(reverseVolume)), tick)
   }
+
+  def getMetrics(tick: Long): Metrics = {
+    state.getMetrics(tick)
+  }
+
 }

@@ -13,7 +13,7 @@ case object DebugDump
 
 case object TakeSnapshotNow
 
-case object QueryRobotMetrics
+case object QueryMetrics
 
 case object QueryActorStats
 
