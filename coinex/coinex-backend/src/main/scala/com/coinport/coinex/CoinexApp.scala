@@ -17,6 +17,7 @@ import scala.concurrent.duration._
 import akka.util.Timeout
 import java.net.InetAddress
 import com.typesafe.config.Config
+import com.coinport.coinex.common.Constants
 
 object CoinexApp extends App {
   if (args.length < 2 || args.length > 4) {
@@ -30,34 +31,11 @@ object CoinexApp extends App {
     System.exit(1)
   }
 
-  val ALL_ROLES = """
-    user_processor,
-    account_processor,
-    marke_update_processor,
-    market_processor_btc_rmb,
-    market_depth_view_btc_rmb,
-    user_view,
-    account_view,
-    user_orders_view,
-    candle_data_view_btc_rmb,
-    mailer,
-    metrics_view,
-    transaction_data_view_btc_rmb,
-    user_transaction_view_btc_rmb,
-    api_auth_processor,
-    api_auth_view,
-    robot_processor,
-    user_processor_mpv,
-    account_processor_mpv,
-    market_processor_mpv_btc_rmb,
-    dw_processor,
-    """
-
   val seeds = args(1).split(",").map(_.stripMargin).filter(_.nonEmpty).map("\"akka.tcp://coinex@" + _ + "\"").mkString(",")
 
   val roles =
     if (args.length < 3) ""
-    else if (args(2) == "*") ALL_ROLES
+    else if (args(2) == "*") Constants.ALL_ROLES
     else args(2).split(",").map(_.stripMargin).filter(_.nonEmpty).map("\"" + _ + "\"").mkString(",")
 
   val hostname =
@@ -74,7 +52,7 @@ object CoinexApp extends App {
   implicit val system = ActorSystem("coinex", config)
   implicit val cluster = Cluster(system)
 
-  new Deployer(config, hostname, markets).deploy()
+  val routers = new Deployer(config, hostname, markets).deploy()
 
   Thread.sleep(5000)
   val summary = "============= Akka Node Ready =============\n" +

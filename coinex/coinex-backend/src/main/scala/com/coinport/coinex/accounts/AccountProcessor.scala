@@ -29,7 +29,6 @@ class AccountProcessor(
   def receiveRecover = PartialFunction.empty[Any, Unit]
 
   def receiveCommand = LoggingReceive {
-
     case m @ DoRequestCashWithdrawal(w) =>
       val adjustment = CashAccount(w.currency, -w.amount, 0, w.amount)
       if (!manager.canUpdateCashAccount(w.userId, adjustment)) {
@@ -44,13 +43,13 @@ class AccountProcessor(
         }
       }
 
-    case DoRequestCashDeposit(deposit) =>
+    case m @ DoRequestCashDeposit(deposit) =>
       if (deposit.amount <= 0) {
         sender ! RequestCashDepositFailed(InvalidAmount)
       } else {
         // TODO(chao): fees should be calculated right here
         val updated = deposit.copy(id = lastSequenceNr, created = Some(System.currentTimeMillis))
-        persist(DoRequestCashDeposit(updated)) { event =>
+        persist(m.copy(deposit = updated)) { event =>
           updateState(event)
           channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
           sender ! RequestCashDepositSucceeded(updated)
@@ -66,7 +65,7 @@ class AccountProcessor(
     case p @ ConfirmablePersistent(m: AdminConfirmCashDepositSuccess, seq, _) =>
       persist(m) { event => p.confirm(); updateState(event) }
 
-    case m @ DoSubmitOrder(side, order) =>
+    case DoSubmitOrder(side, order) =>
       if (order.quantity <= 0) {
         sender ! SubmitOrderFailed(side, order, ErrorCode.InvalidAmount)
       } else {
@@ -75,7 +74,7 @@ class AccountProcessor(
           sender ! SubmitOrderFailed(side, order, ErrorCode.InsufficientFund)
         } else {
           val updated = order.copy(id = lastSequenceNr, timestamp = Some(System.currentTimeMillis))
-          persist(m.copy(order = updated)) { event =>
+          persist(DoSubmitOrder(side, updated)) { event =>
             channelToMarketProcessors forward Deliver(Persistent(OrderFundFrozen(side, updated)), getProcessorPath(side))
             updateState(event)
           }
@@ -87,9 +86,6 @@ class AccountProcessor(
 
     case p @ ConfirmablePersistent(event: OrderCancelled, seq, _) =>
       persist(event) { event => p.confirm(); updateState(event) }
-
-    case p @ ConfirmablePersistent(AdminConfirmCashDepositSuccess(deposit), seq, _) =>
-      p.confirm()
   }
 
   private def getProcessorPath(side: MarketSide): ActorPath = {
@@ -107,7 +103,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
     case AdminConfirmCashWithdrawalSuccess(w) => manager.updateCashAccount(w.userId, CashAccount(w.currency, 0, 0, -w.amount))
     case AdminConfirmCashWithdrawalFailure(w, _) => manager.updateCashAccount(w.userId, CashAccount(w.currency, w.amount, 0, -w.amount))
 
-    case m @ DoSubmitOrder(side: MarketSide, order) =>
+    case DoSubmitOrder(side: MarketSide, order) =>
       manager.updateCashAccount(order.userId, CashAccount(side.outCurrency, -order.quantity, order.quantity, 0))
 
     case OrderSubmitted(originOrderInfo, txs) =>

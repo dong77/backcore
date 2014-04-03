@@ -10,7 +10,7 @@ import com.coinport.coinex.common.SimpleJsonMongoCollection
 import com.mongodb.casbah.MongoDB
 import com.coinport.coinex.common.SimpleMongoCollection
 
-// TODO(d): Count fees
+// TODO(c): Count fees
 class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
     extends EventsourcedProcessor with DepositWithdrawBehavior with ChannelSupport with ActorLogging {
   override val processorId = "coinex_dwp"
@@ -77,13 +77,11 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
 
   private def deliverToAccountManager(event: Any) =
     channelToAccountProcessor forward Deliver(Persistent(event), accountProcessorPath)
-
 }
 
 // TODO(xi): add more query method into `deposits` and `withdrawals`.
 trait DepositWithdrawBehavior {
   val db: MongoDB
-
   val deposits = new SimpleJsonMongoCollection[Deposit, Deposit.Immutable] {
     val coll = db("deposits")
     def extractId(deposit: Deposit) = deposit.id
