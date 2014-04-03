@@ -55,7 +55,8 @@ class WindowQueue[T](range: Long, interval: Long, elems: Array[T], var head: Int
 
   def toList = elems.toList
 
-  override def toString() = "head: %d\nlastTick: %d\nelems: %s" format (head, lastTick, elems.toList)
+  override def toString() = "WindowQueue(head: %d, lastTick: %d, elems: %s)".format(
+    head, lastTick, elems.toList).replace("List", "")
 
   private def clean(start: Int, end: Int) {
     for (i <- start until end) elems(i) = NULL

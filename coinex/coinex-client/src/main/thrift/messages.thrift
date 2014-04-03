@@ -35,7 +35,7 @@ enum ErrorCode {
     // Api Auth related
     TOO_MANY_SECRETS                 = 5001
     INVALID_SECRET                   = 5002
-    
+
     // Deposit/Withdrawal
     ALREADY_CONFIRMED                = 6001
     DEPOSIT_NOT_EXIST                = 6002
@@ -219,10 +219,10 @@ struct MarketByMetrics {
     2: double price  // 当前价格
 
     // ------------- 一段时间内（24 小时） ----------
-    3: double low = 0.0
-    4: double high = 0.0
-    5: i64 volume = 0
-    6: double gain = 0.0  // 涨幅百分比
+    3: optional double low = 0.0
+    4: optional double high = 0.0
+    5: optional i64 volume = 0
+    6: optional double gain = 0.0  // 涨幅百分比
 
     7: Direction direction = Direction.KEEP
 }
