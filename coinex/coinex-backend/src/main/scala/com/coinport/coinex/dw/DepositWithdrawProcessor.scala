@@ -21,8 +21,8 @@ class DepositWithdrawProcessor(db: MongoDB, accountProcessorPath: ActorPath)
   }
 
   def receiveCommand = LoggingReceive {
-    case p @ ConfirmablePersistent(e: DoRequestCashWithdrawal) => persist(e) { event => p.confirm(); updateState(event) }
-    case p @ ConfirmablePersistent(e: DoRequestCashDeposit) => persist(e) { event => p.confirm(); updateState(event) }
+    case p @ ConfirmablePersistent(e: DoRequestCashWithdrawal, seq, _) => persist(e) { event => p.confirm(); updateState(event) }
+    case p @ ConfirmablePersistent(e: DoRequestCashDeposit, seq, _) => persist(e) { event => p.confirm(); updateState(event) }
 
     case AdminConfirmCashDepositFailure(deposit, error) =>
       deposits.get(deposit.id) match {

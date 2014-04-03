@@ -57,13 +57,13 @@ class AccountProcessor(
         }
       }
 
-    case p @ ConfirmablePersistent(m: AdminConfirmCashWithdrawalSuccess) =>
+    case p @ ConfirmablePersistent(m: AdminConfirmCashWithdrawalSuccess, seq, _) =>
       persist(m) { event => p.confirm(); updateState(event) }
 
-    case p @ ConfirmablePersistent(m: AdminConfirmCashWithdrawalFailure) =>
+    case p @ ConfirmablePersistent(m: AdminConfirmCashWithdrawalFailure, seq, _) =>
       persist(m) { event => p.confirm(); updateState(event) }
 
-    case p @ ConfirmablePersistent(m: AdminConfirmCashDepositSuccess) =>
+    case p @ ConfirmablePersistent(m: AdminConfirmCashDepositSuccess, seq, _) =>
       persist(m) { event => p.confirm(); updateState(event) }
 
     case m @ DoSubmitOrder(side, order) =>

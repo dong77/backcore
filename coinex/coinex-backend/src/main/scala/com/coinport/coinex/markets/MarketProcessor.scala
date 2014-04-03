@@ -25,8 +25,6 @@ class MarketProcessor(
   val manager = new MarketManager(marketSide)
 
   def receive = LoggingReceive {
-    // ------------------------------------------------------------------------------------------------
-    // Commands
     case p @ Persistent(DoCancelOrder(side, orderId, userId), seq) =>
       if (!manager.orderExist(orderId)) {
         sender ! CancelOrderFailed(OrderNotExist)
@@ -38,8 +36,6 @@ class MarketProcessor(
         channelToMarketUpdateProcessor forward Deliver(p.withPayload(cancelled), marketUpdateProcessoressorPath)
       }
 
-    // ------------------------------------------------------------------------------------------------
-    // Events
     case p @ ConfirmablePersistent(OrderFundFrozen(side, order: Order), seq, _) =>
       p.confirm()
       if (!manager.isOrderPriceInGoodRange(side, order.price)) {
