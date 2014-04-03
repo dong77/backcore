@@ -283,7 +283,7 @@ struct OrderItem {
     8: i64 timestamp
 }
 
-struct TransactionItem{
+struct TransactionItem  {
     1: i64 tid
     2: double price
     3: i64 volume
@@ -294,6 +294,10 @@ struct TransactionItem{
     8: i64 mOrder
     9: bool sameSide
     10: i64 timestamp
+}
+
+struct RedeliverFilterState {
+    1: list<i64> ids
 }
 
 ////////////////////////////////////////////////////////////////
