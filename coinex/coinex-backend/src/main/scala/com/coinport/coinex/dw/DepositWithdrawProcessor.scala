@@ -84,7 +84,6 @@ trait DepositWithdrawBehavior {
   val db: MongoDB
   val deposits = new SimpleJsonMongoCollection[Deposit, Deposit.Immutable] {
     val coll = db("deposits")
-    println("coll: " + coll.db)
     def extractId(deposit: Deposit) = deposit.id
   }
 

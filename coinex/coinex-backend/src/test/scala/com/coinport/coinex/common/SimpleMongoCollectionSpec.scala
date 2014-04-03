@@ -8,12 +8,12 @@ import com.mongodb.casbah._
 
 // TODO(xi): use in-memory mongod
 class SimpleMongoCollectionSpec extends Specification {
-  val uri = MongoURI("mongodb://localhost:27017/test2")
+  val uri = MongoURI("mongodb://localhost:27017/unit_test_coinex_views")
   val mongo = MongoConnection(uri)
-  val database = mongo(uri.database.getOrElse("coinex_export"))
+  val database = mongo(uri.database.get)
 
   val jsonDeposits = new SimpleJsonMongoCollection[Deposit, Deposit.Immutable]() {
-    val coll = database("deposits1")
+    val coll = database("deposits_json")
     def extractId(deposit: Deposit) = deposit.id
   }
 
@@ -27,7 +27,7 @@ class SimpleMongoCollectionSpec extends Specification {
   }
 
   val binaryDeposits = new SimpleBinaryMongoCollection[Deposit, Deposit.Immutable]() {
-    val coll = database("deposits2")
+    val coll = database("deposits_binary")
     def extractId(deposit: Deposit) = deposit.id
   }
 
