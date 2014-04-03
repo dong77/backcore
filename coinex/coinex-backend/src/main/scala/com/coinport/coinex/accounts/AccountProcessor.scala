@@ -93,7 +93,7 @@ class AccountProcessor(
   }
 
   def updateState(event: Any): Unit = event match {
-    case DoRequestCashDeposit => // do nothing
+    case m: DoRequestCashDeposit => // do nothing
     case DoRequestCashWithdrawal(w) => manager.updateCashAccount(w.userId, CashAccount(w.currency, -w.amount, 0, w.amount))
     case AdminConfirmCashDepositSuccess(d) => manager.updateCashAccount(d.userId, CashAccount(d.currency, d.amount, 0, 0))
     case AdminConfirmCashWithdrawalSuccess(w) => manager.updateCashAccount(w.userId, CashAccount(w.currency, 0, 0, -w.amount))
