@@ -60,7 +60,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       deployView(Props(new CandleDataView(m)), CANDLE_DATA_VIEW(m))
       deployView(Props(new TransactionDataView(m)), TRANSACTION_DATA_VIEW(m))
       deployView(Props(new UserTransactionView(m)), USER_TRANSACTION_VIEW(m))
-      deployView(Props(new MongoPersistentView(db, "coinex_mp_" + m.asString)), MARKET_PROCESSOR_MPV(m))
+      deployView(Props(new EventExportToMongoView(db, "coinex_mp_" + m.asString)), MARKET_PROCESSOR_MPV(m))
     }
 
     deployView(Props(classOf[UserView]), USER_VIEW)
@@ -69,8 +69,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployView(Props(classOf[MetricsView]), ROBOT_METRICS_VIEW)
     deployView(Props(new ApiAuthView(apiAuthSecret)), API_AUTH_VIEW)
 
-    deployView(Props(new MongoPersistentView(db, "coinex_up")), USER_PROCESSOR_MPV)
-    deployView(Props(new MongoPersistentView(db, "coinex_ap")), ACCOUNT_PROCESSOR_MPV)
+    deployView(Props(new EventExportToMongoView(db, "coinex_up")), USER_PROCESSOR_MPV)
+    deployView(Props(new EventExportToMongoView(db, "coinex_ap")), ACCOUNT_PROCESSOR_MPV)
 
     // Then deploy routers
     val routers = new LocalRouters(markets)

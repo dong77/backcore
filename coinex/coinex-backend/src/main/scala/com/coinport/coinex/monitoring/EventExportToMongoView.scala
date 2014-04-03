@@ -10,10 +10,12 @@ import Implicits._
 import com.mongodb.util.JSON
 import com.mongodb.casbah.Imports._
 
-class MongoPersistentView(db: MongoDB, pid: String) extends ExtendedView {
+// This view is not defined for querying data.
+class EventExportToMongoView(db: MongoDB, pid: String) extends ExtendedView {
   override val processorId = pid
   override val viewId = pid + "_mongop"
 
+  // This serializer cannot deserialize json to thrift case classes properly.
   val serializer = new ThriftJsonSerializer
   val collection = db(pid + "_events")
 
