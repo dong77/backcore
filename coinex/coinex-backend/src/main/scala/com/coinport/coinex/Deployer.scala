@@ -39,21 +39,25 @@ import java.io.File
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
   val paths = new ListBuffer[String]
+  val secret = config.getString("akka.exchange.secret")
+  val userManagerSecret = Hash.sha256Base64(secret + "userProcessorSecret")
+  val apiAuthSecret = Hash.sha256Base64(secret + "apiAuthSecret")
 
-  def deploy() = {
+  val mongoUriForViews = MongoURI(config.getString("akka.exchange.mongo-uri-for-views"))
+  val mongoForViews = MongoConnection(mongoUriForViews)
+  val dbForViews = mongoForViews(mongoUriForViews.database.get)
+
+  val mongoUriForDataExport = MongoURI(config.getString("akka.exchange.mongo-uri-for-data-export"))
+  val mongoForDataExport = MongoConnection(mongoUriForDataExport)
+  val dbForDataExport = mongoForDataExport(mongoUriForDataExport.database.get)
+
+  def shutdown() {
+    mongoForViews.close()
+    mongoForDataExport.close()
+  }
+
+  def deploy(): LocalRouters = {
     import LocalRouters._
-
-    val secret = config.getString("akka.exchange.secret")
-    val userManagerSecret = Hash.sha256Base64(secret + "userProcessorSecret")
-    val apiAuthSecret = Hash.sha256Base64(secret + "apiAuthSecret")
-    val mongoUri = MongoURI(config.getString("akka.exchange.export-persistent-view.mongo-uri"))
-    val mongo = MongoConnection(mongoUri)
-    val db = mongo(mongoUri.database.getOrElse("coinex_export"))
-
-    val mongoUriView = MongoURI(config.getString("akka.exchange.export-persistent-view.mongo-view-uri"))
-    val mongoView = MongoConnection(mongoUriView)
-    val viewDB = mongoView(mongoUriView.database.getOrElse("coinex_view"))
-
     val feeConfig = loadFeeConfig(config.getString("akka.exchange.fee-rules-path"))
 
     deployMailer(MAILER)
@@ -62,9 +66,9 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     markets foreach { m =>
       deployView(Props(new MarketDepthView(m)), MARKET_DEPTH_VIEW(m))
       deployView(Props(new CandleDataView(m)), CANDLE_DATA_VIEW(m))
-      deployView(Props(new TransactionView(m, viewDB)), TRANSACTION_VIEW(m))
-      deployView(Props(new OrderView(m, viewDB)), ORDER_VIEW(m))
-      deployView(Props(new EventExportToMongoView(db, "coinex_mp_" + m.asString)), MARKET_PROCESSOR_MPV(m))
+      deployView(Props(new TransactionView(m, dbForViews)), TRANSACTION_VIEW(m))
+      deployView(Props(new OrderView(m, dbForViews)), ORDER_VIEW(m))
+      deployView(Props(new EventExportToMongoView(dbForDataExport, "coinex_mp_" + m.asString)), MARKET_PROCESSOR_MPV(m))
     }
 
     deployView(Props(classOf[UserView]), USER_VIEW)
@@ -72,8 +76,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployView(Props(classOf[MetricsView]), ROBOT_METRICS_VIEW)
     deployView(Props(new ApiAuthView(apiAuthSecret)), API_AUTH_VIEW)
 
-    deployView(Props(new EventExportToMongoView(db, "coinex_up")), USER_PROCESSOR_MPV)
-    deployView(Props(new EventExportToMongoView(db, "coinex_ap")), ACCOUNT_PROCESSOR_MPV)
+    deployView(Props(new EventExportToMongoView(dbForDataExport, "coinex_up")), USER_PROCESSOR_MPV)
+    deployView(Props(new EventExportToMongoView(dbForDataExport, "coinex_ap")), ACCOUNT_PROCESSOR_MPV)
 
     // Then deploy routers
     val routers = new LocalRouters(markets)
@@ -91,10 +95,12 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployProcessor(Props(new AccountProcessor(routers.marketProcessors, routers.depositWithdrawProcessor.path, feeConfig) with Eventsourced[AccountState, AccountManager]), ACCOUNT_PROCESSOR)
     deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret) with Commandsourced[ApiSecretState, ApiAuthManager]), API_AUTH_PROCESSOR)
     deployProcessor(Props(new RobotProcessor(routers) with Commandsourced[RobotState, RobotManager]), ROBOT_PROCESSOR)
-    deployProcessor(Props(new DepositWithdrawProcessor(db, routers.accountProcessor.path)), DEPOSIT_WITHDRAWAL_PROCESSOR)
+    deployProcessor(Props(new DepositWithdrawProcessor(dbForViews, routers.accountProcessor.path)), DEPOSIT_WITHDRAWAL_PROCESSOR)
 
     // Deploy monitor at last
     deployMonitor(routers)
+
+    routers
   }
 
   private def deployProcessor(props: Props, name: String) =
@@ -128,7 +134,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     val service = system.actorOf(Props(new Monitor(paths.toList)), "monitor-service")
     val port = config.getInt("akka.exchange.monitor.http-port")
     IO(Http) ! Http.Bind(service, hostname, port)
-    println("Started HTTP server: http://" + hostname + ":" + port)
+    log.info("Started HTTP server: http://" + hostname + ":" + port)
   }
 
   private def loadFeeConfig(feeConfigPath: String): FeeConfig = {
