@@ -60,10 +60,9 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
   }
 
   def deploy(): LocalRouters = {
-    import LocalRouters._
     val feeConfig = loadFeeConfig(config.getString("akka.exchange.fee-rules-path"))
 
-    deployMailer(MAILER)
+    deployMailer(mailer<<)
 
     // Deploy views first
     markets foreach { m =>

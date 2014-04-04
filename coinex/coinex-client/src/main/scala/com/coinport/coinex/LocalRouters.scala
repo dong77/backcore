@@ -11,78 +11,47 @@ import akka.routing._
 import akka.contrib.pattern.ClusterSingletonProxy
 import com.coinport.coinex.data._
 import Implicits._
+import com.coinport.coinex.common._
+import ConstantRole._
+import MarketRole._
 import akka.cluster.Cluster
-
-object LocalRouters {
-  val USER_PROCESSOR = "user_processor"
-  val ACCOUNT_PROCESSOR = "account_processor"
-  val MARKET_UPDATE_PROCESSOR = "marke_update_processor"
-  val API_AUTH_PROCESSOR = "api_auth_processor"
-  def MARKET_PROCESSOR(side: MarketSide) = "market_processor_" + side.asString
-  val ROBOT_PROCESSOR = "robot_processor"
-  val DEPOSIT_WITHDRAWAL_PROCESSOR = "dw_processor"
-
-  val USER_VIEW = "user_view"
-  val USER_MPVIEW = "user_mpview"
-  val ACCOUNT_VIEW = "account_view"
-  val USER_ORDERS_VIEW = "user_orders_view"
-  val ROBOT_METRICS_VIEW = "metrics_view"
-  val API_AUTH_VIEW = "api_auth_view"
-
-  def MARKET_PROCESSOR_EVENT_EXPORT(side: MarketSide) = "market_processor_event_export_" + side.asString
-  val USER_PROCESSOR_EVENT_EXPORT = "user_processor_event_export"
-  val ACCOUNT_PROCESSOR_EVENT_EXPORT = "account_processor_event_export"
-  val DEPOSIT_WITHDRAW_PROCESSOR_EVENT_EXPORT = "deposit_withdraw_event_export"
-
-  def CANDLE_DATA_VIEW(side: MarketSide) = "candle_data_view_" + side.asString
-  def MARKET_DEPTH_VIEW(side: MarketSide) = "market_depth_view_" + side.asString
-
-  val TRANSACTION_READER = "transaction_reader"
-  val TRANSACTION_WRITER = "transaction_writer"
-  val ORDER_READER = "order_reader"
-  val ORDER_WRITER = "order_writer"
-
-  def MAILER = "mailer"
-
-}
 
 class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
   implicit val system = cluster.system
 
-  import LocalRouters._
-  val userProcessor = routerForSingleton(USER_PROCESSOR)
-  val accountProcessor = routerForSingleton(ACCOUNT_PROCESSOR)
-  val marketUpdateProcessor = routerForSingleton(MARKET_UPDATE_PROCESSOR)
-  val apiAuthProcessor = routerForSingleton(API_AUTH_PROCESSOR)
+  val userProcessor = routerForSingleton(user_processor <<)
+  val accountProcessor = routerForSingleton(account_processor <<)
+  val marketUpdateProcessor = routerForSingleton(market_update_processor <<)
+  val apiAuthProcessor = routerForSingleton(api_auth_processor <<)
 
   val marketProcessors = bidirection(Map(markets map { m =>
-    m -> routerForSingleton(MARKET_PROCESSOR(m))
+    m -> routerForSingleton(market_processor << m)
   }: _*))
 
-  val robotProcessor = routerForSingleton(ROBOT_PROCESSOR)
-  val depositWithdrawProcessor = routerForSingleton(DEPOSIT_WITHDRAWAL_PROCESSOR)
+  val robotProcessor = routerForSingleton(robot_processor<<)
+  val depositWithdrawProcessor = routerForSingleton(dw_processor <<)
 
-  val userView = routerFor(USER_VIEW)
-  val accountView = routerFor(ACCOUNT_VIEW)
-  val apiAuthView = routerFor(API_AUTH_VIEW)
+  val userView = routerFor(user_view <<)
+  val accountView = routerFor(account_view <<)
+  val apiAuthView = routerFor(api_auth_view <<)
 
   val candleDataView = bidirection(Map(markets map { m =>
-    m -> routerFor(CANDLE_DATA_VIEW(m))
+    m -> routerFor(candle_data_view << m)
   }: _*))
 
   val marketDepthViews = bidirection(Map(markets map { m =>
-    m -> routerFor(MARKET_DEPTH_VIEW(m))
+    m -> routerFor(market_depth_view << m)
   }: _*))
 
-  val transaction_reader = routerFor(TRANSACTION_READER)
-  //  val transaction_writer = routerFor(TRANSACTION_WRITER)
+  val transaction_reader = routerFor(transaction_mongo_reader<<)
+  //val transaction_writer = routerFor(transaction_mongo_writer <<)
 
-  val order_reader = routerFor(ORDER_READER)
-  //  val order_writer = routerFor(ORDER_WRITER)
+  val order_reader = routerFor(order_mongo_reader<<)
+  //val order_writer = routerFor(order_mongo_writer <<)
 
-  val mailer = routerFor(MAILER)
+  val mailer = routerFor(ConstantRole.mailer <<)
 
-  val robotMetricsView = routerFor(ROBOT_METRICS_VIEW)
+  val robotMetricsView = routerFor(metrics_view<<)
 
   private def routerForSingleton(name: String) = system.actorOf(
     ClusterSingletonProxy.defaultProps("/user/" + name + "/singleton", name),
