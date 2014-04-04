@@ -21,6 +21,7 @@ object ConstantRole extends Enumeration {
   val user_processor_event_export = Value
   val account_processor_event_export = Value
   val dw_processor_event_export = Value
+  val market_update_processor_event_export = Value
 
   val transaction_mongo_writer = Value
   val transaction_mongo_reader = Value

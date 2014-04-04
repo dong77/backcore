@@ -81,6 +81,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_up")), user_processor_event_export<<)
     deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_ap")), account_processor_event_export<<)
     deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_dwp")), dw_processor_event_export<<)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_mup")), market_update_processor_event_export<<)
 
     deployView(Props(new TransactionReader(dbForViews)), transaction_mongo_reader<<)
     deployView(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer<<)
