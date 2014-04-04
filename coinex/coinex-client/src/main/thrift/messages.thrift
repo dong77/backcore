@@ -338,7 +338,7 @@ struct RedeliverFilterState {
 /* R-   */ struct RequestCashDepositFailed            {1: ErrorCode error}
 /* R+   */ struct RequestCashDepositSucceeded         {1: Deposit deposit}
 
-/* C,P  */ struct DoRequestCashWithdrawal             {2: Withdrawal withdrawal}
+/* C,P  */ struct DoRequestCashWithdrawal             {1: Withdrawal withdrawal}
 /* R-   */ struct RequestCashWithdrawalFailed         {1: ErrorCode error}
 /* R+   */ struct RequestCashWithdrawalSucceeded      {1: Withdrawal withdrawal}
 

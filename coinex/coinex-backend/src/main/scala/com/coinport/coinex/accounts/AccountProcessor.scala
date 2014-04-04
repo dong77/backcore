@@ -34,8 +34,7 @@ class AccountProcessor(
       if (!manager.canUpdateCashAccount(w.userId, adjustment)) {
         sender ! RequestCashWithdrawalFailed(InsufficientFund)
       } else {
-        // TODO(chao): fees should be calculated right here
-        val updated = w.copy(id = lastSequenceNr, created = Some(System.currentTimeMillis))
+        val updated = countFee(w.copy(id = lastSequenceNr, created = Some(System.currentTimeMillis)))
         persist(DoRequestCashWithdrawal(updated)) { event =>
           updateState(event)
           channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
@@ -47,8 +46,7 @@ class AccountProcessor(
       if (deposit.amount <= 0) {
         sender ! RequestCashDepositFailed(InvalidAmount)
       } else {
-        // TODO(chao): fees should be calculated right here
-        val updated = deposit.copy(id = lastSequenceNr, created = Some(System.currentTimeMillis))
+        val updated = countFee(deposit.copy(id = lastSequenceNr, created = Some(System.currentTimeMillis)))
         persist(m.copy(deposit = updated)) { event =>
           updateState(event)
           channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
@@ -99,8 +97,21 @@ trait AccountManagerBehavior extends CountFeeSupport {
   def updateState(event: Any): Unit = event match {
     case m: DoRequestCashDeposit => // do nothing
     case DoRequestCashWithdrawal(w) => manager.updateCashAccount(w.userId, CashAccount(w.currency, -w.amount, 0, w.amount))
-    case AdminConfirmCashDepositSuccess(d) => manager.updateCashAccount(d.userId, CashAccount(d.currency, d.amount, 0, 0))
-    case AdminConfirmCashWithdrawalSuccess(w) => manager.updateCashAccount(w.userId, CashAccount(w.currency, 0, 0, -w.amount))
+    case AdminConfirmCashDepositSuccess(d) =>
+      manager.updateCashAccount(d.userId, CashAccount(d.currency, d.amount, 0, 0))
+      d.fee match {
+        case Some(f) if (f.amount > 0) =>
+          manager.transferFundFromAvailable(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
+        case _ => None
+      }
+    case AdminConfirmCashWithdrawalSuccess(w) =>
+      w.fee match {
+        case Some(f) if (f.amount > 0) =>
+          manager.transferFundFromPendingWithdrawal(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
+          manager.updateCashAccount(w.userId, CashAccount(w.currency, 0, 0, f.amount - w.amount))
+        case _ =>
+          manager.updateCashAccount(w.userId, CashAccount(w.currency, 0, 0, -w.amount))
+      }
     case AdminConfirmCashWithdrawalFailure(w, _) => manager.updateCashAccount(w.userId, CashAccount(w.currency, w.amount, 0, -w.amount))
 
     case DoSubmitOrder(side: MarketSide, order) =>
@@ -109,8 +120,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
     case OrderSubmitted(originOrderInfo, txs) =>
       val side = originOrderInfo.side
       txs foreach { tx =>
-        val (takerOrderUpdate, makerOrderUpdate) = (tx.takerUpdate, tx.makerUpdate)
-        val fees = countFee(tx)
+        val (takerOrderUpdate, makerOrderUpdate, fees) = (tx.takerUpdate, tx.makerUpdate, tx.fees)
         manager.transferFundFromLocked(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
         manager.transferFundFromLocked(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
         tx.fees.getOrElse(Nil) foreach { f =>
