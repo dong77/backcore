@@ -58,8 +58,8 @@ trait EmbeddedMongoSupport {
   def embeddedMongoShutdown() {
     try {
       connection.close()
-      mongod.stop()
       mongodExe.stop()
+      mongod.stop()
     } catch {
       case e: Throwable =>
     }
