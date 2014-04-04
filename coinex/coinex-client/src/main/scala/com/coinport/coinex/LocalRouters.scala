@@ -23,13 +23,16 @@ object LocalRouters {
   val DEPOSIT_WITHDRAWAL_PROCESSOR = "dw_processor"
 
   val USER_VIEW = "user_view"
+  val USER_MPVIEW = "user_mpview"
   val ACCOUNT_VIEW = "account_view"
   val USER_ORDERS_VIEW = "user_orders_view"
   val ROBOT_METRICS_VIEW = "metrics_view"
   val API_AUTH_VIEW = "api_auth_view"
-  def MARKET_PROCESSOR_MPV(side: MarketSide) = "market_processor_mpv_" + side.asString
-  val USER_PROCESSOR_MPV = "user_processor_mpv"
-  val ACCOUNT_PROCESSOR_MPV = "account_processor_mpv"
+
+  def MARKET_PROCESSOR_EVENT_EXPORT(side: MarketSide) = "market_processor_event_export_" + side.asString
+  val USER_PROCESSOR_EVENT_EXPORT = "user_processor_event_export"
+  val ACCOUNT_PROCESSOR_EVENT_EXPORT = "account_processor_event_export"
+  val DEPOSIT_WITHDRAW_PROCESSOR_EVENT_EXPORT = "deposit_withdraw_event_export"
 
   def CANDLE_DATA_VIEW(side: MarketSide) = "candle_data_view_" + side.asString
   def MARKET_DEPTH_VIEW(side: MarketSide) = "market_depth_view_" + side.asString

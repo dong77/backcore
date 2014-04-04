@@ -40,8 +40,9 @@ class UserManager(secret: String = "") extends Manager[UserState](UserState()) {
       status = UserStatus.Normal)
   }
 
-  def registerUser(profile: UserProfile) = {
+  def registerUser(profile: UserProfile): UserProfile = {
     state = state.addUserProfile(profile).addVerificationToken(profile.verificationToken.get, profile.id)
+    profile
   }
 
   def requestPasswordReset(email: String, salt: Long): UserProfile = {
@@ -53,13 +54,14 @@ class UserManager(secret: String = "") extends Manager[UserState](UserState()) {
     updatedProfile
   }
 
-  def resetPassword(email: String, password: String, passwordResetToken: Option[String]) = {
+  def resetPassword(email: String, password: String, passwordResetToken: Option[String]): UserProfile = {
     val id = computeUserId(email)
     val profile = state.profileMap(id)
     profile.passwordResetToken foreach { token => state = state.deletePasswordResetToken(token) }
     val passwordHash = computePassword(profile.id, profile.email, password)
     val updatedProfile = profile.copy(passwordHash = Some(passwordHash), passwordResetToken = None)
     state = state.updateUserProfile(id)(_ => updatedProfile)
+    updatedProfile
   }
 
   def checkLogin(email: String, password: String): Either[ErrorCode, UserProfile] = {

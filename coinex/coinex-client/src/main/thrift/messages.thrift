@@ -312,6 +312,9 @@ struct RedeliverFilterState {
 // 'R-' stands for response to sender on command failure,
 // 'R' stands for response to sender regardless of failure or success.
 
+////////// General
+/* R-   */ struct MessageNotSupported                   {1: string event}
+
 ////////// Admin
 /* R    */ struct AdminCommandResult                  {1: ErrorCode error = ErrorCode.OK}
 

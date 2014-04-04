@@ -47,13 +47,13 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
   val mongoForViews = MongoConnection(mongoUriForViews)
   val dbForViews = mongoForViews(mongoUriForViews.database.get)
 
-  val mongoUriForDataExport = MongoURI(config.getString("akka.exchange.mongo-uri-for-data-export"))
-  val mongoForDataExport = MongoConnection(mongoUriForDataExport)
-  val dbForDataExport = mongoForDataExport(mongoUriForDataExport.database.get)
+  val mongoUriForEventExport = MongoURI(config.getString("akka.exchange.mongo-uri-for-event-export"))
+  val mongoForEventExport = MongoConnection(mongoUriForEventExport)
+  val dbForEventExport = mongoForEventExport(mongoUriForEventExport.database.get)
 
   def shutdown() {
     mongoForViews.close()
-    mongoForDataExport.close()
+    mongoForEventExport.close()
   }
 
   def deploy(): LocalRouters = {
@@ -68,16 +68,18 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       deployView(Props(new CandleDataView(m)), CANDLE_DATA_VIEW(m))
       deployView(Props(new TransactionView(m, dbForViews)), TRANSACTION_VIEW(m))
       deployView(Props(new OrderView(m, dbForViews)), ORDER_VIEW(m))
-      deployView(Props(new EventExportToMongoView(dbForDataExport, "coinex_mp_" + m.asString)), MARKET_PROCESSOR_MPV(m))
+      deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_mp_" + m.asString)), MARKET_PROCESSOR_EVENT_EXPORT(m))
     }
 
-    deployView(Props(classOf[UserView]), USER_VIEW)
+    deployView(Props(new UserView(userManagerSecret)), USER_VIEW)
+    deployView(Props(new UserMPView(dbForViews, userManagerSecret)), USER_MPVIEW)
     deployView(Props(new AccountView(feeConfig)), ACCOUNT_VIEW)
-    deployView(Props(classOf[MetricsView]), ROBOT_METRICS_VIEW)
+    deployView(Props(new MetricsView), ROBOT_METRICS_VIEW)
     deployView(Props(new ApiAuthView(apiAuthSecret)), API_AUTH_VIEW)
 
-    deployView(Props(new EventExportToMongoView(dbForDataExport, "coinex_up")), USER_PROCESSOR_MPV)
-    deployView(Props(new EventExportToMongoView(dbForDataExport, "coinex_ap")), ACCOUNT_PROCESSOR_MPV)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_up")), USER_PROCESSOR_EVENT_EXPORT)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_ap")), ACCOUNT_PROCESSOR_EVENT_EXPORT)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_dwp")), DEPOSIT_WITHDRAW_PROCESSOR_EVENT_EXPORT)
 
     // Then deploy routers
     val routers = new LocalRouters(markets)

@@ -15,25 +15,36 @@ object Constants {
 
   val ALL_ROLES = """
     user_processor,
-    account_processor,
-    marke_update_processor,
-    market_processor_btc_rmb,
-    market_depth_view_btc_rmb,
     user_view,
+    user_mpview,
+    
+    account_processor,
     account_view,
-    user_orders_view,
-    candle_data_view_btc_rmb,
-    mailer,
-    metrics_view,
-    transaction_data_view_btc_rmb,
-    user_transaction_view_btc_rmb,
+    
     api_auth_processor,
     api_auth_view,
+    
+    marke_update_processor,
+    
+    market_processor_btc_rmb,
+    market_depth_view_btc_rmb,
+    candle_data_view_btc_rmb,
+    transaction_data_view_btc_rmb,
+    user_transaction_view_btc_rmb,
+
+
+    user_orders_view,
+    metrics_view,
+    mailer,
+
+
+ 
     robot_processor,
-    user_processor_mpv,
-    account_processor_mpv,
-    market_processor_mpv_btc_rmb,
     dw_processor,
+    
+    user_processor_event_export,
+    account_processor_event_export,
+    market_processor_event_export_btc_rmb,
     """
 
   type MarketEvent = (Option[Double], Option[Long]) // (price, volume)

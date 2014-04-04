@@ -27,10 +27,7 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Eventso
         val profile = manager.regulateProfile(userProfile, password, lastSequenceNr)
         sender ! RegisterUserSucceeded(profile)
         persist(DoRegisterUser(profile, password))(updateState)
-        mailer ! DoSendEmail(profile.email, EmailType.RegisterVerify, Map(
-          "NAME" -> profile.realName.getOrElse(profile.email),
-          "LANG" -> "CHINESE",
-          "TOKEN" -> profile.verificationToken.get))
+        sendEmailVerificationEmail(profile)
       }
 
     case m @ DoRequestPasswordReset(email) =>
@@ -40,12 +37,8 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Eventso
           sender ! RequestPasswordResetFailed(TokenNotUnique)
         case Some(profile) if profile.passwordResetToken.isDefined =>
           sender ! RequestPasswordResetSucceeded(profile.id, profile.email, profile.passwordResetToken.get)
-        case Some(profile) if profile.passwordResetToken.isEmpty =>
-          persist(m)(updateState)
-          mailer ! DoSendEmail(profile.email, EmailType.PasswordResetToken, Map(
-            "NAME" -> profile.realName.getOrElse(profile.email),
-            "LANG" -> "CHINESE",
-            "TOKEN" -> profile.passwordResetToken.get))
+          sendRequestPasswordResetEmail(profile)
+        case Some(profile) if profile.passwordResetToken.isEmpty => persist(m)(updateState)
       }
 
     case m @ DoResetPassword(email, password, passwordResetToken) =>
@@ -65,23 +58,39 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Eventso
         case Right(profile) => sender ! LoginSucceeded(profile.id, profile.email)
       }
 
+    // This command may not be necessary
+    /*
     case ValidatePasswordResetToken(token) =>
       manager().passwordResetTokenMap.get(token) match {
         case Some(id) => sender ! PasswordResetTokenValidationResult(manager().profileMap.get(id))
         case None => sender ! PasswordResetTokenValidationResult(None)
       }
-
+      */
   }
 
-  def updateState(event: Any) = event match {
+  def updateState(event: Any): Unit = event match {
     case DoRegisterUser(profile, _) =>
       manager.registerUser(profile)
 
     case DoRequestPasswordReset(email) =>
       val profile = manager.requestPasswordReset(email, lastSequenceNr)
       sender ! RequestPasswordResetSucceeded(profile.id, profile.email, profile.passwordResetToken.get)
+      if (!recoveryRunning) { sendRequestPasswordResetEmail(profile) }
 
     case DoResetPassword(email, password, token) =>
       manager.resetPassword(email, password, token)
+  }
+
+  def sendEmailVerificationEmail(profile: UserProfile) {
+    mailer ! DoSendEmail(profile.email, EmailType.RegisterVerify, Map(
+      "NAME" -> profile.realName.getOrElse(profile.email),
+      "LANG" -> "CHINESE",
+      "TOKEN" -> profile.verificationToken.get))
+  }
+  def sendRequestPasswordResetEmail(profile: UserProfile) {
+    mailer ! DoSendEmail(profile.email, EmailType.PasswordResetToken, Map(
+      "NAME" -> profile.realName.getOrElse(profile.email),
+      "LANG" -> "CHINESE",
+      "TOKEN" -> profile.passwordResetToken.get))
   }
 }

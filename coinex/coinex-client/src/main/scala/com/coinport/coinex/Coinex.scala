@@ -12,8 +12,9 @@ import akka.routing._
 import com.coinport.coinex.data._
 import akka.persistence._
 import Implicits._
+import org.slf4s.Logging
 
-final class Coinex(routers: LocalRouters) extends Actor {
+final class Coinex(routers: LocalRouters) extends Actor with Logging {
 
   def receive = {
     LoggingReceive {
@@ -22,8 +23,8 @@ final class Coinex(routers: LocalRouters) extends Actor {
       case m: DoRegisterUser => routers.userProcessor forward m
       case m: DoRequestPasswordReset => routers.userProcessor forward m
       case m: DoResetPassword => routers.userProcessor forward m
-      case m: Login => routers.userProcessor forward m
-      case m: ValidatePasswordResetToken => routers.userProcessor forward m
+      case m: Login => routers.userView forward m
+      // case m: ValidatePasswordResetToken => routers.userView forward m
 
       //-------------------------------------------------------------------------
       // Account Processor
@@ -74,8 +75,9 @@ final class Coinex(routers: LocalRouters) extends Actor {
       case m: QueryApiSecrets => routers.apiAuthView forward m
 
       //-------------------------------------------------------------------------
-      case Persistent => throw new IllegalArgumentException("Coinex doesn't handle persistent messages")
-      case m => throw new IllegalArgumentException("Coinex doesn't handle messages of type: " + m.getClass.getCanonicalName)
+      case m =>
+        log.error("Coinex received unsupported event: " + m.toString)
+        sender ! MessageNotSupported(m.toString)
     }
   }
 }
