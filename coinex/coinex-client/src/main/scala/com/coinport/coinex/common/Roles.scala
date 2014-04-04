@@ -1,0 +1,34 @@
+package com.coinport.coinex.common
+
+object ConstantRole extends Enumeration {
+  val user_processor = Value
+  val user_view = Value
+  val user_mpview = Value
+
+  val account_processor = Value
+  val account_view = Value
+
+  val api_auth_processor = Value
+  val api_auth_view = Value
+
+  val marke_update_processor = Value
+  val robot_processor = Value
+  val dw_processor = Value
+
+  val metrics_view = Value
+  val mailer = Value
+
+  val user_processor_event_export = Value
+  val account_processor_event_export = Value
+  val dw_processor_event_export = Value
+}
+
+object MarketRole extends Enumeration {
+  val market_processor = Value
+  val market_depth_view = Value
+  val candle_data_view = Value
+  val user_orders_view = Value
+  val transaction_data_view = Value
+  val user_transaction_view = Value
+  val market_processor_event_export = Value
+}

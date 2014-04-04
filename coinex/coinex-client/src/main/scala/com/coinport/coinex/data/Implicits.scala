@@ -8,6 +8,8 @@
 
 package com.coinport.coinex.data
 
+import com.coinport.coinex.common._
+
 class RichCurrency(raw: Currency) {
   def ~>(another: Currency) = MarketSide(raw, another)
   def <~(another: Currency) = MarketSide(another, raw)
@@ -97,6 +99,14 @@ class RichCandleDataItem(raw: CandleDataItem) {
       Math.max(raw.high, another.high))
 }
 
+class RichConstRole(v: ConstantRole.Value) {
+  def << = v.toString.toLowerCase
+}
+
+class RichMarketRole(v: MarketRole.Value) {
+  def <<(side: MarketSide) = v.toString.toLowerCase + "_" + new RichMarketSide(side).asString
+}
+
 object Implicits {
   implicit def currency2Rich(raw: Currency) = new RichCurrency(raw)
   implicit def marketSide2Rich(raw: MarketSide) = new RichMarketSide(raw)
@@ -107,4 +117,7 @@ object Implicits {
   implicit def orderSubmitted2Rich(raw: OrderSubmitted) = new RichOrderSubmitted(raw)
   implicit def cashAccont2Rich(raw: CashAccount) = new RichCashAccount(raw)
   implicit def candleDataItem2Rich(raw: CandleDataItem) = new RichCandleDataItem(raw)
+
+  implicit def constantRole2Rich(r: ConstantRole.Value) = new RichConstRole(r)
+  implicit def marketRole2Rich(r: MarketRole.Value) = new RichMarketRole(r)
 }

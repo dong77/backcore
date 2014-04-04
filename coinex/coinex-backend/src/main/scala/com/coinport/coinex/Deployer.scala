@@ -30,6 +30,8 @@ import com.coinport.coinex.util._
 import Implicits._
 import scala.collection.mutable.ListBuffer
 import com.coinport.coinex.common._
+import ConstantRole._
+import MarketRole._
 import com.mongodb.casbah._
 import com.coinport.coinex.fee.FeeConfig
 import com.coinport.coinex.fee.CountFeeSupport
@@ -65,20 +67,22 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     // Deploy views first
     markets foreach { m =>
-      deployView(Props(new MarketDepthView(m)), MARKET_DEPTH_VIEW(m))
-      deployView(Props(new CandleDataView(m)), CANDLE_DATA_VIEW(m))
-      deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_mp_" + m.asString)), MARKET_PROCESSOR_EVENT_EXPORT(m))
+      deployView(Props(new MarketDepthView(m)), market_depth_view << m)
+      deployView(Props(new CandleDataView(m)), candle_data_view << m)
+      deployView(Props(new TransactionView(m, dbForViews)), transaction_data_view << m)
+      deployView(Props(new OrderView(m, dbForViews)), user_orders_view << m)
+      deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_mp_" + m.asString)), market_processor_event_export << m)
     }
 
-    deployView(Props(new UserView(userManagerSecret)), USER_VIEW)
-    deployView(Props(new UserMPView(dbForViews, userManagerSecret)), USER_MPVIEW)
-    deployView(Props(new AccountView(feeConfig)), ACCOUNT_VIEW)
-    deployView(Props(new MetricsView), ROBOT_METRICS_VIEW)
-    deployView(Props(new ApiAuthView(apiAuthSecret)), API_AUTH_VIEW)
+    deployView(Props(new UserView(userManagerSecret)), user_view <<)
+    deployView(Props(new UserMPView(dbForViews, userManagerSecret)), user_mpview<<)
+    deployView(Props(new AccountView(feeConfig)), account_view <<)
+    deployView(Props(new MetricsView), metrics_view <<)
+    deployView(Props(new ApiAuthView(apiAuthSecret)), api_auth_view <<)
 
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_up")), USER_PROCESSOR_EVENT_EXPORT)
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_ap")), ACCOUNT_PROCESSOR_EVENT_EXPORT)
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_dwp")), DEPOSIT_WITHDRAW_PROCESSOR_EVENT_EXPORT)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_up")), user_processor_event_export<<)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_ap")), account_processor_event_export<<)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_dwp")), dw_processor_event_export<<)
 
     deployView(Props(new TransactionReader(dbForViews)), TRANSACTION_READER)
     deployView(Props(new TransactionWriter(dbForViews)), TRANSACTION_WRITER)
@@ -93,15 +97,15 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       val props = Props(new MarketProcessor(m,
         routers.accountProcessor.path,
         routers.marketUpdateProcessor.path) with Commandsourced[MarketState, MarketManager])
-      deployProcessor(props, MARKET_PROCESSOR(m))
+      deployProcessor(props, market_processor << m)
     }
 
     deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
-    deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with Eventsourced[UserState, UserManager]), USER_PROCESSOR)
-    deployProcessor(Props(new AccountProcessor(routers.marketProcessors, routers.depositWithdrawProcessor.path, feeConfig) with Eventsourced[AccountState, AccountManager]), ACCOUNT_PROCESSOR)
-    deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret) with Commandsourced[ApiSecretState, ApiAuthManager]), API_AUTH_PROCESSOR)
-    deployProcessor(Props(new RobotProcessor(routers) with Commandsourced[RobotState, RobotManager]), ROBOT_PROCESSOR)
-    deployProcessor(Props(new DepositWithdrawProcessor(dbForViews, routers.accountProcessor.path)), DEPOSIT_WITHDRAWAL_PROCESSOR)
+    deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with Eventsourced[UserState, UserManager]), user_processor <<)
+    deployProcessor(Props(new AccountProcessor(routers.marketProcessors, routers.depositWithdrawProcessor.path, feeConfig) with Eventsourced[AccountState, AccountManager]), account_processor <<)
+    deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret) with Commandsourced[ApiSecretState, ApiAuthManager]), api_auth_processor <<)
+    deployProcessor(Props(new RobotProcessor(routers) with Commandsourced[RobotState, RobotManager]), robot_processor <<)
+    deployProcessor(Props(new DepositWithdrawProcessor(dbForViews, routers.accountProcessor.path)), dw_processor <<)
 
     // Deploy monitor at last
     deployMonitor(routers)
