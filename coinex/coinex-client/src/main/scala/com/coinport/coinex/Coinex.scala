@@ -63,11 +63,11 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       // MetricsView
       case QueryMetrics => routers.robotMetricsView forward QueryMetrics
 
-      // TransactionDataView
-      case m @ QueryTransaction(side, _, _, _, _, _, _) => routers.transactionView(side) forward m
+      // QueryTransaction
+      case m: QueryTransaction => routers.transaction_reader forward m
 
-      // TransactionDataView
-      case m @ QueryOrder(side, _, _, _, _, _, _) => routers.orderView(side) forward m
+      // QueryOrder
+      case m: QueryOrder => routers.order_reader forward m
 
       // ApiAuthProcessor and View
       case m: DoAddNewApiSecret => routers.apiAuthProcessor forward Persistent(m)

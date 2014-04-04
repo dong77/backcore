@@ -35,6 +35,7 @@ import com.coinport.coinex.fee.FeeConfig
 import com.coinport.coinex.fee.CountFeeSupport
 import com.twitter.util.Eval
 import java.io.File
+import com.coinport.coinex.ot._
 
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
@@ -66,9 +67,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     markets foreach { m =>
       deployView(Props(new MarketDepthView(m)), MARKET_DEPTH_VIEW(m))
       deployView(Props(new CandleDataView(m)), CANDLE_DATA_VIEW(m))
-      deployView(Props(new TransactionView(m, dbForViews)), TRANSACTION_VIEW(m))
-      deployView(Props(new OrderView(m, dbForViews)), ORDER_VIEW(m))
-      deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_mp_" + m.asString)), MARKET_PROCESSOR_EVENT_EXPORT(m))
+      deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_mp_" + m.asString)), MARKET_PROCESSOR_MPV(m))
     }
 
     deployView(Props(new UserView(userManagerSecret)), USER_VIEW)
@@ -80,6 +79,11 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_up")), USER_PROCESSOR_EVENT_EXPORT)
     deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_ap")), ACCOUNT_PROCESSOR_EVENT_EXPORT)
     deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_dwp")), DEPOSIT_WITHDRAW_PROCESSOR_EVENT_EXPORT)
+
+    deployView(Props(new TransactionReader(dbForViews)), TRANSACTION_READER)
+    deployView(Props(new TransactionWriter(dbForViews)), TRANSACTION_WRITER)
+    deployView(Props(new OrderReader(dbForViews)), ORDER_READER)
+    deployView(Props(new OrderWriter(dbForViews)), ORDER_WRITER)
 
     // Then deploy routers
     val routers = new LocalRouters(markets)

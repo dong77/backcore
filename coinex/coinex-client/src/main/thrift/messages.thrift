@@ -273,17 +273,6 @@ struct Cursor {
     2: i32 limit
 }
 
-struct OrderItem {
-    1: i64 oid
-    2: i64 uid
-    3: i64 inAmount
-    4: i64 outAmount
-    5: Order originOrder
-    6: bool sameSide
-    7: i32 status
-    8: i64 timestamp
-}
-
 struct TransactionItem  {
     1: i64 tid
     2: double price
@@ -293,7 +282,7 @@ struct TransactionItem  {
     6: i64 maker
     7: i64 tOrder
     8: i64 mOrder
-    9: bool sameSide
+    9: MarketSide side
     10: i64 timestamp
 }
 
@@ -395,9 +384,9 @@ struct RedeliverFilterState {
 /* R    */ struct QueryCandleDataResult               {1: CandleData candleData}
 
 ////////// OrderView
-/* Q    */ struct QueryOrder                          {1: MarketSide side, 2: optional i64 uid, 3: optional i64 oid, 4:optional i32 status, 5:optional bool sameSide, 6: Cursor cursor, 7: bool getCount}
-/* R    */ struct QueryOrderResult                    {1: list<OrderItem> orderItems, 2: i64 count}
+/* Q    */ struct QueryOrder                          {1: optional i64 uid, 2: optional i64 oid, 3:optional i32 status, 4:optional MarketSide side, 5: Cursor cursor, 6: bool getCount}
+/* R    */ struct QueryOrderResult                    {1: list<OrderInfo> orderinfos, 2: i64 count}
 
 ////////// TransactionView
-/* Q    */ struct QueryTransaction                    {1: MarketSide side, 2: optional i64 tid, 3: optional i64 uid, 4: optional i64 oid, 5:optional bool sameSide, 6: Cursor cursor, 7: bool getCount}
-/* R    */ struct QueryTransactionResult              {1: list<TransactionItem> transactionItems, 3: i64 count}
+/* Q    */ struct QueryTransaction                    {1: optional i64 tid, 2: optional i64 uid, 3: optional i64 oid, 4:optional MarketSide side, 5: Cursor cursor, 6: bool getCount}
+/* R    */ struct QueryTransactionResult              {1: list<TransactionItem> transactionItems, 2: i64 count}
