@@ -14,9 +14,9 @@ class MetricsObserver(
     transactionQueue: WindowQueue[MarketEvent] = new WindowQueue[MarketEvent](_24_HOURS, _10_SECONDS),
     minMaintainer: StackQueue[Double] = new StackQueue[Double](ascending),
     maxMaintainer: StackQueue[Double] = new StackQueue[Double](descending),
+    preMaintainer: StackQueue[Double] = new StackQueue[Double]((l, r) => true),
     var price: Option[Double] = None,
     var lastPrice: Option[Double] = None,
-    var preRangePrice: Option[Double] = None,
     var volumeMaintainer: Long = 0L) {
 
   def pushEvent(event: MarketEvent, tick: Long) {
@@ -28,8 +28,8 @@ class MetricsObserver(
             case (Some(p), Some(v)) =>
               minMaintainer.dequeue(p)
               maxMaintainer.dequeue(p)
+              preMaintainer.dequeue(p)
               volumeMaintainer -= v
-              preRangePrice = Some(p)
             case _ => None
           }
         }
@@ -37,6 +37,7 @@ class MetricsObserver(
           case (Some(p), Some(v)) =>
             minMaintainer.push(p)
             maxMaintainer.push(p)
+            preMaintainer.push(p)
             lastPrice = price
             price = Some(p)
             volumeMaintainer += v
@@ -47,8 +48,8 @@ class MetricsObserver(
 
   def getMetrics(tick: Long): MetricsByMarket = {
     pushEvent(null, tick)
-    val gain: Option[Double] = (preRangePrice, price) match {
-      case (Some(p24p), Some(p)) => Some((p - p24p) / p24p)
+    val gain: Option[Double] = (preMaintainer.front, price) match {
+      case (Some(prp), Some(p)) => Some((p - prp) / prp)
       case _ => None
     }
     val direction = (lastPrice, price) match {
@@ -60,9 +61,9 @@ class MetricsObserver(
   }
 
   def copy = new MetricsObserver(side, transactionQueue.copy, minMaintainer.copy, maxMaintainer.copy,
-    price, lastPrice, preRangePrice, volumeMaintainer)
+    preMaintainer.copy, price, lastPrice, volumeMaintainer)
 
   override def toString() = """side: %s; transactionQueue: %s; minMaintainer: %s; maxMaintainer: %s;
-    | price: %s; lastPrice: %s; preRangePrice: %s; volumeMaintainer: %s""".stripMargin.format(
-    side, transactionQueue, minMaintainer, maxMaintainer, price, lastPrice, preRangePrice, volumeMaintainer)
+    | preMaintainer: %s; price: %s; lastPrice: %s; volumeMaintainer: %s""".stripMargin.format(
+    side, transactionQueue, minMaintainer, maxMaintainer, preMaintainer, price, lastPrice, volumeMaintainer)
 }
