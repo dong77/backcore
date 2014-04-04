@@ -2,11 +2,11 @@
  * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
  */
 
-package com.coinport.coinex.data
+package com.coinport.coinex.mongohandler
 
 import org.specs2.mutable._
 
-class TransactionStateSpec extends Specification {
+class TransactionHandlerSpec extends Specification {
   //  "TransactionDataStateSpec" should {
   //    "add item into state and get them all" in {
   //      var state = TransactionDataState()
