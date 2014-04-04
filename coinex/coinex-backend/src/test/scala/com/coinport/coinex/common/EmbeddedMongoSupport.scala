@@ -7,7 +7,7 @@ import de.flapdoodle.embed.process.config.IRuntimeConfig
 import de.flapdoodle.embed.process.config.io.ProcessOutput
 import de.flapdoodle.embed.process.extract.UUIDTempNaming
 import de.flapdoodle.embed.process.io.{ NullProcessor, Processors }
-import de.flapdoodle.embed.process.io.directories.PlatformTempDir
+import de.flapdoodle.embed.process.io.directories.FixedPath
 import de.flapdoodle.embed.process.runtime.Network
 import com.mongodb.casbah.MongoConnection
 
@@ -16,7 +16,7 @@ trait EmbeddedMongoSupport {
   lazy val port = 52345 // DO NOT CHANGE THIS PORT
   lazy val localHostIPV6 = Network.localhostIsIPv6()
 
-  val artifactStorePath = new PlatformTempDir()
+  val artifactStorePath = new FixedPath("./mongodb")
   val executableNaming = new UUIDTempNaming()
   val command = Command.MongoD
   val version = Version.Main.PRODUCTION

@@ -28,7 +28,7 @@ class OrderWriter(db: MongoDB) extends Actor with OrderMongoHandler with ActorLo
     case m: OrderSubmitted =>
       addItem(m.originOrderInfo)
       m.txs.foreach { tx =>
-        val outAmount = tx.makerUpdate.previous.quantity - tx.makerUpdate.current.quantity
+        val outAmount = tx.makerUpdate.current.inAmount
         val inAmount = tx.takerUpdate.previous.quantity - tx.takerUpdate.current.quantity
         val status =
           if (tx.makerUpdate.current.isFullyExecuted) OrderStatus.FullyExecuted

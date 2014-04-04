@@ -1,6 +1,7 @@
 .cache
 .classpath
 .project
+mongodb
 nohup.out
 project/project/
 project/target/
