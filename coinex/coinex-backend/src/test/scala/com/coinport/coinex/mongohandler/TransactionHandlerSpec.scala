@@ -5,30 +5,38 @@
 package com.coinport.coinex.mongohandler
 
 import org.specs2.mutable._
+import com.coinport.coinex.ot.TransactionMongoHandler
+import com.coinport.coinex.data.Currency.{ Rmb, Btc }
+import com.coinport.coinex.data.{ Cursor, QueryOrder, QueryTransaction, TransactionItem }
+import com.coinport.coinex.common.EmbeddedMongoSupport
+import com.coinport.coinex.data.Implicits._
 
-class TransactionHandlerSpec extends Specification {
-  //  "TransactionDataStateSpec" should {
-  //    "add item into state and get them all" in {
-  //      var state = TransactionDataState()
-  //      val txs = (0 until 10) map (i => TransactionItem(i, i, i, i, i, i, true, i, i))
-  //      txs.foreach(t => state = state.addItem(t))
-  //
-  //      state.getItems(0, 2) mustEqual (Seq(TransactionItem(9, 9, 9, 9, 9, 9, true, 9, 9), TransactionItem(8, 8, 8, 8, 8, 8, true, 8, 8)))
-  //      state.getItems(0, 10) mustEqual txs.reverse
-  //    }
-  //
-  //    "will auto archive redundant data" in {
-  //      val archive = 50
-  //      val maxMaintain = 150
-  //      var state = TransactionDataState(archive, maxMaintain, Seq.empty[TransactionItem])
-  //      (0 until 210).foreach {
-  //        i =>
-  //          val item = TransactionItem(i, i, i, i, i, i, true, i, i)
-  //          state = state.addItem(item)
-  //          if (i == 170) state.transactionItems.size mustEqual (121)
-  //      }
-  //
-  //      state.transactionItems.size mustEqual 110
-  //    }
-  //  }
+class TransactionHandlerSpec extends Specification with EmbeddedMongoSupport {
+  val market = Btc ~> Rmb
+  step(embeddedMongoStartup())
+
+  class TransactionClass extends TransactionMongoHandler {
+    val coll = database("transaction")
+  }
+
+  "TransactionHandlerSpec" should {
+    val transactionClass = new TransactionClass()
+
+    "add item into state and get them all" in {
+      transactionClass.coll.drop()
+      val txs = (0 until 10) map (i => TransactionItem(i, i, i, i, i, i, i, i, market, i))
+      txs.foreach(t => transactionClass.addItem(t))
+
+      var q = QueryTransaction(cursor = Cursor(0, 2), getCount = false)
+      transactionClass.getItems(q).map(_.tid) mustEqual Seq(9, 8)
+
+      q = QueryTransaction(cursor = Cursor(0, 1), getCount = true)
+      transactionClass.countItems(q) mustEqual 10
+
+      q = QueryTransaction(cursor = Cursor(0, 100), getCount = false)
+      transactionClass.getItems(q).map(_.tid) mustEqual Seq(9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+    }
+  }
+
+  step(embeddedMongoShutdown())
 }
