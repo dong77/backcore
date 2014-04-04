@@ -144,6 +144,7 @@ struct Order {
     7: optional i32 robotType
     8: optional i64 robotId
     9: optional bool onlyTaker
+    10: i64 inAmount = 0
 }
 
 struct OrderInfo {

@@ -34,8 +34,8 @@ class MarketManagerSpec extends Specification {
 
       val result = manager.addOrder(takerSide, taker)
 
-      val updatedLpo1 = lpo1.copy(quantity = 0) // buy 2
-      val updatedLpo2 = lpo2.copy(quantity = 0) // buy 10
+      val updatedLpo1 = lpo1.copy(quantity = 0, inAmount = 2) // buy 2
+      val updatedLpo2 = lpo2.copy(quantity = 0, inAmount = 10) // buy 10
       val updatedMpo1 = mpo1.copy(quantity = 0) // buy 15
       val updatedMpo2 = mpo2.copy(quantity = 0) // buy 30
       val updatedTaker = taker.copy(quantity = 100 - 57)
@@ -43,8 +43,10 @@ class MarketManagerSpec extends Specification {
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 12, 50000, PartiallyExecuted, Some(0)),
         Seq(
-          Transaction(50000, 0, takerSide, taker --> taker.copy(quantity = 98), lpo1 --> updatedLpo1),
-          Transaction(50001, 0, takerSide, taker.copy(quantity = 98) --> taker.copy(quantity = 88), lpo2 --> updatedLpo2)))
+          Transaction(50000, 0, takerSide, taker --> taker.copy(quantity = 98, inAmount = 10000), lpo1 --> updatedLpo1),
+          Transaction(50001, 0, takerSide,
+            taker.copy(quantity = 98, inAmount = 10000) --> taker.copy(quantity = 88, inAmount = 50000),
+            lpo2 --> updatedLpo2)))
     }
   }
 
@@ -57,8 +59,8 @@ class MarketManagerSpec extends Specification {
       manager.addOrder(makerSide, maker)
       val result = manager.addOrder(takerSide, taker)
 
-      val updatedMaker = maker.copy(quantity = 99, takeLimit = Some(1))
-      val updatedTaker = taker.copy(quantity = taker.quantity - 10)
+      val updatedMaker = maker.copy(quantity = 99, takeLimit = Some(1), inAmount = 10)
+      val updatedTaker = taker.copy(quantity = taker.quantity - 10, inAmount = 45000)
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 10, 45000, FullyExecuted, Some(0)),
@@ -79,17 +81,19 @@ class MarketManagerSpec extends Specification {
       manager.addOrder(makerSide, maker2)
       val result = manager.addOrder(takerSide, taker)
 
-      val updatedMaker1 = maker1.copy(quantity = maker1.quantity - 4500, takeLimit = Some(0))
-      val updatedMaker2 = maker2.copy(quantity = maker2.quantity - 15000, takeLimit = Some(0))
-      val updatedTaker = taker.copy(quantity = 6)
+      val updatedMaker1 = maker1.copy(quantity = maker1.quantity - 4500, takeLimit = Some(0), inAmount = 1)
+      val updatedMaker2 = maker2.copy(quantity = maker2.quantity - 15000, takeLimit = Some(0), inAmount = 3)
+      val updatedTaker = taker.copy(quantity = 6, inAmount = 19500)
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 4, 19500, PartiallyExecuted, Some(0)),
         Seq(
-          Transaction(30000, 0, takerSide, taker --> taker.copy(quantity = 7), maker2 --> updatedMaker2),
-          Transaction(30001, 0, takerSide, taker.copy(quantity = 7) --> updatedTaker, maker1 --> updatedMaker1)))
+          Transaction(30000, 0, takerSide,
+            taker --> taker.copy(quantity = 7, inAmount = 15000), maker2 --> updatedMaker2),
+          Transaction(30001, 0, takerSide,
+            taker.copy(quantity = 7, inAmount = 15000) --> updatedTaker, maker1 --> updatedMaker1)))
 
-      manager().orderMap mustEqual Map(3 -> taker.copy(quantity = 6))
+      manager().orderMap mustEqual Map(3 -> taker.copy(quantity = 6, inAmount = 19500))
       manager().orderPool(takerSide) mustEqual SortedSet(updatedTaker)
       manager().orderPool(makerSide) mustEqual EmptyOrderPool
     }
@@ -141,8 +145,8 @@ class MarketManagerSpec extends Specification {
         manager.addOrder(makerSide, maker)
         val result = manager.addOrder(takerSide, taker)
 
-        val updatedMaker = maker.copy(quantity = 0)
-        val updatedTaker = taker.copy(quantity = 0)
+        val updatedMaker = maker.copy(quantity = 0, inAmount = 100)
+        val updatedTaker = taker.copy(quantity = 0, inAmount = 100)
 
         result mustEqual OrderSubmitted(
           OrderInfo(takerSide, taker, 100, 100, FullyExecuted, Some(0)),
@@ -166,8 +170,8 @@ class MarketManagerSpec extends Specification {
         manager.addOrder(makerSide, maker)
         val result = manager.addOrder(takerSide, taker)
 
-        val updatedMaker = maker.copy(quantity = 90)
-        val updatedTaker = taker.copy(quantity = 0)
+        val updatedMaker = maker.copy(quantity = 90, inAmount = 10)
+        val updatedTaker = taker.copy(quantity = 0, inAmount = 10)
 
         result mustEqual OrderSubmitted(
           OrderInfo(takerSide, taker, 10, 10, FullyExecuted, Some(0)),
@@ -190,8 +194,8 @@ class MarketManagerSpec extends Specification {
         manager.addOrder(makerSide, maker)
         val result = manager.addOrder(takerSide, taker)
 
-        val updatedMaker = maker.copy(quantity = 0)
-        val updatedTaker = taker.copy(quantity = 90)
+        val updatedMaker = maker.copy(quantity = 0, inAmount = 10)
+        val updatedTaker = taker.copy(quantity = 90, inAmount = 10)
 
         result mustEqual OrderSubmitted(
           OrderInfo(takerSide, taker, 10, 10, MarketAutoPartiallyCancelled, Some(0)),
@@ -214,15 +218,17 @@ class MarketManagerSpec extends Specification {
         manager.addOrder(makerSide, maker2)
         val result = manager.addOrder(takerSide, taker)
 
-        val updatedMaker1 = maker1.copy(quantity = 30)
-        val updatedMaker2 = maker2.copy(quantity = 0)
-        val updatedTaker = taker.copy(quantity = 0)
+        val updatedMaker1 = maker1.copy(quantity = 30, inAmount = 70)
+        val updatedMaker2 = maker2.copy(quantity = 0, inAmount = 50)
+        val updatedTaker = taker.copy(quantity = 0, inAmount = 170)
 
         result mustEqual OrderSubmitted(
           OrderInfo(takerSide, taker, 120, 170, FullyExecuted, Some(0)),
           Seq(
-            Transaction(100000, 0, takerSide, taker --> taker.copy(quantity = 70), maker2 --> updatedMaker2),
-            Transaction(100001, 0, takerSide, taker.copy(quantity = 70) --> updatedTaker, maker1 --> updatedMaker1)))
+            Transaction(100000, 0, takerSide,
+              taker --> taker.copy(quantity = 70, inAmount = 100), maker2 --> updatedMaker2),
+            Transaction(100001, 0, takerSide,
+              taker.copy(quantity = 70, inAmount = 100) --> updatedTaker, maker1 --> updatedMaker1)))
 
         manager().orderMap mustEqual Map(1 -> updatedMaker1) //  100 x 0.5 + 100 x 1 - 120 = 30
         manager().orderPool(makerSide) mustEqual SortedSet(updatedMaker1)
@@ -240,15 +246,17 @@ class MarketManagerSpec extends Specification {
         manager.addOrder(makerSide, maker2)
         val result = manager.addOrder(takerSide, taker)
 
-        val updatedMaker1 = maker1.copy(quantity = 0)
-        val updatedMaker2 = maker2.copy(quantity = 0)
-        val updatedTaker = taker.copy(quantity = 50)
+        val updatedMaker1 = maker1.copy(quantity = 0, inAmount = 20)
+        val updatedMaker2 = maker2.copy(quantity = 0, inAmount = 50)
+        val updatedTaker = taker.copy(quantity = 50, inAmount = 120)
 
         result mustEqual OrderSubmitted(
           OrderInfo(takerSide, taker, 70, 120, MarketAutoPartiallyCancelled, Some(0)),
           Seq(
-            Transaction(100000, 0, takerSide, taker --> taker.copy(quantity = 70), maker2 --> updatedMaker2),
-            Transaction(100001, 0, takerSide, taker.copy(quantity = 70) --> updatedTaker, maker1 --> updatedMaker1)))
+            Transaction(100000, 0, takerSide,
+              taker --> taker.copy(quantity = 70, inAmount = 100), maker2 --> updatedMaker2),
+            Transaction(100001, 0, takerSide,
+              taker.copy(quantity = 70, inAmount = 100) --> updatedTaker, maker1 --> updatedMaker1)))
 
         manager().orderMap mustEqual Map()
         manager().orderPool(makerSide) mustEqual EmptyOrderPool
@@ -267,8 +275,8 @@ class MarketManagerSpec extends Specification {
       manager.addOrder(makerSide, maker2)
 
       val result = manager.addOrder(takerSide, taker)
-      val updatedMaker2 = maker2.copy(quantity = 80)
-      val updatedTaker = taker.copy(quantity = 0)
+      val updatedMaker2 = maker2.copy(quantity = 80, inAmount = 10)
+      val updatedTaker = taker.copy(quantity = 0, inAmount = 20)
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 10, 20, FullyExecuted, Some(0)),
@@ -289,17 +297,19 @@ class MarketManagerSpec extends Specification {
       manager.addOrder(makerSide, maker2)
       val result = manager.addOrder(takerSide, taker)
 
-      val updatedMaker1 = maker1.copy(quantity = 10)
-      val updatedMaker2 = maker2.copy(quantity = 0)
-      val updatedTaker = taker.copy(quantity = 0)
+      val updatedMaker1 = maker1.copy(quantity = 10, inAmount = 10)
+      val updatedMaker2 = maker2.copy(quantity = 0, inAmount = 50)
+      val updatedTaker = taker.copy(quantity = 0, inAmount = 110)
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 60, 110, FullyExecuted, Some(33333)),
         Seq(
-          Transaction(100000, 33333, takerSide, taker --> taker.copy(quantity = 10), maker2 --> updatedMaker2),
-          Transaction(100001, 33333, takerSide, taker.copy(quantity = 10) --> updatedTaker, maker1 --> updatedMaker1)))
+          Transaction(100000, 33333, takerSide,
+            taker --> taker.copy(quantity = 10, inAmount = 100), maker2 --> updatedMaker2),
+          Transaction(100001, 33333, takerSide,
+            taker.copy(quantity = 10, inAmount = 100) --> updatedTaker, maker1 --> updatedMaker1)))
 
-      manager().orderMap mustEqual Map(1 -> maker1.copy(quantity = 10))
+      manager().orderMap mustEqual Map(1 -> maker1.copy(quantity = 10, inAmount = 10))
       manager().orderPool(makerSide) mustEqual SortedSet(maker1.copy(quantity = 10))
       manager().orderPool(takerSide) mustEqual EmptyOrderPool
     }
@@ -314,15 +324,17 @@ class MarketManagerSpec extends Specification {
       manager.addOrder(makerSide, maker2)
       val result = manager.addOrder(takerSide, taker)
 
-      val updatedMaker1 = maker1.copy(quantity = 0)
-      val updatedMaker2 = maker2.copy(quantity = 0)
-      val updatedTaker = taker.copy(quantity = 40)
+      val updatedMaker1 = maker1.copy(quantity = 0, inAmount = 10)
+      val updatedMaker2 = maker2.copy(quantity = 0, inAmount = 40)
+      val updatedTaker = taker.copy(quantity = 40, inAmount = 120)
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 50, 120, PartiallyExecuted, Some(0)),
         Seq(
-          Transaction(100000, 0, takerSide, taker --> taker.copy(quantity = 50), maker2 --> updatedMaker2),
-          Transaction(100001, 0, takerSide, taker.copy(quantity = 50) --> updatedTaker, maker1 --> updatedMaker1)))
+          Transaction(100000, 0, takerSide,
+            taker --> taker.copy(quantity = 50, inAmount = 100), maker2 --> updatedMaker2),
+          Transaction(100001, 0, takerSide,
+            taker.copy(quantity = 50, inAmount = 100) --> updatedTaker, maker1 --> updatedMaker1)))
 
       manager().orderMap mustEqual Map(10 -> updatedTaker) // 90 - 100x0.4 - 20x0.5
       manager().orderPool(makerSide) mustEqual EmptyOrderPool
@@ -361,8 +373,8 @@ class MarketManagerSpec extends Specification {
       manager.addOrder(makerSide, maker)
       val result = manager.addOrder(takerSide, taker)
 
-      val updatedMaker = maker.copy(quantity = 0) // buy 2
-      val updatedTaker = taker.copy(quantity = 400) // buy 10
+      val updatedMaker = maker.copy(quantity = 0, inAmount = 500)
+      val updatedTaker = taker.copy(quantity = 400, inAmount = 1)
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 500, 1, MarketAutoPartiallyCancelled, Some(0)),
@@ -377,8 +389,8 @@ class MarketManagerSpec extends Specification {
       manager.addOrder(makerSide, maker)
       val result = manager.addOrder(takerSide, taker)
 
-      val updatedMaker = maker.copy(quantity = 0) // buy 2
-      val updatedTaker = taker.copy(quantity = 30) // buy 10
+      val updatedMaker = maker.copy(quantity = 0, inAmount = 150)
+      val updatedTaker = taker.copy(quantity = 30, inAmount = 1000)
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 150, 1000, MarketAutoPartiallyCancelled, Some(0)),
@@ -410,7 +422,9 @@ class MarketManagerSpec extends Specification {
 
       result mustEqual OrderSubmitted(
         OrderInfo(side, taker, 100, 500000, MarketAutoPartiallyCancelled, Some(0)),
-        Seq(Transaction(20000, 0, side, taker --> taker.copy(quantity = 900), maker --> maker.copy(quantity = 0)))
+        Seq(Transaction(20000, 0, side,
+          taker --> taker.copy(quantity = 900, inAmount = 5000 * 100),
+          maker --> maker.copy(quantity = 0, inAmount = 100)))
       )
 
       manager().orderMap mustEqual Map()

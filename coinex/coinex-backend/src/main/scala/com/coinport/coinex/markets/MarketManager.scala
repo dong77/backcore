@@ -75,25 +75,25 @@ class MarketManager(headSide: MarketSide) extends Manager[MarketState](MarketSta
     } else {
       val makerOrder = makerOrderOption.get
       val price = 1 / makerOrder.vprice
-      val outAmount = Math.min(takerOrder.maxOutAmount(price), makerOrder.maxInAmount(1 / price))
-      val inAmount = Math.round(outAmount * price)
+      val lvOutAmount = Math.min(takerOrder.maxOutAmount(price), makerOrder.maxInAmount(1 / price))
+      val lvInAmount = Math.round(lvOutAmount * price)
 
-      val updatedSellOrder = takerOrder.copy(
-        quantity = takerOrder.quantity - outAmount, takeLimit = takerOrder.takeLimit.map(_ - inAmount))
-      val updatedBuyOrder = makerOrder.copy(
-        quantity = makerOrder.quantity - inAmount, takeLimit = makerOrder.takeLimit.map(_ - outAmount))
+      val updatedSellOrder = takerOrder.copy(quantity = takerOrder.quantity - lvOutAmount,
+        takeLimit = takerOrder.takeLimit.map(_ - lvInAmount), inAmount = takerOrder.inAmount + lvInAmount)
+      val updatedBuyOrder = makerOrder.copy(quantity = makerOrder.quantity - lvInAmount,
+        takeLimit = makerOrder.takeLimit.map(_ - lvOutAmount), inAmount = makerOrder.inAmount + lvOutAmount)
       txsBuffer += Transaction(txId, takerOrder.timestamp.getOrElse(0), takerSide,
         takerOrder --> updatedSellOrder, makerOrder --> updatedBuyOrder)
 
       val leftMarket = market.removeOrder(makerSide, makerOrder.id)
       if (updatedSellOrder.isFullyExecuted) {
         // return point
-        (totalOutAmount + outAmount, totalInAmount + inAmount, updatedSellOrder, if (!updatedBuyOrder.isFullyExecuted)
+        (totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, updatedSellOrder, if (!updatedBuyOrder.isFullyExecuted)
           leftMarket.addOrder(makerSide, updatedBuyOrder) else leftMarket)
       } else {
         // return point
         addOrderRec(makerSide, takerSide, updatedSellOrder, leftMarket,
-          totalOutAmount + outAmount, totalInAmount + inAmount, txsBuffer, txId + 1)
+          totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, txsBuffer, txId + 1)
       }
     }
   }
