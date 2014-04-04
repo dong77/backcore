@@ -125,19 +125,4 @@ object CoinexBuild extends Build {
     )
     .dependsOn(client)
     .configs(MultiJvm)
-    
-  lazy val integration = Project(
-      id = "coinex-integration",
-      base = file("coinex-integration"),
-      settings = Project.defaultSettings ++
-        sharedSettings ++
-        scalariformSettings
-      )
-      .settings(
-        libraryDependencies ++= Seq(
-          "org.specs2" %% "specs2" % "2.3.8" % "test",
-          "org.scalatest" %% "scalatest" % "2.0" % "test"
-          )
-      )
-      .dependsOn(backend)
 }

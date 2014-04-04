@@ -13,7 +13,7 @@ import com.mongodb.casbah.MongoConnection
 
 trait EmbeddedMongoSupport {
   lazy val host = "localhost"
-  lazy val port = 52345
+  lazy val port = 52345 // DO NOT CHANGE THIS PORT
   lazy val localHostIPV6 = Network.localhostIsIPv6()
 
   val artifactStorePath = new PlatformTempDir()
@@ -48,14 +48,20 @@ trait EmbeddedMongoSupport {
   lazy val mongodStarter = MongodStarter.getInstance(runtimeConfig)
   lazy val mongod = mongodStarter.prepare(mongodConfig)
   lazy val mongodExe = mongod.start()
-  lazy val database = MongoConnection(host, port)("coinex_test")
+  lazy val connection = MongoConnection(host, port)
+  lazy val database = connection("coinex_test")
 
   def embeddedMongoStartup() {
     mongodExe
   }
 
   def embeddedMongoShutdown() {
-    mongod.stop()
-    mongodExe.stop()
+    try {
+      connection.close()
+      mongod.stop()
+      mongodExe.stop()
+    } catch {
+      case e: Throwable =>
+    }
   }
 }

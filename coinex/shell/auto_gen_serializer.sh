@@ -82,7 +82,7 @@ object Generator {
     { case JInt(s) => %s(s.intValue) }, {
       case x: %s => JInt(x.value)
     }))
-  """
+"""
 
   val ENUM_SERIALIZER2 = " +\n    new %sSerializer"
 
@@ -95,7 +95,6 @@ object Generator {
 
 package com.coinport.coinex.serializers
 
-
 import org.json4s.CustomSerializer
 import org.json4s._
 import com.coinport.coinex.data._
@@ -103,8 +102,7 @@ import org.json4s.native.Serialization
 
 object %s {
 %s
-
-  implicit val formats = Serialization.formats(NoTypeHints) %s
+  implicit val formats = Serialization.formats(NoTypeHints)%s
 }
 """
 

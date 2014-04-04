@@ -1,13 +1,13 @@
-package com.coinport.coinex
+package com.coinport.coinex.integration
 
 import com.coinport.coinex.data._
-import Currency._
-
+import com.coinport.coinex.data.Currency._
 import scala.concurrent.duration._
+import akka.actor.actorRef2Scala
 
-// TODO(d): somehow the depoists are not saved into the right mongodb collectino.
-// TODO(d): compelete the spec.
-class DepositWithdrawIntegrationSpec extends IntegrationTest(new Environment) {
+// TODO(d): somehow the deposits are not saved into the right mongodb collection.
+// TODO(d): complete the spec.
+class DepositWithdrawIntegrationSpec extends IntegrationSpec(new Environment) {
   import env._
   "CoinexApp" must {
     "save and retrieve deposit requests" in {
