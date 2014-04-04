@@ -34,8 +34,5 @@ object MarketRole extends Enumeration {
   val market_processor = Value
   val market_depth_view = Value
   val candle_data_view = Value
-  val user_orders_view = Value
-  val transaction_data_view = Value
-  val user_transaction_view = Value
   val market_processor_event_export = Value
 }
