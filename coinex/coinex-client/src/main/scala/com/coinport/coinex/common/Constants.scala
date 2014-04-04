@@ -8,7 +8,6 @@ package com.coinport.coinex.common
 import com.coinport.coinex.data._
 import Implicits._
 
-// TODO(c): make these case objects
 ///////////// WARNING ///////////////////////////////////
 // TRY TO AVOID USING THIS CLASS!!!!!!!!!!!!!!!!!!!!!!!!
 

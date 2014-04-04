@@ -3,7 +3,7 @@ package com.coinport.coinex.common
 object ConstantRole extends Enumeration {
   val user_processor = Value
   val user_view = Value
-  val user_mpview = Value
+  val user_mongo_writer = Value
 
   val account_processor = Value
   val account_view = Value
@@ -11,7 +11,7 @@ object ConstantRole extends Enumeration {
   val api_auth_processor = Value
   val api_auth_view = Value
 
-  val marke_update_processor = Value
+  val market_update_processor = Value
   val robot_processor = Value
   val dw_processor = Value
 
@@ -21,6 +21,12 @@ object ConstantRole extends Enumeration {
   val user_processor_event_export = Value
   val account_processor_event_export = Value
   val dw_processor_event_export = Value
+
+  val transaction_mongo_writer = Value
+  val transaction_mongo_reader = Value
+
+  val order_mongo_writer = Value
+  val order_mongo_reader = Value
 }
 
 object MarketRole extends Enumeration {

@@ -9,7 +9,7 @@ import com.coinport.coinex.common.SimpleJsonMongoCollection
 
 // This view persists user manager state into MongoDB but also keeps an inmemory copy of the state.
 // THis view shall not serve any queries.
-class UserMPView(db: MongoDB, userManagerSecret: String) extends ExtendedView {
+class UserWriter(db: MongoDB, userManagerSecret: String) extends ExtendedView {
   override val processorId = "coinex_up"
   override val viewId = "user_mpview"
 

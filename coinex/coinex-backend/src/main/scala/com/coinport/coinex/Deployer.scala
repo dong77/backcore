@@ -69,13 +69,11 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     markets foreach { m =>
       deployView(Props(new MarketDepthView(m)), market_depth_view << m)
       deployView(Props(new CandleDataView(m)), candle_data_view << m)
-      deployView(Props(new TransactionView(m, dbForViews)), transaction_data_view << m)
-      deployView(Props(new OrderView(m, dbForViews)), user_orders_view << m)
       deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_mp_" + m.asString)), market_processor_event_export << m)
     }
 
     deployView(Props(new UserView(userManagerSecret)), user_view <<)
-    deployView(Props(new UserMPView(dbForViews, userManagerSecret)), user_mpview<<)
+    deployView(Props(new UserWriter(dbForViews, userManagerSecret)), user_mongo_writer<<)
     deployView(Props(new AccountView(feeConfig)), account_view <<)
     deployView(Props(new MetricsView), metrics_view <<)
     deployView(Props(new ApiAuthView(apiAuthSecret)), api_auth_view <<)
@@ -84,10 +82,10 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_ap")), account_processor_event_export<<)
     deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_dwp")), dw_processor_event_export<<)
 
-    deployView(Props(new TransactionReader(dbForViews)), TRANSACTION_READER)
-    deployView(Props(new TransactionWriter(dbForViews)), TRANSACTION_WRITER)
-    deployView(Props(new OrderReader(dbForViews)), ORDER_READER)
-    deployView(Props(new OrderWriter(dbForViews)), ORDER_WRITER)
+    deployView(Props(new TransactionReader(dbForViews)), transaction_mongo_reader<<)
+    deployView(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer<<)
+    deployView(Props(new OrderReader(dbForViews)), order_mongo_reader<<)
+    deployView(Props(new OrderWriter(dbForViews)), order_mongo_writer<<)
 
     // Then deploy routers
     val routers = new LocalRouters(markets)
@@ -100,7 +98,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       deployProcessor(props, market_processor << m)
     }
 
-    deployProcessor(Props(new MarketUpdateProcessor()), MARKET_UPDATE_PROCESSOR)
+    deployProcessor(Props(new MarketUpdateProcessor()), market_update_processor <<)
     deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with Eventsourced[UserState, UserManager]), user_processor <<)
     deployProcessor(Props(new AccountProcessor(routers.marketProcessors, routers.depositWithdrawProcessor.path, feeConfig) with Eventsourced[AccountState, AccountManager]), account_processor <<)
     deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret) with Commandsourced[ApiSecretState, ApiAuthManager]), api_auth_processor <<)
