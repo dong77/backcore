@@ -222,7 +222,7 @@ struct MetricsByMarket {
     // ------------- 一段时间内（24 小时） ----------
     3: optional double low
     4: optional double high
-    5: optional i64 volume
+    5: i64 volume = 0
     6: optional double gain  // 涨幅百分比
 
     7: Direction direction = Direction.KEEP

@@ -17,7 +17,7 @@ class MetricsObserver(
     var price: Option[Double] = None,
     var lastPrice: Option[Double] = None,
     var preRangePrice: Option[Double] = None,
-    var volumeMaintainer: Option[Long] = Some(0)) {
+    var volumeMaintainer: Long = 0L) {
 
   def pushEvent(event: MarketEvent, tick: Long) {
     transactionQueue.addAtTick(event, tick) match {
@@ -28,7 +28,7 @@ class MetricsObserver(
             case (Some(p), Some(v)) =>
               minMaintainer.dequeue(p)
               maxMaintainer.dequeue(p)
-              volumeMaintainer = volumeMaintainer map (_ - v)
+              volumeMaintainer -= v
               preRangePrice = Some(p)
             case _ => None
           }
@@ -39,7 +39,7 @@ class MetricsObserver(
             maxMaintainer.push(p)
             lastPrice = price
             price = Some(p)
-            volumeMaintainer = volumeMaintainer map (_ + v)
+            volumeMaintainer += v
           case _ => None
         }
     }
