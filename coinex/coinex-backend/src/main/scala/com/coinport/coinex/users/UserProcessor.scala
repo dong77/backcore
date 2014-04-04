@@ -27,17 +27,19 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Eventso
         val profile = manager.regulateProfile(userProfile, password, lastSequenceNr)
         sender ! RegisterUserSucceeded(profile)
         persist(DoRegisterUser(profile, password))(updateState)
-        mailer ! DoSendEmail(userProfile.email, EmailType.RegisterVerify, Map(
-          "NAME" -> userProfile.realName.getOrElse(userProfile.email),
+        mailer ! DoSendEmail(profile.email, EmailType.RegisterVerify, Map(
+          "NAME" -> profile.realName.getOrElse(profile.email),
           "LANG" -> "CHINESE",
-          "TOKEN" -> userProfile.verificationToken.get))
+          "TOKEN" -> profile.verificationToken.get))
       }
 
     case m @ DoRequestPasswordReset(email) =>
       manager.getUser(email) match {
         case None => sender ! RequestPasswordResetFailed(UserNotExist)
-        case Some(profile) if profile.email != email => sender ! RequestPasswordResetFailed(TokenNotUnique)
-        case Some(profile) if profile.passwordResetToken.isDefined => sender ! RequestPasswordResetSucceeded(profile.id, profile.email, profile.passwordResetToken.get)
+        case Some(profile) if profile.email != email =>
+          sender ! RequestPasswordResetFailed(TokenNotUnique)
+        case Some(profile) if profile.passwordResetToken.isDefined =>
+          sender ! RequestPasswordResetSucceeded(profile.id, profile.email, profile.passwordResetToken.get)
         case Some(profile) if profile.passwordResetToken.isEmpty =>
           persist(m)(updateState)
           mailer ! DoSendEmail(profile.email, EmailType.PasswordResetToken, Map(
@@ -72,8 +74,8 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Eventso
   }
 
   def updateState(event: Any) = event match {
-    case DoRegisterUser(userProfile, _) =>
-      manager.registerUser(userProfile)
+    case DoRegisterUser(profile, _) =>
+      manager.registerUser(profile)
 
     case DoRequestPasswordReset(email) =>
       val profile = manager.requestPasswordReset(email, lastSequenceNr)
