@@ -8,9 +8,10 @@ package com.coinport.coinex.metrics
 import scala.collection.mutable.ArrayBuffer
 
 class StackQueue[T](elems: ArrayBuffer[T], var head: Int,
-    ordering: (T, T) => Boolean)(implicit m: Manifest[T]) extends Serializable {
+    ordering: (T, T) => Boolean, cleanThreshold: Int)(implicit m: Manifest[T]) extends Serializable {
 
-  def this(ordering: (T, T) => Boolean)(implicit m: Manifest[T]) = this(new ArrayBuffer[T](), 0, ordering)
+  def this(ordering: (T, T) => Boolean, cleanThreshold: Int)(implicit m: Manifest[T]) = this(
+    new ArrayBuffer[T](), 0, ordering, cleanThreshold)
 
   def push(elem: T): StackQueue[T] = {
     val lastIndex = lastIndexWhere((e: T) => ordering(e, elem)) + 1
@@ -30,6 +31,9 @@ class StackQueue[T](elems: ArrayBuffer[T], var head: Int,
         if (elems.length <= head) {
           elems.clear()
           head = 0
+        } else if (head > cleanThreshold) {
+          elems.remove(0, head)
+          head = 0
         }
       case _ => None
     }
@@ -38,7 +42,7 @@ class StackQueue[T](elems: ArrayBuffer[T], var head: Int,
 
   def front: Option[T] = if (elems.length == 0) None else Some(elems(head))
 
-  def copy = new StackQueue[T](elems.slice(head, elems.length), 0, ordering)
+  def copy = new StackQueue[T](elems.slice(head, elems.length), 0, ordering, cleanThreshold)
 
   def toList = elems.slice(head, elems.length).toList
 

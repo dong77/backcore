@@ -10,7 +10,7 @@ import org.specs2.mutable._
 class StackQueueSpec extends Specification {
   "StackQueue" should {
     "normal test" in {
-      val sq = new StackQueue[Int]((lhs: Int, rhs: Int) => lhs <= rhs)
+      val sq = new StackQueue[Int]((lhs: Int, rhs: Int) => lhs <= rhs, 1)
       sq.push(2)
       sq.toList mustEqual List(2)
       sq.front.get mustEqual 2

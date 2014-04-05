@@ -12,9 +12,9 @@ import Direction._
 class MetricsObserver(
     side: MarketSide,
     transactionQueue: WindowQueue[MarketEvent] = new WindowQueue[MarketEvent](_24_HOURS, _10_SECONDS),
-    minMaintainer: StackQueue[Double] = new StackQueue[Double](ascending),
-    maxMaintainer: StackQueue[Double] = new StackQueue[Double](descending),
-    preMaintainer: StackQueue[Double] = new StackQueue[Double]((l, r) => true),
+    minMaintainer: StackQueue[Double] = new StackQueue[Double](ascending, (_24_HOURS / _10_SECONDS).toInt),
+    maxMaintainer: StackQueue[Double] = new StackQueue[Double](descending, (_24_HOURS / _10_SECONDS).toInt),
+    preMaintainer: StackQueue[Double] = new StackQueue[Double]((l, r) => true, (_24_HOURS / _10_SECONDS).toInt),
     var price: Option[Double] = None,
     var lastPrice: Option[Double] = None,
     var volumeMaintainer: Long = 0L) {
