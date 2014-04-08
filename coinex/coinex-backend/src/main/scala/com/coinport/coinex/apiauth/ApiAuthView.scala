@@ -8,7 +8,7 @@ package com.coinport.coinex.apiauth
 import akka.event.LoggingReceive
 import com.coinport.coinex.common._
 import com.coinport.coinex.data._
-import com.coinport.coinex.util.Hash
+import com.coinport.coinex.util.MHash
 import com.google.common.io.BaseEncoding
 import akka.persistence.Persistent
 
@@ -87,13 +87,13 @@ class ApiAuthManager(initialSeed: String) extends Manager[ApiSecretState](ApiSec
   }
 
   private def generateNewSecret(): (String, String) = {
-    val x1 = Hash.sha256Base64(state.seed)
-    val x2 = Hash.sha256Base64(x1)
-    val x3 = Hash.sha256Base64(x2)
+    val x1 = MHash.sha256Base64(state.seed)
+    val x2 = MHash.sha256Base64(x1)
+    val x3 = MHash.sha256Base64(x2)
 
-    val identifier = Math.abs(Hash.murmur3(x1)).toString
-    val secret = "%x%x".format(Hash.murmur3(x2), Hash.murmur3(x3))
-    state = state.copy(seed = Hash.sha256Base64(x3))
+    val identifier = Math.abs(MHash.murmur3(x1)).toString
+    val secret = "%x%x".format(MHash.murmur3(x2), MHash.murmur3(x3))
+    state = state.copy(seed = MHash.sha256Base64(x3))
     (identifier, secret)
   }
 }

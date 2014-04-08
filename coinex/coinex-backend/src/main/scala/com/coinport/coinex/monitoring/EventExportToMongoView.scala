@@ -4,7 +4,7 @@ import akka.event.LoggingReceive
 import com.coinport.coinex.common.ExtendedView
 import akka.persistence._
 import com.coinport.coinex.data._
-import com.coinport.coinex.util.Hash
+import com.coinport.coinex.util.MHash
 import com.coinport.coinex.serializers.ThriftJsonSerializer
 import Implicits._
 import com.mongodb.util.JSON
@@ -43,7 +43,7 @@ class EventExportToMongoView(db: MongoDB, pid: String) extends ExtendedView {
         "prehash" -> state.hash,
         event -> data)
 
-      val hash = Hash.sha1Base32(json.toString)
+      val hash = MHash.sha1Base32(json.toString)
       val jsonWithHash = MongoDBObject(
         "_id" -> state.index,
         "snapshot" -> state.snapshotIndex,

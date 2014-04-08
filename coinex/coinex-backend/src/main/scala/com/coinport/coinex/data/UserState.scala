@@ -17,7 +17,7 @@ case class UserState(numUsers: Long = 0,
     passwordResetTokenMap: Map[String, Long] = Map.empty[String, Long],
     verificationTokenMap: Map[String, Long] = Map.empty[String, Long]) {
 
-  def userExist(email: String): Boolean = userExist(Hash.murmur3(email))
+  def userExist(email: String): Boolean = userExist(MHash.murmur3(email))
   def userExist(userId: Long): Boolean = profileMap.contains(userId)
 
   def addUserProfile(profile: UserProfile): UserState = {

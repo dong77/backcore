@@ -108,7 +108,7 @@ object CoinexBuild extends Build {
         "io.spray" % "spray-routing" % sprayVersion,
         "io.spray" % "spray-client" % sprayVersion,
         "io.spray" % "spray-http" % sprayVersion),
-      
+
       compile in MultiJvm <<= (compile in MultiJvm) triggeredBy (compile in Test),
       parallelExecution in Test := false,
       executeTests in Test <<= (executeTests in Test, executeTests in MultiJvm) map {

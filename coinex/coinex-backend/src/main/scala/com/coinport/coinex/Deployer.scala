@@ -13,6 +13,7 @@ import akka.io.IO
 import akka.routing._
 import com.typesafe.config.Config
 import org.slf4s.Logging
+import org.apache.commons.io.IOUtils
 import scala.collection.mutable.ListBuffer
 import spray.can.Http
 import com.coinport.coinex.accounts._
@@ -37,14 +38,15 @@ import com.coinport.coinex.fee.FeeConfig
 import com.coinport.coinex.fee.CountFeeSupport
 import com.twitter.util.Eval
 import java.io.File
+import java.io.InputStream
 import com.coinport.coinex.ot._
 
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
   val paths = new ListBuffer[String]
   val secret = config.getString("akka.exchange.secret")
-  val userManagerSecret = Hash.sha256Base64(secret + "userProcessorSecret")
-  val apiAuthSecret = Hash.sha256Base64(secret + "apiAuthSecret")
+  val userManagerSecret = MHash.sha256Base64(secret + "userProcessorSecret")
+  val apiAuthSecret = MHash.sha256Base64(secret + "apiAuthSecret")
 
   val mongoUriForViews = MongoURI(config.getString("akka.exchange.mongo-uri-for-views"))
   val mongoForViews = MongoConnection(mongoUriForViews)
@@ -148,7 +150,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
   }
 
   private def loadFeeConfig(feeConfigPath: String): FeeConfig = {
-    val fullPath = this.getClass.getClassLoader.getResource(feeConfigPath).getPath()
-    (new Eval()(new File(fullPath))).asInstanceOf[FeeConfig]
+    val in: InputStream = this.getClass.getClassLoader.getResourceAsStream(feeConfigPath)
+    (new Eval()(IOUtils.toString(in))).asInstanceOf[FeeConfig]
   }
 }
