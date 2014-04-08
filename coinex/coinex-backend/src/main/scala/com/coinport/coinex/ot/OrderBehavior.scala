@@ -8,8 +8,7 @@ import Implicits._
 import com.coinport.coinex.common.ExtendedView
 import akka.persistence.Persistent
 
-class OrderReader(db: MongoDB) extends ExtendedView with OrderMongoHandler with ActorLogging {
-  override val processorId = "coinex_mup"
+class OrderReader(db: MongoDB) extends Actor with OrderMongoHandler with ActorLogging {
   val coll = db("order")
 
   def receive = LoggingReceive {
@@ -20,16 +19,15 @@ class OrderReader(db: MongoDB) extends ExtendedView with OrderMongoHandler with 
   }
 }
 
-class OrderWriter(db: MongoDB) extends ExtendedView with OrderMongoHandler with ActorLogging {
-  override val processorId = "coinex_mup"
+class OrderWriter(db: MongoDB) extends Actor with OrderMongoHandler with ActorLogging {
   val coll = db("order")
 
   def receive = LoggingReceive {
     case DebugDump => log.info("")
 
-    case Persistent(OrderCancelled(_, order), _) => cancelItem(order.id)
+    case OrderCancelled(_, order) => cancelItem(order.id)
 
-    case e @ Persistent(OrderSubmitted(orderInfo, txs), _) =>
+    case OrderSubmitted(orderInfo, txs) =>
       addItem(orderInfo)
       txs.foreach { tx =>
         val outAmount = tx.makerUpdate.current.inAmount

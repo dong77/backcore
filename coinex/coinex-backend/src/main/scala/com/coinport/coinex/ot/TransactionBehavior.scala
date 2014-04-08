@@ -4,11 +4,8 @@ import akka.actor.{ Actor, ActorLogging }
 import com.coinport.coinex.data._
 import com.mongodb.casbah.Imports._
 import akka.event.LoggingReceive
-import com.coinport.coinex.common.ExtendedView
-import akka.persistence.Persistent
 
-class TransactionReader(db: MongoDB) extends ExtendedView with TransactionMongoHandler with ActorLogging {
-  override val processorId = "coinex_mup"
+class TransactionReader(db: MongoDB) extends Actor with TransactionMongoHandler with ActorLogging {
   val coll = db("transaction")
 
   def receive = LoggingReceive {
@@ -20,15 +17,14 @@ class TransactionReader(db: MongoDB) extends ExtendedView with TransactionMongoH
   }
 }
 
-class TransactionWriter(db: MongoDB) extends ExtendedView with TransactionMongoHandler with ActorLogging {
-  override val processorId = "coinex_mup"
+class TransactionWriter(db: MongoDB) extends Actor with TransactionMongoHandler with ActorLogging {
   val coll = db("transaction")
 
   def receive = LoggingReceive {
     case DebugDump =>
       log.info("TransactionWriter")
 
-    case e @ Persistent(OrderSubmitted(orderInfo, txs), _) =>
+    case OrderSubmitted(orderInfo, txs) =>
       txs foreach { t =>
         val amount = Math.abs(t.takerUpdate.current.quantity - t.takerUpdate.previous.quantity)
         val reverseAmount = Math.abs(t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity)

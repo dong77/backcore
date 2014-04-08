@@ -43,11 +43,11 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
     m -> routerFor(market_depth_view << m)
   }: _*))
 
-  val transaction_reader = routerFor(transaction_mongo_reader<<)
-  //val transaction_writer = routerFor(transaction_mongo_writer <<)
+  val transaction_reader = routerFor(transaction_mongo_reader <<)
+  val transaction_writer = routerFor(transaction_mongo_writer <<)
 
-  val order_reader = routerFor(order_mongo_reader<<)
-  //val order_writer = routerFor(order_mongo_writer <<)
+  val order_reader = routerFor(order_mongo_reader <<)
+  val order_writer = routerFor(order_mongo_writer <<)
 
   val mailer = routerFor(ConstantRole.mailer <<)
 

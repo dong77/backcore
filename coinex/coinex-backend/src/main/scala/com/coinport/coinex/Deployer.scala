@@ -94,7 +94,9 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     markets foreach { m =>
       val props = Props(new MarketProcessor(m,
         routers.accountProcessor.path,
-        routers.marketUpdateProcessor.path) with Commandsourced[MarketState, MarketManager])
+        routers.marketUpdateProcessor.path,
+        routers.order_writer,
+        routers.transaction_writer) with Commandsourced[MarketState, MarketManager])
       deployProcessor(props, market_processor << m)
     }
 

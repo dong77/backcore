@@ -8,8 +8,6 @@ package com.coinport.coinex.markets
 import akka.event.LoggingReceive
 import com.coinport.coinex.common.ExtendedProcessor
 import akka.persistence._
-import com.coinport.coinex.data._
-import akka.persistence.SnapshotOffer
 
 // This is an empty processor to support various views.
 class MarketUpdateProcessor extends ExtendedProcessor {
