@@ -1,14 +1,14 @@
 /**
- * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
- *
- * All classes here are case-classes or case-objects. This is required since we are
- * maintaining an in-memory state that's immutable, so that while snapshot is taken,
- * the in-memory state can still be updated.
+ * Copyright 2014 Coinport Inc. All Rights Reserved.
+ * Author: c@coinport.com (Chao Ma)
  */
 
-package com.coinport.coinex.data
+package com.coinport.coinex.data.mutable
 
-import scala.collection.immutable.SortedSet
+import scala.collection.mutable.Map
+import scala.collection.mutable.SortedSet
+
+import com.coinport.coinex.data._
 import MarketState._
 import Implicits._
 
@@ -30,16 +30,12 @@ object MarketState {
   val EmptyOrderPools = Map.empty[MarketSide, MarketState.OrderPool]
 }
 
-/**
- * This class is the real in-memory state (data model) for a event-sourcing market processor.
- * It should be kept as a case class with immutable collections.
- */
 case class MarketState(
     headSide: MarketSide,
-    orderPools: MarketState.OrderPools = MarketState.EmptyOrderPools,
+    orderPools: MarketState.OrderPools = Map.empty,
     orderMap: Map[Long, Order] = Map.empty,
     // the price restriction of market price which avoiding user mis-type a price (5000 -> 500)
-    priceRestriction: Option[Double] = None) {
+    var priceRestriction: Option[Double] = None) {
 
   val tailSide = headSide.reverse
   val bothSides = Seq(headSide, tailSide)
@@ -48,11 +44,11 @@ case class MarketState(
   def bestTailSidePrice = orderPool(tailSide).headOption.map(_.price)
 
   def orderPool(side: MarketSide): OrderPool = {
-    orderPools.getOrElse(side, MarketState.EmptyOrderPool)
+    orderPools.getOrElse(side, SortedSet.empty[Order])
   }
 
   def setPriceRestriction(value: Option[Double]) = {
-    copy(priceRestriction = value)
+    priceRestriction = value
   }
 
   def popOrder(side: MarketSide): (Option[Order], MarketState) = {
@@ -67,13 +63,14 @@ case class MarketState(
       case None =>
         this
       case p =>
-        val market = removeOrder(side, order.id)
-        var lpos = market.orderPools
-
-        lpos += (side -> (market.orderPool(side) + order))
-        val orders = market.orderMap + (order.id -> order)
-
-        copy(orderPools = lpos, orderMap = orders)
+        removeOrder(side, order.id)
+        if (orderPools.contains(side)) {
+          orderPool(side) += order
+        } else {
+          orderPools += (side -> (orderPool(side) + order))
+        }
+        orderMap += (order.id -> order)
+        this
     }
   }
 
@@ -82,17 +79,16 @@ case class MarketState(
   def removeOrder(side: MarketSide, id: Long): MarketState = {
     orderMap.get(id) match {
       case Some(order) if orderPool(side).contains(order) =>
-        var lpos = orderPools
-
-        var pool = orderPool(side) - order
-        if (pool.isEmpty) lpos -= side
-        else lpos += (side -> pool)
-
-        val orders = orderMap - id
-        copy(orderPools = lpos, orderMap = orders)
+        orderPool(side) -= order
+        if (orderPool(side).isEmpty) orderPools -= side
+        // else orderPools += (side -> orderPool(side))
+        orderMap -= id
+        this
 
       case _ =>
         this
     }
   }
+
+  def copy = MarketState(headSide, orderPools.map(item => (item._1 -> item._2.clone)), orderMap.clone, priceRestriction)
 }

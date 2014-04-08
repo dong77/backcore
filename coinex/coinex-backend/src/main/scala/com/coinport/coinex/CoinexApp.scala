@@ -30,7 +30,7 @@ object CoinexApp extends App {
         required args(1): seeds - seed note seperated by comma, i.e, "127.0.0.1:25551,127.0.0.1:25552"
         optioanl args(2): roles - "*" for all roles, "" for empty node, and "a,b,c" for 3 roles
         optioanl args(3): hostname - self hostname
-      
+
         available roles:%s
       """.format(allRoles.mkString("\n\t\t", "\n\t\t", "\n\t\t"))
     println(message)
