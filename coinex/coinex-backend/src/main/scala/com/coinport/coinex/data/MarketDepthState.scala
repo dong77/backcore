@@ -9,7 +9,8 @@
 package com.coinport.coinex.data
 
 import scala.collection.immutable.SortedMap
-import MarketState._
+
+import com.coinport.coinex.data.immutable.MarketState._
 import Implicits._
 
 object MarketDepthState {

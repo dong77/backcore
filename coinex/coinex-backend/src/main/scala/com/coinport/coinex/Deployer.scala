@@ -19,7 +19,7 @@ import spray.can.Http
 import com.coinport.coinex.accounts._
 import com.coinport.coinex.apiauth._
 import com.coinport.coinex.common._
-import com.coinport.coinex.data.{ MarketState => _, _ }
+import com.coinport.coinex.data._
 import com.coinport.coinex.data.mutable.MarketState
 import com.coinport.coinex.mail._
 import com.coinport.coinex.markets._

@@ -5,7 +5,8 @@
 package com.coinport.coinex.data
 
 import org.specs2.mutable._
-import MarketState._
+
+import com.coinport.coinex.data.immutable.MarketState._
 import Implicits._
 import Currency._
 

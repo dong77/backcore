@@ -31,6 +31,8 @@ trait Commandsourced[T, M <: Manager[T]] extends Processor {
   val manager: M
 
   abstract override def receive = super.receive orElse {
+    // TODO(c): need copy a new instance
+    case TakeSnapshotNow => saveSnapshot(manager())
     case SnapshotOffer(_, snapshot) => manager(snapshot.asInstanceOf[T])
   }
 }

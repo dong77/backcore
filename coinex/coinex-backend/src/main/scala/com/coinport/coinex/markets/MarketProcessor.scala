@@ -6,11 +6,10 @@
 package com.coinport.coinex.markets
 
 import akka.actor.{ ActorRef, ActorPath }
-import akka.persistence.SnapshotOffer
 import akka.persistence._
 import akka.event.LoggingReceive
 import com.coinport.coinex.common.ExtendedProcessor
-import com.coinport.coinex.data.{ MarketState => _, _ }
+import com.coinport.coinex.data._
 import com.coinport.coinex.data.mutable.MarketState
 import Implicits._
 import ErrorCode._
@@ -28,8 +27,6 @@ class MarketProcessor(
   val manager = new MarketManager(marketSide)
 
   def receive = LoggingReceive {
-    case TakeSnapshotNow => saveSnapshot(manager().toThrift)
-    case SnapshotOffer(_, snapshot) => manager(MarketState(snapshot.asInstanceOf[TMarketState]))
     case p @ Persistent(DoCancelOrder(side, orderId, userId), seq) =>
       if (!manager.orderExist(orderId)) {
         sender ! CancelOrderFailed(OrderNotExist)

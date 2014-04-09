@@ -6,9 +6,11 @@
  * the in-memory state can still be updated.
  */
 
-package com.coinport.coinex.data
+package com.coinport.coinex.data.immutable
 
 import scala.collection.immutable.SortedSet
+
+import com.coinport.coinex.data._
 import MarketState._
 import Implicits._
 

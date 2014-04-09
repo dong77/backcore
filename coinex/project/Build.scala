@@ -109,8 +109,9 @@ object CoinexBuild extends Build {
         "io.spray" % "spray-can" % sprayVersion,
         "io.spray" % "spray-routing" % sprayVersion,
         "io.spray" % "spray-client" % sprayVersion,
-        "io.spray" % "spray-http" % sprayVersion),
-
+        "io.spray" % "spray-http" % sprayVersion,
+        "com.coinport" %% "akka-persistence-hbase" % "1.0.1-SNAPSHOT"),
+      
       compile in MultiJvm <<= (compile in MultiJvm) triggeredBy (compile in Test),
       parallelExecution in Test := false,
       executeTests in Test <<= (executeTests in Test, executeTests in MultiJvm) map {

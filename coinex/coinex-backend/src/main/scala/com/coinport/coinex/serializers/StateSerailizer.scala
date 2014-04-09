@@ -3,6 +3,7 @@ package com.coinport.coinex.serializers
 import akka.serialization.Serializer
 import com.twitter.bijection.scrooge.BinaryScalaCodec
 import com.coinport.coinex.data._
+import com.coinport.coinex.data.mutable._
 import Conversions._
 
 class StateSerializer extends Serializer {
@@ -14,6 +15,10 @@ class StateSerializer extends Serializer {
       val thrift = m.toThrift
       println("------StateSerializer>> toBinary for: " + thrift)
       BinaryScalaCodec(PersistentAccountState)(thrift)
+    case m: MarketState =>
+      println("------StateSerializer>> for MarketState")
+      val thrift = m.toThrift
+      BinaryScalaCodec(TMarketState)(thrift)
     case m => throw new IllegalArgumentException("Cannot serialize object: " + m)
   }
 
@@ -23,6 +28,10 @@ class StateSerializer extends Serializer {
       val thrift = BinaryScalaCodec(PersistentAccountState).invert(bytes).get
       println("------StateSerializer>> fromBinary for: " + thrift)
       thrift.toPojo
+    case Some(c) if c == classOf[MarketState] =>
+      println("------StateDeserializer>> for MarketState")
+      val thrift = BinaryScalaCodec(TMarketState).invert(bytes).get
+      MarketState(thrift)
 
     case Some(c) => throw new IllegalArgumentException("Cannot deserialize class: " + c.getCanonicalName)
     case None => throw new IllegalArgumentException("No class found in EventSerializer when deserializing array: " + bytes.mkString(""))

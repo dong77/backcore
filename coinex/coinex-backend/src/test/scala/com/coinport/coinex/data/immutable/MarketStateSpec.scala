@@ -2,9 +2,11 @@
  * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
  */
 
-package com.coinport.coinex.data
+package com.coinport.coinex.data.immutable
 
 import org.specs2.mutable._
+
+import com.coinport.coinex.data._
 import MarketState._
 import Implicits._
 import Currency._

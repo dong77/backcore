@@ -6,9 +6,9 @@ package com.coinport.coinex.markets
 
 import org.specs2.mutable._
 import scala.collection.immutable.SortedSet
+
 import com.coinport.coinex.data._
-import com.coinport.coinex.data.MarketState
-import MarketState._
+import com.coinport.coinex.data.mutable.MarketState._
 import Implicits._
 import Currency._
 import OrderStatus._

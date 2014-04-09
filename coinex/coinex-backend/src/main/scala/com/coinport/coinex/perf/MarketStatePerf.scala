@@ -6,7 +6,7 @@
 package com.coinport.coinex.perf
 
 import com.coinport.coinex.data.mutable.{ MarketState => MS }
-import com.coinport.coinex.data.MarketState
+import com.coinport.coinex.data.immutable.MarketState
 import com.coinport.coinex.data.TMarketState
 import com.coinport.coinex.data.Currency._
 import com.coinport.coinex.data.Order

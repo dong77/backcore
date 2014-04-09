@@ -15,7 +15,7 @@
 
 package com.coinport.coinex.markets
 
-import com.coinport.coinex.data.{ MarketState => _, _ }
+import com.coinport.coinex.data._
 import com.coinport.coinex.data.mutable.MarketState
 import com.coinport.coinex.common.Manager
 import scala.annotation.tailrec
