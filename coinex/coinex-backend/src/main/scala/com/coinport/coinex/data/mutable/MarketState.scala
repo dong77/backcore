@@ -9,8 +9,8 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.SortedSet
 
 import com.coinport.coinex.data._
-import MarketState._
 import Implicits._
+import MarketState._
 
 object MarketState {
   implicit val ordering = new Ordering[Order] {
@@ -28,6 +28,14 @@ object MarketState {
 
   val EmptyOrderPool = SortedSet.empty[Order]
   val EmptyOrderPools = Map.empty[MarketSide, MarketState.OrderPool]
+
+  def apply(tms: TMarketState): MarketState = MarketState(
+    tms.side,
+    Map.empty[MarketSide, MarketState.OrderPool] ++ tms.orderPools.map(
+      item => (item._1 -> (SortedSet.empty[Order] ++ item._2))),
+    Map.empty[Long, Order] ++ tms.orderMap,
+    tms.priceRestriction
+  )
 }
 
 case class MarketState(
@@ -91,4 +99,7 @@ case class MarketState(
   }
 
   def copy = MarketState(headSide, orderPools.map(item => (item._1 -> item._2.clone)), orderMap.clone, priceRestriction)
+
+  def toThrift = TMarketState(
+    headSide, orderPools.map(item => (item._1 -> item._2.toList)), orderMap.clone, priceRestriction)
 }

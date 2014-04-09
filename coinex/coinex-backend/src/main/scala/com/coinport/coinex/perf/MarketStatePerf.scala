@@ -7,6 +7,7 @@ package com.coinport.coinex.perf
 
 import com.coinport.coinex.data.mutable.{ MarketState => MS }
 import com.coinport.coinex.data.MarketState
+import com.coinport.coinex.data.TMarketState
 import com.coinport.coinex.data.Currency._
 import com.coinport.coinex.data.Order
 import com.coinport.coinex.data.Implicits._
@@ -25,16 +26,27 @@ object MarketStatePerf {
     println(res)
     println(state.orderPool(side).size)
 
-    num = 100
-    var copyState: MS = null
+    num = 10
+    var copyState: TMarketState = null
     start = System.currentTimeMillis()
     for (i <- 0L until num)
-      copyState = state.copy
+      copyState = state.toThrift
 
-    opsPerSecond = (num * 1000L) / (System.currentTimeMillis() - start)
-    res = "The ops of snapshot mutable state is %,d ops/sec" format opsPerSecond
+    opsPerSecond = (num * 1000L * 60L) / (System.currentTimeMillis() - start)
+    res = "The ops of snapshot mutable state is %,d ops/min" format opsPerSecond
     println(res)
-    println(copyState.orderPool(side).size)
+    println(copyState.orderPools(side).size)
+
+    num = 10
+    var newState: MS = null
+    start = System.currentTimeMillis()
+    for (i <- 0L until num)
+      newState = MS(copyState)
+
+    opsPerSecond = (num * 1000L * 60L) / (System.currentTimeMillis() - start)
+    res = "The ops of reload mutable state from thrift is %,d ops/min" format opsPerSecond
+    println(res)
+    println(newState.orderPools(side).size)
   }
 
   def immutableTest() {

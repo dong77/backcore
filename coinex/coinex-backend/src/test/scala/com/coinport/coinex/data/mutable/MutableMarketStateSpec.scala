@@ -6,9 +6,10 @@ package com.coinport.coinex.data.mutable
 
 import org.specs2.mutable._
 import MarketState._
-import com.coinport.coinex.data.Implicits._
 import com.coinport.coinex.data.Currency._
+import com.coinport.coinex.data.Implicits._
 import com.coinport.coinex.data.Order
+import com.coinport.coinex.data.TMarketState
 
 class MutableMarketStateSpec extends Specification {
   val rand = new scala.util.Random
@@ -107,6 +108,31 @@ class MutableMarketStateSpec extends Specification {
         o mustEqual order2
       }
       leftMarket mustEqual m1
+    }
+  }
+
+  "MarketState" should {
+    "to/from thrift obj" in {
+      val m = newMarket
+      val side = Btc ~> Rmb
+      val order1 = Order(888L, 1L, 100, Some(1000.0))
+      val order2 = Order(888L, 2L, 100, Some(999.99))
+      val order3 = Order(888L, 3L, 100, Some(1000.1))
+      m.addOrder(side, order1)
+      m.addOrder(side, order2)
+      m.addOrder(side, order3)
+
+      m.orderPool(side.reverse) mustEqual EmptyOrderPool
+      m.orderPool(side).toList mustEqual order2 :: order1 :: order3 :: Nil
+      m.orderMap mustEqual Map(order1.id -> order1, order2.id -> order2, order3.id -> order3)
+
+      val tms = m.toThrift
+      val newM = MarketState(tms)
+      newM mustEqual m
+      val ss = m.copy
+      m.removeOrder(side, 2)
+      newM mustNotEqual m
+      newM mustEqual ss
     }
   }
 }
