@@ -12,8 +12,8 @@ import scala.concurrent.duration._
 import com.coinport.coinex.data.TakeSnapshotNow
 
 trait ExtendedProcessor extends Processor with ActorLogging {
-  val snapshotInterval = 3 minute
-  // val snapshotInterval = 30 second
+  // val snapshotInterval = 3 minute
+  val snapshotInterval = 10 second
 
   implicit val ec = context.system.dispatcher
   private var cancellable: Cancellable = null
@@ -34,7 +34,7 @@ trait ExtendedProcessor extends Processor with ActorLogging {
     if (cancellable != null && !cancellable.isCancelled) cancellable.cancel()
 
   protected def scheduleSnapshot() =
-    cancellable = context.system.scheduler.schedule(snapshotInterval, snapshotInterval, self, TakeSnapshotNow)
+    cancellable = context.system.scheduler.scheduleOnce(snapshotInterval, self, TakeSnapshotNow)
 
   protected def createChannelTo(dest: String) = {
     val channelName = processorId + "_2_" + dest
