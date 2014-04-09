@@ -64,6 +64,8 @@ object CoinexBuild extends Build {
       "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
       "com.typesafe.akka" %% "akka-contrib" % akkaVersion,
       "com.typesafe.akka" %% "akka-persistence-experimental" % akkaVersion,
+      "org.specs2" %% "specs2" % "2.3.8" % "test",
+      "org.scalatest" %% "scalatest" % "2.0" % "test",
       "com.twitter" %% "bijection-scrooge" % bijectionVersion,
       "com.twitter" %% "bijection-json4s" % bijectionVersion,
       "com.twitter" %% "bijection-json" % bijectionVersion,
