@@ -7,6 +7,8 @@ import javax.crypto.Mac
 import scala.collection.mutable.ArrayBuffer
 import java.nio.ByteBuffer
 
+// https://github.com/evanx/vellum/blob/c1329e5a97cf21ff1a8a186e961d6397b7e96176/src/vellumdemo/totp/GenerateGoogleTotpQrUrl.java
+
 final class GoogleAuthenticator {
   private val rand = SecureRandom.getInstance("SHA1PRNG", "SUN")
 
@@ -21,28 +23,18 @@ final class GoogleAuthenticator {
   def verifyCode(secret: String, code: Int, timeIndex: Long, variance: Int): Boolean = {
     val secretBytes = new Base32().decode(secret)
     (-variance to variance) map { i =>
-
-      println("code: " + getCode(secretBytes, timeIndex + i))
       if (getCode(secretBytes, timeIndex + i) == code) { return true; }
     }
     false
   }
 
   def getCode(secret: Array[Byte], timeIndex: Long): Int = {
-    val buffer = ByteBuffer.allocate(8)
-    buffer.putLong(timeIndex)
-    val timeBytes = buffer.array()
-
+    val msg = ByteBuffer.allocate(8).putLong(timeIndex).array()
     val mac = Mac.getInstance("HmacSHA1")
-    mac.init(new SecretKeySpec(secret, "HmacSHA1"))
-    val hash = mac.doFinal(timeBytes)
-
-    val offset = hash(19) & 0xf
-    var truncatedHash: Long = hash(offset) & 0x7f
-    (1 to 3) foreach { i =>
-      truncatedHash <<= 8
-      truncatedHash |= hash(offset + i) & 0xff
-    }
-    (truncatedHash % 1000000).toInt
+    mac.init(new SecretKeySpec(secret, "RAW"))
+    val hash = mac.doFinal(msg)
+    val offset = hash(hash.length - 1) & 0xf
+    val binary = ((hash(offset) & 0x7f) << 24) | ((hash(offset + 1) & 0xff) << 16) | ((hash(offset + 2) & 0xff) << 8) | (hash(offset + 3) & 0xff)
+    (binary % 1000000).toInt
   }
 }

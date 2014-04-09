@@ -11,16 +11,20 @@ class GoogleAuthenticatorSpec extends Specification {
   val auth = new GoogleAuthenticator
 
   "GoogleAuthenticator" should {
+    "generate right code base on time" in {
+      val secret = "R5MB5FAQNX5UIPWL"
+      val secretBytes = new Base32().decode(secret)
+      auth.getCode(secretBytes, 45187109L) mustEqual 2941
+    }
+
     "authenticate code correctly with 1 variance" in {
       val secret = auth.createSecret
-      println("secret: " + secret)
       val secretBytes = new Base32().decode(secret)
 
       val millis = System.currentTimeMillis()
       val timeIndex = auth.getTimeIndex(millis)
 
       val code = auth.getCode(secretBytes, timeIndex)
-      println("code: " + code)
       auth.verifyCode(secret, code, timeIndex, 1) mustEqual true
     }
 
