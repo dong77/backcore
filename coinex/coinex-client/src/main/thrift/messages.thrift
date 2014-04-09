@@ -274,6 +274,11 @@ struct Cursor {
     2: i32 limit
 }
 
+struct SpanCursor {
+    1: i64 from
+    2: i64 to
+}
+
 struct TransactionItem  {
     1: i64 tid
     2: double price
@@ -399,3 +404,11 @@ struct RedeliverFilterState {
 ////////// TransactionView
 /* Q    */ struct QueryTransaction                    {1: optional i64 tid, 2: optional i64 uid, 3: optional i64 oid, 4:optional MarketSide side, 5: Cursor cursor, 6: bool getCount}
 /* R    */ struct QueryTransactionResult              {1: list<TransactionItem> transactionItems, 2: i64 count}
+
+////////// DepositQuery
+/* Q    */ struct QueryDeposit                        {1: optional i64 uid, 2: optional Currency currency, 3: optional TransferStatus status, 4: optional SpanCursor spanCur, 5: Cursor cur, 6: bool getCount}
+/* R    */ struct QueryDepositResult                  {1: list<Deposit> deposits, 2: i64 count}
+
+////////// WithdrawalQuery
+/* Q    */ struct QueryWithdrawal                     {1: optional i64 uid, 2: optional Currency currency, 3: optional TransferStatus status,  4: optional SpanCursor spanCur, 5: Cursor cur, 6: bool getCount}
+/* R    */ struct QueryWithdrawalResult               {1: list<Withdrawal> withdrawals, 2: i64 count}

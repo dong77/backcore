@@ -15,6 +15,7 @@ trait OrderMongoHandler {
   val STATUS = "st"
   val CREATED_TIME = "c@"
   val UPDATED_TIME = "u@"
+  val MARKET = "m"
 
   val converter = new ThriftBinarySerializer
 
@@ -62,5 +63,4 @@ trait OrderMongoHandler {
     if (q.status.isDefined) query = query ++ (STATUS -> q.status.get)
     query
   }
-
 }

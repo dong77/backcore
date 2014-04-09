@@ -8,7 +8,6 @@ import com.coinport.coinex.data._
 import ErrorCode._
 import com.coinport.coinex.common.SimpleJsonMongoCollection
 import com.mongodb.casbah.MongoDB
-import com.coinport.coinex.common.SimpleMongoCollection
 
 // TODO(c): Count fees
 class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)

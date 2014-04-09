@@ -1,8 +1,7 @@
 package com.coinport.coinex.common
 
-import com.mongodb.casbah._
+import com.mongodb.casbah.Imports._
 import com.coinport.coinex.serializers._
-import com.mongodb.casbah.commons.MongoDBObject
 import com.mongodb.util.JSON
 
 sealed trait SimpleMongoCollection[T <: AnyRef] {
@@ -13,6 +12,7 @@ sealed trait SimpleMongoCollection[T <: AnyRef] {
   def extractId(obj: T): Long
   def get(id: Long): Option[T]
   def put(data: T): Unit
+
   // def delete(id: Long) = coll -= MongoDBObject(ID -> id)
 }
 
@@ -21,6 +21,11 @@ abstract class SimpleJsonMongoCollection[T <: AnyRef, S <: T](implicit man: Mani
   import org.json4s.native.Serialization.{ read, write }
   def get(id: Long) = coll.findOne(MongoDBObject(ID -> id)) map { json => read[S](json.get(DATA).toString) }
   def put(data: T) = coll += MongoDBObject(ID -> extractId(data), DATA -> JSON.parse(write(data)))
+
+  def find(q: MongoDBObject, skip: Int, limit: Int): Seq[T] =
+    coll.find(q).sort(MongoDBObject(ID -> -1)).skip(skip).limit(limit).map { json => read[S](json.get(DATA).toString) }.toSeq
+
+  def count(q: MongoDBObject): Long = coll.count(q)
 }
 
 abstract class SimpleBinaryMongoCollection[T <: AnyRef, S <: T](implicit man: Manifest[S]) extends SimpleMongoCollection[T] {

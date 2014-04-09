@@ -1,7 +1,6 @@
 package com.coinport.coinex.ot
 
 import com.coinport.coinex.data.{ Currency, MarketSide }
-import com.coinport.coinex.data.Currency._
 import com.coinport.coinex.data.Implicits._
 
 object MarketSideMap {
