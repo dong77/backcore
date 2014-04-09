@@ -14,7 +14,8 @@ class UserView(userManagerSecret: String) extends ExtendedView {
   override val processorId = "coinex_up"
   override val viewId = "user_view"
 
-  val manager = new UserManager(userManagerSecret)
+  val googleAuthenticator = new GoogleAuthenticator
+  val manager = new UserManager(googleAuthenticator, userManagerSecret)
 
   def receive = LoggingReceive {
     case Persistent(m, seq) => updateState(m)
@@ -24,17 +25,27 @@ class UserView(userManagerSecret: String) extends ExtendedView {
         case Left(error) => sender ! LoginFailed(error)
         case Right(profile) => sender ! LoginSucceeded(profile.id, profile.email)
       }
-    // This command may not be necessary
-    /*
+
     case ValidatePasswordResetToken(token) =>
       manager().passwordResetTokenMap.get(token) match {
         case Some(id) => sender ! PasswordResetTokenValidationResult(manager().profileMap.get(id))
         case None => sender ! PasswordResetTokenValidationResult(None)
-      }*/
+      }
+
+    case VerifyGoogleAuthCode(email, code) =>
+      manager.getUser(email) match {
+        case Some(profile) if profile.googleAuthenticatorSecret.isDefined =>
+          val secret = profile.googleAuthenticatorSecret.get
+          val timeIndex = googleAuthenticator.getTimeIndex()
+          if (googleAuthenticator.verifyCode(secret, code, timeIndex, 1)) GoogleAuthCodeVerificationResult(Some(profile))
+          else GoogleAuthCodeVerificationResult(None)
+        case _ => GoogleAuthCodeVerificationResult(None)
+      }
   }
 
   def updateState(event: Any) = event match {
     case DoRegisterUser(profile, _) => manager.registerUser(profile)
+    case DoUpdateUserProfile(profile) => manager.updateUser(profile)
     case DoRequestPasswordReset(email) => manager.requestPasswordReset(email, lastSequenceNr)
     case DoResetPassword(email, password, token) => manager.resetPassword(email, password, token)
   }

@@ -15,7 +15,8 @@ import akka.event.LoggingReceive
 class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends EventsourcedProcessor with ActorLogging {
   override val processorId = "coinex_up"
 
-  val manager = new UserManager(userManagerSecret)
+  val googleAuthenticator = new GoogleAuthenticator
+  val manager = new UserManager(googleAuthenticator, userManagerSecret)
 
   def receiveRecover = PartialFunction.empty[Any, Unit]
 
@@ -28,6 +29,15 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Eventso
         sender ! RegisterUserSucceeded(profile)
         persist(DoRegisterUser(profile, password))(updateState)
         sendEmailVerificationEmail(profile)
+      }
+
+    case m @ DoUpdateUserProfile(userProfile) =>
+      if (!manager.isEmailRegistered(userProfile.email)) {
+        sender ! UpdateUserProfileFailed(EmailAlreadyRegistered)
+      } else {
+        val profile = manager.getUser(userProfile.email)
+        sender ! UpdateUserProfileSucceeded(profile.get)
+        persist(DoUpdateUserProfile(userProfile))(updateState)
       }
 
     case m @ DoRequestPasswordReset(email) =>
@@ -51,26 +61,11 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends Eventso
         case None =>
           sender ! ResetPasswordFailed(UserNotExist)
       }
-
-    case Login(email, password) =>
-      manager.checkLogin(email, password) match {
-        case Left(error) => sender ! LoginFailed(error)
-        case Right(profile) => sender ! LoginSucceeded(profile.id, profile.email)
-      }
-
-    // This command may not be necessary
-    /*
-    case ValidatePasswordResetToken(token) =>
-      manager().passwordResetTokenMap.get(token) match {
-        case Some(id) => sender ! PasswordResetTokenValidationResult(manager().profileMap.get(id))
-        case None => sender ! PasswordResetTokenValidationResult(None)
-      }
-      */
   }
 
   def updateState(event: Any): Unit = event match {
-    case DoRegisterUser(profile, _) =>
-      manager.registerUser(profile)
+    case DoRegisterUser(profile, _) => manager.registerUser(profile)
+    case DoUpdateUserProfile(profile) => manager.updateUser(profile)
 
     case DoRequestPasswordReset(email) =>
       val profile = manager.requestPasswordReset(email, lastSequenceNr)

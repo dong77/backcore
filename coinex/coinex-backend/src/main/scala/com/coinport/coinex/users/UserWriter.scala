@@ -13,19 +13,18 @@ class UserWriter(db: MongoDB, userManagerSecret: String) extends ExtendedView {
   override val processorId = "coinex_up"
   override val viewId = "user_mpview"
 
-  val manager = new UserManager(userManagerSecret)
+  val totpAuthenticator = new GoogleAuthenticator
+  val manager = new UserManager(totpAuthenticator, userManagerSecret)
 
   def receive = LoggingReceive {
     case Persistent(m, seq) => updateState(m)
   }
 
   def updateState(event: Any) = event match {
-    case DoRegisterUser(profile, _) =>
-      profiles.put(manager.registerUser(profile))
-    case DoRequestPasswordReset(email) =>
-      profiles.put(manager.requestPasswordReset(email, lastSequenceNr))
-    case DoResetPassword(email, password, token) =>
-      profiles.put(manager.resetPassword(email, password, token))
+    case DoRegisterUser(profile, _) => profiles.put(manager.registerUser(profile))
+    case DoUpdateUserProfile(profile) => profiles.put(profile)
+    case DoRequestPasswordReset(email) => profiles.put(manager.requestPasswordReset(email, lastSequenceNr))
+    case DoResetPassword(email, password, token) => profiles.put(manager.resetPassword(email, password, token))
   }
 
   val profiles = new SimpleJsonMongoCollection[UserProfile, UserProfile.Immutable] {

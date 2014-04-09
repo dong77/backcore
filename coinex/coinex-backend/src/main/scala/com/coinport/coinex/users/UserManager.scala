@@ -20,7 +20,7 @@ import com.coinport.coinex.common.Manager
 import com.coinport.coinex.util._
 import com.google.common.io.BaseEncoding
 
-class UserManager(secret: String = "") extends Manager[UserState](UserState()) {
+class UserManager(googleAuthenticator: GoogleAuthenticator, secret: String = "") extends Manager[UserState](UserState()) {
 
   def getUser(email: String) = state.profileMap.get(computeUserId(email))
   def isEmailRegistered(email: String) = getUser(email).isDefined
@@ -29,6 +29,7 @@ class UserManager(secret: String = "") extends Manager[UserState](UserState()) {
     val id = computeUserId(profile.email)
     val verificationToken = computeHexToken(salt, profile.email)
     val passwordHash = computePassword(id, profile.email, password)
+    val googleAuthenticatorSecret = googleAuthenticator.createSecret
 
     profile.copy(
       id = id,
@@ -37,11 +38,17 @@ class UserManager(secret: String = "") extends Manager[UserState](UserState()) {
       passwordResetToken = None,
       verificationToken = Some(verificationToken),
       loginToken = None,
+      googleAuthenticatorSecret = None,
       status = UserStatus.Normal)
   }
 
   def registerUser(profile: UserProfile): UserProfile = {
     state = state.addUserProfile(profile).addVerificationToken(profile.verificationToken.get, profile.id)
+    profile
+  }
+
+  def updateUser(profile: UserProfile): UserProfile = {
+    state = state.addUserProfile(profile)
     profile
   }
 
@@ -64,16 +71,14 @@ class UserManager(secret: String = "") extends Manager[UserState](UserState()) {
     updatedProfile
   }
 
-  def checkLogin(email: String, password: String): Either[ErrorCode, UserProfile] = {
-    val id = computeUserId(email)
-    state.profileMap.get(id) match {
+  def checkLogin(email: String, password: String): Either[ErrorCode, UserProfile] =
+    getUser(email) match {
       case None => Left(ErrorCode.UserNotExist)
       case Some(profile) =>
         val passwordHash = computePassword(profile.id, profile.email, password)
         if (Some(passwordHash) == profile.passwordHash) Right(profile)
         else Left(ErrorCode.PasswordNotMatch)
     }
-  }
 
   private val userIdSecret = MHash.sha256Base64(secret + "userIdSecret")
   private val passwordSecret = MHash.sha256Base64(secret + "passwordSecret")
