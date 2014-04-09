@@ -7,7 +7,7 @@ import akka.event.LoggingReceive
 import com.coinport.coinex.data._
 import ErrorCode._
 import com.coinport.coinex.common.SimpleJsonMongoCollection
-import com.mongodb.casbah.MongoDB
+import com.mongodb.casbah.Imports._
 
 // TODO(c): Count fees
 class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
@@ -78,17 +78,33 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
     channelToAccountProcessor forward Deliver(Persistent(event), accountProcessorPath)
 }
 
-// TODO(xi): add more query method into `deposits` and `withdrawals`.
 trait DepositWithdrawBehavior {
   val db: MongoDB
+
   val deposits = new SimpleJsonMongoCollection[Deposit, Deposit.Immutable] {
-    val coll = db("deposits")
+    lazy val coll = db("deposits")
     def extractId(deposit: Deposit) = deposit.id
+    def getQueryDBObject(q: QueryDeposit): MongoDBObject = {
+      var query = MongoDBObject()
+      if (q.uid.isDefined) query ++= MongoDBObject(DATA + "." + Deposit.UserIdField.name -> q.uid.get)
+      if (q.currency.isDefined) query ++= MongoDBObject(DATA + "." + Deposit.CurrencyField.name -> q.currency.get.getValue())
+      if (q.status.isDefined) query ++= MongoDBObject(DATA + "." + Deposit.StatusField.name -> q.status.get.getValue())
+      if (q.spanCur.isDefined) query ++= (DATA + "." + Deposit.CreatedField.name $lte q.spanCur.get.from $gte q.spanCur.get.to)
+      query
+    }
   }
 
   val withdrawals = new SimpleJsonMongoCollection[Withdrawal, Withdrawal.Immutable] {
-    val coll = db("withdrawal")
+    lazy val coll = db("withdrawal")
     def extractId(withdrawal: Withdrawal) = withdrawal.id
+    def getQueryDBObject(q: QueryWithdrawal): MongoDBObject = {
+      var query = MongoDBObject()
+      if (q.uid.isDefined) query ++= MongoDBObject(DATA + "." + Withdrawal.UserIdField.name -> q.uid.get)
+      if (q.currency.isDefined) query ++= MongoDBObject(DATA + "." + Withdrawal.CurrencyField.name -> q.currency.get.getValue())
+      if (q.status.isDefined) query ++= MongoDBObject(DATA + "." + Withdrawal.StatusField.name -> q.status.get.getValue())
+      if (q.spanCur.isDefined) query ++= (DATA + "." + Withdrawal.CreatedField.name $lte q.spanCur.get.from $gte q.spanCur.get.to)
+      query
+    }
   }
 
   def updateState(event: Any) = event match {

@@ -89,6 +89,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployView(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer<<)
     deployView(Props(new OrderReader(dbForViews)), order_mongo_reader<<)
     deployView(Props(new OrderWriter(dbForViews)), order_mongo_writer<<)
+    deployView(Props(new DepositWithdrawReader(dbForViews)), dw_mongo_reader<<)
 
     // Then deploy routers
     val routers = new LocalRouters(markets)

@@ -2,7 +2,7 @@
  * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
  */
 
-package com.coinport.coinex.mongohandler
+package com.coinport.coinex.mongo
 
 import com.coinport.coinex.data.Currency.{ Btc, Rmb }
 import org.specs2.mutable._

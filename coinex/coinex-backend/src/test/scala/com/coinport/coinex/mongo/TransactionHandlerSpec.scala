@@ -2,7 +2,7 @@
  * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
  */
 
-package com.coinport.coinex.mongohandler
+package com.coinport.coinex.mongo
 
 import org.specs2.mutable._
 import com.coinport.coinex.ot.TransactionMongoHandler
