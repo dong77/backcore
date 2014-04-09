@@ -14,7 +14,7 @@ import com.coinport.coinex.data.Implicits._
 object MarketStatePerf {
   def mutableTest() {
     val side = (Btc ~> Rmb)
-    val num: Long = 4000 * 1000L
+    var num: Long = 4000 * 1000L
     var state = new MS(side)
     var start: Long = System.currentTimeMillis()
     for (i <- 0L until num) {
@@ -25,9 +25,10 @@ object MarketStatePerf {
     println(res)
     println(state.orderPool(side).size)
 
-    start = System.currentTimeMillis()
+    num = 100
     var copyState: MS = null
-    for (i <- 0 until 10)
+    start = System.currentTimeMillis()
+    for (i <- 0L until num)
       copyState = state.copy
 
     opsPerSecond = (num * 1000L) / (System.currentTimeMillis() - start)
