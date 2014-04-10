@@ -11,6 +11,7 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import com.coinport.coinex.data.TakeSnapshotNow
 
+@deprecated(message = "use AbstractEventsourced or AbstractCommandsourced", since = "20140410")
 trait ExtendedProcessor extends Processor with ActorLogging {
   // val snapshotInterval = 3 minute
   val snapshotInterval = 10 second
