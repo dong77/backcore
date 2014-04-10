@@ -1,18 +1,36 @@
 /**
- * Copyright 2014 Coinport Inc. All Rights Reserved.
- * Author: c@coinport.com (Chao Ma)
+ * Copyright {C} 2014 Coinport Inc. <http://www.coinport.com>
+ *
+ * WARNING:
+ *  All structs must have at least 1 parameters, otherwise AKKA serialization fails.
  */
 
 namespace java com.coinport.coinex.data
 
-include "messages.thrift"
+include "data.thrift"
 
-typedef messages.MarketSide MarketSide
-typedef messages.Order Order
+///////////////////////////////////////////////////////////////////////
+///////////////////// PROCESSOR AND VIEW STATES ///////////////////////
+///////////////////////////////////////////////////////////////////////
+
+typedef data.Order                 Order
+typedef data.MarketSide            MarketSide
 
 struct TMarketState {
     1: MarketSide side
     2: map<MarketSide, list<Order>> orderPools
     3: map<i64, Order> orderMap
     4: optional double priceRestriction
+}
+
+// TODO: rename
+struct ApiSecretState {
+    1: map<string, ApiSecret> identifierLookupMap // key is identifier
+    2: map<i64, list<ApiSecret>> userSecretMap // key is userId
+    3: string seed
+}
+
+// TODO: rename
+struct PersistentAccountState {
+    1: map<i64, UserAccount> userAccountsMap
 }

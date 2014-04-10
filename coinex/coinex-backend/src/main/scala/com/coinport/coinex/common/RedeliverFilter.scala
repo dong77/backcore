@@ -1,9 +1,9 @@
 package com.coinport.coinex.common
 
-import com.coinport.coinex.data.RedeliverFilterState
+import com.coinport.coinex.data.RedeliverFilterData
 import scala.collection.mutable.SortedSet
 
-class RedeliverFilter(state: RedeliverFilterState, maxSize: Int = -1) {
+class RedeliverFilter(state: RedeliverFilterData, maxSize: Int = -1) {
   private val max = if (maxSize <= 0) state.ids.size else maxSize
   assert(max > 0)
   private[common] var ids = SortedSet[Long](state.ids: _*).takeRight(max)
@@ -14,6 +14,6 @@ class RedeliverFilter(state: RedeliverFilterState, maxSize: Int = -1) {
     op(id)
   }
 
-  def getState = RedeliverFilterState(ids.toSeq)
+  def getState = RedeliverFilterData(ids.toSeq)
   private def seen(id: Long) = id < ids.headOption.getOrElse(0L) || ids.contains(id)
 }

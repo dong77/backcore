@@ -15,8 +15,14 @@ object Generator {
 
   // Do the generation and replace existing files
   val time = Calendar.getInstance().getTime().toString
-  val enums = extractEnumsFromFile("coinex-client/src/main/thrift/messages.thrift")
-  val structs = extractStructsFromFile("coinex-client/src/main/thrift/messages.thrift")
+
+  val enums = extractEnumsFromFile("coinex-client/src/main/thrift/data.thrift") ++
+    extractEnumsFromFile("coinex-client/src/main/thrift/message.thrift") ++
+    extractEnumsFromFile("coinex-client/src/main/thrift/state.thrift")
+
+  val structs = extractStructsFromFile("coinex-client/src/main/thrift/data.thrift") ++
+    extractStructsFromFile("coinex-client/src/main/thrift/message.thrift") ++
+    extractStructsFromFile("coinex-client/src/main/thrift/state.thrift")
 
   def apply() = {
     generateSerializerFile("ThriftBinarySerializer", 607870725, "BinaryScalaCodec", structs,
@@ -35,7 +41,7 @@ object Generator {
 
   def extractEnumsFromFile(file: String): Seq[String] = {
     val lines = scala.io.Source.fromFile(file).mkString
-    enumNameExtractor.findAllIn(lines).matchData.toSeq.map(_.group(1))
+    enumNameExtractor.findAllIn(lines).matchData.toSeq.map(_.group(1)).sortWith(_<_)
   }
 
   def enumSerializerClause(enum: String) = ENUM_SERIALIZER.format(enum, enum, enum, enum)
@@ -50,7 +56,7 @@ object Generator {
   // Auto-generate EventSerializer code
   def extractStructsFromFile(file: String): Seq[String] = {
     val lines = scala.io.Source.fromFile(file).mkString
-    structNameExtractor.findAllIn(lines).matchData.toSeq.map(_.group(1))
+    structNameExtractor.findAllIn(lines).matchData.toSeq.map(_.group(1)).sortWith(_<_)
   }
 
   def generateSerializerFile(className: String, id: Int, codec: String, structs: Seq[String], outputFile: String, time: String) = {
@@ -61,12 +67,12 @@ object Generator {
     writeToFile(code, outputFile)
   }
 
-  def codecClause(idx: Int, codec: String, struct: String) = s"  lazy val s_${idx} = ${codec}(${struct})"
-  def toBinaryClauses(idx: Int, struct: String) = s"    case m: $struct => s_${idx}(m)"
-  def fromBinaryClause(idx: Int, struct: String) = s"    case Some(c) if c == classOf[${struct}.Immutable] => s_${idx}.invert(bytes).get"
+  def codecClause(idx: Int, codec: String, struct: String) = s"  lazy val _c${struct} = ${codec}(${struct})"
+  def toBinaryClauses(idx: Int, struct: String) = s"    case m: $struct => _c${struct}(m)"
+  def fromBinaryClause(idx: Int, struct: String) = s"    case Some(c) if c == classOf[${struct}.Immutable] => _c${struct}.invert(bytes).get"
 
   // Auto-generate Akka serialization configuration file
-  def generateConfigFileEntry(struct: String) = "      \"com.coinport.coinex.data.%s\" = event".format(struct)
+  def generateConfigFileEntry(struct: String) = "      \"com.coinport.coinex.data.%s\" = thrift".format(struct)
   def generateConfigFile(className: String, structs: Seq[String], outputFile: String, time: String) = {
     val configs = SERIALIZATION_CONFIG_TEMPLATE.format(time, className, structs.map(generateConfigFileEntry).mkString("\n"))
     writeToFile(configs, outputFile)
@@ -157,7 +163,7 @@ akka {
       akka-pubsub = "akka.contrib.pattern.protobuf.DistributedPubSubMessageSerializer"
       akka-persistence-snapshot = "akka.persistence.serialization.SnapshotSerializer"
       akka-persistence-message = "akka.persistence.serialization.MessageSerializer"
-      event = "com.coinport.coinex.serializers.%s"
+      thrift = "com.coinport.coinex.serializers.%s"
     }
     serialization-bindings {
       "[B" = bytes

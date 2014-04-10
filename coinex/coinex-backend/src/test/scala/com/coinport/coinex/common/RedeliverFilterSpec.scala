@@ -1,12 +1,12 @@
 package com.coinport.coinex.common
 
-import com.coinport.coinex.data.RedeliverFilterState
+import com.coinport.coinex.data.RedeliverFilterData
 import org.specs2.mutable._
 
 class RedeliverFilterSpec extends Specification {
   "RedeliverFilter" should {
     "restore state and restrict sizes" in {
-      val state = RedeliverFilterState(Seq(10, 2, 4, 6, 19))
+      val state = RedeliverFilterData(Seq(10, 2, 4, 6, 19))
       val filter = new RedeliverFilter(state, 8)
       filter.ids.toSeq mustEqual Seq(2, 4, 6, 10, 19)
 
@@ -27,7 +27,7 @@ class RedeliverFilterSpec extends Specification {
     }
 
     "keep state size if not specified" in {
-      val state = RedeliverFilterState(Seq(10, 2, 4, 6, 19))
+      val state = RedeliverFilterData(Seq(10, 2, 4, 6, 19))
       val filter = new RedeliverFilter(state)
 
       filter.ids.toSeq mustEqual Seq(2, 4, 6, 10, 19)
