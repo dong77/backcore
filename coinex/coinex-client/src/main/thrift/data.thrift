@@ -206,6 +206,7 @@ struct CandleDataItem {
 struct CandleData {
     1: i64 timestamp
     2: list<CandleDataItem> items
+    3: MarketSide side
 }
 
 struct MetricsByMarket {

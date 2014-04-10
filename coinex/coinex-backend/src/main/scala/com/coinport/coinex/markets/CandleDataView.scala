@@ -49,7 +49,7 @@ class CandleDataManager(market: MarketSide) extends Manager[CandleDataState](Can
   def getCandleData(sameSide: Boolean, dimension: ChartTimeDimension, from: Long, to: Long) = {
     val start = Math.min(from, to)
     val stop = Math.max(from, to)
-    if (sameSide) CandleData(System.currentTimeMillis(), state.getItems(dimension, start, stop))
-    else CandleData(System.currentTimeMillis(), state.getReverseItems(dimension, start, stop))
+    if (sameSide) CandleData(System.currentTimeMillis(), state.getItems(dimension, start, stop), market)
+    else CandleData(System.currentTimeMillis(), state.getReverseItems(dimension, start, stop), market)
   }
 }
