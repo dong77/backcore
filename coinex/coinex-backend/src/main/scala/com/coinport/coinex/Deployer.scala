@@ -79,10 +79,10 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployView(Props(new MetricsView), metrics_view <<)
     deployView(Props(new ApiAuthView(apiAuthSecret)), api_auth_view <<)
 
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_up") with AbstractView[TExportToMongoState, EventExportToMongoManager]), user_processor_event_export<<)
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_ap") with AbstractView[TExportToMongoState, EventExportToMongoManager]), account_processor_event_export<<)
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_dwp") with AbstractView[TExportToMongoState, EventExportToMongoManager]), dw_processor_event_export<<)
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_mup") with AbstractView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export<<)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_up") with StackableView[TExportToMongoState, EventExportToMongoManager]), user_processor_event_export<<)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_ap") with StackableView[TExportToMongoState, EventExportToMongoManager]), account_processor_event_export<<)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_dwp") with StackableView[TExportToMongoState, EventExportToMongoManager]), dw_processor_event_export<<)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_mup") with StackableView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export<<)
 
     deployView(Props(new TransactionReader(dbForViews)), transaction_mongo_reader<<)
     deployView(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer<<)
@@ -99,13 +99,13 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
         routers.accountProcessor.path,
         routers.marketUpdateProcessor.path,
         routers.order_writer,
-        routers.transaction_writer) with AbstractCommandsourced[TMarketState, MarketManager])
+        routers.transaction_writer) with StackableCmdsourced[TMarketState, MarketManager])
       deployProcessor(props, market_processor << m)
     }
 
     deployProcessor(Props(new MarketUpdateProcessor()), market_update_processor <<)
-    deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with AbstractEventsourced[TUserState, UserManager]), user_processor <<)
-    deployProcessor(Props(new AccountProcessor(routers.marketProcessors, routers.depositWithdrawProcessor.path, feeConfig) with AbstractEventsourced[TAccountState, AccountManager]), account_processor <<)
+    deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with StackableEventsourced[TUserState, UserManager]), user_processor <<)
+    deployProcessor(Props(new AccountProcessor(routers.marketProcessors, routers.depositWithdrawProcessor.path, feeConfig) with StackableEventsourced[TAccountState, AccountManager]), account_processor <<)
     deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret) with Commandsourced[TApiSecretState, ApiAuthManager]), api_auth_processor <<)
     deployProcessor(Props(new RobotProcessor(routers) with Commandsourced[RobotState, RobotManager]), robot_processor <<)
     deployProcessor(Props(new DepositWithdrawProcessor(dbForViews, routers.accountProcessor.path)), dw_processor <<)

@@ -15,7 +15,7 @@ abstract class Manager[T](s: T) {
   def apply(s: T) = state = s
 }
 
-@deprecated(message = "use AbstractEventsourced or AbstractCommandsourced", since = "20140410")
+@deprecated(message = "use StackableEventsourced or StackableCmdsourced", since = "20140410")
 trait Eventsourced[T, M <: Manager[T]] extends EventsourcedProcessor {
   val manager: M
   def updateState(event: Any): Unit
@@ -30,7 +30,7 @@ trait Eventsourced[T, M <: Manager[T]] extends EventsourcedProcessor {
   }
 }
 
-@deprecated(message = "use AbstractEventsourced or AbstractCommandsourced", since = "20140410")
+@deprecated(message = "use StackableEventsourced or StackableCmdsourced", since = "20140410")
 trait Commandsourced[T, M <: Manager[T]] extends Processor {
   val manager: M
 
