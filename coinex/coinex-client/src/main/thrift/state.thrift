@@ -43,6 +43,10 @@ struct TApiSecretState {
     3: string seed
 }
 
+struct TMarketDepthState {
+    1: map<double, i64> askMap
+    2: map<double, i64> bidMap
+}
 struct TExportToMongoState {
     1: i64 snapshotIndex
     2: i64 index

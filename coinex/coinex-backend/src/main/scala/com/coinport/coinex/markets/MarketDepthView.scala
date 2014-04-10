@@ -10,6 +10,7 @@ import akka.persistence.Persistent
 import com.coinport.coinex.data._
 import com.coinport.coinex.common._
 import Implicits._
+import scala.collection.SortedMap
 
 class MarketDepthView(market: MarketSide) extends ExtendedView {
   override val processorId = "coinex_mup"
@@ -25,21 +26,47 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
       txs foreach { manager.reductAmount(orderInfo.side, _) }
 
     case QueryMarketDepth(side, maxDepth) if side == market =>
-      val (asks, bids) = manager().get(maxDepth)
+      val (asks, bids) = manager.get(maxDepth)
       sender ! QueryMarketDepthResult(MarketDepth(market, asks, bids))
   }
 }
 
-class MarketDepthManager(market: MarketSide) extends Manager[MarketDepthState](MarketDepthState()) {
+class MarketDepthManager(market: MarketSide) extends AbstractManager[TMarketDepthState] {
+  // Internal mutable state ----------------------------------------------
+  var askMap = SortedMap.empty[Double, Long]
+  var bidMap = SortedMap.empty[Double, Long]
+
+  // Thrift conversions     ----------------------------------------------
+  def getSnapshot = TMarketDepthState(askMap, bidMap)
+
+  def loadSnapshot(snapshot: TMarketDepthState) = {
+    askMap = askMap.take(0) ++ snapshot.askMap
+    bidMap = bidMap.take(0) ++ snapshot.bidMap
+  }
+
+  // Business logics      ----------------------------------------------
+  def adjustAsk(price: Double, amount: Long) = {
+    val updatedAmount = askMap.getOrElse(price, 0L) + amount
+    if (updatedAmount > 0) askMap += (price -> updatedAmount)
+  }
+
+  def adjustBid(price: Double, amount: Long) = {
+    val updatedAmount = bidMap.getOrElse(price, 0L) + amount
+    if (updatedAmount > 0) bidMap += (price -> updatedAmount)
+  }
+
+  def get(maxDepth: Int): (Seq[MarketDepthItem], Seq[MarketDepthItem]) = {
+    val asks = askMap.take(maxDepth).toSeq.map(i => MarketDepthItem(i._1, i._2))
+    val bids = bidMap.take(maxDepth).toSeq.map(i => MarketDepthItem(1 / i._1, i._2))
+    (asks, bids)
+  }
 
   def adjustAmount(side: MarketSide, order: Order, addOrRemove: Boolean /*true for increase, false for reduce*/ ) {
     def adjust(amount: Long) = if (addOrRemove) amount else -amount
     if (side == market && order.price.isDefined) {
-      // ask
-      state = state.adjustAsk(order.price.get, adjust(order.maxOutAmount(order.price.get)))
+      adjustAsk(order.price.get, adjust(order.maxOutAmount(order.price.get)))
     } else if (side == market.reverse && order.price.isDefined) {
-      // bid
-      state = state.adjustBid(order.price.get, adjust(order.maxInAmount(order.price.get)))
+      adjustBid(order.price.get, adjust(order.maxInAmount(order.price.get)))
     }
   }
 
@@ -49,12 +76,12 @@ class MarketDepthManager(market: MarketSide) extends Manager[MarketDepthState](M
 
     if (ask.previous.price.isDefined) {
       val diff = ask.current.maxOutAmount(ask.current.price.get) - ask.previous.maxOutAmount(ask.previous.price.get)
-      state = state.adjustAsk(ask.previous.price.get, diff)
+      adjustAsk(ask.previous.price.get, diff)
     }
 
     if (bid.previous.price.isDefined) {
       val diff = bid.current.maxInAmount(bid.current.price.get) - bid.previous.maxInAmount(bid.previous.price.get)
-      state = state.adjustBid(bid.previous.price.get, diff)
+      adjustBid(bid.previous.price.get, diff)
     }
   }
 }
