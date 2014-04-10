@@ -53,6 +53,6 @@ class EventExportToMongoView(db: MongoDB, pid: String) extends ExtendedView {
       state = state.copy(index = state.index + 1, hash = hash)
   }
 
-  def postSnapshot(state: State) = {}
+  def postSnapshot(state: TExportToMongoState) = {}
 }
 
