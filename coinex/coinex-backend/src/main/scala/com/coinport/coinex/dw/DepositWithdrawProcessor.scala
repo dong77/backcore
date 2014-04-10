@@ -2,11 +2,11 @@ package com.coinport.coinex.dw
 
 import akka.persistence._
 import akka.actor._
-import com.coinport.coinex.common.ChannelSupport
+import com.coinport.coinex.common.support.ChannelSupport
 import akka.event.LoggingReceive
 import com.coinport.coinex.data._
 import ErrorCode._
-import com.coinport.coinex.common.SimpleJsonMongoCollection
+import com.coinport.coinex.common.mongo.SimpleJsonMongoCollection
 import com.mongodb.casbah.Imports._
 
 // TODO(c): Count fees

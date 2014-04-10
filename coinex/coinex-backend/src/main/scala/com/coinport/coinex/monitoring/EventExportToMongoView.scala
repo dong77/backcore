@@ -8,14 +8,13 @@ import com.coinport.coinex.serializers.ThriftJsonSerializer
 import Implicits._
 import com.mongodb.util.JSON
 import com.mongodb.casbah.Imports._
-import com.coinport.coinex.common.SnapshotSupport
+import com.coinport.coinex.common.support.SnapshotSupport
 import com.coinport.coinex.common.AbstractManager
 
 // This view is not defined for querying data.
 class EventExportToMongoView(db: MongoDB, pid: String) extends View with SnapshotSupport {
   override val processorId = pid
   override val viewId = pid + "_mongop"
-
   val manager = new EventExportToMongoManager
 
   val collection = db(pid + "_events")

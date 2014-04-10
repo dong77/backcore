@@ -10,6 +10,7 @@ import akka.event.LoggingReceive
 import akka.util.Timeout
 import scala.concurrent.duration._
 import com.coinport.coinex.data.TakeSnapshotNow
+import com.coinport.coinex.common.support._
 
 trait ExtendedProcessor extends Processor with ActorLogging with SnapshotSupport with ChannelSupport {
 

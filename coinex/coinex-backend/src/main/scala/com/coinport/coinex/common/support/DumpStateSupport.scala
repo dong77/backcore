@@ -1,4 +1,4 @@
-package com.coinport.coinex.common
+package com.coinport.coinex.common.support
 
 import akka.actor.Actor
 import java.io.FileOutputStream

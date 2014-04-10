@@ -1,4 +1,4 @@
-package com.coinport.coinex.ot
+package com.coinport.coinex.ordertx
 
 import com.mongodb.casbah.Imports._
 import com.coinport.coinex.data._

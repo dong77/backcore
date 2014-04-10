@@ -15,6 +15,7 @@ import com.coinport.coinex.fee._
 import com.coinport.coinex.common.Constants._
 import Implicits._
 import ErrorCode._
+import com.coinport.coinex.common.support._
 
 class AccountProcessor(
   marketProcessors: Map[MarketSide, ActorRef],

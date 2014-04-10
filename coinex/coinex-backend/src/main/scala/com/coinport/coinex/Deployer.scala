@@ -19,13 +19,16 @@ import spray.can.Http
 import com.coinport.coinex.accounts._
 import com.coinport.coinex.apiauth._
 import com.coinport.coinex.common._
+import com.coinport.coinex.common.stackable._
 import com.coinport.coinex.data._
 import com.coinport.coinex.mail._
 import com.coinport.coinex.markets._
 import com.coinport.coinex.metrics._
 import com.coinport.coinex.monitoring._
 import com.coinport.coinex.robot._
+import com.coinport.coinex.ordertx._
 import com.coinport.coinex.users._
+import com.coinport.coinex.fee._
 import com.coinport.coinex.dw._
 import com.coinport.coinex.util._
 import Implicits._
@@ -34,12 +37,10 @@ import com.coinport.coinex.common._
 import ConstantRole._
 import MarketRole._
 import com.mongodb.casbah._
-import com.coinport.coinex.fee.FeeConfig
-import com.coinport.coinex.fee.CountFeeSupport
+
 import com.twitter.util.Eval
 import java.io.File
 import java.io.InputStream
-import com.coinport.coinex.ot._
 
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system

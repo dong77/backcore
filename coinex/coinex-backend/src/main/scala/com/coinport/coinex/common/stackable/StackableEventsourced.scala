@@ -1,13 +1,15 @@
-package com.coinport.coinex.common
+package com.coinport.coinex.common.stackable
 
 import com.twitter.scrooge.ThriftStruct
 import akka.persistence.EventsourcedProcessor
 import akka.persistence.SnapshotOffer
 import com.coinport.coinex.data._
 import akka.actor.ActorLogging
+import com.coinport.coinex.common.AbstractManager
+import com.coinport.coinex.common.support._
 
 trait StackableEventsourced[T <: ThriftStruct, M <: AbstractManager[T]]
-    extends EventsourcedProcessor with ActorLogging with DumpStateSupport with SnapshotSupport {
+    extends EventsourcedProcessor with ActorLogging with SnapshotSupport with DumpStateSupport {
   val manager: M
   def updateState(event: Any): Unit
 

@@ -1,8 +1,7 @@
-package com.coinport.coinex.common
+package com.coinport.coinex.common.support
 
 import akka.actor.Actor
 import akka.actor.Cancellable
-import akka.util.Timeout
 import scala.concurrent.duration._
 import com.coinport.coinex.data.TakeSnapshotNow
 

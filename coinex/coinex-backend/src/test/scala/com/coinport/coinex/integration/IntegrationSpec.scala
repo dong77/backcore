@@ -13,7 +13,7 @@ import akka.testkit._
 import akka.actor.ActorSystem
 import akka.actor.Props
 
-final class Environment extends Object with EmbeddedMongoSupport {
+final class Environment extends Object with EmbeddedMongoForTest {
   val markets = Seq(Btc ~> Rmb, Btc ~> Ltc)
   val allRoles = (ConstantRole.values.map(_.<<) ++ MarketRole.values.map { v => markets.map { m => v << m } }.flatten)
   val config = ConfigFactory.parseString("akka.cluster.roles=[" + allRoles.mkString(",") + "]")

@@ -1,13 +1,15 @@
-package com.coinport.coinex.common
+package com.coinport.coinex.common.stackable
 
+import akka.persistence.Processor
 import com.twitter.scrooge.ThriftStruct
-import akka.persistence.View
 import akka.persistence.SnapshotOffer
-import akka.actor.ActorLogging
 import com.coinport.coinex.data._
+import akka.actor.ActorLogging
+import com.coinport.coinex.common.AbstractManager
+import com.coinport.coinex.common.support._
 
-trait StackableView[T <: ThriftStruct, M <: AbstractManager[T]]
-    extends View with ActorLogging with DumpStateSupport with SnapshotSupport {
+trait StackableCmdsourced[T <: ThriftStruct, M <: AbstractManager[T]]
+    extends Processor with ActorLogging with SnapshotSupport with DumpStateSupport {
   val manager: M
 
   abstract override def receive = super.receive orElse {

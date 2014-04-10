@@ -1,4 +1,4 @@
-package com.coinport.coinex.ot
+package com.coinport.coinex.ordertx
 
 import akka.actor.{ Actor, ActorLogging }
 import com.coinport.coinex.data._

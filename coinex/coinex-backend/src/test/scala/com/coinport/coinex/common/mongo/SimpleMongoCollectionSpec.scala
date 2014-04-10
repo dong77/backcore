@@ -1,10 +1,11 @@
-package com.coinport.coinex.common
+package com.coinport.coinex.common.mongo
 
 import org.specs2.mutable._
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Currency._
+import com.coinport.coinex.common._
 
-class SimpleMongoCollectionSpec extends Specification with EmbeddedMongoSupport {
+class SimpleMongoCollectionSpec extends Specification with EmbeddedMongoForTest {
   step(embeddedMongoStartup())
 
   val jsonDeposits = new SimpleJsonMongoCollection[Deposit, Deposit.Immutable]() {

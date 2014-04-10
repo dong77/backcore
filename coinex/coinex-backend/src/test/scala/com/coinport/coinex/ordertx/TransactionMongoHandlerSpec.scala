@@ -2,16 +2,15 @@
  * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
  */
 
-package com.coinport.coinex.mongo
+package com.coinport.coinex.ordertx
 
 import org.specs2.mutable._
-import com.coinport.coinex.ot.TransactionMongoHandler
 import com.coinport.coinex.data.Currency.{ Rmb, Btc }
 import com.coinport.coinex.data.{ Cursor, QueryTransaction, TransactionItem }
-import com.coinport.coinex.common.EmbeddedMongoSupport
+import com.coinport.coinex.common.EmbeddedMongoForTest
 import com.coinport.coinex.data.Implicits._
 
-class TransactionHandlerSpec extends Specification with EmbeddedMongoSupport {
+class TransactionHandlerSpec extends Specification with EmbeddedMongoForTest {
   val market = Btc ~> Rmb
   step(embeddedMongoStartup())
 

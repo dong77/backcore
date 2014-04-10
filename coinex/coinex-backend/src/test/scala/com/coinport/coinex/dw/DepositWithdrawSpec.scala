@@ -2,16 +2,14 @@
  * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
  */
 
-package com.coinport.coinex.mongo
+package com.coinport.coinex.dw
 
 import org.specs2.mutable._
-import com.coinport.coinex.dw.DepositWithdrawBehavior
 import com.coinport.coinex.data._
 import com.mongodb.casbah._
-import scala.Some
-import com.coinport.coinex.common.EmbeddedMongoSupport
+import com.coinport.coinex.common.EmbeddedMongoForTest
 
-class DepositWithdrawSpec extends Specification with EmbeddedMongoSupport {
+class DepositWithdrawSpec extends Specification with EmbeddedMongoForTest {
   step(embeddedMongoStartup())
 
   class DWClass(val db: MongoDB) extends DepositWithdrawBehavior

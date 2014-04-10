@@ -7,6 +7,7 @@ package com.coinport.coinex.common
 import akka.actor.ActorLogging
 import akka.persistence.View
 import com.mongodb.casbah.{ MongoConnection, MongoURI, MongoCollection }
+import com.coinport.coinex.common.support.SnapshotSupport
 
 trait ExtendedView extends View with ActorLogging with SnapshotSupport {
 

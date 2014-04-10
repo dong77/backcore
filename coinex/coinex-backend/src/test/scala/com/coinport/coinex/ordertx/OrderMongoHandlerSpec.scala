@@ -2,21 +2,20 @@
  * Copyright (C) 2014 Coinport Inc. <http://www.coinport.com>
  */
 
-package com.coinport.coinex.mongo
+package com.coinport.coinex.ordertx
 
 import com.coinport.coinex.data.Currency.{ Btc, Rmb }
 import org.specs2.mutable._
-import com.coinport.coinex.common.EmbeddedMongoSupport
+import com.coinport.coinex.common.EmbeddedMongoForTest
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Implicits._
-import com.coinport.coinex.ot.OrderMongoHandler
 import com.mongodb.casbah.MongoConnection
 
-class OrderHandlerSpec extends Specification with EmbeddedMongoSupport {
+class OrderMongoHandlerSpec extends Specification with EmbeddedMongoForTest {
 
   class OrderClass extends OrderMongoHandler {
-    val coll = database("OrderHandlerSpec")
-    //    val coll = MongoConnection("localhost", 27017)("test")("OrderHandlerSpec")
+    val coll = database("OrderMongoHandlerSpec")
+    //    val coll = MongoConnection("localhost", 27017)("test")("OrderMongoHandlerSpec")
   }
 
   val market = Btc ~> Rmb

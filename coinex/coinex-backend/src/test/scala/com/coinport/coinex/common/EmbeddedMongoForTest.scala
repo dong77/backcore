@@ -11,7 +11,7 @@ import de.flapdoodle.embed.process.io.directories.FixedPath
 import de.flapdoodle.embed.process.runtime.Network
 import com.mongodb.casbah.MongoConnection
 
-trait EmbeddedMongoSupport {
+trait EmbeddedMongoForTest {
   lazy val host = "localhost"
   lazy val port = 52345 // DO NOT CHANGE THIS PORT
   lazy val localHostIPV6 = Network.localhostIsIPv6()

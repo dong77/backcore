@@ -5,7 +5,7 @@ import com.coinport.coinex.common.ExtendedView
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
 import com.mongodb.casbah.MongoDB
-import com.coinport.coinex.common.SimpleJsonMongoCollection
+import com.coinport.coinex.common.mongo.SimpleJsonMongoCollection
 
 // This view persists user manager state into MongoDB but also keeps an inmemory copy of the state.
 // THis view shall not serve any queries.

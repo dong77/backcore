@@ -1,8 +1,10 @@
-package com.coinport.coinex.common
+package com.coinport.coinex.common.mongo
 
 import com.mongodb.casbah.Imports._
 import com.coinport.coinex.serializers._
 import com.mongodb.util.JSON
+import com.coinport.coinex.serializers.ThriftEnumJson4sSerialization.formats
+import org.json4s.native.Serialization.{ read, write }
 
 sealed trait SimpleMongoCollection[T <: AnyRef] {
   val coll: MongoCollection
@@ -12,8 +14,6 @@ sealed trait SimpleMongoCollection[T <: AnyRef] {
   def extractId(obj: T): Long
   def get(id: Long): Option[T]
   def put(data: T): Unit
-
-  // def delete(id: Long) = coll -= MongoDBObject(ID -> id)
 }
 
 abstract class SimpleJsonMongoCollection[T <: AnyRef, S <: T](implicit man: Manifest[S]) extends SimpleMongoCollection[T] {
