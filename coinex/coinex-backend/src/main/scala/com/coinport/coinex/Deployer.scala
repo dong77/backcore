@@ -104,7 +104,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     }
 
     deployProcessor(Props(new MarketUpdateProcessor()), market_update_processor <<)
-    deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with Eventsourced[UserState, UserManager]), user_processor <<)
+    deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with AbstractEventsourced[TUserState, UserManager]), user_processor <<)
     deployProcessor(Props(new AccountProcessor(routers.marketProcessors, routers.depositWithdrawProcessor.path, feeConfig) with AbstractEventsourced[TAccountState, AccountManager]), account_processor <<)
     deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret) with Commandsourced[TApiSecretState, ApiAuthManager]), api_auth_processor <<)
     deployProcessor(Props(new RobotProcessor(routers) with Commandsourced[RobotState, RobotManager]), robot_processor <<)

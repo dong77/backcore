@@ -15,16 +15,30 @@
 
 package com.coinport.coinex.users
 
+import scala.collection.mutable.Map
 import com.coinport.coinex.data._
-import com.coinport.coinex.common.Manager
+import com.coinport.coinex.common.AbstractManager
 import com.coinport.coinex.util._
 import com.google.common.io.BaseEncoding
 
-class UserManager(googleAuthenticator: GoogleAuthenticator, secret: String = "") extends Manager[UserState](UserState()) {
+class UserManager(googleAuthenticator: GoogleAuthenticator, secret: String = "") extends AbstractManager[TUserState] {
+  // Internal mutable state ----------------------------------------------
+  var numUsers = 0L
+  val profileMap: Map[Long, UserProfile] = Map.empty[Long, UserProfile]
+  val passwordResetTokenMap: Map[String, Long] = Map.empty[String, Long]
+  val verificationTokenMap: Map[String, Long] = Map.empty[String, Long]
 
-  def getUser(email: String) = state.profileMap.get(computeUserId(email))
-  def isEmailRegistered(email: String) = getUser(email).isDefined
+  // Thrift conversions     ----------------------------------------------
+  def getSnapshot = TAccountState(profileMap.clone, passwordResetTokenMap.clone, verificationTokenMap.clone, numUsers)
 
+  def loadSnapshot(snapshot: TAccountState) = {
+    profileMap.clear; profileMap ++= snapshot.profileMap
+    passwordResetTokenMap.clear; passwordResetTokenMap ++= snapshot.profileMap
+    verificationTokenMap.clear; verificationTokenMap ++= snapshot.profileMap
+    numUsers = snapshot.numUsers
+  }
+
+  // Business logics      ----------------------------------------------
   def regulateProfile(profile: UserProfile, password: String, salt: Long): UserProfile = {
     val id = computeUserId(profile.email)
     val verificationToken = computeHexToken(salt, profile.email)
@@ -43,31 +57,33 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, secret: String = "")
   }
 
   def registerUser(profile: UserProfile): UserProfile = {
-    state = state.addUserProfile(profile).addVerificationToken(profile.verificationToken.get, profile.id)
+    addUserProfile(profile)
+    addVerificationToken(profile.verificationToken.get, profile.id)
     profile
   }
 
   def updateUser(profile: UserProfile): UserProfile = {
-    state = state.addUserProfile(profile)
+    addUserProfile(profile)
     profile
   }
 
   def requestPasswordReset(email: String, salt: Long): UserProfile = {
     val id = computeUserId(email)
-    val profile = state.profileMap(id)
+    val profile = profileMap(id)
     val token = computeHexToken(salt, email)
     val updatedProfile = profile.copy(passwordResetToken = Some(token))
-    state = state.updateUserProfile(id)(_ => updatedProfile).addPasswordResetToken(token, id)
+    updateUserProfile(id)(_ => updatedProfile)
+    addPasswordResetToken(token, id)
     updatedProfile
   }
 
   def resetPassword(email: String, password: String, passwordResetToken: Option[String]): UserProfile = {
     val id = computeUserId(email)
-    val profile = state.profileMap(id)
-    profile.passwordResetToken foreach { token => state = state.deletePasswordResetToken(token) }
+    val profile = profileMap(id)
+    profile.passwordResetToken foreach { deletePasswordResetToken }
     val passwordHash = computePassword(profile.id, profile.email, password)
     val updatedProfile = profile.copy(passwordHash = Some(passwordHash), passwordResetToken = None)
-    state = state.updateUserProfile(id)(_ => updatedProfile)
+    updateUserProfile(id)(_ => updatedProfile)
     updatedProfile
   }
 
@@ -97,5 +113,36 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, secret: String = "")
     val num = MHash.sha256ThenMurmur3(email + salt + numericTokenSecret)
     "%04d".format(Math.abs(num)).substring(0, 6)
 
+  }
+
+  def getUser(email: String) = profileMap.get(computeUserId(email))
+  def isEmailRegistered(email: String) = getUser(email).isDefined
+  def userExist(email: String): Boolean = userExist(MHash.murmur3(email))
+  def userExist(userId: Long): Boolean = profileMap.contains(userId)
+
+  def addUserProfile(profile: UserProfile) = {
+    numUsers += 1
+    profileMap += profile.id -> profile
+  }
+
+  def updateUserProfile(userId: Long)(updateOp: UserProfile => UserProfile) = {
+    assert(!profileMap.contains(userId))
+    profileMap += userId -> updateOp(profileMap(userId))
+  }
+
+  def deletePasswordResetToken(token: String) = {
+    passwordResetTokenMap -= token
+  }
+
+  def addPasswordResetToken(token: String, userId: Long) = {
+    passwordResetTokenMap += token -> userId
+  }
+
+  def deleteVerificationToken(token: String) = {
+    verificationTokenMap -= token
+  }
+
+  def addVerificationToken(token: String, userId: Long) = {
+    verificationTokenMap += token -> userId
   }
 }

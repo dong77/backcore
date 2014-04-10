@@ -17,6 +17,18 @@ typedef data.Order                 Order
 typedef data.MarketSide            MarketSide
 typedef data.ApiSecret             ApiSecret
 typedef data.UserAccount           UserAccount
+typedef data.UserProfile           UserProfile
+
+struct TUserState {
+    1: map<i64, UserProfile> profileMap
+    2: map<string, i64> passwordResetTokenMap
+    3: map<string, i64> verificationTokenMap
+    4: i64 numUsers
+}
+
+struct TAccountState {
+    1: map<i64, UserAccount> userAccountsMap
+}
 
 struct TMarketState {
     1: MarketSide side
@@ -29,10 +41,6 @@ struct TApiSecretState {
     1: map<string, ApiSecret> identifierLookupMap // key is identifier
     2: map<i64, list<ApiSecret>> userSecretMap // key is userId
     3: string seed
-}
-
-struct TAccountState {
-    1: map<i64, UserAccount> userAccountsMap
 }
 
 struct TExportToMongoState {

@@ -21,8 +21,10 @@ import com.coinport.coinex.common._
 import Implicits._
 
 class AccountManager extends AbstractManager[TAccountState] {
+  // Internal mutable state ----------------------------------------------
   private val accountMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]
 
+  // Thrift conversions     ----------------------------------------------
   def getSnapshot = TAccountState(accountMap.clone)
 
   def loadSnapshot(snapshot: TAccountState) = {
@@ -30,6 +32,7 @@ class AccountManager extends AbstractManager[TAccountState] {
     accountMap ++= snapshot.userAccountsMap
   }
 
+  // Business logics      ----------------------------------------------
   def transferFundFromLocked(from: Long, to: Long, currency: Currency, amount: Long) = {
     updateCashAccount(from, CashAccount(currency, 0, -amount, 0))
     updateCashAccount(to, CashAccount(currency, amount, 0, 0))
