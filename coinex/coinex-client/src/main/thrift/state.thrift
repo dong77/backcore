@@ -15,6 +15,8 @@ include "data.thrift"
 
 typedef data.Order                 Order
 typedef data.MarketSide            MarketSide
+typedef data.ApiSecret             ApiSecret
+typedef data.UserAccount           UserAccount
 
 struct TMarketState {
     1: MarketSide side
