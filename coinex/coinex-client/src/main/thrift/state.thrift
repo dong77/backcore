@@ -18,6 +18,7 @@ typedef data.MarketSide            MarketSide
 typedef data.ApiSecret             ApiSecret
 typedef data.UserAccount           UserAccount
 typedef data.UserProfile           UserProfile
+typedef data.RedeliverFilterData   RedeliverFilterData
 
 struct TUserState {
     1: map<i64, UserProfile> profileMap
@@ -35,6 +36,7 @@ struct TMarketState {
     2: map<MarketSide, list<Order>> orderPools
     3: map<i64, Order> orderMap
     4: optional double priceRestriction
+    5: map<string, RedeliverFilterData> filters
 }
 
 struct TApiSecretState {

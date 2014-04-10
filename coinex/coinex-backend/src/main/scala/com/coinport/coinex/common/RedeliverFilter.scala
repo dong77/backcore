@@ -9,11 +9,17 @@ class RedeliverFilter(state: RedeliverFilterData, maxSize: Int = -1) {
   private[common] var ids = SortedSet[Long](state.ids: _*).takeRight(max)
 
   def filter(id: Long)(op: Long => Unit) = if (!seen(id)) {
-    ids += id
-    if (ids.size > max) ids = ids.takeRight(max)
     op(id)
   }
 
-  def getThrift = RedeliverFilterData(ids.toSeq)
-  private def seen(id: Long) = id < ids.headOption.getOrElse(0L) || ids.contains(id)
+  def getThrift = RedeliverFilterData(ids.toSeq, maxSize)
+
+  def seen(id: Long) = {
+    val isSeen = (id < ids.headOption.getOrElse(0L) || ids.contains(id))
+    if (!isSeen) {
+      ids += id
+      if (ids.size > max) ids = ids.takeRight(max)
+    }
+    isSeen
+  }
 }

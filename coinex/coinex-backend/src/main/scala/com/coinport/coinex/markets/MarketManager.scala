@@ -18,6 +18,7 @@ package com.coinport.coinex.markets
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.mutable.MarketState
 import com.coinport.coinex.common.AbstractManager
+import com.coinport.coinex.common.RedeliverFilter
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import Implicits._
@@ -37,10 +38,12 @@ class MarketManager(headSide: MarketSide) extends AbstractManager[TMarketState] 
     else false
   }
 
-  override def getSnapshot = state.toThrift
+  override def getSnapshot = state.toThrift.copy(
+    filters = filters.map(item => (item._1 -> item._2.getThrift)))
 
   override def loadSnapshot(s: TMarketState) {
     state = MarketState(s)
+    filters = Map.empty ++ s.filters.map(item => (item._1 -> new RedeliverFilter(item._2, item._2.maxSize)))
   }
 
   private[markets] def apply(): MarketState = state.copy

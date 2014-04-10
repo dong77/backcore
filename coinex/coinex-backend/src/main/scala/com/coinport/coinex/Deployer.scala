@@ -100,7 +100,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
         routers.accountProcessor.path,
         routers.marketUpdateProcessor.path,
         routers.order_writer,
-        routers.transaction_writer) with StackableCmdsourced[TMarketState, MarketManager])
+        routers.transaction_writer) with AbstractCommandsourced[TMarketState, MarketManager])
       deployProcessor(props, market_processor << m)
     }
 

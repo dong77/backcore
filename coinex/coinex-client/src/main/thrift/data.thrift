@@ -281,6 +281,7 @@ struct TransactionItem  {
 
 struct RedeliverFilterData {
     1: list<i64> ids
+    2: i32 maxSize
 }
 
 struct QueryMarketSide {
