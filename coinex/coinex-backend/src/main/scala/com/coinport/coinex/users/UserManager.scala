@@ -29,9 +29,9 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, secret: String = "")
   val verificationTokenMap: Map[String, Long] = Map.empty[String, Long]
 
   // Thrift conversions     ----------------------------------------------
-  def getSnapshot = TAccountState(profileMap.clone, passwordResetTokenMap.clone, verificationTokenMap.clone, numUsers)
+  def getSnapshot = TUserState(profileMap.clone, passwordResetTokenMap.clone, verificationTokenMap.clone, numUsers)
 
-  def loadSnapshot(snapshot: TAccountState) = {
+  def loadSnapshot(snapshot: TUserState) = {
     profileMap.clear; profileMap ++= snapshot.profileMap
     passwordResetTokenMap.clear; passwordResetTokenMap ++= snapshot.profileMap
     verificationTokenMap.clear; verificationTokenMap ++= snapshot.profileMap
