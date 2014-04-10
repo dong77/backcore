@@ -31,7 +31,6 @@ struct TApiSecretState {
     3: string seed
 }
 
-// TODO: rename
 struct TAccountState {
     1: map<i64, UserAccount> userAccountsMap
 }

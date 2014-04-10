@@ -11,7 +11,7 @@ import com.typesafe.sbt.SbtAtmos.{ Atmos, atmosSettings }
 
 object CoinexBuild extends Build {
   val coinexVersion = "1.0.5-SNAPSHOT"
-  val akkaVersion = "2.3.1"
+  val akkaVersion = "2.3.2"
   val bijectionVersion = "0.6.2"
   val sprayVersion = "1.3.1"
   val scroogeVersion = "3.13.0"
