@@ -28,7 +28,7 @@ class UserView(userManagerSecret: String) extends ExtendedView {
 
     case ValidatePasswordResetToken(token) =>
       manager.passwordResetTokenMap.get(token) match {
-        case Some(id) => sender ! PasswordResetTokenValidationResult(manager().profileMap.get(id))
+        case Some(id) => sender ! PasswordResetTokenValidationResult(manager.profileMap.get(id))
         case None => sender ! PasswordResetTokenValidationResult(None)
       }
 

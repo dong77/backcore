@@ -33,8 +33,8 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, secret: String = "")
 
   def loadSnapshot(snapshot: TUserState) = {
     profileMap.clear; profileMap ++= snapshot.profileMap
-    passwordResetTokenMap.clear; passwordResetTokenMap ++= snapshot.profileMap
-    verificationTokenMap.clear; verificationTokenMap ++= snapshot.profileMap
+    passwordResetTokenMap.clear; passwordResetTokenMap ++= snapshot.passwordResetTokenMap
+    verificationTokenMap.clear; verificationTokenMap ++= snapshot.verificationTokenMap
     numUsers = snapshot.numUsers
   }
 
