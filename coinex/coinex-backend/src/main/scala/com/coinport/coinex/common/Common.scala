@@ -13,6 +13,11 @@ abstract class Manager[T](s: T) {
   def apply(s: T) = state = s
 }
 
+abstract class AbstractManager[T] {
+  def dump: T
+  def load(s: T): Unit
+}
+
 trait Eventsourced[T, M <: Manager[T]] extends EventsourcedProcessor {
   val manager: M
   def updateState(event: Any): Unit
@@ -34,6 +39,16 @@ trait Commandsourced[T, M <: Manager[T]] extends Processor {
     // TODO(c): need copy a new instance
     case TakeSnapshotNow => saveSnapshot(manager())
     case SnapshotOffer(_, snapshot) => manager(snapshot.asInstanceOf[T])
+  }
+}
+
+trait AbstractCommandsourced[T, M <: AbstractManager[T]] extends Processor {
+  val manager: M
+
+  abstract override def receive = super.receive orElse {
+    // TODO(c): need copy a new instance
+    case TakeSnapshotNow => saveSnapshot(manager.dump)
+    case SnapshotOffer(_, snapshot) => manager.load(snapshot.asInstanceOf[T])
   }
 }
 

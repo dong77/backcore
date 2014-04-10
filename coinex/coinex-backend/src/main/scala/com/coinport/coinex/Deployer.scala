@@ -20,7 +20,6 @@ import com.coinport.coinex.accounts._
 import com.coinport.coinex.apiauth._
 import com.coinport.coinex.common._
 import com.coinport.coinex.data._
-import com.coinport.coinex.data.mutable.MarketState
 import com.coinport.coinex.mail._
 import com.coinport.coinex.markets._
 import com.coinport.coinex.metrics._
@@ -100,7 +99,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
         routers.accountProcessor.path,
         routers.marketUpdateProcessor.path,
         routers.order_writer,
-        routers.transaction_writer) with Commandsourced[MarketState, MarketManager])
+        routers.transaction_writer) with AbstractCommandsourced[TMarketState, MarketManager])
       deployProcessor(props, market_processor << m)
     }
 

@@ -17,13 +17,16 @@ package com.coinport.coinex.markets
 
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.mutable.MarketState
-import com.coinport.coinex.common.Manager
+import com.coinport.coinex.common.AbstractManager
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import Implicits._
 import OrderStatus._
 
-class MarketManager(headSide: MarketSide) extends Manager[MarketState](MarketState(headSide)) {
+class MarketManager(headSide: MarketSide) extends AbstractManager[TMarketState] {
+
+  var state = MarketState(headSide)
+
   val MAX_TX_GROUP_SIZE = 10000
   def isOrderPriceInGoodRange(takerSide: MarketSide, price: Option[Double]): Boolean = {
     if (price.isEmpty) true
@@ -33,6 +36,14 @@ class MarketManager(headSide: MarketSide) extends Manager[MarketState](MarketSta
       state.priceRestriction.get) true
     else false
   }
+
+  override def dump = state.toThrift
+
+  override def load(s: TMarketState) {
+    state = MarketState(s)
+  }
+
+  private[markets] def apply(): MarketState = state.copy
 
   def orderExist(orderId: Long) = state.getOrder(orderId).isDefined
 
