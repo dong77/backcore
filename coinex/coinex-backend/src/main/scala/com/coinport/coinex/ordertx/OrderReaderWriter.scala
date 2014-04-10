@@ -13,6 +13,8 @@ class OrderReader(db: MongoDB) extends Actor with OrderMongoHandler with ActorLo
 
   def receive = LoggingReceive {
     case q: QueryOrder =>
+      val xx = getItems(q)
+      xx.foreach(println)
       sender ! QueryOrderResult(getItems(q), countItems(q))
   }
 }
@@ -24,16 +26,18 @@ class OrderWriter(db: MongoDB) extends Actor with OrderMongoHandler with ActorLo
     case OrderCancelled(_, order) => cancelItem(order.id)
 
     case OrderSubmitted(orderInfo, txs) =>
-      addItem(orderInfo)
+      var takerQuantity = 0L
       txs.foreach { tx =>
-        val outAmount = tx.makerUpdate.current.inAmount
-        val inAmount = tx.takerUpdate.previous.quantity - tx.takerUpdate.current.quantity
+        takerQuantity = tx.takerUpdate.current.quantity
+        val quantity = tx.makerUpdate.current.quantity
+        val inAmount = tx.makerUpdate.current.inAmount
         val status =
           if (tx.makerUpdate.current.isFullyExecuted) OrderStatus.FullyExecuted
           else OrderStatus.PartiallyExecuted
 
-        updateItem(tx.makerUpdate.current.id, inAmount, outAmount, status.getValue(), orderInfo.side.reverse, tx.timestamp)
+        updateItem(tx.makerUpdate.current.id, inAmount, quantity, status.getValue(), orderInfo.side.reverse, tx.timestamp)
       }
+      addItem(orderInfo, takerQuantity)
   }
 }
 

@@ -10,6 +10,8 @@ class TransactionReader(db: MongoDB) extends Actor with TransactionMongoHandler 
 
   def receive = LoggingReceive {
     case q: QueryTransaction =>
+      val xx = getItems(q)
+      xx.foreach(println)
       sender ! QueryTransactionResult(getItems(q), countItems(q))
   }
 }
@@ -20,15 +22,15 @@ class TransactionWriter(db: MongoDB) extends Actor with TransactionMongoHandler 
   def receive = LoggingReceive {
     case OrderSubmitted(orderInfo, txs) =>
       txs foreach { t =>
-        val amount = Math.abs(t.takerUpdate.current.quantity - t.takerUpdate.previous.quantity)
-        val reverseAmount = Math.abs(t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity)
+        val ia = t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity
+        val oa = t.takerUpdate.previous.quantity - t.takerUpdate.current.quantity
 
-        val price = reverseAmount.toDouble / amount.toDouble
+        val price = t.makerUpdate.current.price.get
 
         val (taker, toId) = (t.takerUpdate.current.userId, t.takerUpdate.current.id)
         val (maker, moId) = (t.makerUpdate.current.userId, t.makerUpdate.current.id)
 
-        val item = TransactionItem(tid = t.id, price = price, volume = amount, amount = reverseAmount, taker = taker,
+        val item = TransactionItem(tid = t.id, price = price, volume = ia, amount = oa, taker = taker,
           maker = maker, tOrder = toId, mOrder = moId, side = t.side, timestamp = t.timestamp)
         addItem(item)
       }
