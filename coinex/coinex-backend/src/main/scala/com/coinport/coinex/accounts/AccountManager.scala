@@ -15,11 +15,20 @@
 
 package com.coinport.coinex.accounts
 
+import scala.collection.mutable.Map
 import com.coinport.coinex.data._
-import com.coinport.coinex.common.Manager
+import com.coinport.coinex.common._
 import Implicits._
 
-class AccountManager extends Manager[AccountState](AccountState()) {
+class AccountManager extends AbstractManager[TAccountState] {
+  private val accountMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]
+
+  def getSnapshot = TAccountState(accountMap.clone)
+
+  def loadSnapshot(snapshot: TAccountState) = {
+    accountMap.clear
+    accountMap ++= snapshot.userAccountsMap
+  }
 
   def transferFundFromLocked(from: Long, to: Long, currency: Currency, amount: Long) = {
     updateCashAccount(from, CashAccount(currency, 0, -amount, 0))
@@ -45,14 +54,29 @@ class AccountManager extends Manager[AccountState](AccountState()) {
   }
 
   def canUpdateCashAccount(userId: Long, adjustment: CashAccount) = {
-    val current = state.getUserCashAccount(userId, adjustment.currency)
+    val current = getUserCashAccount(userId, adjustment.currency)
     (current + adjustment).isValid
   }
 
   def updateCashAccount(userId: Long, adjustment: CashAccount) = {
-    val current = state.getUserCashAccount(userId, adjustment.currency)
+    val current = getUserCashAccount(userId, adjustment.currency)
     val updated = current + adjustment
     assert(updated.isValid)
-    state = state.setUserCashAccount(userId, updated)
+    setUserCashAccount(userId, updated)
+  }
+
+  def getUserAccounts(userId: Long): UserAccount =
+    accountMap.get(userId).getOrElse(UserAccount(userId))
+
+  private def getUserCashAccount(userId: Long, currency: Currency): CashAccount =
+    getUserAccounts(userId).cashAccounts.getOrElse(currency, CashAccount(currency, 0, 0, 0))
+
+  private def setUserCashAccount(userId: Long, cashAccount: CashAccount) = {
+    if (!cashAccount.isValid)
+      throw new IllegalArgumentException("Attempted to set user cash account to an invalid value: " + cashAccount)
+
+    val accounts = accountMap.getOrElseUpdate(userId, UserAccount(userId))
+    val updated = accounts.copy(cashAccounts = accounts.cashAccounts + (cashAccount.currency -> cashAccount))
+    accountMap += userId -> updated
   }
 }
