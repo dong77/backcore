@@ -14,6 +14,6 @@ class RedeliverFilter(state: RedeliverFilterData, maxSize: Int = -1) {
     op(id)
   }
 
-  def getState = RedeliverFilterData(ids.toSeq)
+  def getThrift = RedeliverFilterData(ids.toSeq)
   private def seen(id: Long) = id < ids.headOption.getOrElse(0L) || ids.contains(id)
 }

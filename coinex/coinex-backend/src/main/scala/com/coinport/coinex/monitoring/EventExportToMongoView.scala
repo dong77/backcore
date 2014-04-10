@@ -19,9 +19,7 @@ class EventExportToMongoView(db: MongoDB, pid: String) extends ExtendedView {
   val serializer = new ThriftJsonSerializer
   val collection = db(pid + "_events")
 
-  case class State(snapshotIndex: Long, index: Long, hash: String)
-
-  var state = State(0, 0, "0" * 32)
+  var state = TExportToMongoState(0, 0, "0" * 32)
 
   def receive = LoggingReceive {
     case TakeSnapshotNow => {
@@ -31,7 +29,7 @@ class EventExportToMongoView(db: MongoDB, pid: String) extends ExtendedView {
     }
 
     case SnapshotOffer(meta, snapshot) => state =
-      snapshot.asInstanceOf[State]
+      snapshot.asInstanceOf[TExportToMongoState]
 
     case Persistent(m: AnyRef, _) =>
       val data = JSON.parse(new String(serializer.toBinary(m)))

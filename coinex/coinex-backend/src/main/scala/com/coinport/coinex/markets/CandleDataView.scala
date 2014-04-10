@@ -17,7 +17,7 @@ class CandleDataView(market: MarketSide) extends ExtendedView {
   private val manager = new CandleDataManager(market)
 
   def receive = LoggingReceive {
-    case DebugDump =>
+    case DumpToFile =>
       log.info("state: {}", manager())
 
     case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>

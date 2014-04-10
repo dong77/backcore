@@ -7,7 +7,7 @@ import com.mongodb.casbah.Imports._
 
 class DepositWithdrawReader(val db: MongoDB) extends Actor with DepositWithdrawBehavior with ActorLogging {
   def receive = LoggingReceive {
-    case DebugDump => log.info("DepositWithdrawReader")
+    case DumpToFile => log.info("DepositWithdrawReader")
 
     case q: QueryDeposit =>
       val query = deposits.getQueryDBObject(q)

@@ -16,7 +16,7 @@ class RobotView extends ExtendedView {
   override val viewId = "coinex_robot_view"
   val manager = new RobotManager()
   def receive = LoggingReceive {
-    case DebugDump =>
+    case DumpToFile =>
       log.info("state: {}", manager())
   }
 }

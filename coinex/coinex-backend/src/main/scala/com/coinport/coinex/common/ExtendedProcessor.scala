@@ -34,7 +34,7 @@ trait ExtendedProcessor extends Processor with ActorLogging {
     if (cancellable != null && !cancellable.isCancelled) cancellable.cancel()
 
   protected def scheduleSnapshot() =
-    cancellable = context.system.scheduler.scheduleOnce(snapshotInterval, self, TakeSnapshotNow)
+    cancellable = context.system.scheduler.scheduleOnce(snapshotInterval, self, TakeSnapshotNow("scheduled"))
 
   protected def createChannelTo(dest: String) = {
     val channelName = processorId + "_2_" + dest

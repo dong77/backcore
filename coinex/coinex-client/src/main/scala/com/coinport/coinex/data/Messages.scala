@@ -9,10 +9,6 @@
 package com.coinport.coinex.data
 
 // TODO(d): put all these classes into thrift file.
-case object DebugDump
-
-case object TakeSnapshotNow
-
 case object QueryMetrics
 
 case object QueryActorStats
