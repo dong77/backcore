@@ -282,3 +282,8 @@ struct TransactionItem  {
 struct RedeliverFilterData {
     1: list<i64> ids
 }
+
+struct QueryMarketSide {
+    1: MarketSide side
+    2: bool bothSide
+}

@@ -3,7 +3,8 @@ package com.coinport.coinex.ot
 import com.coinport.coinex.data._
 import com.mongodb.casbah.Imports._
 import com.coinport.coinex.serializers.ThriftBinarySerializer
-import com.coinport.coinex.ot.MarketSideMap._
+import com.coinport.coinex.data.MarketMap._
+import Implicits._
 
 trait OrderMongoHandler {
   val OID = "_id"
@@ -11,11 +12,11 @@ trait OrderMongoHandler {
   val IN_AMOUNT = "ia"
   val OUT_AMOUNT = "oa"
   val ORIGIN_ORDER = "oo"
-  val SIDE = "s"
   val STATUS = "st"
   val CREATED_TIME = "c@"
   val UPDATED_TIME = "u@"
   val MARKET = "m"
+  val SIDE = "s"
 
   val converter = new ThriftBinarySerializer
 
@@ -25,7 +26,7 @@ trait OrderMongoHandler {
 
   def updateItem(orderId: Long, inAmount: Long, outAmount: Long, status: Int, side: MarketSide, timestamp: Long) =
     coll.update(MongoDBObject(OID -> orderId), $set(IN_AMOUNT -> inAmount, OUT_AMOUNT -> outAmount, STATUS -> status,
-      UPDATED_TIME -> timestamp, SIDE -> getValue(side)), false, false)
+      UPDATED_TIME -> timestamp, SIDE -> side.market.direction), false, false)
 
   def cancelItem(orderId: Long) =
     coll.update(MongoDBObject(OID -> orderId), $set(STATUS -> OrderStatus.Cancelled), false, false)
@@ -38,10 +39,11 @@ trait OrderMongoHandler {
   }
 
   private def toBson(item: OrderInfo) = {
+    val market = item.side.market
     val obj = MongoDBObject(
       OID -> item.order.id, UID -> item.order.userId, ORIGIN_ORDER -> converter.toBinary(item.order),
-      IN_AMOUNT -> item.inAmount, OUT_AMOUNT -> item.outAmount, SIDE -> getValue(item.side),
-      CREATED_TIME -> item.order.timestamp.getOrElse(0), STATUS -> item.status.getValue())
+      IN_AMOUNT -> item.inAmount, OUT_AMOUNT -> item.outAmount, MARKET -> getValue(market),
+      SIDE -> market.direction, CREATED_TIME -> item.order.timestamp.getOrElse(0), STATUS -> item.status.getValue())
 
     if (item.lastTxTimestamp.isDefined) obj ++ (UPDATED_TIME -> item.lastTxTimestamp.get)
     else obj
@@ -51,7 +53,8 @@ trait OrderMongoHandler {
     OrderInfo(
       order = converter.fromBinary(obj.getAsOrElse(ORIGIN_ORDER, null), Some(classOf[Order.Immutable])).asInstanceOf[Order],
       inAmount = obj.getAsOrElse(IN_AMOUNT, -1), outAmount = obj.getAsOrElse(OUT_AMOUNT, -1),
-      side = getSide(obj.getAsOrElse(SIDE, 0)), lastTxTimestamp = obj.getAs[Long](UPDATED_TIME),
+      side = getSide(obj.getAsOrElse(MARKET, 0)).getMarketSide(obj.getAsOrElse(SIDE, true)),
+      lastTxTimestamp = obj.getAs[Long](UPDATED_TIME),
       status = OrderStatus.get(obj.getAsOrElse(STATUS, 0)).getOrElse(OrderStatus.Pending))
   }
 
@@ -59,7 +62,12 @@ trait OrderMongoHandler {
     var query = MongoDBObject()
     if (q.oid.isDefined) query = query ++ (OID -> q.oid.get)
     if (q.uid.isDefined) query = query ++ (UID -> q.uid.get)
-    if (q.side.isDefined) query = query ++ (SIDE -> getValue(q.side.get))
+    if (q.side.isDefined) query = {
+      val querySide = q.side.get
+      val market = querySide.side.market
+      if (querySide.bothSide) query ++ (MARKET -> getValue(market))
+      else query ++ (MARKET -> getValue(querySide.side.market), SIDE -> market.direction)
+    }
     if (q.status.isDefined) query = query ++ (STATUS -> q.status.get)
     query
   }

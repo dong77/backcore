@@ -18,6 +18,7 @@ class RichCurrency(raw: Currency) {
 class RichMarketSide(raw: MarketSide) {
   def reverse = MarketSide(raw.inCurrency, raw.outCurrency)
   def asString = "%s_%s".format(raw.outCurrency, raw.inCurrency).toLowerCase
+  def market = Market(raw.outCurrency, raw.inCurrency)
 }
 
 class RichOrder(raw: Order) {

@@ -10,10 +10,13 @@ import com.coinport.coinex.common.EmbeddedMongoSupport
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Implicits._
 import com.coinport.coinex.ot.OrderMongoHandler
+import com.mongodb.casbah.MongoConnection
 
 class OrderHandlerSpec extends Specification with EmbeddedMongoSupport {
+
   class OrderClass extends OrderMongoHandler {
     val coll = database("OrderHandlerSpec")
+    //    val coll = MongoConnection("localhost", 27017)("test")("OrderHandlerSpec")
   }
 
   val market = Btc ~> Rmb
@@ -23,7 +26,6 @@ class OrderHandlerSpec extends Specification with EmbeddedMongoSupport {
     val orderClass = new OrderClass()
     "can save update OrderInfo and can sort count data" in {
       orderClass.coll.size mustEqual 0
-
       var orderInfos = (0 to 3).map(i => OrderInfo(market, Order(i, i, i), 10, 10, OrderStatus.Pending, None))
       orderInfos.foreach(oi => orderClass.addItem(oi))
 
@@ -56,6 +58,17 @@ class OrderHandlerSpec extends Specification with EmbeddedMongoSupport {
       q = QueryOrder(uid = Some(1L), cursor = Cursor(0, 10), getCount = false)
       orderClass.countItems(q) mustEqual 0
       orderClass.getItems(q).map(_.order.id) mustEqual Seq(10, 7, 4, 1)
+
+      orderClass.coll.drop()
+      orderInfos = (0 to 3).map(i => OrderInfo(if (i % 2 == 0) market else market.reverse, Order(i, i, i), 10, 10, OrderStatus.Pending, None))
+      orderInfos.foreach(oi => orderClass.addItem(oi))
+
+      q = QueryOrder(side = Some(QueryMarketSide(market, true)), cursor = Cursor(0, 10), getCount = false)
+      orderClass.getItems(q).map(_.order.id) mustEqual Seq(3, 2, 1, 0)
+      q = QueryOrder(side = Some(QueryMarketSide(market, false)), cursor = Cursor(0, 10), getCount = false)
+      orderClass.getItems(q).map(_.order.id) mustEqual Seq(2, 0)
+      q = QueryOrder(side = Some(QueryMarketSide(market.reverse, false)), cursor = Cursor(0, 10), getCount = false)
+      orderClass.getItems(q).map(_.order.id) mustEqual Seq(3, 1)
     }
   }
 

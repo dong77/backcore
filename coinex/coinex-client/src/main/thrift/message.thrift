@@ -32,6 +32,7 @@ typedef data.Transaction           Transaction
 typedef data.TransactionItem       TransactionItem
 typedef data.CandleData            CandleData
 typedef data.ChartTimeDimension    ChartTimeDimension
+typedef data.QueryMarketSide       QueryMarketSide
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -135,11 +136,11 @@ typedef data.ChartTimeDimension    ChartTimeDimension
 /* R    */ struct QueryCandleDataResult               {1: CandleData candleData}
 
 ////////// OrderView
-/* Q    */ struct QueryOrder                          {1: optional i64 uid, 2: optional i64 oid, 3:optional i32 status, 4:optional MarketSide side, 5: Cursor cursor, 6: bool getCount}
+/* Q    */ struct QueryOrder                          {1: optional i64 uid, 2: optional i64 oid, 3:optional i32 status, 4:optional QueryMarketSide side, 5: Cursor cursor, 6: bool getCount}
 /* R    */ struct QueryOrderResult                    {1: list<OrderInfo> orderinfos, 2: i64 count}
 
 ////////// TransactionView
-/* Q    */ struct QueryTransaction                    {1: optional i64 tid, 2: optional i64 uid, 3: optional i64 oid, 4:optional MarketSide side, 5: Cursor cursor, 6: bool getCount}
+/* Q    */ struct QueryTransaction                    {1: optional i64 tid, 2: optional i64 uid, 3: optional i64 oid, 4:optional QueryMarketSide side, 5: Cursor cursor, 6: bool getCount}
 /* R    */ struct QueryTransactionResult              {1: list<TransactionItem> transactionItems, 2: i64 count}
 
 ////////// DepositQuery
