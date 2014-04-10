@@ -5,7 +5,7 @@ import java.io.FileOutputStream
 import akka.serialization.SerializationExtension
 import akka.actor.ActorLogging
 
-private[common] trait DumpStateSupport { self: Actor with ActorLogging =>
+private[common] trait DumpStateSupport extends Actor with ActorLogging {
   def dumpToFile(state: AnyRef, file: String) = {
     val out = new FileOutputStream(file)
     val serialization = SerializationExtension(context.system)
