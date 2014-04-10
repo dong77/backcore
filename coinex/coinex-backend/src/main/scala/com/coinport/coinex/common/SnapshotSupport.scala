@@ -6,9 +6,14 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import com.coinport.coinex.data.TakeSnapshotNow
 
-trait SnapshotSupport { self: Actor =>
+private[common] trait SnapshotSupport extends Actor {
   implicit val executeContext = context.system.dispatcher
   private var cancellable: Cancellable = null
+
+  abstract override def preStart() = {
+    super.preStart()
+    scheduleSnapshot(30, TakeSnapshotNow("auto", Some(30)))
+  }
 
   def takeSnapshot(cmd: TakeSnapshotNow)(action: => Unit) = {
     cancelSnapshotSchedule()
