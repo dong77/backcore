@@ -25,14 +25,13 @@ struct TMarketState {
     4: optional double priceRestriction
 }
 
-// TODO: rename
-struct ApiSecretState {
+struct TApiSecretState {
     1: map<string, ApiSecret> identifierLookupMap // key is identifier
     2: map<i64, list<ApiSecret>> userSecretMap // key is userId
     3: string seed
 }
 
 // TODO: rename
-struct PersistentAccountState {
+struct TAccountState {
     1: map<i64, UserAccount> userAccountsMap
 }

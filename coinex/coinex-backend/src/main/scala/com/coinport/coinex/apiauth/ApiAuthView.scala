@@ -39,7 +39,7 @@ class ApiAuthView(seed: String) extends ExtendedView {
   }
 }
 
-class ApiAuthManager(initialSeed: String) extends Manager[ApiSecretState](ApiSecretState(seed = initialSeed)) {
+class ApiAuthManager(initialSeed: String) extends Manager[TApiSecretState](TApiSecretState(seed = initialSeed)) {
   val MAX_SECRETS_PER_USER = 50
 
   def getUserSecrets(userId: Long) = {
