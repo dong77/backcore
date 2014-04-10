@@ -21,7 +21,7 @@ class MetricsView extends ExtendedView {
   val manager = new MetricsManager()
 
   def receive = LoggingReceive {
-    case DumpToFile =>
+    case DumpStateToFile =>
       log.info("state: {}", manager())
     case e @ Persistent(OrderSubmitted(orderInfo, txs), _) =>
       txs.lastOption foreach { tx =>

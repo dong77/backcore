@@ -9,7 +9,7 @@ class TransactionReader(db: MongoDB) extends Actor with TransactionMongoHandler 
   val coll = db("transaction")
 
   def receive = LoggingReceive {
-    case DumpToFile =>
+    case DumpStateToFile =>
       log.info("TransactionReader")
 
     case q: QueryTransaction =>
@@ -21,7 +21,7 @@ class TransactionWriter(db: MongoDB) extends Actor with TransactionMongoHandler 
   val coll = db("transaction")
 
   def receive = LoggingReceive {
-    case DumpToFile =>
+    case DumpStateToFile =>
       log.info("TransactionWriter")
 
     case OrderSubmitted(orderInfo, txs) =>
