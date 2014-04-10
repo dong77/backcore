@@ -2,10 +2,11 @@ package com.coinport.coinex.common
 
 import akka.persistence.EventsourcedProcessor
 import akka.persistence.SnapshotOffer
-import com.coinport.coinex.data.TakeSnapshotNow
+import com.coinport.coinex.data._
 import akka.persistence.Processor
 import akka.actor.Actor
 import akka.persistence.Channel
+import com.twitter.scrooge.ThriftStruct
 
 abstract class Manager[T](s: T) {
   protected var state = s
@@ -13,9 +14,9 @@ abstract class Manager[T](s: T) {
   def apply(s: T) = state = s
 }
 
-abstract class AbstractManager[T] {
-  def dump: T
-  def load(s: T): Unit
+abstract class AbstractManager[T <: ThriftStruct] {
+  def getSnapshot: T
+  def loadSnapshot(s: T): Unit
 }
 
 trait Eventsourced[T, M <: Manager[T]] extends EventsourcedProcessor {
@@ -42,13 +43,29 @@ trait Commandsourced[T, M <: Manager[T]] extends Processor {
   }
 }
 
-trait AbstractCommandsourced[T, M <: AbstractManager[T]] extends Processor {
+trait AbstractEventsourced[T <: ThriftStruct, M <: AbstractManager[T]] extends EventsourcedProcessor with DumpStateSupport {
+  val manager: M
+  def updateState(event: Any): Unit
+
+  abstract override def receiveRecover = super.receiveRecover orElse {
+    case SnapshotOffer(_, snapshot) => manager.loadSnapshot(snapshot.asInstanceOf[T])
+    case event: AnyRef => updateState(event)
+  }
+
+  abstract override def receiveCommand = super.receiveCommand orElse {
+    case TakeSnapshotNow => saveSnapshot(manager.getSnapshot)
+    case DumpStateToFile => dumpToFile(manager.getSnapshot, self.path.toString.replace("akka://coinex/user", "dump"))
+  }
+}
+
+trait AbstractCommandsourced[T <: ThriftStruct, M <: AbstractManager[T]] extends Processor with DumpStateSupport {
   val manager: M
 
   abstract override def receive = super.receive orElse {
     // TODO(c): need copy a new instance
-    case TakeSnapshotNow => saveSnapshot(manager.dump)
-    case SnapshotOffer(_, snapshot) => manager.load(snapshot.asInstanceOf[T])
+    case TakeSnapshotNow => saveSnapshot(manager.getSnapshot)
+    case SnapshotOffer(_, snapshot) => manager.loadSnapshot(snapshot.asInstanceOf[T])
+    case DumpStateToFile => dumpToFile(manager.getSnapshot, self.path.toString.replace("akka://coinex/user", "dump"))
   }
 }
 

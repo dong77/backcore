@@ -12,8 +12,6 @@ class OrderReader(db: MongoDB) extends Actor with OrderMongoHandler with ActorLo
   val coll = db("order")
 
   def receive = LoggingReceive {
-    case DumpStateToFile => log.info("")
-
     case q: QueryOrder =>
       sender ! QueryOrderResult(getItems(q), countItems(q))
   }
@@ -23,8 +21,6 @@ class OrderWriter(db: MongoDB) extends Actor with OrderMongoHandler with ActorLo
   val coll = db("order")
 
   def receive = LoggingReceive {
-    case DumpStateToFile => log.info("")
-
     case OrderCancelled(_, order) => cancelItem(order.id)
 
     case OrderSubmitted(orderInfo, txs) =>

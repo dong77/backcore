@@ -53,6 +53,5 @@ class MarketProcessor(
         channelToAccountProcessor ! Deliver(p.withPayload(orderSubmitted), accountProcessorPath)
         channelToMarketUpdateProcessor ! Deliver(p.withPayload(orderSubmitted), marketUpdateProcessoressorPath)
       }
-      log.info("state: {}", manager.dump)
   }
 }

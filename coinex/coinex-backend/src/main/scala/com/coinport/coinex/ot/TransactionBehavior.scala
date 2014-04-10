@@ -9,9 +9,6 @@ class TransactionReader(db: MongoDB) extends Actor with TransactionMongoHandler 
   val coll = db("transaction")
 
   def receive = LoggingReceive {
-    case DumpStateToFile =>
-      log.info("TransactionReader")
-
     case q: QueryTransaction =>
       sender ! QueryTransactionResult(getItems(q), countItems(q))
   }
@@ -21,9 +18,6 @@ class TransactionWriter(db: MongoDB) extends Actor with TransactionMongoHandler 
   val coll = db("transaction")
 
   def receive = LoggingReceive {
-    case DumpStateToFile =>
-      log.info("TransactionWriter")
-
     case OrderSubmitted(orderInfo, txs) =>
       txs foreach { t =>
         val amount = Math.abs(t.takerUpdate.current.quantity - t.takerUpdate.previous.quantity)

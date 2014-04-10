@@ -37,9 +37,9 @@ class MarketManager(headSide: MarketSide) extends AbstractManager[TMarketState] 
     else false
   }
 
-  override def dump = state.toThrift
+  override def getSnapshot = state.toThrift
 
-  override def load(s: TMarketState) {
+  override def loadSnapshot(s: TMarketState) {
     state = MarketState(s)
   }
 

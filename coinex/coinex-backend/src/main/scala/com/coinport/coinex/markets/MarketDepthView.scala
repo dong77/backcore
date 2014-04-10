@@ -17,9 +17,6 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
   val manager = new MarketDepthManager(market)
 
   def receive = LoggingReceive {
-    case DumpStateToFile =>
-      log.info("state: {}", manager())
-
     case Persistent(OrderCancelled(side, order), _) if side == market || side == market.reverse =>
       manager.adjustAmount(side, order, false)
 
