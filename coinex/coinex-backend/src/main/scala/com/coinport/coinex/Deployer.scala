@@ -79,10 +79,10 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployView(Props(new MetricsView), metrics_view <<)
     deployView(Props(new ApiAuthView(apiAuthSecret)), api_auth_view <<)
 
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_up")), user_processor_event_export<<)
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_ap")), account_processor_event_export<<)
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_dwp")), dw_processor_event_export<<)
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_mup")), market_update_processor_event_export<<)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_up") with AbstractView[TExportToMongoState, EventExportToMongoManager]), user_processor_event_export<<)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_ap") with AbstractView[TExportToMongoState, EventExportToMongoManager]), account_processor_event_export<<)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_dwp") with AbstractView[TExportToMongoState, EventExportToMongoManager]), dw_processor_event_export<<)
+    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_mup") with AbstractView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export<<)
 
     deployView(Props(new TransactionReader(dbForViews)), transaction_mongo_reader<<)
     deployView(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer<<)

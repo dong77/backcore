@@ -6,7 +6,7 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import com.coinport.coinex.data.TakeSnapshotNow
 
-private[common] trait SnapshotSupport extends Actor {
+trait SnapshotSupport extends Actor {
   implicit val executeContext = context.system.dispatcher
   private var cancellable: Cancellable = null
 
