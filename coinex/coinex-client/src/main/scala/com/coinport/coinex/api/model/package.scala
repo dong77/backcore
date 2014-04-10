@@ -3,9 +3,9 @@
  */
 package com.coinport.coinex.api
 
-import com.coinport.coinex.api.model.CurrencyUnits._
 import com.coinport.coinex.data.ChartTimeDimension._
-import com.coinport.coinex.data.Currency.{ Btc, Rmb }
+import com.coinport.coinex.data.Currency._
+import com.coinport.coinex.data.Implicits._
 import com.coinport.coinex.data._
 import org.json4s.ext.EnumNameSerializer
 import org.json4s.JsonAST.JField
@@ -15,41 +15,13 @@ import scala.concurrent.duration._
 import scala.Some
 
 package object model {
-  implicit def long2CurrencyUnit(value: Long) = new CurrencyValue(value)
+  implicit def long2CurrencyWrapper(value: Long) = new CurrencyWrapper(value)
 
-  implicit def double2CurrencyUnit(value: Double) = new CurrencyValue(value)
+  implicit def double2CurrencyWrapper(value: Double) = new CurrencyWrapper(value)
 
-  implicit def currencyUnit2Long(value: CurrencyValue) = value.toLong
+  implicit def double2PriceWrapper(value: Double): PriceWrapper = new PriceWrapper(value)
 
-  implicit def currencyUnit2Double(value: CurrencyValue) = value.toDouble
-
-  implicit def double2PriceUnit(value: Double): PriceValue = new PriceValue(value)
-
-  implicit def priceUnit2Double(value: PriceValue) = value
-
-  // internal unit of backend
-  implicit def currency2CurrencyUnit(value: Currency): CurrencyUnit = {
-    value match {
-      case Btc => MBTC
-      case Rmb => CNY2
-      case _ => NO_UNIT
-    }
-  }
-
-  implicit def tuple2CurrencyUnit(value: (Currency, Currency)): (CurrencyUnit, CurrencyUnit) = {
-    val unit1: CurrencyUnit = value._1
-    val unit2: CurrencyUnit = value._2
-    (unit1, unit2)
-  }
-
-  implicit def currencyUnit2Currency(value: CurrencyUnit): Currency = {
-    value match {
-      case BTC => Btc
-      case MBTC => Btc
-      case CNY => Rmb
-      case CNY2 => Rmb
-    }
-  }
+  implicit def priceWrapper2Double(value: PriceWrapper) = value
 
   implicit def string2Currency(currencyString: String): Currency = {
     currencyString.toUpperCase match {
@@ -74,31 +46,13 @@ package object model {
     }
   }
 
-  // currency conversions between backend and frontend
-  // example: (1000, Btc) -> 1000 unit MBTC
-  implicit def tuple2CurrencyValue(t: (Long, Currency)): CurrencyValue = {
-    t._1 unit t._2
-  }
-
-  // example: (300, Rmb, Btc) -> 300 unit (CNY2, MBTC)
-  implicit def tuple3toPriceValue(t: (Double, Currency, Currency)): PriceValue = {
-    val price: PriceValue = t._1
-    price unit (t._2, t._3)
-  }
-
-  // example: (300, Btc ~> Rmb) -> 300 unit (CNY2, MBTC)
-  implicit def tuple2toPriceValue(t: (Double, MarketSide)): PriceValue = {
-    val price: PriceValue = t._1
-    price unit (t._2._2, t._2._1)
-  }
-
   // user account conversions
   implicit def fromUserAccount(backendObj: com.coinport.coinex.data.UserAccount): com.coinport.coinex.api.model.UserAccount = {
     val uid = backendObj.userId
     val map: Map[String, Double] = backendObj.cashAccounts.map {
-      case (k, v) =>
+      case (k: Currency, v: CashAccount) =>
         val currency: String = k
-        currency -> (v.available, v.currency).userValue
+        currency -> v.available.externalValue(k)
     }.toMap
 
     com.coinport.coinex.api.model.UserAccount(uid, accounts = map)
@@ -106,11 +60,11 @@ package object model {
 
   // market depth conversions
   implicit def fromMarketDepth(backendObj: com.coinport.coinex.data.MarketDepth): com.coinport.coinex.api.model.MarketDepth = {
-    val subject = backendObj.side._1
-    val currency = backendObj.side._2
+    val side = backendObj.side
+    val subject = side._1
     val mapper = {
       item: com.coinport.coinex.data.MarketDepthItem =>
-        com.coinport.coinex.api.model.MarketDepthItem((item.price, currency, subject).userValue, (item.quantity, subject).userValue)
+        com.coinport.coinex.api.model.MarketDepthItem(item.price.externalValue(side), item.quantity.externalValue(subject))
     }
     val bids = backendObj.bids.map(mapper)
     val asks = backendObj.asks.map(mapper)
@@ -142,10 +96,10 @@ package object model {
     val side = metrics.side
     val currency: String = side._1
     val subject = side._1
-    val price = (metrics.price, side).userValue
-    val high = metrics.high.map(v => (v, side).userValue)
-    val low = metrics.low.map(v => (v, side).userValue)
-    val volume = (metrics.volume, subject).userValue
+    val price = metrics.price.externalValue(side)
+    val high = metrics.high.map(_.externalValue(side))
+    val low = metrics.low.map(_.externalValue(side))
+    val volume = metrics.volume.externalValue(subject)
     val gain = metrics.gain
     val trend = Some(metrics.direction.toString.toLowerCase)
 
@@ -167,9 +121,10 @@ package object model {
     val currency = side._2
     val id = item.tid
     val timestamp = item.timestamp
-    val price = (item.price, side).userValue
-    val volume = (item.volume, subject).userValue
-    val total = (item.amount, currency).userValue
+    val price = item.price.externalValue(side)
+    val volume = item.volume.externalValue(subject)
+    val total = item.amount.externalValue(currency)
+    // TODO: use Market+Operation model
     val isSell = side._2 equals Rmb
     val taker = item.taker
     val maker = item.maker
@@ -188,16 +143,17 @@ package object model {
 
   class CandleDataItemSerializer extends CustomSerializer[CandleDataItem](
     format => ({
-      null // deserializer not implemented
+      null // deserializer is not implemented
     }, {
       case candleDataItem: CandleDataItem =>
+        val side = Btc ~> Rmb // TODO: put side in CandleDataItem
         JArray(List(
           JDecimal(candleDataItem.timestamp),
-          JDouble((candleDataItem.open unit (CNY2, MBTC) to (CNY, BTC)).value),
-          JDouble((candleDataItem.high unit (CNY2, MBTC) to (CNY, BTC)).value),
-          JDouble((candleDataItem.low unit (CNY2, MBTC) to (CNY, BTC)).value),
-          JDouble((candleDataItem.close unit (CNY2, MBTC) to (CNY, BTC)).value),
-          JDouble((candleDataItem.volumn unit MBTC).userValue)
+          JDouble(candleDataItem.open.externalValue(side)),
+          JDouble(candleDataItem.high.externalValue(side)),
+          JDouble(candleDataItem.low.externalValue(side)),
+          JDouble(candleDataItem.close.externalValue(side)),
+          JDouble(candleDataItem.volumn.externalValue(Btc)) // TODO: remove hardcoded subject
         ))
     })
   )

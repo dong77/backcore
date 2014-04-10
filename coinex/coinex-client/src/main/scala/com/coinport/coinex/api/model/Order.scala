@@ -7,8 +7,7 @@ package com.coinport.coinex.api.model
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Implicits._
 import scala.Some
-import com.coinport.coinex.api.model.CurrencyUnits._
-import com.coinport.coinex.data.Currency.{ Btc, Rmb }
+import com.coinport.coinex.data.Currency._
 
 object Operations extends Enumeration {
   type Operation = Value
@@ -49,33 +48,29 @@ case class UserOrder(
     operation match {
       case Buy =>
         // convert price
-        val newPrice = price match {
-          case Some(value: Double) =>
-            Some(((value unit (CNY, BTC)) to (CNY2, MBTC)).inverse.value)
-          case None => None
+        val newPrice = price map {
+          value => value.internalValue(marketSide.reverse).inverse
         }
         // regard total as quantity
         val quantity: Long = total match {
-          case Some(t) => (t unit CNY to CNY2).toLong
-          case None =>
-            (((amount.get unit BTC) * (price.get unit (CNY, BTC))) to CNY2).toLong
+          case Some(t) => t.internalValue(currency)
+          case None => (amount.get * price.get).internalValue(currency)
         }
-        val limit = amount.map(a => (a unit BTC to MBTC).toLong)
+        val limit = amount.map(_.internalValue(subject))
         DoSubmitOrder(marketSide, Order(uid, id, quantity, newPrice, limit))
       case Sell =>
         // TODO: handle None total or price
-        val newPrice: Option[Double] = price.map(p => (p unit (CNY, BTC) to (CNY2, MBTC)).value)
+        val newPrice = price.map(p => p.internalValue(marketSide))
         val quantity: Long = amount match {
-          case Some(a) => (a unit BTC to MBTC).toLong
+          case Some(a) => a.internalValue(subject)
           case None =>
             if (total.isDefined && price.isDefined) {
-              val totalValue = (price.get unit (CNY, BTC)).inverse * (total.get unit CNY)
-              (totalValue to MBTC).toLong
+              val totalValue = price.get.inverse * total.get
+              totalValue.internalValue(subject)
             } else 0
         }
-        val limit = total match {
-          case Some(total) => Some((total unit CNY to CNY2).toLong)
-          case None => None
+        val limit = total map {
+          total => total.internalValue(currency)
         }
         DoSubmitOrder(marketSide, Order(uid, id, quantity, newPrice, limit))
     }
@@ -85,34 +80,29 @@ case class UserOrder(
 object UserOrder {
   def fromOrderInfo(orderInfo: OrderInfo): UserOrder = {
     // all are sell-orders
-    val side = orderInfo.side
+    val marketSide = orderInfo.side
     val order = orderInfo.order
 
-    val unit1: CurrencyUnit = side._1
-    val unit2: CurrencyUnit = side._2
+    val unit1 = marketSide._1
+    val unit2 = marketSide._2
 
-    val currency: Currency = unit2
-
-    println(orderInfo + " -> " + currency)
-    currency match {
+    unit2 match {
       case Rmb => // sell
-        val price: Option[Double] = order.price.map {
-          p =>
-            val priceUnit: (CurrencyUnit, CurrencyUnit) = (unit2, unit1)
-            (p unit priceUnit).userValue
+        val price = order.price.map {
+          p => p.externalValue(marketSide)
         }
-        val amount: Option[Double] = Some((order.quantity unit unit1).userValue)
-        val total: Option[Double] = order.takeLimit.map(t => (t unit unit2).userValue)
+        val amount: Option[Double] = Some(order.quantity.externalValue(unit1))
+        val total: Option[Double] = order.takeLimit.map(t => t.externalValue(unit2))
 
         // finished quantity = out
-        val finishedQuantity: Double = (orderInfo.outAmount unit unit1).userValue
+        val finishedQuantity = orderInfo.outAmount.externalValue(unit1)
         // remaining quantity = quantity - out
-        val remainingQuantity: Double = ((order.quantity - orderInfo.outAmount) unit unit1).userValue
+        val remainingQuantity = (order.quantity - orderInfo.outAmount).externalValue(unit1)
         // finished amount = in
-        val finishedAmount: Double = (orderInfo.inAmount unit unit2).userValue
+        val finishedAmount = orderInfo.inAmount.externalValue(unit2)
         // remaining amount = take - in
-        val remainingAmount: Double = order.takeLimit match {
-          case Some(t) => ((t - orderInfo.inAmount) unit unit2).userValue
+        val remainingAmount = order.takeLimit match {
+          case Some(t) => (t - orderInfo.inAmount).externalValue(unit2)
           case None => 0
         }
 
@@ -128,25 +118,23 @@ object UserOrder {
 
       case _ => // buy
         val price: Option[Double] = order.price.map {
-          p =>
-            val priceUnit: (CurrencyUnit, CurrencyUnit) = (unit2, unit1)
-            (p unit priceUnit).inverse.userValue
+          p => p.inverse.externalValue(marketSide.reverse)
         }
 
-        val amount: Option[Double] = order.takeLimit.map(t => (t unit unit2).userValue)
-        val total: Option[Double] = Some((order.quantity unit unit1).userValue)
+        val amount = order.takeLimit.map(t => t.externalValue(unit2))
+        val total = Some(order.quantity.externalValue(unit1))
 
         // finished quantity = in
-        val finishedQuantity: Double = (orderInfo.inAmount unit unit2).userValue
+        val finishedQuantity = orderInfo.inAmount.externalValue(unit2)
         // remaining quantity = take - in
-        val remainingQuantity: Double = order.takeLimit match {
-          case Some(t) => ((t - orderInfo.inAmount) unit unit2).userValue
+        val remainingQuantity = order.takeLimit match {
+          case Some(t) => (t - orderInfo.inAmount).externalValue(unit2)
           case None => 0
         }
         // finished amount = out
-        val finishedAmount: Double = (orderInfo.outAmount unit unit1).userValue
+        val finishedAmount = orderInfo.outAmount.externalValue(unit1)
         // remaining amount = quantity - out
-        val remainingAmount: Double = ((order.quantity - orderInfo.outAmount) unit unit1).userValue
+        val remainingAmount = (order.quantity - orderInfo.outAmount).externalValue(unit1)
 
         val status = orderInfo.status
         val tid = order.id

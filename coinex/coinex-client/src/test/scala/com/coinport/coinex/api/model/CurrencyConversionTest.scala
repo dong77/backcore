@@ -5,7 +5,8 @@ package com.coinport.coinex.api.model
 
 import org.specs2.mutable._
 import com.coinport.coinex.data._
-import com.coinport.coinex.api.model.CurrencyUnits._
+import com.coinport.coinex.data.Implicits._
+import com.coinport.coinex.data.Currency._
 
 class CurrencyConversionTest extends Specification {
   "currency conversions" should {
@@ -26,37 +27,16 @@ class CurrencyConversionTest extends Specification {
     }
 
     "currency unit conversion" in {
-      val a = 1 unit BTC
-      val b = 1000 unit MBTC
+      12.345.internalValue(Btc) mustEqual 12345L
+      23.45.internalValue(Rmb) mustEqual 2345L
 
-      a mustEqual b
+      1000.externalValue(Btc) mustEqual 1.0
+      78900.externalValue(Rmb) mustEqual 789.0
 
-      a / b mustEqual PriceValue(1.0)
-
-      12.345 unit BTC mustEqual (12345 unit MBTC)
-      23.45 unit CNY mustEqual (2345 unit CNY2)
-      0 unit BTC mustEqual (0 unit MBTC)
-
-      1 unit BTC to MBTC mustEqual (1000 unit MBTC)
-      val goods = 1 unit BTC
-      val money = 4000 unit CNY
-      money / goods mustEqual (PriceValue(4000, (CNY, BTC)))
-
-      // price conversions
-      PriceValue(4000, (CNY, BTC)) to (CNY, MBTC) mustEqual (PriceValue(4.0, (CNY, MBTC)))
-      PriceValue(4000, (CNY, BTC)) to (CNY2, MBTC) mustEqual (PriceValue(400, (CNY2, MBTC)))
-      PriceValue(4000, (CNY, BTC)) to (BTC, CNY) mustEqual (PriceValue(1.0 / 4000, (BTC, CNY)))
-
-      // multiply
-      val amount = 2 unit BTC
-      var price: PriceValue = 4000.0 unit (CNY, BTC)
-
-      amount * price mustEqual (8000.0 unit CNY)
-      price * amount mustEqual (8000.0 unit CNY)
-
-      price = 4.0 unit (CNY, MBTC)
-      amount * price mustEqual (8000.0 unit CNY)
-      price * amount mustEqual (8000.0 unit CNY)
+      3456.0.internalValue(Btc ~> Rmb) mustEqual 345.6
+      (1.0 / 3456.0).internalValue(Rmb ~> Btc) mustEqual (1.0 / 345.6)
+      345.6.externalValue(Btc ~> Rmb) mustEqual 3456.0
+      (1.0 / 345.6).externalValue(Rmb ~> Btc) mustEqual (1.0 / 3456.0)
     }
   }
 }
