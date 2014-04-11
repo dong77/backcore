@@ -11,14 +11,14 @@ import scala.collection.SortedMap
 
 object AccountHistoryState {
   //first key is timestamp, second key is UserId
-  type userAssetMap = SortedMap[Long, Map[Long, UserAccount]]
+  type UserAssetMap = SortedMap[Long, Map[Long, UserAccount]]
   val emptyAssetMap = SortedMap.empty[Long, Map[Long, UserAccount]]
   //first key is timestamp
   type currencyMap = SortedMap[Long, Map[MarketSide, Double]]
   val emptyCurrencyMap = SortedMap.empty[Long, Map[MarketSide, Double]]
 }
 
-case class AccountHistoryState(assetMap: AccountHistoryState.userAssetMap = AccountHistoryState.emptyAssetMap,
+case class AccountHistoryState(assetMap: AccountHistoryState.UserAssetMap = AccountHistoryState.emptyAssetMap,
     currencyMap: AccountHistoryState.currencyMap = AccountHistoryState.emptyCurrencyMap) {
   val day = 1000 * 60 * 60 * 24
 

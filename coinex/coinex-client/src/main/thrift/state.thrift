@@ -18,7 +18,9 @@ typedef data.MarketSide            MarketSide
 typedef data.ApiSecret             ApiSecret
 typedef data.UserAccount           UserAccount
 typedef data.UserProfile           UserProfile
-typedef data.RedeliverFilterData   RedeliverFilterData
+typedef data.RedeliverFilters      RedeliverFilters
+typedef data.ChartTimeDimension    ChartTimeDimension
+typedef data.CandleDataItem        CandleDataItem
 
 struct TUserState {
     1: map<i64, UserProfile> profileMap
@@ -29,7 +31,7 @@ struct TUserState {
 
 struct TAccountState {
     1: map<i64, UserAccount> userAccountsMap
-    2: map<string, RedeliverFilterData> filters
+    2: RedeliverFilters filters
 }
 
 struct TMarketState {
@@ -37,7 +39,7 @@ struct TMarketState {
     2: map<MarketSide, list<Order>> orderPools
     3: map<i64, Order> orderMap
     4: optional double priceRestriction
-    5: map<string, RedeliverFilterData> filters
+    5: RedeliverFilters filters
 }
 
 struct TApiSecretState {
@@ -54,4 +56,14 @@ struct TExportToMongoState {
     1: i64 snapshotIndex
     2: i64 index
     3: string hash
+}
+
+struct TCandleDataState {
+    1: map<ChartTimeDimension, map<i64, CandleDataItem>> candleMap
+    2: map<ChartTimeDimension, map<i64, CandleDataItem>> reverseCandleMap
+}
+
+struct TAccountHistoryState {
+    1: map<i64, map<i64, UserAccount>> assetMap
+    2: map<i64, map<MarketSide, double>> currencyMap
 }

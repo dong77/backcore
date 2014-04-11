@@ -101,5 +101,5 @@ case class MarketState(
   def copy = MarketState(headSide, orderPools.map(item => (item._1 -> item._2.clone)), orderMap.clone, priceRestriction)
 
   def toThrift = TMarketState(
-    headSide, orderPools.map(item => (item._1 -> item._2.toList)), orderMap.clone, priceRestriction)
+    headSide, orderPools.map(item => (item._1 -> item._2.toList)), orderMap.clone, priceRestriction, null)
 }

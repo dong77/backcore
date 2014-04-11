@@ -31,6 +31,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cOrderUpdate = BinaryScalaCodec(OrderUpdate)
   lazy val _cQueryMarketSide = BinaryScalaCodec(QueryMarketSide)
   lazy val _cRedeliverFilterData = BinaryScalaCodec(RedeliverFilterData)
+  lazy val _cRedeliverFilters = BinaryScalaCodec(RedeliverFilters)
   lazy val _cSpanCursor = BinaryScalaCodec(SpanCursor)
   lazy val _cTransaction = BinaryScalaCodec(Transaction)
   lazy val _cTransactionItem = BinaryScalaCodec(TransactionItem)
@@ -99,8 +100,10 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cUpdateUserProfileSucceeded = BinaryScalaCodec(UpdateUserProfileSucceeded)
   lazy val _cValidatePasswordResetToken = BinaryScalaCodec(ValidatePasswordResetToken)
   lazy val _cVerifyGoogleAuthCode = BinaryScalaCodec(VerifyGoogleAuthCode)
+  lazy val _cTAccountHistoryState = BinaryScalaCodec(TAccountHistoryState)
   lazy val _cTAccountState = BinaryScalaCodec(TAccountState)
   lazy val _cTApiSecretState = BinaryScalaCodec(TApiSecretState)
+  lazy val _cTCandleDataState = BinaryScalaCodec(TCandleDataState)
   lazy val _cTExportToMongoState = BinaryScalaCodec(TExportToMongoState)
   lazy val _cTMarketDepthState = BinaryScalaCodec(TMarketDepthState)
   lazy val _cTMarketState = BinaryScalaCodec(TMarketState)
@@ -124,6 +127,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: OrderUpdate => _cOrderUpdate(m)
     case m: QueryMarketSide => _cQueryMarketSide(m)
     case m: RedeliverFilterData => _cRedeliverFilterData(m)
+    case m: RedeliverFilters => _cRedeliverFilters(m)
     case m: SpanCursor => _cSpanCursor(m)
     case m: Transaction => _cTransaction(m)
     case m: TransactionItem => _cTransactionItem(m)
@@ -192,8 +196,10 @@ class ThriftBinarySerializer extends Serializer {
     case m: UpdateUserProfileSucceeded => _cUpdateUserProfileSucceeded(m)
     case m: ValidatePasswordResetToken => _cValidatePasswordResetToken(m)
     case m: VerifyGoogleAuthCode => _cVerifyGoogleAuthCode(m)
+    case m: TAccountHistoryState => _cTAccountHistoryState(m)
     case m: TAccountState => _cTAccountState(m)
     case m: TApiSecretState => _cTApiSecretState(m)
+    case m: TCandleDataState => _cTCandleDataState(m)
     case m: TExportToMongoState => _cTExportToMongoState(m)
     case m: TMarketDepthState => _cTMarketDepthState(m)
     case m: TMarketState => _cTMarketState(m)
@@ -221,6 +227,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[OrderUpdate.Immutable] => _cOrderUpdate.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketSide.Immutable] => _cQueryMarketSide.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilterData.Immutable] => _cRedeliverFilterData.invert(bytes).get
+    case Some(c) if c == classOf[RedeliverFilters.Immutable] => _cRedeliverFilters.invert(bytes).get
     case Some(c) if c == classOf[SpanCursor.Immutable] => _cSpanCursor.invert(bytes).get
     case Some(c) if c == classOf[Transaction.Immutable] => _cTransaction.invert(bytes).get
     case Some(c) if c == classOf[TransactionItem.Immutable] => _cTransactionItem.invert(bytes).get
@@ -289,8 +296,10 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[UpdateUserProfileSucceeded.Immutable] => _cUpdateUserProfileSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ValidatePasswordResetToken.Immutable] => _cValidatePasswordResetToken.invert(bytes).get
     case Some(c) if c == classOf[VerifyGoogleAuthCode.Immutable] => _cVerifyGoogleAuthCode.invert(bytes).get
+    case Some(c) if c == classOf[TAccountHistoryState.Immutable] => _cTAccountHistoryState.invert(bytes).get
     case Some(c) if c == classOf[TAccountState.Immutable] => _cTAccountState.invert(bytes).get
     case Some(c) if c == classOf[TApiSecretState.Immutable] => _cTApiSecretState.invert(bytes).get
+    case Some(c) if c == classOf[TCandleDataState.Immutable] => _cTCandleDataState.invert(bytes).get
     case Some(c) if c == classOf[TExportToMongoState.Immutable] => _cTExportToMongoState.invert(bytes).get
     case Some(c) if c == classOf[TMarketDepthState.Immutable] => _cTMarketDepthState.invert(bytes).get
     case Some(c) if c == classOf[TMarketState.Immutable] => _cTMarketState.invert(bytes).get

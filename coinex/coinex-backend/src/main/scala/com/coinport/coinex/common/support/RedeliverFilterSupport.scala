@@ -5,27 +5,21 @@
 
 package com.coinport.coinex.common.support
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
+import akka.actor._
 import akka.persistence.ConfirmablePersistent
-
 import com.coinport.coinex.common.AbstractManager
 
 trait RedeliverFilterSupport[T <: AnyRef, M <: AbstractManager[T]] extends Actor with ActorLogging {
   val manager: M
-  def chooseFilter: PartialFunction[Any, String]
+  def identifyChannel: PartialFunction[Any, String]
 
-  protected def handleUnseen: Actor.Receive
-
-  def checkSeen: Actor.Receive = {
-    case p @ ConfirmablePersistent(r, seq, _) =>
-      log.debug("manager: " + manager.getClass + manager.getSnapshot)
-      val isSeen = manager.seen(if (!chooseFilter.isDefinedAt(r)) "default" else chooseFilter(r), seq)
-      if (isSeen) {
-        log.warning("has been seen the request: ", r)
-      } else {
-        log.debug("not seen the request")
-        handleUnseen(p)
+  def filterFor(target: Receive): Receive = {
+    case p @ ConfirmablePersistent(payload, seq, _) =>
+      val channel = if (identifyChannel.isDefinedAt(payload)) identifyChannel(payload) else "default"
+      if (manager.hasProcessed(channel, seq)) {
+        log.warning("ConfirmablePersistent request was previously processed: " + p)
+      } else if (target.isDefinedAt(p)) {
+        target(p)
       }
   }
 }

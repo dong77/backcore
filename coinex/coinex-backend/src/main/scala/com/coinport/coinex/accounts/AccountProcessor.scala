@@ -29,7 +29,7 @@ class AccountProcessor(
   val channelToDepositWithdrawalProcessor = createChannelTo("dwp") // DO NOT CHANGE
   val manager = new AccountManager()
 
-  override def chooseFilter: PartialFunction[Any, String] = {
+  override def identifyChannel: PartialFunction[Any, String] = {
     case r: AdminConfirmCashWithdrawalSuccess => "dwp"
     case r: AdminConfirmCashWithdrawalFailure => "dwp"
     case r: AdminConfirmCashDepositSuccess => "dwp"

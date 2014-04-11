@@ -280,8 +280,12 @@ struct TransactionItem  {
 }
 
 struct RedeliverFilterData {
-    1: list<i64> ids
+    1: list<i64> processedIds
     2: i32 maxSize
+}
+
+struct RedeliverFilters {
+    1: map<string, RedeliverFilterData> filterMap
 }
 
 struct QueryMarketSide {

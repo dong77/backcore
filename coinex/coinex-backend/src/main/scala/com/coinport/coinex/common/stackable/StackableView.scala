@@ -8,7 +8,7 @@ import com.coinport.coinex.common.AbstractManager
 import com.coinport.coinex.common.support._
 
 trait StackableView[T <: AnyRef, M <: AbstractManager[T]]
-    extends View with ActorLogging with SnapshotSupport with DumpStateSupport {
+    extends View with ActorLogging with SnapshotSupport {
   val manager: M
 
   abstract override def receive = super.receive orElse {

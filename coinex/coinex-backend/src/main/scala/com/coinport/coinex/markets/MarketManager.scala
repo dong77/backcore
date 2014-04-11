@@ -38,12 +38,11 @@ class MarketManager(headSide: MarketSide) extends AbstractManager[TMarketState] 
     else false
   }
 
-  override def getSnapshot = state.toThrift.copy(
-    filters = filters.map(item => (item._1 -> item._2.getThrift)))
+  override def getSnapshot = state.toThrift.copy(filters = getFiltersSnapshot)
 
   override def loadSnapshot(s: TMarketState) {
     state = MarketState(s)
-    filters = Map.empty ++ s.filters.map(item => (item._1 -> new RedeliverFilter(item._2, item._2.maxSize)))
+    loadFiltersSnapshot(s.filters)
   }
 
   private[markets] def apply(): MarketState = state.copy

@@ -25,13 +25,12 @@ class AccountManager extends AbstractManager[TAccountState] {
   private val accountMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]
 
   // Thrift conversions     ----------------------------------------------
-  def getSnapshot = TAccountState(accountMap.clone, filters = filters.map(item => (item._1 -> item._2.getThrift)))
+  def getSnapshot = TAccountState(accountMap.clone, getFiltersSnapshot)
 
   def loadSnapshot(snapshot: TAccountState) = {
     accountMap.clear
     accountMap ++= snapshot.userAccountsMap
-    filters = scala.collection.immutable.Map.empty ++ snapshot.filters.map(
-      item => (item._1 -> new RedeliverFilter(item._2, item._2.maxSize)))
+    loadFiltersSnapshot(snapshot.filters)
   }
 
   // Business logics      ----------------------------------------------

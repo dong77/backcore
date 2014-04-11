@@ -5,6 +5,8 @@ import akka.actor.Cancellable
 import scala.concurrent.duration._
 import com.coinport.coinex.data.TakeSnapshotNow
 import akka.actor.ActorLogging
+import java.io.FileOutputStream
+import akka.serialization.SerializationExtension
 
 trait SnapshotSupport extends Actor with ActorLogging {
   implicit val executeContext = context.system.dispatcher
@@ -39,5 +41,19 @@ trait SnapshotSupport extends Actor with ActorLogging {
   private def timeInSecondsToNextHour() = {
     val time = System.currentTimeMillis()
     (((time / 3600000 + 1) * 3600000 - time) / 1000).toInt
+  }
+
+  def dumpToFile(state: AnyRef, file: String) = {
+    val out = new FileOutputStream(file)
+    val serialization = SerializationExtension(context.system)
+    val serializer = serialization.findSerializerFor(state)
+    try {
+      out.write(serializer.toBinary(state))
+      log.info("state dumped to file: " + file)
+    } catch {
+      case e: Throwable => log.error("Unable to dump state to file " + file, e)
+    } finally {
+      out.close()
+    }
   }
 }

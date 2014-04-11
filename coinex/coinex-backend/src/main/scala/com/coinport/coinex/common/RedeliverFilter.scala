@@ -3,23 +3,19 @@ package com.coinport.coinex.common
 import com.coinport.coinex.data.RedeliverFilterData
 import scala.collection.mutable.SortedSet
 
-class RedeliverFilter(state: RedeliverFilterData, maxSize: Int = -1) {
-  private val max = if (maxSize <= 0) state.ids.size else maxSize
-  assert(max > 0)
-  private[common] var ids = SortedSet[Long](state.ids: _*).takeRight(max)
+class RedeliverFilter(data: RedeliverFilterData) {
+  private[common] var processedIds = SortedSet[Long](data.processedIds: _*).takeRight(data.maxSize)
 
-  def filter(id: Long)(op: Long => Unit) = if (!seen(id)) {
-    op(id)
-  }
+  def filter(id: Long)(op: Long => Unit) = if (!hasProcessed(id)) { op(id) }
 
-  def getThrift = RedeliverFilterData(ids.toSeq, maxSize)
+  def getThrift = RedeliverFilterData(processedIds.toSeq, data.maxSize)
 
-  def seen(id: Long) = {
-    val isSeen = (id < ids.headOption.getOrElse(0L) || ids.contains(id))
-    if (!isSeen) {
-      ids += id
-      if (ids.size > max) ids = ids.takeRight(max)
+  def hasProcessed(id: Long) = {
+    val processed = (id < processedIds.headOption.getOrElse(0L) || processedIds.contains(id))
+    if (!processed) {
+      processedIds += id
+      if (processedIds.size > data.maxSize) processedIds = processedIds.takeRight(data.maxSize)
     }
-    isSeen
+    processed
   }
 }
