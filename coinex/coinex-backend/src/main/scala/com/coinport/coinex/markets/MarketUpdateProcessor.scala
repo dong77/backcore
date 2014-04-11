@@ -6,12 +6,25 @@
 package com.coinport.coinex.markets
 
 import akka.event.LoggingReceive
-import com.coinport.coinex.common.ExtendedProcessor
 import akka.persistence._
+
+import com.coinport.coinex.common.ExtendedProcessor
+import com.coinport.coinex.common.SimpleManager
+import com.coinport.coinex.data._
+import Implicits._
 
 // This is an empty processor to support various views.
 class MarketUpdateProcessor extends ExtendedProcessor with Processor {
   override def processorId = "coinex_mup"
+
+  val manager = new SimpleManager()
+
+  override def identifyChannel: PartialFunction[Any, String] = {
+    case OrderSubmitted(originOrderInfo, txs) =>
+      val side = originOrderInfo.side
+      "mp" + side.asString
+    case OrderCancelled(side, order) => "mp" + side.asString
+  }
 
   def receive = LoggingReceive {
     case p: ConfirmablePersistent => p.confirm()

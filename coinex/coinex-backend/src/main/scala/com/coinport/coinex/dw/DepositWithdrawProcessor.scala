@@ -5,9 +5,10 @@ import akka.event.LoggingReceive
 import akka.persistence._
 import com.mongodb.casbah.Imports._
 
+import com.coinport.coinex.common.ExtendedProcessor
+import com.coinport.coinex.common.SimpleManager
 import com.coinport.coinex.common.mongo.SimpleJsonMongoCollection
 import com.coinport.coinex.common.support.ChannelSupport
-import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.data._
 import ErrorCode._
 
@@ -17,6 +18,7 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
   override def processorId = "coinex_dwp"
 
   val channelToAccountProcessor = createChannelTo("ap") // DO NOT CHANGE
+  val manager = new SimpleManager()
 
   def receiveRecover = { case event => updateState(event) }
 

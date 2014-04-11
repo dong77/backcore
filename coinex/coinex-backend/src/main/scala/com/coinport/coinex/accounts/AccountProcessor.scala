@@ -33,8 +33,10 @@ class AccountProcessor(
     case r: AdminConfirmCashWithdrawalSuccess => "dwp"
     case r: AdminConfirmCashWithdrawalFailure => "dwp"
     case r: AdminConfirmCashDepositSuccess => "dwp"
-    case r: OrderSubmitted => "mp"
-    case r: OrderCancelled => "mp"
+    case OrderSubmitted(originOrderInfo, txs) =>
+      val side = originOrderInfo.side
+      "mp" + side.asString
+    case OrderCancelled(side, order) => "mp" + side.asString
   }
 
   def receiveRecover = PartialFunction.empty[Any, Unit]

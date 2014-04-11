@@ -52,6 +52,7 @@ struct TMarketDepthState {
     1: map<double, i64> askMap
     2: map<double, i64> bidMap
 }
+
 struct TExportToMongoState {
     1: i64 snapshotIndex
     2: i64 index
@@ -66,4 +67,8 @@ struct TCandleDataState {
 struct TAccountHistoryState {
     1: map<i64, map<i64, UserAccount>> assetMap
     2: map<i64, map<MarketSide, double>> currencyMap
+}
+
+struct TSimpleState {
+    1: RedeliverFilters filters
 }
