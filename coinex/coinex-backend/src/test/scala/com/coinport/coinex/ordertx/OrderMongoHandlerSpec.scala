@@ -34,7 +34,7 @@ class OrderMongoHandlerSpec extends Specification with EmbeddedMongoForTest {
       orderInfos = (0 to 3).map(i => OrderInfo(market, Order(i, i, i), 10, 10, OrderStatus.Pending, None))
       orderInfos.foreach(oi => orderClass.addItem(oi, 20))
 
-      orderClass.updateItem(1, 10, 20, 1, market.reverse, 20)
+      orderClass.updateItem(1, 10, 0, 1, market.reverse, 20)
 
       var q = QueryOrder(oid = Some(1L), cursor = Cursor(0, 2), getCount = false)
 
@@ -43,7 +43,7 @@ class OrderMongoHandlerSpec extends Specification with EmbeddedMongoForTest {
       order_info.order.userId mustEqual 1
       order_info.order.id mustEqual 1
       order_info.inAmount mustEqual 10
-      //      order_info.outAmount mustEqual 20
+      order_info.outAmount mustEqual 1
       order_info.status.getValue() mustEqual 1
       order_info.lastTxTimestamp mustEqual Some(20)
 
