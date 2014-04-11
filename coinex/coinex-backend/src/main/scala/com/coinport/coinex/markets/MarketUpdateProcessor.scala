@@ -10,7 +10,7 @@ import com.coinport.coinex.common.ExtendedProcessor
 import akka.persistence._
 
 // This is an empty processor to support various views.
-class MarketUpdateProcessor extends ExtendedProcessor {
+class MarketUpdateProcessor extends ExtendedProcessor with Processor {
   override def processorId = "coinex_mup"
 
   def receive = LoggingReceive {

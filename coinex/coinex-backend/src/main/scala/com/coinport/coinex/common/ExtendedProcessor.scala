@@ -12,9 +12,10 @@ import scala.concurrent.duration._
 import com.coinport.coinex.data.TakeSnapshotNow
 import com.coinport.coinex.common.support._
 
-trait ExtendedProcessor extends Processor with ActorLogging with SnapshotSupport with ChannelSupport {
+trait ExtendedProcessor extends Actor with ActorLogging with SnapshotSupport with ChannelSupport {
 
   val channelMap: Map[Class[_], String] = Map.empty
+
   override def preStart() = {
     log.info("============ processorId: {}", processorId)
     super.preStart

@@ -5,11 +5,19 @@
 
 package com.coinport.coinex.metrics
 
-import com.coinport.coinex.common.Manager
+import com.coinport.coinex.common.AbstractManager
 import com.coinport.coinex.data._
 import Implicits._
 
-class MetricsManager extends Manager[MetricsState](MetricsState()) {
+class MetricsManager extends AbstractManager[MetricsState] {
+
+  var state = MetricsState()
+
+  override def getSnapshot = state
+
+  override def loadSnapshot(s: MetricsState) {
+    state = s
+  }
 
   def update(side: MarketSide, price: Double, volume: Long, reverseVolume: Long, tick: Long) {
     state = state.pushEvent(side, (Some(price), Some(volume)), tick)

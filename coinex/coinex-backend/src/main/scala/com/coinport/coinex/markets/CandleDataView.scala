@@ -25,7 +25,15 @@ class CandleDataView(market: MarketSide) extends ExtendedView {
   }
 }
 
-class CandleDataManager(market: MarketSide) extends Manager[CandleDataState](CandleDataState()) {
+class CandleDataManager(market: MarketSide) extends AbstractManager[CandleDataState] {
+
+  var state = CandleDataState()
+
+  override def getSnapshot = state
+
+  override def loadSnapshot(s: CandleDataState) {
+    state = s
+  }
 
   def addItem(t: Transaction, sameSide: Boolean) {
     val amount = Math.abs(t.takerUpdate.current.quantity - t.takerUpdate.previous.quantity)

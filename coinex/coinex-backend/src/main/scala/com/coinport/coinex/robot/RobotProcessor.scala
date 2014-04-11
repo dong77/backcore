@@ -18,9 +18,8 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.data.Currency._
 import com.coinport.coinex.robot.sample._
 
-// TODO(c): need put processors path used by robot to the parameter of RobotProcessor
-class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor {
-  override val processorId = "coinex_rp"
+class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor with Processor {
+  override def processorId = "coinex_rp"
   val channelToMarketProcessors = createChannelTo("mps")
 
   // TODO(c): put activateRobotsInterval to the config file

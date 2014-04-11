@@ -6,10 +6,20 @@
 package com.coinport.coinex.robot
 
 import com.coinport.coinex.data._
-import com.coinport.coinex.common.Manager
+import com.coinport.coinex.common.AbstractManager
 import Implicits._
 
-class RobotManager extends Manager[RobotState](RobotState()) {
+class RobotManager extends AbstractManager[RobotState] {
+
+  var state = RobotState()
+
+  override def getSnapshot = state
+
+  override def loadSnapshot(s: RobotState) {
+    state = s
+  }
+
+  def apply() = state
 
   def addRobot(robot: Robot) {
     state = state.addRobot(robot)

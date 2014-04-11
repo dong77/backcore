@@ -5,14 +5,17 @@
 
 package com.coinport.coinex.users
 
-import akka.persistence.SnapshotOffer
-import com.coinport.coinex.data._
 import akka.actor._
-import akka.persistence._
-import ErrorCode._
 import akka.event.LoggingReceive
+import akka.persistence.SnapshotOffer
+import akka.persistence._
 
-class UserProcessor(mailer: ActorRef, userManagerSecret: String) extends EventsourcedProcessor with ActorLogging {
+import com.coinport.coinex.common.ExtendedProcessor
+import com.coinport.coinex.data._
+import ErrorCode._
+
+class UserProcessor(mailer: ActorRef, userManagerSecret: String)
+    extends ExtendedProcessor with EventsourcedProcessor with ActorLogging {
   override val processorId = "coinex_up"
 
   val googleAuthenticator = new GoogleAuthenticator

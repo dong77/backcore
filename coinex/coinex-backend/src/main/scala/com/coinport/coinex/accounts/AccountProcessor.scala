@@ -9,19 +9,21 @@ import akka.actor._
 import akka.event.LoggingReceive
 import akka.persistence.SnapshotOffer
 import akka.persistence._
+
 import com.coinport.coinex.common._
+import com.coinport.coinex.common.Constants._
+import com.coinport.coinex.common.ExtendedProcessor
+import com.coinport.coinex.common.support._
 import com.coinport.coinex.data._
 import com.coinport.coinex.fee._
-import com.coinport.coinex.common.Constants._
-import Implicits._
 import ErrorCode._
-import com.coinport.coinex.common.support._
+import Implicits._
 
 class AccountProcessor(
   marketProcessors: Map[MarketSide, ActorRef],
   depositWithdrawProcessorPath: ActorPath,
-  val feeConfig: FeeConfig)
-    extends EventsourcedProcessor with ChannelSupport with AccountManagerBehavior with ActorLogging {
+  val feeConfig: FeeConfig) extends ExtendedProcessor with EventsourcedProcessor with ChannelSupport
+    with AccountManagerBehavior with ActorLogging {
   override val processorId = "coinex_ap"
   val channelToMarketProcessors = createChannelTo("mps") // DO NOT CHANGE
   val channelToDepositWithdrawalProcessor = createChannelTo("dwp") // DO NOT CHANGE

@@ -15,8 +15,8 @@ import com.google.common.io.BaseEncoding
 import ErrorCode._
 import akka.event.LoggingReceive
 
-class ApiAuthProcessor(seed: String) extends ExtendedProcessor {
-  override val processorId = "coinex_aap"
+class ApiAuthProcessor(seed: String) extends ExtendedProcessor with Processor {
+  override def processorId = "coinex_aap"
 
   val manager = new ApiAuthManager(seed)
 

@@ -19,9 +19,9 @@ class MarketProcessor(
     accountProcessorPath: ActorPath,
     marketUpdateProcessoressorPath: ActorPath,
     orderWriter: ActorRef,
-    transactionWriter: ActorRef) extends ExtendedProcessor {
+    transactionWriter: ActorRef) extends ExtendedProcessor with Processor {
 
-  override val processorId = "coinex_mp_" + marketSide.asString
+  override def processorId = "coinex_mp_" + marketSide.asString
 
   // override val channelMap: Map[Class[_], String] = Map(classOf[OrderFundFrozen.Immutable] -> "apc")
 

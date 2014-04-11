@@ -107,8 +107,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deployProcessor(Props(new MarketUpdateProcessor()), market_update_processor <<)
     deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with StackableEventsourced[TUserState, UserManager]), user_processor <<)
     deployProcessor(Props(new AccountProcessor(routers.marketProcessors, routers.depositWithdrawProcessor.path, feeConfig) with StackableEventsourced[TAccountState, AccountManager]), account_processor <<)
-    deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret) with Commandsourced[TApiSecretState, ApiAuthManager]), api_auth_processor <<)
-    deployProcessor(Props(new RobotProcessor(routers) with Commandsourced[RobotState, RobotManager]), robot_processor <<)
+    deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret) with StackableCmdsourced[TApiSecretState, ApiAuthManager]), api_auth_processor <<)
+    deployProcessor(Props(new RobotProcessor(routers) with StackableCmdsourced[RobotState, RobotManager]), robot_processor <<)
     deployProcessor(Props(new DepositWithdrawProcessor(dbForViews, routers.accountProcessor.path)), dw_processor <<)
 
     // Deploy monitor at last

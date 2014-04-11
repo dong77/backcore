@@ -8,14 +8,14 @@ package com.coinport.coinex.common.support
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.persistence.ConfirmablePersistent
-import akka.persistence.Processor
-import com.twitter.scrooge.ThriftStruct
 
 import com.coinport.coinex.common.AbstractManager
 
-trait RedeliverFilterSupport[T <: ThriftStruct, M <: AbstractManager[T]] extends Processor with ActorLogging {
+trait RedeliverFilterSupport[T <: AnyRef, M <: AbstractManager[T]] extends Actor with ActorLogging {
   val manager: M
   val channelMap: Map[Class[_], String]
+
+  protected def handleUnseen: Actor.Receive
 
   manager.initFilters(if (channelMap.isEmpty) List("all") else channelMap.values.toList)
 
@@ -25,9 +25,7 @@ trait RedeliverFilterSupport[T <: ThriftStruct, M <: AbstractManager[T]] extends
       if (isSeen) {
         log.warning("has been seen the request: ", r)
       } else {
-        super.receive(p)
+        handleUnseen(p)
       }
   }
-
-  abstract override def receive = checkSeen orElse super.receive
 }

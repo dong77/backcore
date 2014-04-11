@@ -1,18 +1,20 @@
 package com.coinport.coinex.dw
 
-import akka.persistence._
 import akka.actor._
-import com.coinport.coinex.common.support.ChannelSupport
 import akka.event.LoggingReceive
-import com.coinport.coinex.data._
-import ErrorCode._
-import com.coinport.coinex.common.mongo.SimpleJsonMongoCollection
+import akka.persistence._
 import com.mongodb.casbah.Imports._
 
+import com.coinport.coinex.common.mongo.SimpleJsonMongoCollection
+import com.coinport.coinex.common.support.ChannelSupport
+import com.coinport.coinex.common.ExtendedProcessor
+import com.coinport.coinex.data._
+import ErrorCode._
+
 // TODO(c): Count fees
-class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
-    extends EventsourcedProcessor with DepositWithdrawBehavior with ChannelSupport with ActorLogging {
-  override val processorId = "coinex_dwp"
+class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath) extends ExtendedProcessor
+    with EventsourcedProcessor with DepositWithdrawBehavior with ChannelSupport with ActorLogging {
+  override def processorId = "coinex_dwp"
 
   val channelToAccountProcessor = createChannelTo("ap") // DO NOT CHANGE
 

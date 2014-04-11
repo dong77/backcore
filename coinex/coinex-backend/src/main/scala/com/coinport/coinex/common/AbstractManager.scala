@@ -1,10 +1,8 @@
 package com.coinport.coinex.common
 
-import com.twitter.scrooge.ThriftStruct
-
 import com.coinport.coinex.data.RedeliverFilterData
 
-abstract class AbstractManager[T <: ThriftStruct] {
+abstract class AbstractManager[T <: AnyRef] {
   protected var filters: Map[String, RedeliverFilter] = Map.empty
 
   def getSnapshot: T
