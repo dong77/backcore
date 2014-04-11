@@ -91,29 +91,6 @@ package object model {
     duration.toMillis
   }
 
-  // ticker conversions
-  implicit def metrics2Ticker(metrics: MetricsByMarket): com.coinport.coinex.api.model.Ticker = {
-    val side = metrics.side
-    val currency: String = side._1
-    val subject = side._1
-    val price = metrics.price.externalValue(side)
-    val high = metrics.high.map(_.externalValue(side))
-    val low = metrics.low.map(_.externalValue(side))
-    val volume = metrics.volume.externalValue(subject)
-    val gain = metrics.gain
-    val trend = Some(metrics.direction.toString.toLowerCase)
-
-    com.coinport.coinex.api.model.Ticker(
-      currency = currency,
-      price = price,
-      volume = volume,
-      high = high,
-      low = low,
-      gain = gain,
-      trend = trend
-    )
-  }
-
   // transaction conversions
   implicit def fromTransactionItem(item: TransactionItem): com.coinport.coinex.api.model.Transaction = {
     val side = item.side
