@@ -98,7 +98,7 @@ package object model {
     val currency = side._2
     val id = item.tid
     val timestamp = item.timestamp
-    val price = item.price.inverse.externalValue(side)
+    val price = item.price.reverse.externalValue(side)
     val volume = item.volume.externalValue(subject)
     val total = item.amount.externalValue(currency)
     // TODO: use Market+Operation model

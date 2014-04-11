@@ -49,7 +49,7 @@ case class UserOrder(
       case Buy =>
         // convert price
         val newPrice = price map {
-          value => value.internalValue(marketSide.reverse).inverse
+          value => value.internalValue(marketSide.reverse).reverse
         }
         // regard total as quantity
         val quantity: Long = total match {
@@ -65,7 +65,7 @@ case class UserOrder(
           case Some(a) => a.internalValue(subject)
           case None =>
             if (total.isDefined && price.isDefined) {
-              val totalValue = price.get.inverse * total.get
+              val totalValue = price.get.reverse * total.get
               totalValue.internalValue(subject)
             } else 0
         }
@@ -118,7 +118,7 @@ object UserOrder {
 
       case _ => // buy
         val price: Option[Double] = order.price.map {
-          p => p.inverse.externalValue(marketSide.reverse)
+          p => p.reverse.externalValue(marketSide.reverse)
         }
 
         val amount = order.takeLimit.map(t => t.externalValue(unit2))

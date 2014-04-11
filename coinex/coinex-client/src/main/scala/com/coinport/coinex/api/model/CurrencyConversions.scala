@@ -19,7 +19,7 @@ object CurrencyConversion {
     Usd -> 2
   )
 
-  val factors: Map[Currency, Double] = exponents map {
+  val multipliers: Map[Currency, Double] = exponents map {
     case (k, v) =>
       k -> math.pow(10, v)
   }
@@ -27,29 +27,29 @@ object CurrencyConversion {
 
 class CurrencyWrapper(val value: Double) {
   def externalValue(currency: Currency): Double = {
-    value / CurrencyConversion.factors(currency)
+    value / CurrencyConversion.multipliers(currency)
   }
 
   def internalValue(currency: Currency): Long = {
-    (value * CurrencyConversion.factors(currency)).toLong
+    (value * CurrencyConversion.multipliers(currency)).toLong
   }
 }
 
 class PriceWrapper(val value: Double) {
   val mathContext = MathContext.UNLIMITED
 
-  def inverse = (BigDecimal(1.0) / BigDecimal(value)).round(mathContext).doubleValue
+  def reverse = (BigDecimal(1.0) / BigDecimal(value)).round(mathContext).doubleValue
 
   def externalValue(marketSide: MarketSide): Double = {
-    val subjectFactor = CurrencyConversion.factors(marketSide._1)
-    val currencyFactor = CurrencyConversion.factors(marketSide._2)
+    val subjectFactor = CurrencyConversion.multipliers(marketSide._1)
+    val currencyFactor = CurrencyConversion.multipliers(marketSide._2)
     val bigValue = BigDecimal(value)
     (bigValue * subjectFactor / currencyFactor).round(mathContext).doubleValue
   }
 
   def internalValue(marketSide: MarketSide): Double = {
-    val subjectFactor = CurrencyConversion.factors(marketSide._1)
-    val currencyFactor = CurrencyConversion.factors(marketSide._2)
+    val subjectFactor = CurrencyConversion.multipliers(marketSide._1)
+    val currencyFactor = CurrencyConversion.multipliers(marketSide._2)
     val bigValue = BigDecimal(value)
     (bigValue * currencyFactor / subjectFactor).round(mathContext).doubleValue
   }
