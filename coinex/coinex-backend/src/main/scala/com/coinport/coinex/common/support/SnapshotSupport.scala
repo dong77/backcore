@@ -52,7 +52,7 @@ trait SnapshotSupport extends Actor with ActorLogging {
 
   def dumpToFile(state: AnyRef, actorPath: ActorPath): String = {
     val fileName = "/tmp/" + actorPath.toString.replace("akka://coinex/user/", "").replace("/", "~") +
-      (new SimpleDateFormat("_yyyy_MM_dd_HH_mm_ss").format(new Date())) + ".json"
+      (new SimpleDateFormat("~yyyy_MM_dd_HH_mm_ss").format(new Date())) + ".json"
     val out = new FileOutputStream(fileName)
     try {
       out.write(write(state).getBytes)

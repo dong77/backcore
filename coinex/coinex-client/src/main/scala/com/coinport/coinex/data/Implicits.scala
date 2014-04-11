@@ -106,7 +106,7 @@ class RichConstRole(v: ConstantRole.Value) {
 }
 
 class RichMarketRole(v: MarketRole.Value) {
-  def <<(side: MarketSide) = v.toString.toLowerCase + "_" + new RichMarketSide(side).asString
+  def <<(side: MarketSide) = (v.toString + "_" + new RichMarketSide(side).asString).toLowerCase
 }
 
 object Implicits {
