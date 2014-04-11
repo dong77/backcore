@@ -21,10 +21,12 @@ trait RedeliverFilterSupport[T <: AnyRef, M <: AbstractManager[T]] extends Actor
 
   def checkSeen: Actor.Receive = {
     case p @ ConfirmablePersistent(r, seq, _) =>
+      log.debug("channelMap for " + manager.getClass + manager.getSnapshot)
       val isSeen = if (channelMap.isEmpty) manager.seen("all", seq) else manager.seen(channelMap(r.getClass), seq)
       if (isSeen) {
         log.warning("has been seen the request: ", r)
       } else {
+        log.debug("not seen the request")
         handleUnseen(p)
       }
   }
