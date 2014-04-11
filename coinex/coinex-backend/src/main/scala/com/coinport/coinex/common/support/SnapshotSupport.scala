@@ -7,6 +7,10 @@ import com.coinport.coinex.data.TakeSnapshotNow
 import akka.actor.ActorLogging
 import java.io.FileOutputStream
 import akka.serialization.SerializationExtension
+import com.mongodb.util.JSON
+import com.coinport.coinex.serializers.ThriftEnumJson4sSerialization
+import org.json4s.native.Serialization.{ read, write }
+import ThriftEnumJson4sSerialization._
 
 trait SnapshotSupport extends Actor with ActorLogging {
   implicit val executeContext = context.system.dispatcher
@@ -45,13 +49,11 @@ trait SnapshotSupport extends Actor with ActorLogging {
 
   def dumpToFile(state: AnyRef, file: String) = {
     val out = new FileOutputStream(file)
-    val serialization = SerializationExtension(context.system)
-    val serializer = serialization.findSerializerFor(state)
     try {
-      out.write(serializer.toBinary(state))
-      log.info("state dumped to file: " + file)
+      out.write(write(state).getBytes)
+      log.info(s"state of type ${state.getClass.getName} dumped to file ${file}")
     } catch {
-      case e: Throwable => log.error("Unable to dump state to file " + file, e)
+      case e: Throwable => log.error(s"Unable to dump state of type ${state.getClass.getName} to file ${file}", e)
     } finally {
       out.close()
     }

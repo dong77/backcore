@@ -76,6 +76,8 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: QueryApiSecrets => routers.apiAuthView forward m
 
       //-------------------------------------------------------------------------
+      case m @ DumpStateToFile(path) => context.actorSelection(path) forward m
+
       case m =>
         log.error("Coinex received unsupported event: " + m.toString)
         sender ! MessageNotSupported(m.toString)
