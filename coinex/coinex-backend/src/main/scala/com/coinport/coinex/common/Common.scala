@@ -44,15 +44,3 @@ trait Commandsourced[T, M <: Manager[T]] extends Processor {
     case SnapshotOffer(_, snapshot) => manager(snapshot.asInstanceOf[T])
   }
 }
-
-trait AbstractCommandsourced[T <: ThriftStruct, M <: AbstractManager[T]]
-    extends Processor with ActorLogging with SnapshotSupport with DumpStateSupport with RedeliverFilterSupport[T, M] {
-  val manager: M
-
-  abstract override def receive = super.receive orElse {
-    case cmd: TakeSnapshotNow => takeSnapshot(cmd)(saveSnapshot(manager.getSnapshot))
-    case SnapshotOffer(_, snapshot) => manager.loadSnapshot(snapshot.asInstanceOf[T])
-    case DumpStateToFile => dumpToFile(manager.getSnapshot, self.path.toString.replace("akka://coinex/user", "dump"))
-  }
-}
-
