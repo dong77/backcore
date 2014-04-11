@@ -46,11 +46,31 @@ object MarketService extends AkkaService {
     // struct QueryTransaction {1: optional i64 tid, 2: optional i64 uid, 3: optional i64 oid, 4:optional MarketSide side, 5: Cursor cursor, 6: bool getCount}
     backend ? QueryTransaction(tid, uid, orderId, Some(QueryMarketSide(marketSide, true)), cursor, false) map {
       case result: QueryTransactionResult =>
-        println("transaction -> " + result)
+        println("transaction: " + marketSide + " -> " + result)
+        val subject = marketSide._1
+        val currency = marketSide._2
         val items = result.transactionItems map {
-          item =>
-            val tx: com.coinport.coinex.api.model.Transaction = item
-            tx
+          item: TransactionItem =>
+            val takerSide = item.side
+            val id = item.tid
+            val timestamp = item.timestamp
+            val isSell = marketSide == takerSide
+            val price = (if (isSell) item.price.reverse else item.price).externalValue(marketSide)
+            val volume = (if (isSell) item.amount else item.volume).externalValue(subject)
+            val total = (if (isSell) item.volume else item.amount).externalValue(currency)
+            val taker = item.taker
+            val maker = item.maker
+
+            com.coinport.coinex.api.model.Transaction(
+              id = id,
+              timestamp = timestamp,
+              price = price,
+              amount = volume,
+              total = total,
+              taker = taker,
+              maker = maker,
+              sell = isSell
+            )
         }
         ApiResult(data = Some(items))
     }

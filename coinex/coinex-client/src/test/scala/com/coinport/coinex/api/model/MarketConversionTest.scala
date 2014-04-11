@@ -45,5 +45,13 @@ class MarketConversionTest extends Specification {
       Market(Btc, Usd).getMarketSide() mustEqual Btc ~> Usd
       Market(Btc, Usd).getMarketSide(false) mustEqual Usd ~> Btc
     }
+
+    "market side conversion" in {
+      Btc ~> Usd mustEqual MarketSide(Btc, Usd)
+      Btc ~> Usd mustEqual Btc ~> Usd
+      Btc ~> Usd mustNotEqual Usd ~> Btc
+      (Btc ~> Usd) == (Btc ~> Usd) mustEqual true
+      (Btc ~> Usd).reverse mustEqual (Usd ~> Btc)
+    }
   }
 }

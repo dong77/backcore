@@ -91,33 +91,6 @@ package object model {
     duration.toMillis
   }
 
-  // transaction conversions
-  implicit def fromTransactionItem(item: TransactionItem): com.coinport.coinex.api.model.Transaction = {
-    val side = item.side
-    val subject = side._1
-    val currency = side._2
-    val id = item.tid
-    val timestamp = item.timestamp
-    val price = item.price.reverse.externalValue(side)
-    val volume = item.volume.externalValue(subject)
-    val total = item.amount.externalValue(currency)
-    // TODO: use Market+Operation model
-    val isSell = side._2 equals Rmb
-    val taker = item.taker
-    val maker = item.maker
-
-    com.coinport.coinex.api.model.Transaction(
-      id = id,
-      timestamp = timestamp,
-      price = price,
-      amount = volume,
-      total = total,
-      taker = taker,
-      maker = maker,
-      sell = isSell
-    )
-  }
-
   class CandleDataItemSerializer extends CustomSerializer[CandleDataItem](
     format => ({
       null // deserializer is not implemented
