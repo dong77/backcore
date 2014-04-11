@@ -42,17 +42,27 @@ class Monitor(actorPaths: List[String]) extends Actor with HttpService with spra
     get {
       pathSingleSlash {
         val lists = actorPaths.map { path =>
-          "<li><a href=\"/stats/actor?path=%s\">%s</a></li>".format(path, path)
+          "<li><a href=\"/actor/stats?path=%s\">%s</a></li>".format(path, path)
         }.mkString
 
         val html = "<html><body><ui>" + lists + "</ui></body></html>"
         respondWithMediaType(`text/html`) { complete(html) }
 
-      } ~ path("stats" / "actor") {
+      } ~ path("actor" / "stats") {
         parameter("path") { path =>
           respondWithMediaType(`application/json`) {
             onComplete(context.actorSelection(path) ? QueryActorStats) {
               case Success(stats: AnyRef) => complete(swrite(stats))
+              case Success(v) => complete("" + v)
+              case Failure(e) => failWith(e)
+            }
+          }
+        }
+      } ~ path("actor" / "dumpstate") {
+        parameter("path") { path =>
+          respondWithMediaType(`application/json`) {
+            onComplete(context.actorSelection(path) ? DumpStateToFile(path)) {
+              case Success(file: String) => complete(swrite(file))
               case Success(v) => complete("" + v)
               case Failure(e) => failWith(e)
             }

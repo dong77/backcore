@@ -11,6 +11,9 @@ import com.mongodb.util.JSON
 import com.coinport.coinex.serializers.ThriftEnumJson4sSerialization
 import org.json4s.native.Serialization.{ read, write }
 import ThriftEnumJson4sSerialization._
+import java.text.SimpleDateFormat
+import java.util.Date
+import akka.actor.ActorPath
 
 trait SnapshotSupport extends Actor with ActorLogging {
   implicit val executeContext = context.system.dispatcher
@@ -47,15 +50,18 @@ trait SnapshotSupport extends Actor with ActorLogging {
     (((time / 3600000 + 1) * 3600000 - time) / 1000).toInt
   }
 
-  def dumpToFile(state: AnyRef, file: String) = {
-    val out = new FileOutputStream(file)
+  def dumpToFile(state: AnyRef, actorPath: ActorPath): String = {
+    val fileName = "/tmp/" + actorPath.toString.replace("akka://coinex/user/", "").replace("/", "~") +
+      (new SimpleDateFormat("_yyyy_MM_dd_HH_mm_ss").format(new Date())) + ".json"
+    val out = new FileOutputStream(fileName)
     try {
       out.write(write(state).getBytes)
-      log.info(s"state of type ${state.getClass.getName} dumped to file ${file}")
+      log.info(s"state of type ${state.getClass.getName} dumped to file ${fileName}")
     } catch {
-      case e: Throwable => log.error(s"Unable to dump state of type ${state.getClass.getName} to file ${file}", e)
+      case e: Throwable => log.error(s"Unable to dump state of type ${state.getClass.getName} to file ${fileName}", e)
     } finally {
       out.close()
     }
+    fileName
   }
 }

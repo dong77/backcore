@@ -19,6 +19,6 @@ trait StackableEventsourced[T <: AnyRef, M <: AbstractManager[T]]
 
   abstract override def receiveCommand = filterFor(super.receiveCommand) orElse super.receiveCommand orElse {
     case cmd: TakeSnapshotNow => takeSnapshot(cmd)(saveSnapshot(manager.getSnapshot))
-    case DumpStateToFile => dumpToFile(manager.getSnapshot, self.path.toString.replace("akka://coinex/user", "dump"))
+    case DumpStateToFile(_) => sender ! dumpToFile(manager.getSnapshot, self.path)
   }
 }

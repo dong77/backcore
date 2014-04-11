@@ -34,7 +34,7 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: DoSubmitOrder => routers.accountProcessor forward m
 
       // Market Processors
-      case m @ DoCancelOrder(side, _, _) => routers.marketProcessors(side) forward Persistent(m)
+      case m: DoCancelOrder => routers.marketProcessors(m.side) forward Persistent(m)
 
       // Robot Processor
       case m: DoSubmitRobot => routers.robotProcessor forward Persistent(m)
@@ -51,15 +51,13 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: QueryAccount => routers.accountView forward m
 
       // MarketDepthViews
-      case m @ QueryMarketDepth(side, _) =>
-        routers.marketDepthViews(side) forward m
+      case m: QueryMarketDepth => routers.marketDepthViews(m.side) forward m
 
       // CandleDataView
-      case m @ QueryCandleData(side, _, _, _) => routers.candleDataView(side) forward m
+      case m: QueryCandleData => routers.candleDataView(m.side) forward m
 
       // Mailer
-      case m: DoSendEmail =>
-        routers.mailer forward m
+      case m: DoSendEmail => routers.mailer forward m
 
       // MetricsView
       case QueryMetrics => routers.robotMetricsView forward QueryMetrics
@@ -76,8 +74,6 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: QueryApiSecrets => routers.apiAuthView forward m
 
       //-------------------------------------------------------------------------
-      case m @ DumpStateToFile(path) => context.actorSelection(path) forward m
-
       case m =>
         log.error("Coinex received unsupported event: " + m.toString)
         sender ! MessageNotSupported(m.toString)
