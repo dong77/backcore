@@ -9,7 +9,7 @@ import com.coinport.coinex.common.AbstractManager
 import com.coinport.coinex.common.support._
 
 trait StackableCmdsourced[T <: ThriftStruct, M <: AbstractManager[T]]
-    extends Processor with ActorLogging with SnapshotSupport with DumpStateSupport {
+    extends Processor with ActorLogging with SnapshotSupport with DumpStateSupport with RedeliverFilterSupport[T, M] {
   val manager: M
 
   abstract override def receive = super.receive orElse {

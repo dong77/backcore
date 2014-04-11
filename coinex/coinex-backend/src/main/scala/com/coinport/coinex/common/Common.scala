@@ -46,27 +46,11 @@ trait Commandsourced[T, M <: Manager[T]] extends Processor {
 }
 
 trait AbstractCommandsourced[T <: ThriftStruct, M <: AbstractManager[T]]
-    extends Processor with ActorLogging with SnapshotSupport with DumpStateSupport {
+    extends Processor with ActorLogging with SnapshotSupport with DumpStateSupport with RedeliverFilterSupport[T, M] {
   val manager: M
-  val channelMap: Map[Class[_], String]
 
-  manager.initFilters(if (channelMap.isEmpty) List("all") else channelMap.values.toList)
-
-  def checkSeen: Actor.Receive = {
-    case p @ ConfirmablePersistent(r, seq, _) =>
-      val isSeen = if (channelMap.isEmpty) manager.seen("all", seq) else manager.seen(channelMap(r.getClass), seq)
-      if (isSeen) {
-        log.warning("has been seen the request: ", p)
-      } else {
-        log.info("not seen the request: ", p)
-        super.receive(p)
-      }
-  }
-
-  abstract override def receive = checkSeen orElse super.receive orElse {
-    case cmd: TakeSnapshotNow =>
-      log.info(manager.getSnapshot.toString)
-      takeSnapshot(cmd)(saveSnapshot(manager.getSnapshot))
+  abstract override def receive = super.receive orElse {
+    case cmd: TakeSnapshotNow => takeSnapshot(cmd)(saveSnapshot(manager.getSnapshot))
     case SnapshotOffer(_, snapshot) => manager.loadSnapshot(snapshot.asInstanceOf[T])
     case DumpStateToFile => dumpToFile(manager.getSnapshot, self.path.toString.replace("akka://coinex/user", "dump"))
   }

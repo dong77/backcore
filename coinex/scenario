@@ -6,8 +6,8 @@
 // deposit
 Client.backend ! DoRequestCashDeposit(Deposit(0, 1, Btc, 100000))
 Client.backend ! AdminConfirmCashDepositSuccess(Deposit(0, 1, Btc, 100000))
-Client.backend ! DoRequestCashDeposit(Deposit(1, 1, Rmb, 1000000000))
-Client.backend ! AdminConfirmCashDepositSuccess(Deposit(1, 1, Rmb, 1000000000))
+Client.backend ! DoRequestCashDeposit(Deposit(2, 1, Rmb, 1000000000))
+Client.backend ! AdminConfirmCashDepositSuccess(Deposit(2, 1, Rmb, 1000000000))
 // submit order
 Client.backend ! DoSubmitOrder(MarketSide(Btc, Rmb), Order(1, 1, 2000, Some(3429.0)))
 Client.backend ! DoSubmitOrder(MarketSide(Rmb, Btc), Order(1, 2, 5000 * 3000, Some(1.0 / 5000), Some(3000)))

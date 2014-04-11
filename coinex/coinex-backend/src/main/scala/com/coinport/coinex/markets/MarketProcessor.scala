@@ -23,7 +23,7 @@ class MarketProcessor(
 
   override val processorId = "coinex_mp_" + marketSide.asString
 
-  override val channelMap: Map[Class[_], String] = Map(classOf[OrderFundFrozen.Immutable] -> "apc")
+  // override val channelMap: Map[Class[_], String] = Map(classOf[OrderFundFrozen.Immutable] -> "apc")
 
   val channelToAccountProcessor = createChannelTo("ap") // DO NOT CHANGE
   val channelToMarketUpdateProcessor = createChannelTo("mup") // DO NOT CHANGE
