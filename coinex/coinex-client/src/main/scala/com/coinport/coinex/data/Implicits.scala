@@ -17,8 +17,9 @@ class RichCurrency(raw: Currency) {
 
 class RichMarketSide(raw: MarketSide) {
   def reverse = MarketSide(raw.inCurrency, raw.outCurrency)
-  def asString = "%s_%s".format(raw.outCurrency, raw.inCurrency).toLowerCase
+  def asString = "%s%s".format(raw.outCurrency, raw.inCurrency).toUpperCase
   def market = Market(raw.outCurrency, raw.inCurrency)
+  def ordered = raw.inCurrency.getValue < raw.outCurrency.getValue
 }
 
 class RichOrder(raw: Order) {
@@ -121,4 +122,15 @@ object Implicits {
 
   implicit def constantRole2Rich(r: ConstantRole.Value) = new RichConstRole(r)
   implicit def marketRole2Rich(r: MarketRole.Value) = new RichMarketRole(r)
+
+  implicit def string2RichMarketSide(raw: String): MarketSide = {
+    if (raw == null || raw.isEmpty || raw.length < 6) {
+      MarketSide(Currency.Unknown, Currency.Unknown)
+    } else {
+      val left = Currency.valueOf(raw.substring(0, 3).toLowerCase.capitalize).getOrElse(Currency.Unknown)
+      val right = Currency.valueOf(raw.substring(3, 6).toLowerCase.capitalize).getOrElse(Currency.Unknown)
+      MarketSide(left, right)
+    }
+  }
+  implicit def string2RichMarket(raw: String): Market = string2RichMarketSide(raw).market
 }

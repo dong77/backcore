@@ -9,7 +9,6 @@ import com.coinport.coinex.api.model._
 import akka.pattern.ask
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import com.coinport.coinex.data.Currency._
 
 object MarketService extends AkkaService {
   def getDepth(marketSide: MarketSide, depth: Int): Future[ApiResult] = {
@@ -63,11 +62,11 @@ object MarketService extends AkkaService {
 
   def getTransactionsByOrder(marketSide: MarketSide, orderId: Long, skip: Int, limit: Int): Future[ApiResult] = getTransactions(marketSide, None, None, Some(orderId), skip, limit)
 
-  def getTickers() = {
+  def getTickers(marketSides: Set[MarketSide]) = {
     backend ? QueryMetrics map {
       case result: Metrics =>
         val data = result.metricsByMarket
-          .filter(_._1._2.equals(Rmb))
+          .filter(kv => marketSides.exists(_ == kv._1))
           .map {
             case (side, metrics) =>
               val side = metrics.side

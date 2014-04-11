@@ -6,6 +6,7 @@ package com.coinport.coinex.api.model
 import org.specs2.mutable._
 import com.coinport.coinex.data.Implicits._
 import com.coinport.coinex.data.Currency._
+import com.coinport.coinex.data._
 
 class MarketConversionTest extends Specification {
   "market conversions" should {
@@ -28,6 +29,21 @@ class MarketConversionTest extends Specification {
       )
 
       marketDepth mustEqual expect
+    }
+
+    "market conversion" in {
+      Market(Btc, Ltc) mustEqual Market(Ltc, Btc)
+
+      Market(Btc, Usd).toString mustEqual "BTCUSD"
+      Market(Usd, Btc).toString mustEqual "BTCUSD"
+
+      var market: Market = "LTCBTC"
+      market mustEqual Market(Ltc, Btc)
+      market = "XXCXXX"
+      market mustEqual Market(Unknown, Unknown)
+
+      Market(Btc, Usd).getMarketSide() mustEqual Btc ~> Usd
+      Market(Btc, Usd).getMarketSide(false) mustEqual Usd ~> Btc
     }
   }
 }

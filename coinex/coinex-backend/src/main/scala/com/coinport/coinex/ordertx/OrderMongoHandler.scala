@@ -3,7 +3,6 @@ package com.coinport.coinex.ordertx
 import com.coinport.coinex.data._
 import com.mongodb.casbah.Imports._
 import com.coinport.coinex.serializers.ThriftBinarySerializer
-import com.coinport.coinex.data.MarketMap._
 import Implicits._
 
 trait OrderMongoHandler {
@@ -26,7 +25,7 @@ trait OrderMongoHandler {
 
   def updateItem(orderId: Long, inAmount: Long, quantity: Long, status: Int, side: MarketSide, timestamp: Long) =
     coll.update(MongoDBObject(OID -> orderId), $set(IN_AMOUNT -> inAmount, QUANTITY -> quantity, STATUS -> status,
-      UPDATED_TIME -> timestamp, SIDE -> side.market.direction), false, false)
+      UPDATED_TIME -> timestamp, SIDE -> side.ordered), false, false)
 
   def cancelItem(orderId: Long) =
     coll.update(MongoDBObject(OID -> orderId), $set(STATUS -> OrderStatus.Cancelled.getValue()), false, false)
@@ -39,11 +38,11 @@ trait OrderMongoHandler {
   }
 
   private def toBson(item: OrderInfo) = {
-    val market = item.side.market
+    val side = item.side
     val obj = MongoDBObject(
       OID -> item.order.id, UID -> item.order.userId, ORIGIN_ORDER -> converter.toBinary(item.order),
-      IN_AMOUNT -> item.inAmount, QUANTITY -> item.order.quantity, MARKET -> getValue(market),
-      SIDE -> market.direction, CREATED_TIME -> item.order.timestamp.getOrElse(0), STATUS -> item.status.getValue())
+      IN_AMOUNT -> item.inAmount, QUANTITY -> item.order.quantity, MARKET -> side.market.toString,
+      SIDE -> side.ordered, CREATED_TIME -> item.order.timestamp.getOrElse(0), STATUS -> item.status.getValue())
 
     if (item.lastTxTimestamp.isDefined) obj ++ (UPDATED_TIME -> item.lastTxTimestamp.get)
     else obj
@@ -54,7 +53,7 @@ trait OrderMongoHandler {
     OrderInfo(
       order = originalOrder, inAmount = obj.getAsOrElse[Long](IN_AMOUNT, 0),
       outAmount = originalOrder.quantity - obj.getAsOrElse[Long](QUANTITY, 0),
-      side = getSide(obj.getAsOrElse[Long](MARKET, 0)).getMarketSide(obj.getAsOrElse[Boolean](SIDE, true)),
+      side = obj.getAsOrElse[String](MARKET, "").getMarketSide(obj.getAsOrElse[Boolean](SIDE, true)),
       lastTxTimestamp = obj.getAs[Long](UPDATED_TIME),
       status = OrderStatus.get(obj.getAsOrElse[Int](STATUS, 0)).getOrElse(OrderStatus.Pending))
   }
@@ -65,9 +64,9 @@ trait OrderMongoHandler {
     if (q.uid.isDefined) query = query ++ (UID -> q.uid.get)
     if (q.side.isDefined) query = {
       val querySide = q.side.get
-      val market = querySide.side.market
-      if (querySide.bothSide) query ++ (MARKET -> getValue(market))
-      else query ++ (MARKET -> getValue(querySide.side.market), SIDE -> market.direction)
+      val side = querySide.side
+      if (querySide.bothSide) query ++ (MARKET -> side.market.toString)
+      else query ++ (MARKET -> side.market.toString, SIDE -> side.ordered)
     }
     if (q.status.isDefined) query = query ++ (STATUS -> q.status.get)
     query
