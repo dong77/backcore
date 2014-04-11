@@ -13,16 +13,14 @@ import com.coinport.coinex.common.AbstractManager
 
 trait RedeliverFilterSupport[T <: AnyRef, M <: AbstractManager[T]] extends Actor with ActorLogging {
   val manager: M
-  val channelMap: Map[Class[_], String]
+  def chooseFilter: PartialFunction[Any, String]
 
   protected def handleUnseen: Actor.Receive
 
-  manager.initFilters(if (channelMap.isEmpty) List("all") else channelMap.values.toList)
-
   def checkSeen: Actor.Receive = {
     case p @ ConfirmablePersistent(r, seq, _) =>
-      log.debug("channelMap for " + manager.getClass + manager.getSnapshot)
-      val isSeen = if (channelMap.isEmpty) manager.seen("all", seq) else manager.seen(channelMap(r.getClass), seq)
+      log.debug("manager: " + manager.getClass + manager.getSnapshot)
+      val isSeen = manager.seen(if (!chooseFilter.isDefinedAt(r)) "default" else chooseFilter(r), seq)
       if (isSeen) {
         log.warning("has been seen the request: ", r)
       } else {

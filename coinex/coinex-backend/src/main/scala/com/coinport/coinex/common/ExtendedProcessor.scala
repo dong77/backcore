@@ -14,7 +14,7 @@ import com.coinport.coinex.common.support._
 
 trait ExtendedProcessor extends Actor with ActorLogging with SnapshotSupport with ChannelSupport {
 
-  val channelMap: Map[Class[_], String] = Map.empty
+  def chooseFilter: PartialFunction[Any, String] = PartialFunction.empty
 
   override def preStart() = {
     log.info("============ processorId: {}", processorId)

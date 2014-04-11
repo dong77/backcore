@@ -8,11 +8,10 @@ abstract class AbstractManager[T <: AnyRef] {
   def getSnapshot: T
   def loadSnapshot(s: T): Unit
 
-  def initFilters(channelsName: List[String]) {
-    channelsName foreach { channel =>
+  def seen(channel: String, id: Long) = {
+    if (!filters.contains(channel)) {
       filters += (channel -> new RedeliverFilter(RedeliverFilterData(Seq.empty[Long], 10), 10))
     }
+    filters(channel).seen(id)
   }
-
-  def seen(channel: String, id: Long) = filters(channel).seen(id)
 }

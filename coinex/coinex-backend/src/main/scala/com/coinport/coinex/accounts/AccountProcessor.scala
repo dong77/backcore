@@ -29,13 +29,13 @@ class AccountProcessor(
   val channelToDepositWithdrawalProcessor = createChannelTo("dwp") // DO NOT CHANGE
   val manager = new AccountManager()
 
-  // TODO(c): change to use PF
-  override val channelMap: Map[Class[_], String] = Map(
-    classOf[AdminConfirmCashWithdrawalSuccess.Immutable] -> "dwp",
-    classOf[AdminConfirmCashWithdrawalFailure.Immutable] -> "dwp",
-    classOf[AdminConfirmCashDepositSuccess.Immutable] -> "dwp",
-    classOf[OrderSubmitted.Immutable] -> "mp",
-    classOf[OrderCancelled.Immutable] -> "mp")
+  override def chooseFilter: PartialFunction[Any, String] = {
+    case r: AdminConfirmCashWithdrawalSuccess => "dwp"
+    case r: AdminConfirmCashWithdrawalFailure => "dwp"
+    case r: AdminConfirmCashDepositSuccess => "dwp"
+    case r: OrderSubmitted => "mp"
+    case r: OrderCancelled => "mp"
+  }
 
   def receiveRecover = PartialFunction.empty[Any, Unit]
 
