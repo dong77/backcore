@@ -8,8 +8,8 @@ import Implicits._
 class MarketUpdateEventExportView(db: MongoDB) extends EventExportToMongoView(db, MARKET_UPDATE_PROCESSOR <<) {
 
   def shouldExport(event: AnyRef) = event match {
-    case OrderCancelled => true
-    case OrderSubmitted => true
+    case m: OrderCancelled => true
+    case m: OrderSubmitted => true
     case _ => false
   }
 }
