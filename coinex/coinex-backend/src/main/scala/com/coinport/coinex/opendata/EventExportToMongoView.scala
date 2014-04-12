@@ -1,4 +1,4 @@
-package com.coinport.coinex.monitoring
+package com.coinport.coinex.opendata
 
 import akka.event.LoggingReceive
 import akka.persistence._
@@ -12,12 +12,15 @@ import com.coinport.coinex.common.support.SnapshotSupport
 import com.coinport.coinex.common.Manager
 
 // This view is not defined for querying data.
-class EventExportToMongoView(db: MongoDB, pid: String) extends View with SnapshotSupport {
+abstract class EventExportToMongoView extends View with SnapshotSupport {
+  val db: MongoDB
+  val pid: String
   override val processorId = pid
   override val viewId = pid + "_mongop"
   val manager = new EventExportToMongoManager
 
   val collection = db(pid + "_events")
+  def shouldExport(event: AnyRef): Boolean
 
   def receive = LoggingReceive {
     case cmd: TakeSnapshotNow => takeSnapshot(cmd) {
@@ -25,9 +28,8 @@ class EventExportToMongoView(db: MongoDB, pid: String) extends View with Snapsho
       manager.increaseSnapshotIndex()
     }
 
-    case Persistent(m: AnyRef, _) =>
+    case Persistent(m: AnyRef, _) if shouldExport(m) =>
       collection += manager.generateJson(m)
-
   }
 }
 

@@ -25,6 +25,7 @@ import com.coinport.coinex.mail._
 import com.coinport.coinex.markets._
 import com.coinport.coinex.metrics._
 import com.coinport.coinex.monitoring._
+import com.coinport.coinex.opendata._
 import com.coinport.coinex.robot._
 import com.coinport.coinex.ordertx._
 import com.coinport.coinex.users._
@@ -71,7 +72,6 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     markets foreach { m =>
       deploy(Props(new MarketDepthView(m)), market_depth_view << m)
       deploy(Props(new CandleDataView(m)), candle_data_view << m)
-      deploy(Props(new EventExportToMongoView(dbForEventExport, "coinex_mp_" + m.s)), market_processor_event_export << m)
     }
 
     deploy(Props(new UserView(userManagerSecret)), user_view <<)
@@ -80,10 +80,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploy(Props(new MetricsView), metrics_view <<)
     deploy(Props(new ApiAuthView(apiAuthSecret)), api_auth_view <<)
 
-    deploy(Props(new EventExportToMongoView(dbForEventExport, "coinex_up") with StackableView[TExportToMongoState, EventExportToMongoManager]), user_processor_event_export <<)
-    deploy(Props(new EventExportToMongoView(dbForEventExport, "coinex_ap") with StackableView[TExportToMongoState, EventExportToMongoManager]), account_processor_event_export <<)
-    deploy(Props(new EventExportToMongoView(dbForEventExport, "coinex_dwp") with StackableView[TExportToMongoState, EventExportToMongoManager]), dw_processor_event_export <<)
-    deploy(Props(new EventExportToMongoView(dbForEventExport, "coinex_mup") with StackableView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export <<)
+    deploy(Props(new DepositWithdrawEventExportView(dbForEventExport, "coinex_dwp") with StackableView[TExportToMongoState, EventExportToMongoManager]), dw_processor_event_export <<)
+    deploy(Props(new MarketUpdateEventExportView(dbForEventExport, "coinex_mup") with StackableView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export <<)
 
     deploy(Props(new TransactionReader(dbForViews)), transaction_mongo_reader <<)
     deploy(Props(new OrderReader(dbForViews)), order_mongo_reader <<)
