@@ -17,11 +17,11 @@ package com.coinport.coinex.users
 
 import scala.collection.mutable.Map
 import com.coinport.coinex.data._
-import com.coinport.coinex.common.AbstractManager
+import com.coinport.coinex.common.Manager
 import com.coinport.coinex.util._
 import com.google.common.io.BaseEncoding
 
-class UserManager(googleAuthenticator: GoogleAuthenticator, secret: String = "") extends AbstractManager[TUserState] {
+class UserManager(googleAuthenticator: GoogleAuthenticator, secret: String = "") extends Manager[TUserState] {
   // Internal mutable state ----------------------------------------------
   var numUsers = 0L
   val profileMap: Map[Long, UserProfile] = Map.empty[Long, UserProfile]

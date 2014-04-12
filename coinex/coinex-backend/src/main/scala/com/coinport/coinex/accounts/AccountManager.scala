@@ -20,7 +20,7 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.common._
 import Implicits._
 
-class AccountManager extends AbstractManager[TAccountState] {
+class AccountManager extends Manager[TAccountState] {
   // Internal mutable state ----------------------------------------------
   private val accountMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]
 

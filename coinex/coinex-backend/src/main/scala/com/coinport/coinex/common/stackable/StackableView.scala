@@ -4,10 +4,10 @@ import akka.persistence.View
 import akka.persistence.SnapshotOffer
 import akka.actor.ActorLogging
 import com.coinport.coinex.data._
-import com.coinport.coinex.common.AbstractManager
+import com.coinport.coinex.common.Manager
 import com.coinport.coinex.common.support._
 
-trait StackableView[T <: AnyRef, M <: AbstractManager[T]]
+trait StackableView[T <: AnyRef, M <: Manager[T]]
     extends View with ActorLogging with SnapshotSupport {
   val manager: M
 

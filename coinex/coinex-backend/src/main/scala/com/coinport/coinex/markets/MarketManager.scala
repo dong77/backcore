@@ -17,14 +17,14 @@ package com.coinport.coinex.markets
 
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.mutable.MarketState
-import com.coinport.coinex.common.AbstractManager
+import com.coinport.coinex.common.Manager
 import com.coinport.coinex.common.RedeliverFilter
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import Implicits._
 import OrderStatus._
 
-class MarketManager(headSide: MarketSide) extends AbstractManager[TMarketState] {
+class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
 
   var state = MarketState(headSide)
 

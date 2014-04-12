@@ -31,7 +31,7 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
   }
 }
 
-class MarketDepthManager(market: MarketSide) extends AbstractManager[TMarketDepthState] {
+class MarketDepthManager(market: MarketSide) extends Manager[TMarketDepthState] {
   // Internal mutable state ----------------------------------------------
   var askMap = SortedMap.empty[Double, Long]
   var bidMap = SortedMap.empty[Double, Long]

@@ -4,10 +4,10 @@ import akka.persistence.EventsourcedProcessor
 import akka.persistence.SnapshotOffer
 import com.coinport.coinex.data._
 import akka.actor.ActorLogging
-import com.coinport.coinex.common.AbstractManager
+import com.coinport.coinex.common.Manager
 import com.coinport.coinex.common.support._
 
-trait StackableEventsourced[T <: AnyRef, M <: AbstractManager[T]]
+trait StackableEventsourced[T <: AnyRef, M <: Manager[T]]
     extends EventsourcedProcessor with ActorLogging with SnapshotSupport with RedeliverFilterSupport[T, M] {
   val manager: M
   def updateState(event: Any): Unit

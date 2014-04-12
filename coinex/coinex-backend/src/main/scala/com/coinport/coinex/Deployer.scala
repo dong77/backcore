@@ -65,49 +65,50 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
   def deploy(): LocalRouters = {
     val feeConfig = loadFeeConfig(config.getString("akka.exchange.fee-rules-path"))
 
-    deployMailer(mailer<<)
+    deployMailer(mailer <<)
 
     // Deploy views first
     markets foreach { m =>
-      deployView(Props(new MarketDepthView(m)), market_depth_view << m)
-      deployView(Props(new CandleDataView(m)), candle_data_view << m)
-      deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_mp_" + m.asString)), market_processor_event_export << m)
+      deploy(Props(new MarketDepthView(m)), market_depth_view << m)
+      deploy(Props(new CandleDataView(m)), candle_data_view << m)
+      deploy(Props(new EventExportToMongoView(dbForEventExport, "coinex_mp_" + m.asLowerCaseString)), market_processor_event_export << m)
     }
 
-    deployView(Props(new UserView(userManagerSecret)), user_view <<)
-    deployView(Props(new UserWriter(dbForViews, userManagerSecret)), user_mongo_writer<<)
-    deployView(Props(new AccountView(feeConfig)), account_view <<)
-    deployView(Props(new MetricsView), metrics_view <<)
-    deployView(Props(new ApiAuthView(apiAuthSecret)), api_auth_view <<)
+    deploy(Props(new UserView(userManagerSecret)), user_view <<)
+    deploy(Props(new UserWriter(dbForViews, userManagerSecret)), user_mongo_writer <<)
+    deploy(Props(new AccountView(feeConfig)), account_view <<)
+    deploy(Props(new MetricsView), metrics_view <<)
+    deploy(Props(new ApiAuthView(apiAuthSecret)), api_auth_view <<)
 
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_up") with StackableView[TExportToMongoState, EventExportToMongoManager]), user_processor_event_export<<)
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_ap") with StackableView[TExportToMongoState, EventExportToMongoManager]), account_processor_event_export<<)
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_dwp") with StackableView[TExportToMongoState, EventExportToMongoManager]), dw_processor_event_export<<)
-    deployView(Props(new EventExportToMongoView(dbForEventExport, "coinex_mup") with StackableView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export<<)
+    deploy(Props(new EventExportToMongoView(dbForEventExport, "coinex_up") with StackableView[TExportToMongoState, EventExportToMongoManager]), user_processor_event_export <<)
+    deploy(Props(new EventExportToMongoView(dbForEventExport, "coinex_ap") with StackableView[TExportToMongoState, EventExportToMongoManager]), account_processor_event_export <<)
+    deploy(Props(new EventExportToMongoView(dbForEventExport, "coinex_dwp") with StackableView[TExportToMongoState, EventExportToMongoManager]), dw_processor_event_export <<)
+    deploy(Props(new EventExportToMongoView(dbForEventExport, "coinex_mup") with StackableView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export <<)
 
-    deployView(Props(new TransactionReader(dbForViews)), transaction_mongo_reader<<)
-    deployView(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer<<)
-    deployView(Props(new OrderReader(dbForViews)), order_mongo_reader<<)
-    deployView(Props(new OrderWriter(dbForViews)), order_mongo_writer<<)
-    deployView(Props(new DepositWithdrawReader(dbForViews)), dw_mongo_reader<<)
+    deploy(Props(new TransactionReader(dbForViews)), transaction_mongo_reader <<)
+    deploy(Props(new OrderReader(dbForViews)), order_mongo_reader <<)
+    deploy(Props(new DepositWithdrawReader(dbForViews)), dw_mongo_reader <<)
 
     // Then deploy routers
     val routers = new LocalRouters(markets)
 
     // Finally deploy processors
     markets foreach { m =>
-      val props = Props(new MarketProcessor(m,
+      def props = Props(new MarketProcessor(m,
         routers.accountProcessor.path,
-        routers.marketUpdateProcessor.path) with StackableCmdsourced[TMarketState, MarketManager])
-      deployProcessor(props, market_processor << m)
+        routers.marketUpdateProcessor.path) with StackableEventsourced[TMarketState, MarketManager])
+      deploySingleton(props, market_processor << m)
     }
 
-    deployProcessor(Props(new MarketUpdateProcessor() with StackableCmdsourced[TSimpleState, SimpleManager]), market_update_processor <<)
-    deployProcessor(Props(new UserProcessor(routers.mailer, userManagerSecret) with StackableEventsourced[TUserState, UserManager]), user_processor <<)
-    deployProcessor(Props(new AccountProcessor(routers.marketProcessors, routers.depositWithdrawProcessor.path, feeConfig) with StackableEventsourced[TAccountState, AccountManager]), account_processor <<)
-    deployProcessor(Props(new ApiAuthProcessor(apiAuthSecret) with StackableCmdsourced[TApiSecretState, ApiAuthManager]), api_auth_processor <<)
-    deployProcessor(Props(new RobotProcessor(routers) with StackableCmdsourced[RobotState, RobotManager]), robot_processor <<)
-    deployProcessor(Props(new DepositWithdrawProcessor(dbForViews, routers.accountProcessor.path) with StackableEventsourced[TSimpleState, SimpleManager]), dw_processor <<)
+    deploySingleton(Props(new MarketUpdateProcessor() with StackableCmdsourced[TSimpleState, SimpleManager]), market_update_processor <<)
+    deploySingleton(Props(new UserProcessor(routers.mailer, userManagerSecret) with StackableEventsourced[TUserState, UserManager]), user_processor <<)
+    deploySingleton(Props(new AccountProcessor(routers.marketProcessors, routers.depositWithdrawProcessor.path, feeConfig) with StackableEventsourced[TAccountState, AccountManager]), account_processor <<)
+    deploySingleton(Props(new ApiAuthProcessor(apiAuthSecret) with StackableCmdsourced[TApiSecretState, ApiAuthManager]), api_auth_processor <<)
+    deploySingleton(Props(new RobotProcessor(routers) with StackableCmdsourced[RobotState, RobotManager]), robot_processor <<)
+    deploySingleton(Props(new DepositWithdrawProcessor(dbForViews, routers.accountProcessor.path) with StackableEventsourced[TSimpleState, SimpleManager]), dw_processor <<)
+
+    deploySingleton(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer <<)
+    deploySingleton(Props(new OrderWriter(dbForViews)), order_mongo_writer <<)
 
     // Deploy monitor at last
     deployMonitor(routers)
@@ -115,7 +116,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     routers
   }
 
-  private def deployProcessor(props: Props, name: String) =
+  private def deploySingleton(props: => Props, name: String) =
     if (cluster.selfRoles.contains(name)) {
       val actor = system.actorOf(ClusterSingletonManager.props(
         singletonProps = props,
@@ -126,7 +127,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       paths += actor.path.toString + "/singleton"
     }
 
-  private def deployView(props: Props, name: String) =
+  private def deploy(props: => Props, name: String) =
     if (cluster.selfRoles.contains(name)) {
       val actor = system.actorOf(props, name)
       paths += actor.path.toString

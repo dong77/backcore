@@ -12,7 +12,7 @@ import com.coinport.coinex.util.MHash
 import com.google.common.io.BaseEncoding
 import akka.persistence.Persistent
 
-class ApiAuthManager(initialSeed: String) extends AbstractManager[TApiSecretState] {
+class ApiAuthManager(initialSeed: String) extends Manager[TApiSecretState] {
   val MAX_SECRETS_PER_USER = 50
 
   var state = TApiSecretState(seed = initialSeed)

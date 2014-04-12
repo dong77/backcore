@@ -6,10 +6,10 @@
 package com.coinport.coinex.robot
 
 import com.coinport.coinex.data._
-import com.coinport.coinex.common.AbstractManager
+import com.coinport.coinex.common.Manager
 import Implicits._
 
-class RobotManager extends AbstractManager[RobotState] {
+class RobotManager extends Manager[RobotState] {
 
   var state = RobotState()
 

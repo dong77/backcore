@@ -7,9 +7,9 @@ package com.coinport.coinex.common.support
 
 import akka.actor._
 import akka.persistence.ConfirmablePersistent
-import com.coinport.coinex.common.AbstractManager
+import com.coinport.coinex.common.Manager
 
-trait RedeliverFilterSupport[T <: AnyRef, M <: AbstractManager[T]] extends Actor with ActorLogging {
+trait RedeliverFilterSupport[T <: AnyRef, M <: Manager[T]] extends Actor with ActorLogging {
   val manager: M
   def identifyChannel: PartialFunction[Any, String]
 

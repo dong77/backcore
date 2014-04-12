@@ -3,7 +3,7 @@ package com.coinport.coinex.common
 import com.coinport.coinex.data._
 import scala.collection.mutable.Map
 
-abstract class AbstractManager[T <: AnyRef] {
+abstract class Manager[T <: AnyRef] {
   protected val filters = Map.empty[String, RedeliverFilter]
 
   def getSnapshot: T

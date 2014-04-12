@@ -7,7 +7,7 @@ package com.coinport.coinex.common
 
 import com.coinport.coinex.data._
 
-class SimpleManager extends AbstractManager[TSimpleState] {
+final class SimpleManager extends Manager[TSimpleState] {
   var state = TSimpleState(RedeliverFilters(Map.empty[String, RedeliverFilterData]))
 
   override def getSnapshot = state.copy(filters = getFiltersSnapshot)

@@ -107,6 +107,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cTExportToMongoState = BinaryScalaCodec(TExportToMongoState)
   lazy val _cTMarketDepthState = BinaryScalaCodec(TMarketDepthState)
   lazy val _cTMarketState = BinaryScalaCodec(TMarketState)
+  lazy val _cTSimpleState = BinaryScalaCodec(TSimpleState)
   lazy val _cTUserState = BinaryScalaCodec(TUserState)
 
   def toBinary(obj: AnyRef): Array[Byte] = obj match {
@@ -203,6 +204,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: TExportToMongoState => _cTExportToMongoState(m)
     case m: TMarketDepthState => _cTMarketDepthState(m)
     case m: TMarketState => _cTMarketState(m)
+    case m: TSimpleState => _cTSimpleState(m)
     case m: TUserState => _cTUserState(m)
 
     case m => throw new IllegalArgumentException("Cannot serialize object: " + m)
@@ -303,6 +305,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[TExportToMongoState.Immutable] => _cTExportToMongoState.invert(bytes).get
     case Some(c) if c == classOf[TMarketDepthState.Immutable] => _cTMarketDepthState.invert(bytes).get
     case Some(c) if c == classOf[TMarketState.Immutable] => _cTMarketState.invert(bytes).get
+    case Some(c) if c == classOf[TSimpleState.Immutable] => _cTSimpleState.invert(bytes).get
     case Some(c) if c == classOf[TUserState.Immutable] => _cTUserState.invert(bytes).get
 
     case Some(c) => throw new IllegalArgumentException("Cannot deserialize class: " + c.getCanonicalName)

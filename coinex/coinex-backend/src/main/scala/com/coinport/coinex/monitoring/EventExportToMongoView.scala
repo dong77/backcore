@@ -9,7 +9,7 @@ import Implicits._
 import com.mongodb.util.JSON
 import com.mongodb.casbah.Imports._
 import com.coinport.coinex.common.support.SnapshotSupport
-import com.coinport.coinex.common.AbstractManager
+import com.coinport.coinex.common.Manager
 
 // This view is not defined for querying data.
 class EventExportToMongoView(db: MongoDB, pid: String) extends View with SnapshotSupport {
@@ -31,7 +31,7 @@ class EventExportToMongoView(db: MongoDB, pid: String) extends View with Snapsho
   }
 }
 
-class EventExportToMongoManager extends AbstractManager[TExportToMongoState] {
+class EventExportToMongoManager extends Manager[TExportToMongoState] {
   private var state = TExportToMongoState(0, 0, "0" * 32)
   private val serializer = new ThriftJsonSerializer
 

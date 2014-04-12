@@ -4,10 +4,10 @@ import akka.persistence.Processor
 import akka.persistence.SnapshotOffer
 import com.coinport.coinex.data._
 import akka.actor.ActorLogging
-import com.coinport.coinex.common.AbstractManager
+import com.coinport.coinex.common.Manager
 import com.coinport.coinex.common.support._
 
-trait StackableCmdsourced[T <: AnyRef, M <: AbstractManager[T]]
+trait StackableCmdsourced[T <: AnyRef, M <: Manager[T]]
     extends Processor with ActorLogging with SnapshotSupport with RedeliverFilterSupport[T, M] {
   val manager: M
 

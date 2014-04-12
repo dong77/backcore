@@ -5,11 +5,11 @@
 
 package com.coinport.coinex.metrics
 
-import com.coinport.coinex.common.AbstractManager
+import com.coinport.coinex.common.Manager
 import com.coinport.coinex.data._
 import Implicits._
 
-class MetricsManager extends AbstractManager[MetricsState] {
+class MetricsManager extends Manager[MetricsState] {
 
   var state = MetricsState()
 
