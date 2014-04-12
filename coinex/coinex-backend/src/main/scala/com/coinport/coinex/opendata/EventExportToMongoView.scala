@@ -12,11 +12,9 @@ import com.coinport.coinex.common.support.SnapshotSupport
 import com.coinport.coinex.common.Manager
 
 // This view is not defined for querying data.
-abstract class EventExportToMongoView extends View with SnapshotSupport {
-  val db: MongoDB
-  val pid: String
+abstract class EventExportToMongoView(db: MongoDB, pid: String) extends View with SnapshotSupport {
   override val processorId = pid
-  override val viewId = pid + "_mongop"
+  override val viewId = pid + "_export"
   val manager = new EventExportToMongoManager
 
   val collection = db(pid + "_events")

@@ -50,11 +50,11 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
   val userManagerSecret = MHash.sha256Base64(secret + "userProcessorSecret")
   val apiAuthSecret = MHash.sha256Base64(secret + "apiAuthSecret")
 
-  val mongoUriForViews = MongoURI(config.getString("akka.exchange.mongo-uri-for-views"))
+  val mongoUriForViews = MongoURI(config.getString("akka.exchange.mongo-uri-for-readers"))
   val mongoForViews = MongoConnection(mongoUriForViews)
   val dbForViews = mongoForViews(mongoUriForViews.database.get)
 
-  val mongoUriForEventExport = MongoURI(config.getString("akka.exchange.mongo-uri-for-event-export"))
+  val mongoUriForEventExport = MongoURI(config.getString("akka.exchange.mongo-uri-for-events"))
   val mongoForEventExport = MongoConnection(mongoUriForEventExport)
   val dbForEventExport = mongoForEventExport(mongoUriForEventExport.database.get)
 
@@ -76,7 +76,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     deploy(Props(new UserView(userManagerSecret)), user_view <<)
     deploy(Props(new UserWriter(dbForViews, userManagerSecret)), user_mongo_writer <<)
-    deploy(Props(new AccountView(feeConfig)), account_view <<)
+    deploy(Props(new AccountView(feeConfig) with StackableView[TAccountState, AccountManager]), account_view <<)
     deploy(Props(new MetricsView with StackableView[TMetricsState, MetricsManager]), metrics_view <<)
     deploy(Props(new ApiAuthView(apiAuthSecret)), api_auth_view <<)
 

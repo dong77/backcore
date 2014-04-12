@@ -63,7 +63,7 @@ object CoinexApp extends App {
   val summary = "============= Akka Node Ready =============\n" +
     "with hostname: " + hostname + "\n" +
     "with seeds: " + seeds + "\n" +
-    "with roles: \n" + roles + "\n"
+    "with roles: " + roles + "\n"
 
   println(summary)
   val coinport = """
