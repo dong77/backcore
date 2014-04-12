@@ -14,14 +14,14 @@ import scala.collection.SortedMap
 
 class MarketDepthView(market: MarketSide) extends ExtendedView {
   override val processorId = "coinex_mup"
-  override val viewId = "market_depth_view"
+  override val viewId = "market_depth_view_" + market.s
   val manager = new MarketDepthManager(market)
 
   def receive = LoggingReceive {
     case Persistent(OrderCancelled(side, order), _) if side == market || side == market.reverse =>
       manager.adjustAmount(side, order, false)
 
-    case e @ Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
+    case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
       manager.adjustAmount(orderInfo.side, orderInfo.order, true)
       txs foreach { manager.reductAmount(orderInfo.side, _) }
 
@@ -48,11 +48,13 @@ class MarketDepthManager(market: MarketSide) extends Manager[TMarketDepthState] 
   def adjustAsk(price: Double, amount: Long) = {
     val updatedAmount = askMap.getOrElse(price, 0L) + amount
     if (updatedAmount > 0) askMap += (price -> updatedAmount)
+    else askMap -= price
   }
 
   def adjustBid(price: Double, amount: Long) = {
     val updatedAmount = bidMap.getOrElse(price, 0L) + amount
     if (updatedAmount > 0) bidMap += (price -> updatedAmount)
+    else bidMap -= price
   }
 
   def get(maxDepth: Int): (Seq[MarketDepthItem], Seq[MarketDepthItem]) = {

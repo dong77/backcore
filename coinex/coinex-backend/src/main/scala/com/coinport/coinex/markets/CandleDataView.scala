@@ -13,7 +13,7 @@ import Implicits._
 
 class CandleDataView(market: MarketSide) extends ExtendedView {
   override def processorId = "coinex_mup"
-  override val viewId = "candle_data_view"
+  override val viewId = "candle_data_view_" + market.s
   private val manager = new CandleDataManager(market)
 
   def receive = LoggingReceive {
