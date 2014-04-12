@@ -6,6 +6,7 @@
 package com.coinport.coinex.markets
 
 import akka.actor.{ ActorRef, ActorPath }
+import akka.actor.Actor.Receive
 import akka.persistence._
 import akka.event.LoggingReceive
 import com.coinport.coinex.common.ExtendedProcessor
@@ -49,7 +50,7 @@ class MarketProcessor(
       }
   }
 
-  def updateState(event: Any): Unit = event match {
+  def updateState: Receive = {
     case DoCancelOrder(side, orderId, userId) =>
       val order = manager.removeOrder(side, orderId, userId)
       val cancelled = OrderCancelled(side, order)

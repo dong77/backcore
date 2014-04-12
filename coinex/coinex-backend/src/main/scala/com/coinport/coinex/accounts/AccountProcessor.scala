@@ -6,6 +6,7 @@
 package com.coinport.coinex.accounts
 
 import akka.actor._
+import akka.actor.Actor.Receive
 import akka.event.LoggingReceive
 import akka.persistence.SnapshotOffer
 import akka.persistence._
@@ -106,7 +107,7 @@ class AccountProcessor(
 trait AccountManagerBehavior extends CountFeeSupport {
   val manager: AccountManager
 
-  def updateState(event: Any): Unit = event match {
+  def updateState: Receive = {
     case m: DoRequestCashDeposit => // do nothing
     case DoRequestCashWithdrawal(w) => manager.updateCashAccount(w.userId, CashAccount(w.currency, -w.amount, 0, w.amount))
     case AdminConfirmCashDepositSuccess(d) =>

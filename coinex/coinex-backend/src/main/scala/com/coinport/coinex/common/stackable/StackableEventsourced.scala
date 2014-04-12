@@ -1,16 +1,18 @@
 package com.coinport.coinex.common.stackable
 
+import akka.actor.ActorLogging
+import akka.actor.Actor.Receive
 import akka.persistence.EventsourcedProcessor
 import akka.persistence.SnapshotOffer
-import com.coinport.coinex.data._
-import akka.actor.ActorLogging
+
 import com.coinport.coinex.common.Manager
 import com.coinport.coinex.common.support._
+import com.coinport.coinex.data._
 
 trait StackableEventsourced[T <: AnyRef, M <: Manager[T]]
     extends EventsourcedProcessor with ActorLogging with SnapshotSupport with RedeliverFilterSupport[T, M] {
   val manager: M
-  def updateState(event: Any): Unit
+  def updateState: Receive
 
   abstract override def receiveRecover = super.receiveRecover orElse {
     case SnapshotOffer(_, snapshot) => manager.loadSnapshot(snapshot.asInstanceOf[T])

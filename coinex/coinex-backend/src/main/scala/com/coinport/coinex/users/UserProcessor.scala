@@ -6,6 +6,7 @@
 package com.coinport.coinex.users
 
 import akka.actor._
+import akka.actor.Actor.Receive
 import akka.event.LoggingReceive
 import akka.persistence.SnapshotOffer
 import akka.persistence._
@@ -68,7 +69,7 @@ class UserProcessor(mailer: ActorRef, userManagerSecret: String)
       }
   }
 
-  def updateState(event: Any): Unit = event match {
+  def updateState: Receive = {
     case DoRegisterUser(profile, _) => manager.registerUser(profile)
     case DoUpdateUserProfile(profile) => manager.updateUser(profile)
 

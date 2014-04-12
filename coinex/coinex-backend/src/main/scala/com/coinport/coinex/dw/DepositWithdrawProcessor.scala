@@ -1,6 +1,7 @@
 package com.coinport.coinex.dw
 
 import akka.actor._
+import akka.actor.Actor.Receive
 import akka.event.LoggingReceive
 import akka.persistence._
 import com.mongodb.casbah.Imports._
@@ -21,7 +22,7 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
   val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
   val manager = new SimpleManager()
 
-  def receiveRecover = { case event => updateState(event) }
+  def receiveRecover = updateState
 
   def receiveCommand = LoggingReceive {
     case p @ ConfirmablePersistent(e: DoRequestCashWithdrawal, seq, _) => persist(e) { event => p.confirm(); updateState(event) }
@@ -112,7 +113,7 @@ trait DepositWithdrawBehavior {
     }
   }
 
-  def updateState(event: Any) = event match {
+  def updateState: Receive = {
     case DoRequestCashDeposit(d) => deposits.put(d)
     case DoRequestCashWithdrawal(w) => withdrawals.put(w)
     case AdminConfirmCashDepositSuccess(d) => deposits.put(d)
