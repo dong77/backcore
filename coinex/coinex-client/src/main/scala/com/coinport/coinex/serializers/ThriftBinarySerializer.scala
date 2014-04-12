@@ -33,6 +33,10 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cRedeliverFilterData = BinaryScalaCodec(RedeliverFilterData)
   lazy val _cRedeliverFilters = BinaryScalaCodec(RedeliverFilters)
   lazy val _cSpanCursor = BinaryScalaCodec(SpanCursor)
+  lazy val _cTMarketEvent = BinaryScalaCodec(TMarketEvent)
+  lazy val _cTMetricsObserver = BinaryScalaCodec(TMetricsObserver)
+  lazy val _cTStackQueue = BinaryScalaCodec(TStackQueue)
+  lazy val _cTWindowQueue = BinaryScalaCodec(TWindowQueue)
   lazy val _cTransaction = BinaryScalaCodec(Transaction)
   lazy val _cTransactionItem = BinaryScalaCodec(TransactionItem)
   lazy val _cUserAccount = BinaryScalaCodec(UserAccount)
@@ -107,6 +111,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cTExportToMongoState = BinaryScalaCodec(TExportToMongoState)
   lazy val _cTMarketDepthState = BinaryScalaCodec(TMarketDepthState)
   lazy val _cTMarketState = BinaryScalaCodec(TMarketState)
+  lazy val _cTMetricsState = BinaryScalaCodec(TMetricsState)
   lazy val _cTSimpleState = BinaryScalaCodec(TSimpleState)
   lazy val _cTUserState = BinaryScalaCodec(TUserState)
 
@@ -130,6 +135,10 @@ class ThriftBinarySerializer extends Serializer {
     case m: RedeliverFilterData => _cRedeliverFilterData(m)
     case m: RedeliverFilters => _cRedeliverFilters(m)
     case m: SpanCursor => _cSpanCursor(m)
+    case m: TMarketEvent => _cTMarketEvent(m)
+    case m: TMetricsObserver => _cTMetricsObserver(m)
+    case m: TStackQueue => _cTStackQueue(m)
+    case m: TWindowQueue => _cTWindowQueue(m)
     case m: Transaction => _cTransaction(m)
     case m: TransactionItem => _cTransactionItem(m)
     case m: UserAccount => _cUserAccount(m)
@@ -204,6 +213,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: TExportToMongoState => _cTExportToMongoState(m)
     case m: TMarketDepthState => _cTMarketDepthState(m)
     case m: TMarketState => _cTMarketState(m)
+    case m: TMetricsState => _cTMetricsState(m)
     case m: TSimpleState => _cTSimpleState(m)
     case m: TUserState => _cTUserState(m)
 
@@ -231,6 +241,10 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[RedeliverFilterData.Immutable] => _cRedeliverFilterData.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilters.Immutable] => _cRedeliverFilters.invert(bytes).get
     case Some(c) if c == classOf[SpanCursor.Immutable] => _cSpanCursor.invert(bytes).get
+    case Some(c) if c == classOf[TMarketEvent.Immutable] => _cTMarketEvent.invert(bytes).get
+    case Some(c) if c == classOf[TMetricsObserver.Immutable] => _cTMetricsObserver.invert(bytes).get
+    case Some(c) if c == classOf[TStackQueue.Immutable] => _cTStackQueue.invert(bytes).get
+    case Some(c) if c == classOf[TWindowQueue.Immutable] => _cTWindowQueue.invert(bytes).get
     case Some(c) if c == classOf[Transaction.Immutable] => _cTransaction.invert(bytes).get
     case Some(c) if c == classOf[TransactionItem.Immutable] => _cTransactionItem.invert(bytes).get
     case Some(c) if c == classOf[UserAccount.Immutable] => _cUserAccount.invert(bytes).get
@@ -305,6 +319,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[TExportToMongoState.Immutable] => _cTExportToMongoState.invert(bytes).get
     case Some(c) if c == classOf[TMarketDepthState.Immutable] => _cTMarketDepthState.invert(bytes).get
     case Some(c) if c == classOf[TMarketState.Immutable] => _cTMarketState.invert(bytes).get
+    case Some(c) if c == classOf[TMetricsState.Immutable] => _cTMetricsState.invert(bytes).get
     case Some(c) if c == classOf[TSimpleState.Immutable] => _cTSimpleState.invert(bytes).get
     case Some(c) if c == classOf[TUserState.Immutable] => _cTUserState.invert(bytes).get
 
