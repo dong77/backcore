@@ -21,7 +21,8 @@ trait SnapshotSupport extends Actor with ActorLogging {
 
   abstract override def preStart() = {
     super.preStart()
-    val delayinSeconds = timeInSecondsToNextHour
+    // val delayinSeconds = timeInSecondsToNextHour
+    val delayinSeconds = 60
     val futureDelayinSeconds = 3600
     scheduleSnapshot(delayinSeconds, TakeSnapshotNow("auto", Some(futureDelayinSeconds)))
     log.info(s"the first snapshot will be taken in ${delayinSeconds / 60} minutes, then every ${futureDelayinSeconds / 60} minutes")
