@@ -21,6 +21,7 @@ typedef data.UserProfile           UserProfile
 typedef data.RedeliverFilters      RedeliverFilters
 typedef data.ChartTimeDimension    ChartTimeDimension
 typedef data.CandleDataItem        CandleDataItem
+typedef data.TMetricsObserver      TMetricsObserver
 
 struct TUserState {
     1: map<i64, UserProfile> profileMap
@@ -71,4 +72,9 @@ struct TAccountHistoryState {
 
 struct TSimpleState {
     1: RedeliverFilters filters
+}
+
+struct TMetricsState {
+    1: map<MarketSide, TMetricsObserver> observers
+    2: RedeliverFilters filters
 }

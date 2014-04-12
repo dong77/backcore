@@ -7,8 +7,10 @@ package com.coinport.coinex.metrics
 
 import scala.collection.mutable.ArrayBuffer
 
+import com.coinport.coinex.data._
+
 class StackQueue[T](elems: ArrayBuffer[T], var head: Int,
-    ordering: (T, T) => Boolean, cleanThreshold: Int)(implicit m: Manifest[T]) extends Serializable {
+    ordering: (T, T) => Boolean, val cleanThreshold: Int)(implicit m: Manifest[T]) extends Serializable {
 
   def this(ordering: (T, T) => Boolean, cleanThreshold: Int)(implicit m: Manifest[T]) = this(
     new ArrayBuffer[T](), 0, ordering, cleanThreshold)

@@ -5,7 +5,7 @@
 
 package com.coinport.coinex.metrics
 
-class WindowQueue[T](range: Long, interval: Long, elems: Array[T], var head: Int /* tail = head + 1 */ ,
+class WindowQueue[T](val range: Long, val interval: Long, elems: Array[T], var head: Int /* tail = head + 1 */ ,
     var lastTick: Long)(implicit m: Manifest[T]) extends Serializable {
 
   val NULL: T = new Array[T](1)(0)

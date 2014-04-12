@@ -77,7 +77,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploy(Props(new UserView(userManagerSecret)), user_view <<)
     deploy(Props(new UserWriter(dbForViews, userManagerSecret)), user_mongo_writer <<)
     deploy(Props(new AccountView(feeConfig)), account_view <<)
-    deploy(Props(new MetricsView), metrics_view <<)
+    deploy(Props(new MetricsView with StackableView[TMetricsState, MetricsManager]), metrics_view <<)
     deploy(Props(new ApiAuthView(apiAuthSecret)), api_auth_view <<)
 
     deploy(Props(new DepositWithdrawEventExportView(dbForEventExport, "coinex_dwp") with StackableView[TExportToMongoState, EventExportToMongoManager]), dw_processor_event_export <<)

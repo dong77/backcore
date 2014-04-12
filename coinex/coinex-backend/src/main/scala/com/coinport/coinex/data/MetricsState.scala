@@ -9,6 +9,12 @@ import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.data._
 import com.coinport.coinex.metrics._
 
+object MetricsState {
+  def apply(tms: TMetricsState): MetricsState = MetricsState(
+    Map.empty ++ tms.observers.map(kv => (kv._1 -> MetricsObserver(kv._2)))
+  )
+}
+
 // MetricsObserver is mutable and need clone when snapshoting
 case class MetricsState(
     observers: Map[MarketSide, MetricsObserver] = Map.empty[MarketSide, MetricsObserver]) {
@@ -27,4 +33,6 @@ case class MetricsState(
     val newObservers = observers map (item => (item._1 -> item._2.copy))
     copy(observers = newObservers)
   }
+
+  def toThrift: TMetricsState = TMetricsState(observers.map(kv => (kv._1 -> kv._2.toThrift)), null)
 }

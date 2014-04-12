@@ -9,14 +9,15 @@ import com.coinport.coinex.common.Manager
 import com.coinport.coinex.data._
 import Implicits._
 
-class MetricsManager extends Manager[MetricsState] {
+class MetricsManager extends Manager[TMetricsState] {
 
   var state = MetricsState()
 
-  override def getSnapshot = state
+  override def getSnapshot = state.toThrift.copy(filters = getFiltersSnapshot)
 
-  override def loadSnapshot(s: MetricsState) {
-    state = s
+  override def loadSnapshot(s: TMetricsState) {
+    state = MetricsState(s)
+    loadFiltersSnapshot(s.filters)
   }
 
   def update(side: MarketSide, price: Double, volume: Long, reverseVolume: Long, tick: Long) {
