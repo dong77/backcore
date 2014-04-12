@@ -24,8 +24,8 @@ class MarketProcessor(
 
   override def processorId = MARKET_PROCESSOR << marketSide
 
-  val channelToAccountProcessor = createChannelTo("ap") // DO NOT CHANGE
-  val channelToMarketUpdateProcessor = createChannelTo("mup") // DO NOT CHANGE
+  val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
+  val channelToMarketUpdateProcessor = createChannelTo(MARKET_UPDATE_PROCESSOR<<) // DO NOT CHANGE
   val manager = new MarketManager(marketSide)
 
   def receiveRecover = PartialFunction.empty[Any, Unit]

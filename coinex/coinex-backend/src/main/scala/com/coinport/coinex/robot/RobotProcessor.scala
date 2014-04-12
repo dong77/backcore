@@ -22,7 +22,7 @@ import Implicits._
 
 class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor with Processor {
   override def processorId = ROBOT_PROCESSOR <<
-  val channelToMarketProcessors = createChannelTo("mps")
+  val channelToMarketProcessors = createChannelTo(MARKET_PROCESSOR <<)
 
   // TODO(c): put activateRobotsInterval to the config file
   val activateRobotsInterval = 5 second

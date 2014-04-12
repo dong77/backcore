@@ -18,7 +18,7 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
     with EventsourcedProcessor with DepositWithdrawBehavior with ChannelSupport with ActorLogging {
   override def processorId = DEPOSIT_WITHDRAW_PROCESSOR <<
 
-  val channelToAccountProcessor = createChannelTo("ap") // DO NOT CHANGE
+  val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
   val manager = new SimpleManager()
 
   def receiveRecover = { case event => updateState(event) }

@@ -26,8 +26,8 @@ class AccountProcessor(
   val feeConfig: FeeConfig) extends ExtendedProcessor with EventsourcedProcessor with ChannelSupport
     with AccountManagerBehavior with ActorLogging {
   override val processorId = ACCOUNT_PROCESSOR <<
-  val channelToMarketProcessors = createChannelTo("mps") // DO NOT CHANGE
-  val channelToDepositWithdrawalProcessor = createChannelTo("dwp") // DO NOT CHANGE
+  val channelToMarketProcessors = createChannelTo(MARKET_PROCESSOR <<) // DO NOT CHANGE
+  val channelToDepositWithdrawalProcessor = createChannelTo(DEPOSIT_WITHDRAW_PROCESSOR<<) // DO NOT CHANGE
   val manager = new AccountManager()
 
   override def identifyChannel: PartialFunction[Any, String] = {
