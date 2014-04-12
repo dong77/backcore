@@ -98,9 +98,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     markets foreach { m =>
       val props = Props(new MarketProcessor(m,
         routers.accountProcessor.path,
-        routers.marketUpdateProcessor.path,
-        routers.order_writer,
-        routers.transaction_writer) with StackableCmdsourced[TMarketState, MarketManager])
+        routers.marketUpdateProcessor.path) with StackableCmdsourced[TMarketState, MarketManager])
       deployProcessor(props, market_processor << m)
     }
 

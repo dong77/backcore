@@ -19,13 +19,14 @@ class OrderReader(db: MongoDB) extends Actor with OrderMongoHandler with ActorLo
   }
 }
 
-class OrderWriter(db: MongoDB) extends Actor with OrderMongoHandler with ActorLogging {
+class OrderWriter(db: MongoDB) extends ExtendedView with OrderMongoHandler with ActorLogging {
+  val processorId = "coinex_mup"
   val coll = db("order")
 
   def receive = LoggingReceive {
-    case OrderCancelled(_, order) => cancelItem(order.id)
+    case Persistent(OrderCancelled(side, order), _) => cancelItem(order.id)
 
-    case OrderSubmitted(orderInfo, txs) =>
+    case e @ Persistent(OrderSubmitted(orderInfo, txs), _) =>
       var takerQuantity = 0L
       txs.foreach { tx =>
         takerQuantity = tx.takerUpdate.current.quantity

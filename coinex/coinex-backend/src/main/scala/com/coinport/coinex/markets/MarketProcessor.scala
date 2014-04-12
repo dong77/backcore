@@ -17,9 +17,7 @@ import ErrorCode._
 class MarketProcessor(
     marketSide: MarketSide,
     accountProcessorPath: ActorPath,
-    marketUpdateProcessoressorPath: ActorPath,
-    orderWriter: ActorRef,
-    transactionWriter: ActorRef) extends ExtendedProcessor with Processor {
+    marketUpdateProcessoressorPath: ActorPath) extends ExtendedProcessor with Processor {
 
   override def processorId = "coinex_mp_" + marketSide.asString
 
@@ -35,7 +33,6 @@ class MarketProcessor(
         val order = manager.removeOrder(side, orderId, userId)
         val cancelled = OrderCancelled(side, order)
         sender ! cancelled
-        orderWriter ! cancelled
         channelToAccountProcessor forward Deliver(p.withPayload(cancelled), accountProcessorPath)
         channelToMarketUpdateProcessor forward Deliver(p.withPayload(cancelled), marketUpdateProcessoressorPath)
       }
@@ -49,8 +46,6 @@ class MarketProcessor(
       } else {
         val orderSubmitted = manager.addOrder(side, order)
         sender ! orderSubmitted
-        orderWriter ! orderSubmitted
-        transactionWriter ! orderSubmitted
         channelToAccountProcessor ! Deliver(p.withPayload(orderSubmitted), accountProcessorPath)
         channelToMarketUpdateProcessor ! Deliver(p.withPayload(orderSubmitted), marketUpdateProcessoressorPath)
       }
