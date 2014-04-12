@@ -41,7 +41,7 @@ object CoinexApp extends App {
 
   val roles =
     if (args.length < 3) ""
-    else if (args(2) == "*") allRoles.mkString(",\n")
+    else if (args(2) == "*") allRoles.mkString(",")
     else args(2).split(",").map(_.stripMargin).filter(_.nonEmpty).map("\"" + _ + "\"").mkString(",")
 
   val hostname =
