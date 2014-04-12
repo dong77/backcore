@@ -34,7 +34,7 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: DoSubmitOrder => routers.accountProcessor forward m
 
       // Market Processors
-      case m: DoCancelOrder => routers.marketProcessors(m.side) forward Persistent(m)
+      case m: DoCancelOrder => routers.marketProcessors(m.side) forward m
 
       // Robot Processor
       case m: DoSubmitRobot => routers.robotProcessor forward Persistent(m)
