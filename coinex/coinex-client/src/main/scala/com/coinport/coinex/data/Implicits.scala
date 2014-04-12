@@ -17,8 +17,8 @@ class RichCurrency(raw: Currency) {
 
 class RichMarketSide(raw: MarketSide) {
   def reverse = MarketSide(raw.inCurrency, raw.outCurrency)
-  def asString = "%s%s".format(raw.outCurrency, raw.inCurrency).toUpperCase
-  def asLowerCaseString = asString.toLowerCase
+  def S = "%s%s".format(raw.outCurrency, raw.inCurrency).toUpperCase
+  def s = "%s%s".format(raw.outCurrency, raw.inCurrency).toLowerCase
   def market = Market(raw.outCurrency, raw.inCurrency)
   def ordered = raw.inCurrency.getValue < raw.outCurrency.getValue
 }
@@ -107,7 +107,7 @@ class RichConstRole(v: ConstantRole.Value) {
 }
 
 class RichMarketRole(v: MarketRole.Value) {
-  def <<(side: MarketSide) = v.toString.toLowerCase + "_" + new RichMarketSide(side).asLowerCaseString
+  def <<(side: MarketSide) = v.toString.toLowerCase + "_" + new RichMarketSide(side).s
 }
 
 object Implicits {

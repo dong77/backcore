@@ -14,11 +14,11 @@ trait RedeliverFilterSupport[T <: AnyRef, M <: Manager[T]] extends Actor with Ac
   def identifyChannel: PartialFunction[Any, String]
 
   def filterFor(target: Receive): Receive = {
-    case p @ ConfirmablePersistent(payload, seq, _) =>
+    case p @ ConfirmablePersistent(payload, seq, _) if target.isDefinedAt(p) =>
       val channel = if (identifyChannel.isDefinedAt(payload)) identifyChannel(payload) else "default"
       if (manager.hasProcessed(channel, seq)) {
         log.warning("ConfirmablePersistent request was previously processed: " + p)
-      } else if (target.isDefinedAt(p)) {
+      } else {
         target(p)
       }
   }

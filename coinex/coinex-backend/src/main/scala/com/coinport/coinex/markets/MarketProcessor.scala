@@ -21,7 +21,7 @@ class MarketProcessor(
   marketUpdateProcessoressorPath: ActorPath)
     extends ExtendedProcessor with EventsourcedProcessor with ChannelSupport {
 
-  override def processorId = "coinex_mp_" + marketSide.asLowerCaseString
+  override def processorId = "coinex_mp_" + marketSide.s
 
   val channelToAccountProcessor = createChannelTo("ap") // DO NOT CHANGE
   val channelToMarketUpdateProcessor = createChannelTo("mup") // DO NOT CHANGE

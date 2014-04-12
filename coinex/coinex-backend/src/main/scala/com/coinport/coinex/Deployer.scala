@@ -71,7 +71,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     markets foreach { m =>
       deploy(Props(new MarketDepthView(m)), market_depth_view << m)
       deploy(Props(new CandleDataView(m)), candle_data_view << m)
-      deploy(Props(new EventExportToMongoView(dbForEventExport, "coinex_mp_" + m.asLowerCaseString)), market_processor_event_export << m)
+      deploy(Props(new EventExportToMongoView(dbForEventExport, "coinex_mp_" + m.s)), market_processor_event_export << m)
     }
 
     deploy(Props(new UserView(userManagerSecret)), user_view <<)
