@@ -9,13 +9,14 @@ import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.SimpleManager
 import com.coinport.coinex.common.mongo.SimpleJsonMongoCollection
 import com.coinport.coinex.common.support.ChannelSupport
+import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import ErrorCode._
+import Implicits._
 
-// TODO(c): Count fees
 class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath) extends ExtendedProcessor
     with EventsourcedProcessor with DepositWithdrawBehavior with ChannelSupport with ActorLogging {
-  override def processorId = "coinex_dwp"
+  override def processorId = DEPOSIT_WITHDRAW_PROCESSOR <<
 
   val channelToAccountProcessor = createChannelTo("ap") // DO NOT CHANGE
   val manager = new SimpleManager()

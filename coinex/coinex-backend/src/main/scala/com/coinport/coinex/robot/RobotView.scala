@@ -8,12 +8,13 @@ package com.coinport.coinex.robot
 import akka.event.LoggingReceive
 import com.coinport.coinex.common.ExtendedView
 import akka.persistence.Persistent
+import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import Implicits._
 
 class RobotView extends ExtendedView {
-  override val processorId = "coinex_rp"
-  override val viewId = "coinex_robot_view"
+  override val processorId = ROBOT_PROCESSOR <<
+  override val viewId = ROBOT_VIEW <<
   val manager = new RobotManager()
   def receive = LoggingReceive {
     case _ =>

@@ -11,10 +11,12 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.util.MHash
 import com.google.common.io.BaseEncoding
 import akka.persistence.Persistent
+import com.coinport.coinex.common.PersistentId._
+import Implicits._
 
 class ApiAuthView(seed: String) extends ExtendedView {
-  override val processorId = "coinex_aap"
-  override val viewId = "api_auth_view"
+  override val processorId = API_AUTH_PROCESSOR <<
+  override val viewId = API_AUTH_VIEW <<
 
   val manager = new ApiAuthManager(seed)
 

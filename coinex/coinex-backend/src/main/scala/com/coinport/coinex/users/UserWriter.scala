@@ -6,12 +6,14 @@ import akka.persistence.Persistent
 import com.coinport.coinex.data._
 import com.mongodb.casbah.MongoDB
 import com.coinport.coinex.common.mongo.SimpleJsonMongoCollection
+import com.coinport.coinex.common.PersistentId._
+import Implicits._
 
 // This view persists user manager state into MongoDB but also keeps an inmemory copy of the state.
 // THis view shall not serve any queries.
 class UserWriter(db: MongoDB, userManagerSecret: String) extends ExtendedView {
-  override val processorId = "coinex_up"
-  override val viewId = "user_mpview"
+  override val processorId = USER_PROCESSOR <<
+  override val viewId = USER_WRITER_VIEW <<
 
   val totpAuthenticator = new GoogleAuthenticator
   val manager = new UserManager(totpAuthenticator, userManagerSecret)

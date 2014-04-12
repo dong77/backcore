@@ -11,12 +11,13 @@ import akka.event.LoggingReceive
 import akka.persistence.Persistent
 
 import com.coinport.coinex.common.ExtendedView
+import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import Implicits._
 
 class MetricsView extends ExtendedView {
-  override def processorId = "coinex_mup"
-  override val viewId = "metrics_view"
+  override def processorId = MARKET_UPDATE_PROCESSOR <<
+  override val viewId = METRICS_VIEW <<
 
   val manager = new MetricsManager()
 

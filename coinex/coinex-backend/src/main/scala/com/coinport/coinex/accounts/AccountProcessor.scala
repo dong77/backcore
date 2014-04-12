@@ -12,6 +12,7 @@ import akka.persistence._
 
 import com.coinport.coinex.common._
 import com.coinport.coinex.common.Constants._
+import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.support._
 import com.coinport.coinex.data._
@@ -24,7 +25,7 @@ class AccountProcessor(
   depositWithdrawProcessorPath: ActorPath,
   val feeConfig: FeeConfig) extends ExtendedProcessor with EventsourcedProcessor with ChannelSupport
     with AccountManagerBehavior with ActorLogging {
-  override val processorId = "coinex_ap"
+  override val processorId = ACCOUNT_PROCESSOR <<
   val channelToMarketProcessors = createChannelTo("mps") // DO NOT CHANGE
   val channelToDepositWithdrawalProcessor = createChannelTo("dwp") // DO NOT CHANGE
   val manager = new AccountManager()

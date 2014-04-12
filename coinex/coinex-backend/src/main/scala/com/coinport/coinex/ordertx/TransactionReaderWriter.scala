@@ -5,6 +5,8 @@ import com.coinport.coinex.data._
 import com.mongodb.casbah.Imports._
 import akka.event.LoggingReceive
 import com.coinport.coinex.common.ExtendedView
+import com.coinport.coinex.common.PersistentId._
+import Implicits._
 import akka.persistence.Persistent
 
 class TransactionReader(db: MongoDB) extends Actor with TransactionMongoHandler with ActorLogging {
@@ -19,7 +21,7 @@ class TransactionReader(db: MongoDB) extends Actor with TransactionMongoHandler 
 }
 
 class TransactionWriter(db: MongoDB) extends ExtendedView with TransactionMongoHandler with ActorLogging {
-  val processorId = "coinex_mup"
+  val processorId = MARKET_UPDATE_PROCESSOR <<
   val coll = db("transaction")
 
   def receive = LoggingReceive {

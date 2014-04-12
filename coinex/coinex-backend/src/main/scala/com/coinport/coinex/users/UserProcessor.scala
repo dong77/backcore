@@ -11,12 +11,14 @@ import akka.persistence.SnapshotOffer
 import akka.persistence._
 
 import com.coinport.coinex.common.ExtendedProcessor
+import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import ErrorCode._
+import Implicits._
 
 class UserProcessor(mailer: ActorRef, userManagerSecret: String)
     extends ExtendedProcessor with EventsourcedProcessor with ActorLogging {
-  override val processorId = "coinex_up"
+  override val processorId = USER_PROCESSOR <<
 
   val googleAuthenticator = new GoogleAuthenticator
   val manager = new UserManager(googleAuthenticator, userManagerSecret)

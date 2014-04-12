@@ -14,12 +14,14 @@ import scala.concurrent.duration._
 
 import com.coinport.coinex.LocalRouters
 import com.coinport.coinex.common.ExtendedProcessor
+import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Currency._
 import com.coinport.coinex.robot.sample._
+import Implicits._
 
 class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor with Processor {
-  override def processorId = "coinex_rp"
+  override def processorId = ROBOT_PROCESSOR <<
   val channelToMarketProcessors = createChannelTo("mps")
 
   // TODO(c): put activateRobotsInterval to the config file

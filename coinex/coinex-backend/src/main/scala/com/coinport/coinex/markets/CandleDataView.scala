@@ -7,13 +7,14 @@ package com.coinport.coinex.markets
 
 import akka.event.LoggingReceive
 import akka.persistence.Persistent
+import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import com.coinport.coinex.common._
 import Implicits._
 
 class CandleDataView(market: MarketSide) extends ExtendedView {
-  override def processorId = "coinex_mup"
-  override val viewId = "candle_data_view_" + market.s
+  override def processorId = MARKET_UPDATE_PROCESSOR <<
+  override val viewId = CANDEL_DATA_VIEW << market
   private val manager = new CandleDataManager(market)
 
   def receive = LoggingReceive {

@@ -110,6 +110,11 @@ class RichMarketRole(v: MarketRole.Value) {
   def <<(side: MarketSide) = v.toString.toLowerCase + "_" + new RichMarketSide(side).s
 }
 
+class RichPersistentId(v: PersistentId.Value) {
+  def << : String = v.toString.toLowerCase
+  def <<(side: MarketSide): String = << + "_" + new RichMarketSide(side).s
+}
+
 object Implicits {
   implicit def currency2Rich(raw: Currency) = new RichCurrency(raw)
   implicit def marketSide2Rich(raw: MarketSide) = new RichMarketSide(raw)
@@ -121,8 +126,9 @@ object Implicits {
   implicit def cashAccont2Rich(raw: CashAccount) = new RichCashAccount(raw)
   implicit def candleDataItem2Rich(raw: CandleDataItem) = new RichCandleDataItem(raw)
 
-  implicit def constantRole2Rich(r: ConstantRole.Value) = new RichConstRole(r)
-  implicit def marketRole2Rich(r: MarketRole.Value) = new RichMarketRole(r)
+  implicit def constantRole2Rich(raw: ConstantRole.Value) = new RichConstRole(raw)
+  implicit def marketRole2Rich(raw: MarketRole.Value) = new RichMarketRole(raw)
+  implicit def persistentId2Rich(raw: PersistentId.Value) = new RichPersistentId(raw)
 
   implicit def string2RichMarketSide(raw: String): MarketSide = {
     if (raw == null || raw.isEmpty || raw.length < 6) {

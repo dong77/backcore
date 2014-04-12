@@ -7,12 +7,14 @@ package com.coinport.coinex.users
 
 import akka.event.LoggingReceive
 import com.coinport.coinex.common.ExtendedView
+import com.coinport.coinex.common.PersistentId._
 import akka.persistence.Persistent
 import com.coinport.coinex.data._
+import Implicits._
 
 class UserView(userManagerSecret: String) extends ExtendedView {
-  override val processorId = "coinex_up"
-  override val viewId = "user_view"
+  override val processorId = USER_PROCESSOR <<
+  override val viewId = USER_VIEW <<
 
   val googleAuthenticator = new GoogleAuthenticator
   val manager = new UserManager(googleAuthenticator, userManagerSecret)

@@ -11,12 +11,13 @@ import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.data._
 import Implicits._
 import com.coinport.coinex.fee.CountFeeSupport
+import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.fee.FeeConfig
 
 class AccountView(val feeConfig: FeeConfig) extends ExtendedView with AccountManagerBehavior {
-  override val processorId = "coinex_ap"
-  override val viewId = "coinex_ap_view"
+  override val processorId = ACCOUNT_PROCESSOR <<
+  override val viewId = ACCOUNT_VIEW<<
   val manager = new AccountManager()
 
   def receive = LoggingReceive {

@@ -7,14 +7,15 @@ package com.coinport.coinex.markets
 
 import akka.event.LoggingReceive
 import akka.persistence.Persistent
+import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import com.coinport.coinex.common._
 import Implicits._
 import scala.collection.SortedMap
 
 class MarketDepthView(market: MarketSide) extends ExtendedView {
-  override val processorId = "coinex_mup"
-  override val viewId = "market_depth_view_" + market.s
+  override val processorId = MARKET_UPDATE_PROCESSOR <<
+  override val viewId = MARKET_DEPTH_VIEW << market
   val manager = new MarketDepthManager(market)
 
   def receive = LoggingReceive {

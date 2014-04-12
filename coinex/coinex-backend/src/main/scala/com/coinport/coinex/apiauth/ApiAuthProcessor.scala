@@ -12,11 +12,13 @@ import akka.persistence._
 import com.coinport.coinex.common._
 import com.coinport.coinex.util.Hash
 import com.google.common.io.BaseEncoding
+import com.coinport.coinex.common.PersistentId._
 import ErrorCode._
+import Implicits._
 import akka.event.LoggingReceive
 
 class ApiAuthProcessor(seed: String) extends ExtendedProcessor with Processor {
-  override def processorId = "coinex_aap"
+  override def processorId = API_AUTH_PROCESSOR <<
 
   val manager = new ApiAuthManager(seed)
 

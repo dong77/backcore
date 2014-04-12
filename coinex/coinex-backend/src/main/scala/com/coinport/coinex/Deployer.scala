@@ -80,8 +80,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploy(Props(new MetricsView with StackableView[TMetricsState, MetricsManager]), metrics_view <<)
     deploy(Props(new ApiAuthView(apiAuthSecret)), api_auth_view <<)
 
-    deploy(Props(new DepositWithdrawEventExportView(dbForEventExport, "coinex_dwp") with StackableView[TExportToMongoState, EventExportToMongoManager]), dw_processor_event_export <<)
-    deploy(Props(new MarketUpdateEventExportView(dbForEventExport, "coinex_mup") with StackableView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export <<)
+    deploy(Props(new DepositWithdrawEventExportView(dbForEventExport) with StackableView[TExportToMongoState, EventExportToMongoManager]), dw_processor_event_export <<)
+    deploy(Props(new MarketUpdateEventExportView(dbForEventExport) with StackableView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export <<)
 
     deploy(Props(new TransactionReader(dbForViews)), transaction_mongo_reader <<)
     deploy(Props(new OrderReader(dbForViews)), order_mongo_reader <<)

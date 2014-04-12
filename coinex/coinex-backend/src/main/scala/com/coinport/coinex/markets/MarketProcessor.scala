@@ -14,6 +14,7 @@ import com.coinport.coinex.data.mutable.MarketState
 import Implicits._
 import ErrorCode._
 import com.coinport.coinex.common.support.ChannelSupport
+import com.coinport.coinex.common.PersistentId._
 
 class MarketProcessor(
   marketSide: MarketSide,
@@ -21,7 +22,7 @@ class MarketProcessor(
   marketUpdateProcessoressorPath: ActorPath)
     extends ExtendedProcessor with EventsourcedProcessor with ChannelSupport {
 
-  override def processorId = "coinex_mp_" + marketSide.s
+  override def processorId = MARKET_PROCESSOR << marketSide
 
   val channelToAccountProcessor = createChannelTo("ap") // DO NOT CHANGE
   val channelToMarketUpdateProcessor = createChannelTo("mup") // DO NOT CHANGE
