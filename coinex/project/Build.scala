@@ -6,6 +6,8 @@ import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 import com.typesafe.sbt.SbtScalariform._
 import org.sbtidea.SbtIdeaPlugin._
 import com.typesafe.sbt.SbtAtmos.{ Atmos, atmosSettings }
+import sbtassembly.Plugin._
+import AssemblyKeys._
 //import com.typesafe.sbt.SbtNativePackager._
 //import NativePackagerKeys._
 
@@ -34,6 +36,7 @@ object CoinexBuild extends Build {
       // implicit val ec = AccountService.system.dispatcher
     """,
     scalacOptions ++= Seq("-encoding", "utf8"),
+    scalacOptions ++= Seq("-optimize"),
     scalacOptions += "-deprecation",
     publishArtifact in Test := false,
     publishMavenStyle := true,
@@ -44,7 +47,20 @@ object CoinexBuild extends Build {
       "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/groups/public",
       "Spray Repo" at "http://repo.spray.io"
       // "scct-github-repository" at "http://mtkopone.github.com/scct/maven-repo"
-      ))
+      )) ++ assemblySettings ++ Seq(
+      test in assembly := {},
+      mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
+        {
+          case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
+          case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
+          // case PathList(ps @ _*) if ps.last endsWith ".xml" => MergeStrategy.first
+          // case PathList(ps @ _*) if ps.last endsWith ".properties" => MergeStrategy.first
+          case "application.conf" => MergeStrategy.concat
+          case "unwanted.txt"     => MergeStrategy.discard
+          case x => old(x)
+        }
+      }
+    )
 
   lazy val root = Project(
     id = "coinex",
@@ -87,7 +103,6 @@ object CoinexBuild extends Build {
       SbtMultiJvm.multiJvmSettings ++
       sharedSettings ++
       ScroogeSBT.newSettings ++
-      sbtassembly.Plugin.assemblySettings ++
       scalariformSettings
     )
     .settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
@@ -98,21 +113,21 @@ object CoinexBuild extends Build {
         "com.typesafe.akka" %% "akka-remote" % akkaVersion,
         "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
         "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
-        "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
         "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion,
         "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.7",
         "com.github.scullxbones" % "akka-persistence-mongo-casbah_2.10" % "0.0.4",
         "org.specs2" %% "specs2" % "2.3.8" % "test",
         "org.scalatest" %% "scalatest" % "2.0" % "test",
-        "org.apache.commons" % "commons-lang3" % "3.1",
+        "org.apache.commons" % "commons-io" % "1.3.2",
         "ch.qos.logback" % "logback-classic" % "1.0.13",
-        "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "1.42",
+        "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "1.42" % "test",
         "io.spray" % "spray-can" % sprayVersion,
         "io.spray" % "spray-routing" % sprayVersion,
         "io.spray" % "spray-client" % sprayVersion,
         "io.spray" % "spray-http" % sprayVersion,
-        "com.coinport" %% "akka-persistence-hbase" % "1.0.1-SNAPSHOT"),
-      
+        "com.coinport" %% "akka-persistence-hbase" % "1.0.1-SNAPSHOT" % "provided"
+        ),
+
       compile in MultiJvm <<= (compile in MultiJvm) triggeredBy (compile in Test),
       parallelExecution in Test := false,
       executeTests in Test <<= (executeTests in Test, executeTests in MultiJvm) map {
