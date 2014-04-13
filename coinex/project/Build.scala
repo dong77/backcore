@@ -31,6 +31,7 @@ object CoinexBuild extends Build {
       import scala.concurrent.duration._
 
       implicit val timeout = Timeout(2 seconds)
+      // implicit val ec = AccountService.system.dispatcher
     """,
     scalacOptions ++= Seq("-encoding", "utf8"),
     scalacOptions += "-deprecation",

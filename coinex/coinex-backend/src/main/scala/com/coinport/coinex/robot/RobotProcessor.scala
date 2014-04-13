@@ -77,7 +77,9 @@ class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor with Proce
             manager.addRobot(newRobot)
           if (recoveryFinished) {
             action match {
-              case Some(m: DoSubmitOrder) => routers.accountProcessor forward Persistent(m)
+              case Some(m: DoSubmitOrder) =>
+                log.debug("robot send the request: " + m);
+                routers.accountProcessor forward m
               case None => None
               case m => log.warning("Robot can't send this message: " + m.getClass.getCanonicalName)
             }
