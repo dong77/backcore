@@ -103,7 +103,7 @@ package object model {
           JDouble(candleDataItem.high.externalValue(side)),
           JDouble(candleDataItem.low.externalValue(side)),
           JDouble(candleDataItem.close.externalValue(side)),
-          JDouble(candleDataItem.volumn.externalValue(Btc)) // TODO: remove hardcoded subject
+          JDouble(candleDataItem.inAoumt.externalValue(Btc)) // TODO: remove hardcoded subject
         ))
     })
   )

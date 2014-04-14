@@ -5,57 +5,89 @@
 
 package com.coinport.coinex.markets
 
+import com.coinport.coinex.data.ChartTimeDimension._
 import akka.event.LoggingReceive
 import akka.persistence.Persistent
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import com.coinport.coinex.common._
+import scala.collection.mutable.Map
 import Implicits._
 
 class CandleDataView(market: MarketSide) extends ExtendedView {
   override def processorId = MARKET_UPDATE_PROCESSOR <<
   override val viewId = CANDLE_DATA_VIEW << market
+
   private val manager = new CandleDataManager(market)
 
   def receive = LoggingReceive {
     case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
-      txs foreach (t => manager.addItem(t, orderInfo.side == market))
+      manager.updateCandleItem(txs.last)
 
     case QueryCandleData(side, dimension, from, to) if side == market || side == market.reverse =>
-      sender ! manager.getCandleData(side == market, dimension, from, to)
+      sender ! manager.getCandleItems(dimension, from, to)
   }
 }
 
-class CandleDataManager(market: MarketSide) extends Manager[CandleDataState] {
+class CandleDataManager(marketSide: MarketSide) extends Manager[TCandleDataState] {
+  val minute = 60 * 1000
+  val hour = 60 * 60 * 1000
+  val day = 24 * 60 * 60 * 1000
+  val week = 7 * 24 * 60 * 60 * 1000
 
-  var state = CandleDataState()
+  var candleMap = Map.empty[ChartTimeDimension, Map[Long, CandleDataItem]]
+  ChartTimeDimension.list.foreach(d => candleMap.put(d, Map.empty[Long, CandleDataItem]))
 
-  override def getSnapshot = state
+  override def getSnapshot = TCandleDataState(candleMap)
 
-  override def loadSnapshot(s: CandleDataState) {
-    state = s
-  }
-
-  def addItem(t: Transaction, sameSide: Boolean) {
-    val amount = Math.abs(t.takerUpdate.current.quantity - t.takerUpdate.previous.quantity)
-    val reverseAmount = Math.abs(t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity)
-
-    val reversePrice = amount.toDouble / reverseAmount.toDouble
-    val price = 1 / reversePrice
-
-    if (sameSide) {
-      ChartTimeDimension.list.foreach(d => state = state.addItem(d, t.timestamp, price, amount))
-      ChartTimeDimension.list.foreach(d => state = state.addReverseItem(d, t.timestamp, reversePrice, reverseAmount))
-    } else {
-      ChartTimeDimension.list.foreach(d => state = state.addItem(d, t.timestamp, reversePrice, reverseAmount))
-      ChartTimeDimension.list.foreach(d => state = state.addReverseItem(d, t.timestamp, price, amount))
+  override def loadSnapshot(snapshot: TCandleDataState) {
+    candleMap = candleMap.empty ++ snapshot.candleMap.map {
+      x =>
+        x._1 -> (Map.empty[Long, CandleDataItem] ++ x._2)
     }
   }
 
-  def getCandleData(sameSide: Boolean, dimension: ChartTimeDimension, from: Long, to: Long) = {
-    val start = Math.min(from, to)
-    val stop = Math.max(from, to)
-    if (sameSide) CandleData(System.currentTimeMillis(), state.getItems(dimension, start, stop), market)
-    else CandleData(System.currentTimeMillis(), state.getReverseItems(dimension, start, stop), market)
+  def updateCandleItem(t: Transaction) {
+    val tout = t.takerUpdate.previous.quantity - t.takerUpdate.current.quantity
+    val tin = t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity
+    val mprice = t.makerUpdate.current.price.get
+    val timestamp = t.timestamp
+    val (price, out, in) = if (t.side == marketSide) (1 / mprice, tout, tin) else (mprice, tin, tout)
+
+    ChartTimeDimension.list.foreach {
+      d =>
+        val key = timestamp / getTimeSkip(d)
+        val itemMap = candleMap.get(d).get
+        val item = itemMap.get(key) match {
+          case Some(item) =>
+            CandleDataItem(key, item.inAoumt + in, item.outAoumt + out,
+              item.open, item.close, Math.min(item.low, mprice), Math.max(item.high, mprice))
+          case None =>
+            CandleDataItem(key, in, out, price, price, price, price)
+        }
+        itemMap.put(key, item)
+    }
+  }
+
+  def getCandleItems(dimension: ChartTimeDimension, from: Long, to: Long) = {
+    val timeSkiper = getTimeSkip(dimension)
+    val itemMap = candleMap.get(dimension).get
+    (from / timeSkiper to to / timeSkiper).map(itemMap.get).filter(_.isDefined).map(_.get)
+  }
+
+  private def getTimeSkip(dimension: ChartTimeDimension) = dimension match {
+    case OneMinute => minute
+    case ThreeMinutes => 3 * minute
+    case FiveMinutes => 5 * minute
+    case FifteenMinutes => 15 * minute
+    case ThirtyMinutes => 30 * minute
+    case OneHour => hour
+    case TwoHours => 2 * hour
+    case FourHours => 4 * hour
+    case SixHours => 6 * hour
+    case TwelveHours => 12 * hour
+    case OneDay => day
+    case ThreeDays => 3 * day
+    case OneWeek => week
   }
 }

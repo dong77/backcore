@@ -201,11 +201,12 @@ struct MarketDepth {
 
 struct CandleDataItem {
     1: i64 timestamp
-    2: i64 volumn
-    3: double open
-    4: double close
-    5: double low
-    6: double high
+    2: i64 inAoumt
+    3: i64 outAoumt
+    4: double open
+    5: double close
+    6: double low
+    7: double high
 }
 
 struct CandleData {

@@ -95,7 +95,8 @@ class RichCandleDataItem(raw: CandleDataItem) {
   def mergeTo(another: CandleDataItem) =
     CandleDataItem(
       another.timestamp,
-      raw.volumn + another.volumn,
+      raw.inAoumt + another.inAoumt,
+      raw.outAoumt + another.outAoumt,
       another.open,
       raw.close,
       Math.min(raw.low, another.low),
