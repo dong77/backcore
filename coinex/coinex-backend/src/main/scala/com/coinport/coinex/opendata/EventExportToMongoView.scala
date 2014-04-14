@@ -23,6 +23,7 @@ abstract class EventExportToMongoView(db: MongoDB, pid: String) extends View wit
   def receive = LoggingReceive {
     case cmd: TakeSnapshotNow => takeSnapshot(cmd) {
       saveSnapshot(manager.getSnapshot)
+      log.info("===== export data generated new snapshot: " + manager.getSnapshot)
       manager.increaseSnapshotIndex()
     }
 
