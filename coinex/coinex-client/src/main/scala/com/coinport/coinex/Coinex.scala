@@ -73,6 +73,9 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: DoDeleteApiSecret => routers.apiAuthProcessor forward Persistent(m)
       case m: QueryApiSecrets => routers.apiAuthView forward m
 
+      // User Asset
+      case m: QueryAsset => routers.assetView forward m
+
       case m @ QueryExportToMongoState(ExportedEventType.AccountEvent) => routers.dwProcessorEventExporter forward m
       case m @ QueryExportToMongoState(ExportedEventType.MarketEvent) => routers.marketUpdateProcessorEventExporter forward m
 

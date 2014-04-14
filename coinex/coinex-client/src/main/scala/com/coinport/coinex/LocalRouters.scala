@@ -35,6 +35,8 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
   val accountView = routerFor(account_view <<)
   val apiAuthView = routerFor(api_auth_view <<)
 
+  val assetView = routerFor(asset_view <<)
+
   val candleDataView = bidirection(Map(markets map { m =>
     m -> routerFor(candle_data_view << m)
   }: _*))

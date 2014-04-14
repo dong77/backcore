@@ -77,6 +77,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploy(Props(new UserView(userManagerSecret)), user_view <<)
     deploy(Props(new UserWriter(dbForViews, userManagerSecret)), user_mongo_writer <<)
     deploy(Props(new AccountView(feeConfig) with StackableView[TAccountState, AccountManager]), account_view <<)
+    deploy(Props(new AssetView), asset_view <<)
     deploy(Props(new MetricsView with StackableView[TMetricsState, MetricsManager]), metrics_view <<)
     deploy(Props(new ApiAuthView(apiAuthSecret)), api_auth_view <<)
 

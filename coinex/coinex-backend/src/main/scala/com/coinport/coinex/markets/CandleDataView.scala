@@ -22,10 +22,13 @@ class CandleDataView(market: MarketSide) extends ExtendedView {
 
   def receive = LoggingReceive {
     case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
-      manager.updateCandleItem(txs.last)
+      if (!txs.isEmpty) manager.updateCandleItem(txs.last)
 
     case QueryCandleData(side, dimension, from, to) if side == market || side == market.reverse =>
-      sender ! manager.getCandleItems(dimension, from, to)
+      println("lllllllllllllllllllllll")
+      println(QueryCandleDataResult(CandleData(manager.getCandleItems(dimension, from, to), side)))
+      println("lllllllllllllllllllllll")
+      sender ! QueryCandleDataResult(CandleData(manager.getCandleItems(dimension, from, to), side))
   }
 }
 

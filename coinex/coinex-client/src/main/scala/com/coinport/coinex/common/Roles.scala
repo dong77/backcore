@@ -8,6 +8,8 @@ object ConstantRole extends Enumeration {
   val account_processor = Value
   val account_view = Value
 
+  val asset_view = Value
+
   val api_auth_processor = Value
   val api_auth_view = Value
 

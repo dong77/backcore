@@ -12,7 +12,7 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.data.Implicits._
 import com.coinport.coinex.common.PersistentId._
 
-class AssetView(val feeConfig: FeeConfig) extends ExtendedView {
+class AssetView extends ExtendedView {
   override val processorId = ACCOUNT_PROCESSOR <<
   override val viewId = USER_ASSET <<
   val manager = new AssetManager()

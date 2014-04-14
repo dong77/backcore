@@ -22,7 +22,8 @@ object MarketService extends AkkaService {
 
   def getHistory(marketSide: MarketSide, timeDimension: ChartTimeDimension, from: Long, to: Long): Future[ApiResult] = {
     backend ? QueryCandleData(marketSide, timeDimension, from, to) map {
-      case candles: CandleData =>
+      case rv: QueryCandleDataResult =>
+        val candles = rv.candleData
         val map = candles.items.map(i => i.timestamp -> i).toMap
         val timeSkip: Long = timeDimension
         var open = 0.0
@@ -37,7 +38,8 @@ object MarketService extends AkkaService {
             }
         }.toSeq
         ApiResult(data = Some(data))
-      case x => ApiResult(false)
+      case x =>
+        ApiResult(false)
     }
   }
 
