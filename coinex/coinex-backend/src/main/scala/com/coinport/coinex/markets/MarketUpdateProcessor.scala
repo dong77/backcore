@@ -21,8 +21,7 @@ class MarketUpdateProcessor extends ExtendedProcessor with Processor {
   val manager = new SimpleManager()
 
   override def identifyChannel: PartialFunction[Any, String] = {
-    case OrderSubmitted(originOrderInfo, txs) => "mp_" + originOrderInfo.side.s
-    case OrderCancelled(side, order) => "mp_" + side.s
+    case _ => "ap"
   }
 
   def receive = LoggingReceive {

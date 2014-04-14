@@ -19,14 +19,13 @@ import com.coinport.coinex.common.PersistentId._
 
 class MarketProcessor(
   marketSide: MarketSide,
-  accountProcessorPath: ActorPath,
-  marketUpdateProcessoressorPath: ActorPath)
+  accountProcessorPath: ActorPath)
     extends ExtendedProcessor with EventsourcedProcessor with ChannelSupport {
 
   override def processorId = MARKET_PROCESSOR << marketSide
 
   val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
-  val channelToMarketUpdateProcessor = createChannelTo(MARKET_UPDATE_PROCESSOR<<) // DO NOT CHANGE
+
   val manager = new MarketManager(marketSide)
 
   def receiveRecover = PartialFunction.empty[Any, Unit]
@@ -56,12 +55,10 @@ class MarketProcessor(
       val cancelled = OrderCancelled(side, order)
       sender ! cancelled
       channelToAccountProcessor forward Deliver(Persistent(cancelled), accountProcessorPath)
-      channelToMarketUpdateProcessor forward Deliver(Persistent(cancelled), marketUpdateProcessoressorPath)
 
     case OrderFundFrozen(side, order: Order) =>
       val orderSubmitted = manager.addOrder(side, order)
       sender ! orderSubmitted
       channelToAccountProcessor ! Deliver(Persistent(orderSubmitted), accountProcessorPath)
-      channelToMarketUpdateProcessor ! Deliver(Persistent(orderSubmitted), marketUpdateProcessoressorPath)
   }
 }

@@ -23,11 +23,14 @@ import Implicits._
 
 class AccountProcessor(
   marketProcessors: Map[MarketSide, ActorRef],
+  marketUpdateProcessoressorPath: ActorPath,
   depositWithdrawProcessorPath: ActorPath,
   val feeConfig: FeeConfig) extends ExtendedProcessor with EventsourcedProcessor with ChannelSupport
     with AccountManagerBehavior with ActorLogging {
+
   override val processorId = ACCOUNT_PROCESSOR <<
   val channelToMarketProcessors = createChannelTo(MARKET_PROCESSOR <<) // DO NOT CHANGE
+  val channelToMarketUpdateProcessor = createChannelTo(MARKET_UPDATE_PROCESSOR<<) // DO NOT CHANGE
   val channelToDepositWithdrawalProcessor = createChannelTo(DEPOSIT_WITHDRAW_PROCESSOR<<) // DO NOT CHANGE
   val manager = new AccountManager()
 
@@ -94,9 +97,11 @@ class AccountProcessor(
 
     case p @ ConfirmablePersistent(event: OrderSubmitted, seq, _) =>
       persist(countFee(event)) { event => p.confirm(); updateState(event) }
+      channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)
 
     case p @ ConfirmablePersistent(event: OrderCancelled, seq, _) =>
       persist(event) { event => p.confirm(); updateState(event) }
+      channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)
   }
 
   private def getProcessorPath(side: MarketSide): ActorPath = {

@@ -88,16 +88,20 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     val routers = new LocalRouters(markets)
 
     // Finally deploy processors
+    deploySingleton(Props(new AccountProcessor(
+      routers.marketProcessors,
+      routers.marketUpdateProcessor.path,
+      routers.depositWithdrawProcessor.path,
+      feeConfig) with StackableEventsourced[TAccountState, AccountManager]), account_processor <<)
+
     markets foreach { m =>
       def props = Props(new MarketProcessor(m,
-        routers.accountProcessor.path,
-        routers.marketUpdateProcessor.path) with StackableEventsourced[TMarketState, MarketManager])
+        routers.accountProcessor.path) with StackableEventsourced[TMarketState, MarketManager])
       deploySingleton(props, market_processor << m)
     }
 
     deploySingleton(Props(new MarketUpdateProcessor() with StackableCmdsourced[TSimpleState, SimpleManager]), market_update_processor <<)
     deploySingleton(Props(new UserProcessor(routers.mailer, userManagerSecret) with StackableEventsourced[TUserState, UserManager]), user_processor <<)
-    deploySingleton(Props(new AccountProcessor(routers.marketProcessors, routers.depositWithdrawProcessor.path, feeConfig) with StackableEventsourced[TAccountState, AccountManager]), account_processor <<)
     deploySingleton(Props(new ApiAuthProcessor(apiAuthSecret) with StackableCmdsourced[TApiSecretState, ApiAuthManager]), api_auth_processor <<)
     deploySingleton(Props(new RobotProcessor(routers) with StackableCmdsourced[RobotState, RobotManager]), robot_processor <<)
     deploySingleton(Props(new DepositWithdrawProcessor(dbForViews, routers.accountProcessor.path) with StackableEventsourced[TSimpleState, SimpleManager]), deposit_withdraw_processor <<)
