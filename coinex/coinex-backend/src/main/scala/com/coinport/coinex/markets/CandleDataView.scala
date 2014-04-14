@@ -25,9 +25,6 @@ class CandleDataView(market: MarketSide) extends ExtendedView {
       if (!txs.isEmpty) manager.updateCandleItem(txs.last)
 
     case QueryCandleData(side, dimension, from, to) if side == market || side == market.reverse =>
-      println("lllllllllllllllllllllll")
-      println(QueryCandleDataResult(CandleData(manager.getCandleItems(dimension, from, to), side)))
-      println("lllllllllllllllllllllll")
       sender ! QueryCandleDataResult(CandleData(manager.getCandleItems(dimension, from, to), side))
   }
 }

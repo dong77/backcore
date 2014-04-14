@@ -15,7 +15,6 @@ class TransactionReader(db: MongoDB) extends Actor with TransactionMongoHandler 
   def receive = LoggingReceive {
     case q: QueryTransaction =>
       val xx = getItems(q)
-      xx.foreach(println)
       sender ! QueryTransactionResult(getItems(q), countItems(q))
   }
 }
