@@ -13,7 +13,11 @@ trait StackableCmdsourced[T <: AnyRef, M <: Manager[T]]
 
   abstract override def receive = filterFor(super.receive) orElse super.receive orElse {
     case cmd: TakeSnapshotNow => takeSnapshot(cmd)(saveSnapshot(manager.getSnapshot))
-    case SnapshotOffer(_, snapshot) => manager.loadSnapshot(snapshot.asInstanceOf[T])
+
+    case SnapshotOffer(meta, snapshot) =>
+      log.info("Loading snapshot: " + meta)
+      manager.loadSnapshot(snapshot.asInstanceOf[T])
+
     case DumpStateToFile(_) => sender ! dumpToFile(manager.getSnapshot, self.path)
   }
 }

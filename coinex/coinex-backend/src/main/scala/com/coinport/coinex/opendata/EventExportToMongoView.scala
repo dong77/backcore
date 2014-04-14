@@ -16,6 +16,7 @@ abstract class EventExportToMongoView(db: MongoDB, pid: String) extends View wit
   override val processorId = pid
   override val viewId = pid + "_export"
   val manager = new EventExportToMongoManager
+  val snapshotIntervalSec = 15 * 60
 
   val eventColl = db(pid + "_events")
   val metaColl = db(pid + "_metadata")

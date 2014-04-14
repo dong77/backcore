@@ -82,7 +82,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     deploy(Props(new TransactionReader(dbForViews)), transaction_mongo_reader <<)
     deploy(Props(new OrderReader(dbForViews)), order_mongo_reader <<)
-    deploy(Props(new DepositWithdrawReader(dbForViews)), dw_mongo_reader <<)
+    deploy(Props(new DepositWithdrawReader(dbForViews)), deposit_withdraw_mongo_reader <<)
 
     // Then deploy routers
     val routers = new LocalRouters(markets)
@@ -100,9 +100,9 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploySingleton(Props(new AccountProcessor(routers.marketProcessors, routers.depositWithdrawProcessor.path, feeConfig) with StackableEventsourced[TAccountState, AccountManager]), account_processor <<)
     deploySingleton(Props(new ApiAuthProcessor(apiAuthSecret) with StackableCmdsourced[TApiSecretState, ApiAuthManager]), api_auth_processor <<)
     deploySingleton(Props(new RobotProcessor(routers) with StackableCmdsourced[RobotState, RobotManager]), robot_processor <<)
-    deploySingleton(Props(new DepositWithdrawProcessor(dbForViews, routers.accountProcessor.path) with StackableEventsourced[TSimpleState, SimpleManager]), dw_processor <<)
+    deploySingleton(Props(new DepositWithdrawProcessor(dbForViews, routers.accountProcessor.path) with StackableEventsourced[TSimpleState, SimpleManager]), deposit_withdraw_processor <<)
 
-    deploySingleton(Props(new DepositWithdrawEventExportView(dbForEventExport) with StackableView[TExportToMongoState, EventExportToMongoManager]), dw_processor_event_export <<)
+    deploySingleton(Props(new DepositWithdrawEventExportView(dbForEventExport) with StackableView[TExportToMongoState, EventExportToMongoManager]), deposit_withdraw_processor_event_export <<)
     deploySingleton(Props(new MarketUpdateEventExportView(dbForEventExport) with StackableView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export <<)
 
     deploySingleton(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer <<)

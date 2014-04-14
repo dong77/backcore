@@ -20,14 +20,14 @@ trait SnapshotSupport extends Actor with ActorLogging {
   implicit val executeContext = context.system.dispatcher
   implicit val formats = ThriftEnumJson4sSerialization.formats + MapSerializer
   private var cancellable: Cancellable = null
+  val snapshotIntervalSec: Int
 
   abstract override def preStart() = {
     super.preStart()
     // val delayinSeconds = timeInSecondsToNextHour
-    val delayinSeconds = 60
-    val futureDelayinSeconds = 3600
-    scheduleSnapshot(delayinSeconds, TakeSnapshotNow("auto", Some(futureDelayinSeconds)))
-    log.info(s"the first snapshot will be taken in ${delayinSeconds / 60} minutes, then every ${futureDelayinSeconds / 60} minutes")
+    val initialDelaySec = 60
+    scheduleSnapshot(initialDelaySec, TakeSnapshotNow("auto", Some(snapshotIntervalSec)))
+    log.info(s"the first snapshot will be taken in ${initialDelaySec} seconds, then every ${snapshotIntervalSec} seconds")
   }
 
   def takeSnapshot(cmd: TakeSnapshotNow)(action: => Unit) = {

@@ -15,7 +15,10 @@ trait StackableEventsourced[T <: AnyRef, M <: Manager[T]]
   def updateState: Receive
 
   abstract override def receiveRecover = super.receiveRecover orElse {
-    case SnapshotOffer(_, snapshot) => manager.loadSnapshot(snapshot.asInstanceOf[T])
+    case SnapshotOffer(meta, snapshot) =>
+      log.info("Loading snapshot: " + meta)
+      manager.loadSnapshot(snapshot.asInstanceOf[T])
+
     case event: AnyRef => updateState(event)
   }
 
