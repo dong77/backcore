@@ -15,14 +15,13 @@
 
 package com.coinport.coinex.accounts
 
-import org.slf4s.Logging
 import scala.collection.mutable.Map
 
 import com.coinport.coinex.data._
 import com.coinport.coinex.common._
 import Implicits._
 
-class AccountManager extends Manager[TAccountState] with Logging {
+class AccountManager extends Manager[TAccountState] {
   // Internal mutable state ----------------------------------------------
   private val accountMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]
 
@@ -67,10 +66,8 @@ class AccountManager extends Manager[TAccountState] with Logging {
   def updateCashAccount(userId: Long, adjustment: CashAccount) = {
     val current = getUserCashAccount(userId, adjustment.currency)
     val updated = current + adjustment
-    if (updated.isValid)
-      setUserCashAccount(userId, updated)
-    else
-      log.warn("Attempted to set user cash account to an invalid value: " + updated)
+    assert(updated.isValid)
+    setUserCashAccount(userId, updated)
   }
 
   def getUserAccounts(userId: Long): UserAccount =
