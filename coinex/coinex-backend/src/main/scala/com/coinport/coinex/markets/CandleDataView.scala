@@ -26,7 +26,7 @@ class CandleDataView(market: MarketSide) extends ExtendedView {
   }
 }
 
-class CandleDataManager(market: MarketSide) extends Manager[TCandleDataState] {
+class CandleDataManager(market: MarketSide) extends Manager[CandleDataState] {
 
   var state = CandleDataState()
 
