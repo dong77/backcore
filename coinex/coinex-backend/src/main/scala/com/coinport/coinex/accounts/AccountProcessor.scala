@@ -96,12 +96,19 @@ class AccountProcessor(
       }
 
     case p @ ConfirmablePersistent(event: OrderSubmitted, seq, _) =>
-      persist(countFee(event)) { event => p.confirm(); updateState(event) }
-      channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)
+      persist(countFee(event)) { event =>
+        p.confirm()
+        updateState(event)
+        channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)
+      }
 
     case p @ ConfirmablePersistent(event: OrderCancelled, seq, _) =>
-      persist(event) { event => p.confirm(); updateState(event) }
-      channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)
+      persist(countFee(event)) { event =>
+        p.confirm()
+        updateState(event)
+        channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)
+      }
+
   }
 
   private def getProcessorPath(side: MarketSide): ActorPath = {
