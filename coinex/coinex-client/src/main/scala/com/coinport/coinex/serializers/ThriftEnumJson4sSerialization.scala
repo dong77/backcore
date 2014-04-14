@@ -9,52 +9,78 @@ package com.coinport.coinex.serializers
 
 import org.json4s.CustomSerializer
 import org.json4s._
+import org.json4s.ext._
 import com.coinport.coinex.data._
 import org.json4s.native.Serialization
+
+object MapSerializer extends Serializer[Map[Any, Any]] {
+  def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
+    case m: Map[_, _] => JObject(m.map({
+      case (k, v) => JField(
+        k match {
+          case ks: String => ks
+          case ks: ChartTimeDimension => ks.name
+          case ks: Currency => ks.name
+          case ks: Direction => ks.name
+          case ks: EmailType => ks.name
+          case ks: ErrorCode => ks.name
+          case ks: OrderStatus => ks.name
+          case ks: TransferStatus => ks.name
+          case ks: UserStatus => ks.name
+          case ks: Any => ks.toString
+        },
+        Extraction.decompose(v))
+    }).toList)
+  }
+
+  def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), Map[Any, Any]] = {
+    sys.error("Not interested.")
+  }
+}
 
 object ThriftEnumJson4sSerialization {
 
   class ChartTimeDimensionSerializer extends CustomSerializer[ChartTimeDimension](format => (
-    { case JInt(s) => ChartTimeDimension(s.intValue) }, {
-      case x: ChartTimeDimension => JInt(x.value)
+    { case JString(s) => ChartTimeDimension.valueOf(s).get }, {
+      case x: ChartTimeDimension => JString(x.name)
     }))
 
   class CurrencySerializer extends CustomSerializer[Currency](format => (
-    { case JInt(s) => Currency(s.intValue) }, {
-      case x: Currency => JInt(x.value)
+    { case JString(s) => Currency.valueOf(s).get }, {
+      case x: Currency => JString(x.name)
     }))
 
   class DirectionSerializer extends CustomSerializer[Direction](format => (
-    { case JInt(s) => Direction(s.intValue) }, {
-      case x: Direction => JInt(x.value)
+    { case JString(s) => Direction.valueOf(s).get }, {
+      case x: Direction => JString(x.name)
     }))
 
   class EmailTypeSerializer extends CustomSerializer[EmailType](format => (
-    { case JInt(s) => EmailType(s.intValue) }, {
-      case x: EmailType => JInt(x.value)
+    { case JString(s) => EmailType.valueOf(s).get }, {
+      case x: EmailType => JString(x.name)
     }))
 
   class ErrorCodeSerializer extends CustomSerializer[ErrorCode](format => (
-    { case JInt(s) => ErrorCode(s.intValue) }, {
-      case x: ErrorCode => JInt(x.value)
+    { case JString(s) => ErrorCode.valueOf(s).get }, {
+      case x: ErrorCode => JString(x.name)
     }))
 
   class OrderStatusSerializer extends CustomSerializer[OrderStatus](format => (
-    { case JInt(s) => OrderStatus(s.intValue) }, {
-      case x: OrderStatus => JInt(x.value)
+    { case JString(s) => OrderStatus.valueOf(s).get }, {
+      case x: OrderStatus => JString(x.name)
     }))
 
   class TransferStatusSerializer extends CustomSerializer[TransferStatus](format => (
-    { case JInt(s) => TransferStatus(s.intValue) }, {
-      case x: TransferStatus => JInt(x.value)
+    { case JString(s) => TransferStatus.valueOf(s).get }, {
+      case x: TransferStatus => JString(x.name)
     }))
 
   class UserStatusSerializer extends CustomSerializer[UserStatus](format => (
-    { case JInt(s) => UserStatus(s.intValue) }, {
-      case x: UserStatus => JInt(x.value)
+    { case JString(s) => UserStatus.valueOf(s).get }, {
+      case x: UserStatus => JString(x.name)
     }))
 
-  implicit val formats = Serialization.formats(NoTypeHints) +
+  implicit val formats = Serialization.formats(NoTypeHints) + MapSerializer +
     new ChartTimeDimensionSerializer +
     new CurrencySerializer +
     new DirectionSerializer +

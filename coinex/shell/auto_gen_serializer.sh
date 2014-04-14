@@ -43,11 +43,13 @@ object Generator {
   }
 
   def enumSerializerClause(enum: String) = ENUM_SERIALIZER.format(enum, enum, enum, enum)
+	def enumInMapCase(enum: String) = ENUM_IN_MAP_CASE.format(enum)
 
   def generateJson4sSerializerFile(className: String, enums: Seq[String], outputFile: String) = {
+    val enumInMapCases = enums.map(enumInMapCase).mkString
     val enumSerializers = enums.map(enumSerializerClause).mkString
-    val enumSerializers2 = enums.map(enum => ENUM_SERIALIZER2.format(enum)).mkString
-    val code = ENUM_CODE_TEMPLATE.format(className, enumSerializers, enumSerializers2)
+    val enumFormats = enums.map(enum => ENUM_SERIALIZER2.format(enum)).mkString
+    val code = ENUM_CODE_TEMPLATE.format(enumInMapCases, className, enumSerializers, enumFormats)
     writeToFile(code, outputFile)
   }
 
@@ -83,10 +85,11 @@ object Generator {
 
   val ENUM_SERIALIZER = """
   class %sSerializer extends CustomSerializer[%s](format => (
-    { case JInt(s) => %s(s.intValue) }, {
-      case x: %s => JInt(x.value)
+    { case JString(s) => %s.valueOf(s).get }, {
+      case x: %s => JString(x.name)
     }))
 """
+  val ENUM_IN_MAP_CASE = "\n          case ks: %s => ks.name"
 
   val ENUM_SERIALIZER2 = " +\n    new %sSerializer"
 
@@ -101,12 +104,30 @@ package com.coinport.coinex.serializers
 
 import org.json4s.CustomSerializer
 import org.json4s._
+import org.json4s.ext._
 import com.coinport.coinex.data._
 import org.json4s.native.Serialization
 
+object MapSerializer extends Serializer[Map[Any, Any]] {
+  def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
+    case m: Map[_, _] => JObject(m.map({
+      case (k, v) => JField(
+        k match {
+          case ks: String => ks%s
+          case ks: Any => ks.toString
+        },
+        Extraction.decompose(v))
+    }).toList)
+  }
+
+  def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), Map[Any, Any]] = {
+    sys.error("Not interested.")
+  }
+}
+
 object %s {
 %s
-  implicit val formats = Serialization.formats(NoTypeHints)%s
+  implicit val formats = Serialization.formats(NoTypeHints) + MapSerializer%s
 }
 """
 

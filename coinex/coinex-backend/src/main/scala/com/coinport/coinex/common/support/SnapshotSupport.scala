@@ -9,11 +9,12 @@ import java.io.FileOutputStream
 import akka.serialization.SerializationExtension
 import com.mongodb.util.JSON
 import com.coinport.coinex.serializers.ThriftEnumJson4sSerialization
-import org.json4s.native.Serialization.{ read, write }
 import ThriftEnumJson4sSerialization._
 import java.text.SimpleDateFormat
 import java.util.Date
 import akka.actor.ActorPath
+import org.json4s._
+import org.json4s.native.JsonMethods._
 
 trait SnapshotSupport extends Actor with ActorLogging {
   implicit val executeContext = context.system.dispatcher
@@ -52,14 +53,20 @@ trait SnapshotSupport extends Actor with ActorLogging {
   }
 
   def dumpToFile(state: AnyRef, actorPath: ActorPath): String = {
-    val fileName = "/tmp/" + actorPath.toString.replace("akka://coinex/user/", "").replace("/", "~") +
+    val fileName = "/tmp/" + actorPath.toString.replace("akka://coinex/user/", "").replace("/", "__") +
       (new SimpleDateFormat("~yyyy_MM_dd_HH_mm_ss").format(new Date())) + ".json"
     val out = new FileOutputStream(fileName)
     try {
-      out.write(write(state).getBytes)
+      val filtered = Extraction.decompose(state).removeField {
+        case JField("_passthroughFields", _) => true
+        case _ => false
+      }
+      out.write(pretty(render(filtered)).getBytes)
       log.info(s"state of type ${state.getClass.getName} dumped to file ${fileName}")
     } catch {
-      case e: Throwable => log.error(s"Unable to dump state of type ${state.getClass.getName} to file ${fileName}", e)
+      case e: Throwable =>
+        log.error(s"Unable to dump state of type ${state.getClass.getName} to file ${fileName}", e.getStackTraceString)
+        throw e
     } finally {
       out.close()
     }

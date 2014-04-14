@@ -91,6 +91,7 @@ object CoinexBuild extends Build {
       "org.slf4s" %% "slf4s-api" % "1.7.6",
       "io.spray" %%  "spray-json" % "1.2.5",
       "org.json4s" %% "json4s-native" % "3.2.7",
+      "org.json4s" %% "json4s-ext" % "3.2.7",
       "com.google.guava" % "guava" % "16.0.1",
       "org.mongodb" %% "casbah" % "2.6.5",
       "com.twitter" %% "util-eval" % "6.12.1",
