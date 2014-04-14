@@ -53,7 +53,7 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
 
   val mailer = routerFor(ConstantRole.mailer <<)
 
-  val robotMetricsView = routerFor(metrics_view<<)
+  val metricsView = routerFor(metrics_view<<)
 
   private def routerForSingleton(name: String) = system.actorOf(
     ClusterSingletonProxy.defaultProps("/user/" + name + "/singleton", name),

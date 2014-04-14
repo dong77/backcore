@@ -60,7 +60,7 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: DoSendEmail => routers.mailer forward m
 
       // MetricsView
-      case QueryMetrics => routers.robotMetricsView forward QueryMetrics
+      case QueryMetrics => routers.metricsView forward QueryMetrics
 
       // Misc Queries
       case m: QueryTransaction => routers.transaction_reader forward m

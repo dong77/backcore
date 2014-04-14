@@ -46,7 +46,7 @@ class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor with Proce
 
     case ActivateRobotsNow =>
       if (recoveryFinished) {
-        routers.robotMetricsView.ask(
+        routers.metricsView.ask(
           QueryMetrics).mapTo[Metrics] foreach { metrics =>
             self ! Persistent(DoUpdateMetrics(metrics))
           }
