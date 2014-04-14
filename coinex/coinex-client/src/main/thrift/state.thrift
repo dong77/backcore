@@ -22,6 +22,11 @@ typedef data.RedeliverFilters      RedeliverFilters
 typedef data.ChartTimeDimension    ChartTimeDimension
 typedef data.CandleDataItem        CandleDataItem
 typedef data.TMetricsObserver      TMetricsObserver
+typedef data.MarketPrice           MarketPrice
+typedef data.TimePrice             TimePrice
+typedef data.CashAccount           CashAccount
+typedef data.Currency              Currency
+
 
 struct TUserState {
     1: map<i64, UserProfile> profileMap
@@ -65,9 +70,9 @@ struct TCandleDataState {
     2: map<ChartTimeDimension, map<i64, CandleDataItem>> reverseCandleMap
 }
 
-struct TAccountHistoryState {
-    1: map<i64, map<i64, UserAccount>> assetMap
-    2: map<i64, map<MarketSide, double>> currencyMap
+struct TAssetState {
+    1: map<i64, map<i64, map<Currency, i64>>> userAssetMap
+    2: map<MarketSide, map<i64, double>> marketPriceMap
 }
 
 struct TSimpleState {

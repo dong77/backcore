@@ -23,6 +23,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cFee = JsonScalaCodec(Fee)
   lazy val _cMarketDepth = JsonScalaCodec(MarketDepth)
   lazy val _cMarketDepthItem = JsonScalaCodec(MarketDepthItem)
+  lazy val _cMarketPrice = JsonScalaCodec(MarketPrice)
   lazy val _cMarketSide = JsonScalaCodec(MarketSide)
   lazy val _cMetrics = JsonScalaCodec(Metrics)
   lazy val _cMetricsByMarket = JsonScalaCodec(MetricsByMarket)
@@ -37,9 +38,11 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cTMetricsObserver = JsonScalaCodec(TMetricsObserver)
   lazy val _cTStackQueue = JsonScalaCodec(TStackQueue)
   lazy val _cTWindowQueue = JsonScalaCodec(TWindowQueue)
+  lazy val _cTimePrice = JsonScalaCodec(TimePrice)
   lazy val _cTransaction = JsonScalaCodec(Transaction)
   lazy val _cTransactionItem = JsonScalaCodec(TransactionItem)
   lazy val _cUserAccount = JsonScalaCodec(UserAccount)
+  lazy val _cUserAsset = JsonScalaCodec(UserAsset)
   lazy val _cUserLogsState = JsonScalaCodec(UserLogsState)
   lazy val _cUserProfile = JsonScalaCodec(UserProfile)
   lazy val _cWithdrawal = JsonScalaCodec(Withdrawal)
@@ -76,6 +79,8 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cQueryAccountResult = JsonScalaCodec(QueryAccountResult)
   lazy val _cQueryApiSecrets = JsonScalaCodec(QueryApiSecrets)
   lazy val _cQueryApiSecretsResult = JsonScalaCodec(QueryApiSecretsResult)
+  lazy val _cQueryAsset = JsonScalaCodec(QueryAsset)
+  lazy val _cQueryAssetResult = JsonScalaCodec(QueryAssetResult)
   lazy val _cQueryCandleData = JsonScalaCodec(QueryCandleData)
   lazy val _cQueryCandleDataResult = JsonScalaCodec(QueryCandleDataResult)
   lazy val _cQueryDeposit = JsonScalaCodec(QueryDeposit)
@@ -104,14 +109,13 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cUpdateUserProfileSucceeded = JsonScalaCodec(UpdateUserProfileSucceeded)
   lazy val _cValidatePasswordResetToken = JsonScalaCodec(ValidatePasswordResetToken)
   lazy val _cVerifyGoogleAuthCode = JsonScalaCodec(VerifyGoogleAuthCode)
-  lazy val _cTAccountHistoryState = JsonScalaCodec(TAccountHistoryState)
   lazy val _cTAccountState = JsonScalaCodec(TAccountState)
   lazy val _cTApiSecretState = JsonScalaCodec(TApiSecretState)
+  lazy val _cTAssetState = JsonScalaCodec(TAssetState)
   lazy val _cTCandleDataState = JsonScalaCodec(TCandleDataState)
   lazy val _cTExportToMongoState = JsonScalaCodec(TExportToMongoState)
   lazy val _cTMarketDepthState = JsonScalaCodec(TMarketDepthState)
   lazy val _cTMarketState = JsonScalaCodec(TMarketState)
-  lazy val _cTMetricsState = JsonScalaCodec(TMetricsState)
   lazy val _cTSimpleState = JsonScalaCodec(TSimpleState)
   lazy val _cTUserState = JsonScalaCodec(TUserState)
 
@@ -125,6 +129,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: Fee => _cFee(m)
     case m: MarketDepth => _cMarketDepth(m)
     case m: MarketDepthItem => _cMarketDepthItem(m)
+    case m: MarketPrice => _cMarketPrice(m)
     case m: MarketSide => _cMarketSide(m)
     case m: Metrics => _cMetrics(m)
     case m: MetricsByMarket => _cMetricsByMarket(m)
@@ -139,9 +144,11 @@ class ThriftJsonSerializer extends Serializer {
     case m: TMetricsObserver => _cTMetricsObserver(m)
     case m: TStackQueue => _cTStackQueue(m)
     case m: TWindowQueue => _cTWindowQueue(m)
+    case m: TimePrice => _cTimePrice(m)
     case m: Transaction => _cTransaction(m)
     case m: TransactionItem => _cTransactionItem(m)
     case m: UserAccount => _cUserAccount(m)
+    case m: UserAsset => _cUserAsset(m)
     case m: UserLogsState => _cUserLogsState(m)
     case m: UserProfile => _cUserProfile(m)
     case m: Withdrawal => _cWithdrawal(m)
@@ -178,6 +185,8 @@ class ThriftJsonSerializer extends Serializer {
     case m: QueryAccountResult => _cQueryAccountResult(m)
     case m: QueryApiSecrets => _cQueryApiSecrets(m)
     case m: QueryApiSecretsResult => _cQueryApiSecretsResult(m)
+    case m: QueryAsset => _cQueryAsset(m)
+    case m: QueryAssetResult => _cQueryAssetResult(m)
     case m: QueryCandleData => _cQueryCandleData(m)
     case m: QueryCandleDataResult => _cQueryCandleDataResult(m)
     case m: QueryDeposit => _cQueryDeposit(m)
@@ -206,14 +215,13 @@ class ThriftJsonSerializer extends Serializer {
     case m: UpdateUserProfileSucceeded => _cUpdateUserProfileSucceeded(m)
     case m: ValidatePasswordResetToken => _cValidatePasswordResetToken(m)
     case m: VerifyGoogleAuthCode => _cVerifyGoogleAuthCode(m)
-    case m: TAccountHistoryState => _cTAccountHistoryState(m)
     case m: TAccountState => _cTAccountState(m)
     case m: TApiSecretState => _cTApiSecretState(m)
+    case m: TAssetState => _cTAssetState(m)
     case m: TCandleDataState => _cTCandleDataState(m)
     case m: TExportToMongoState => _cTExportToMongoState(m)
     case m: TMarketDepthState => _cTMarketDepthState(m)
     case m: TMarketState => _cTMarketState(m)
-    case m: TMetricsState => _cTMetricsState(m)
     case m: TSimpleState => _cTSimpleState(m)
     case m: TUserState => _cTUserState(m)
 
@@ -231,6 +239,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[Fee.Immutable] => _cFee.invert(bytes).get
     case Some(c) if c == classOf[MarketDepth.Immutable] => _cMarketDepth.invert(bytes).get
     case Some(c) if c == classOf[MarketDepthItem.Immutable] => _cMarketDepthItem.invert(bytes).get
+    case Some(c) if c == classOf[MarketPrice.Immutable] => _cMarketPrice.invert(bytes).get
     case Some(c) if c == classOf[MarketSide.Immutable] => _cMarketSide.invert(bytes).get
     case Some(c) if c == classOf[Metrics.Immutable] => _cMetrics.invert(bytes).get
     case Some(c) if c == classOf[MetricsByMarket.Immutable] => _cMetricsByMarket.invert(bytes).get
@@ -245,9 +254,11 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[TMetricsObserver.Immutable] => _cTMetricsObserver.invert(bytes).get
     case Some(c) if c == classOf[TStackQueue.Immutable] => _cTStackQueue.invert(bytes).get
     case Some(c) if c == classOf[TWindowQueue.Immutable] => _cTWindowQueue.invert(bytes).get
+    case Some(c) if c == classOf[TimePrice.Immutable] => _cTimePrice.invert(bytes).get
     case Some(c) if c == classOf[Transaction.Immutable] => _cTransaction.invert(bytes).get
     case Some(c) if c == classOf[TransactionItem.Immutable] => _cTransactionItem.invert(bytes).get
     case Some(c) if c == classOf[UserAccount.Immutable] => _cUserAccount.invert(bytes).get
+    case Some(c) if c == classOf[UserAsset.Immutable] => _cUserAsset.invert(bytes).get
     case Some(c) if c == classOf[UserLogsState.Immutable] => _cUserLogsState.invert(bytes).get
     case Some(c) if c == classOf[UserProfile.Immutable] => _cUserProfile.invert(bytes).get
     case Some(c) if c == classOf[Withdrawal.Immutable] => _cWithdrawal.invert(bytes).get
@@ -284,6 +295,8 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[QueryAccountResult.Immutable] => _cQueryAccountResult.invert(bytes).get
     case Some(c) if c == classOf[QueryApiSecrets.Immutable] => _cQueryApiSecrets.invert(bytes).get
     case Some(c) if c == classOf[QueryApiSecretsResult.Immutable] => _cQueryApiSecretsResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryAsset.Immutable] => _cQueryAsset.invert(bytes).get
+    case Some(c) if c == classOf[QueryAssetResult.Immutable] => _cQueryAssetResult.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleData.Immutable] => _cQueryCandleData.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleDataResult.Immutable] => _cQueryCandleDataResult.invert(bytes).get
     case Some(c) if c == classOf[QueryDeposit.Immutable] => _cQueryDeposit.invert(bytes).get
@@ -312,14 +325,13 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[UpdateUserProfileSucceeded.Immutable] => _cUpdateUserProfileSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ValidatePasswordResetToken.Immutable] => _cValidatePasswordResetToken.invert(bytes).get
     case Some(c) if c == classOf[VerifyGoogleAuthCode.Immutable] => _cVerifyGoogleAuthCode.invert(bytes).get
-    case Some(c) if c == classOf[TAccountHistoryState.Immutable] => _cTAccountHistoryState.invert(bytes).get
     case Some(c) if c == classOf[TAccountState.Immutable] => _cTAccountState.invert(bytes).get
     case Some(c) if c == classOf[TApiSecretState.Immutable] => _cTApiSecretState.invert(bytes).get
+    case Some(c) if c == classOf[TAssetState.Immutable] => _cTAssetState.invert(bytes).get
     case Some(c) if c == classOf[TCandleDataState.Immutable] => _cTCandleDataState.invert(bytes).get
     case Some(c) if c == classOf[TExportToMongoState.Immutable] => _cTExportToMongoState.invert(bytes).get
     case Some(c) if c == classOf[TMarketDepthState.Immutable] => _cTMarketDepthState.invert(bytes).get
     case Some(c) if c == classOf[TMarketState.Immutable] => _cTMarketState.invert(bytes).get
-    case Some(c) if c == classOf[TMetricsState.Immutable] => _cTMetricsState.invert(bytes).get
     case Some(c) if c == classOf[TSimpleState.Immutable] => _cTSimpleState.invert(bytes).get
     case Some(c) if c == classOf[TUserState.Immutable] => _cTUserState.invert(bytes).get
 

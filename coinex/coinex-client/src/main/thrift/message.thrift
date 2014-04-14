@@ -33,6 +33,8 @@ typedef data.TransactionItem       TransactionItem
 typedef data.CandleData            CandleData
 typedef data.ChartTimeDimension    ChartTimeDimension
 typedef data.QueryMarketSide       QueryMarketSide
+typedef data.UserAsset             UserAsset
+typedef data.MarketPrice           MarketPrice
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -150,3 +152,7 @@ typedef data.QueryMarketSide       QueryMarketSide
 ////////// WithdrawalQuery
 /* Q    */ struct QueryWithdrawal                     {1: optional i64 uid, 2: optional Currency currency, 3: optional TransferStatus status,  4: optional SpanCursor spanCur, 5: Cursor cur, 6: bool getCount}
 /* R    */ struct QueryWithdrawalResult               {1: list<Withdrawal> withdrawals, 2: i64 count}
+
+////////// AssetQuery
+/* Q    */ struct QueryAsset                          {1: i64 uid, 2: i64 from, 3: i64 to}
+/* R    */ struct QueryAssetResult                    {1: map<i64, UserAsset> userAssets, 2: MarketPrice marketPrice}

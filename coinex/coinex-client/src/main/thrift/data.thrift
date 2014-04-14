@@ -322,3 +322,16 @@ struct TMetricsObserver {
     7: optional double lastPrice
     8: i64 volumeMaintainer
 }
+
+
+struct TimePrice {
+    1: map<i64, double> timePriceMap
+}
+
+struct UserAsset {
+    1: map<Currency, i64> currencyMap
+}
+
+struct MarketPrice {
+    1: map<MarketSide, TimePrice> marketPriceMap
+}
