@@ -4,13 +4,12 @@
 
 package com.coinport.coinex.dw
 
-import org.specs2.mutable._
 import com.coinport.coinex.data._
 import com.mongodb.casbah._
-import com.coinport.coinex.common.EmbeddedMongoForTest
+import com.coinport.coinex.common.EmbeddedMongoForTestWithBF
 
-class DepositWithdrawSpec extends Specification with EmbeddedMongoForTest {
-  step(embeddedMongoStartup())
+class DepositWithdrawSpec extends EmbeddedMongoForTestWithBF {
+  //  step(embeddedMongoStartup())
 
   class DWClass(val db: MongoDB) extends DepositWithdrawBehavior
 
@@ -25,24 +24,24 @@ class DepositWithdrawSpec extends Specification with EmbeddedMongoForTest {
       seq.foreach(d => dw.deposits.put(d))
 
       var q = QueryDeposit(cur = Cursor(0, 10), getCount = true)
-      dw.deposits.count(dw.deposits.getQueryDBObject(q)) mustEqual 4
+      dw.deposits.count(dw.deposits.getQueryDBObject(q)) should be(4)
 
       q = QueryDeposit(uid = Some(1), cur = Cursor(0, 10), getCount = true)
-      dw.deposits.count(dw.deposits.getQueryDBObject(q)) mustEqual 2
+      dw.deposits.count(dw.deposits.getQueryDBObject(q)) should be(2)
       q = QueryDeposit(uid = Some(1), cur = Cursor(0, 10), getCount = false)
-      dw.deposits.find(dw.deposits.getQueryDBObject(q), 0, 10).map(_.id) mustEqual Seq(2, 1)
+      dw.deposits.find(dw.deposits.getQueryDBObject(q), 0, 10).map(_.id) should equal(Seq(2, 1))
 
       q = QueryDeposit(uid = Some(1), currency = Some(Currency.Rmb), cur = Cursor(0, 10), getCount = true)
-      dw.deposits.count(dw.deposits.getQueryDBObject(q)) mustEqual 1
+      dw.deposits.count(dw.deposits.getQueryDBObject(q)) should be(1)
       q = QueryDeposit(uid = Some(1), currency = Some(Currency.Rmb), cur = Cursor(0, 10), getCount = false)
-      dw.deposits.find(dw.deposits.getQueryDBObject(q), 0, 10).map(_.id) mustEqual Seq(1)
+      dw.deposits.find(dw.deposits.getQueryDBObject(q), 0, 10).map(_.id) should equal(Seq(1))
 
       q = QueryDeposit(spanCur = Some(SpanCursor(300, 200)), cur = Cursor(0, 10), getCount = true)
-      dw.deposits.count(dw.deposits.getQueryDBObject(q)) mustEqual 2
+      dw.deposits.count(dw.deposits.getQueryDBObject(q)) should be(2)
       q = QueryDeposit(spanCur = Some(SpanCursor(300, 200)), cur = Cursor(0, 10), getCount = true)
-      dw.deposits.find(dw.deposits.getQueryDBObject(q), 0, 10).map(_.id) mustEqual Seq(3, 2)
+      dw.deposits.find(dw.deposits.getQueryDBObject(q), 0, 10).map(_.id) should equal(Seq(3, 2))
     }
   }
 
-  step(embeddedMongoShutdown())
+  //  step(embeddedMongoShutdown())
 }

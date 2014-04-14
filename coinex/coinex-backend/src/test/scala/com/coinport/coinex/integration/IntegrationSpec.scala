@@ -28,6 +28,7 @@ final class Environment extends Object with EmbeddedMongoForTest {
 
   Thread.sleep(2000)
   val client = system.actorOf(Props(new Coinex(routers)))
+
 }
 
 abstract class IntegrationSpec(val env: Environment) extends TestKit(env.system)

@@ -10,6 +10,7 @@ import de.flapdoodle.embed.process.io.{ NullProcessor, Processors }
 import de.flapdoodle.embed.process.io.directories.FixedPath
 import de.flapdoodle.embed.process.runtime.Network
 import com.mongodb.casbah.MongoConnection
+import org.scalatest.{ Matchers, WordSpecLike, BeforeAndAfterAll, Suite }
 
 trait EmbeddedMongoForTest {
   lazy val host = "localhost"
@@ -57,11 +58,21 @@ trait EmbeddedMongoForTest {
 
   def embeddedMongoShutdown() {
     try {
-      connection.close()
-      mongodExe.stop()
+      //      connection.close()
       mongod.stop()
+      mongodExe.stop()
     } catch {
       case e: Throwable =>
     }
   }
 }
+
+trait EmbeddedMongoForTestWithBF extends EmbeddedMongoForTest with WordSpecLike with Matchers with BeforeAndAfterAll with Suite {
+  override def beforeAll() {
+    super.embeddedMongoStartup()
+  }
+  override def afterAll() {
+    super.embeddedMongoShutdown()
+  }
+}
+

@@ -14,9 +14,9 @@ class DepositWithdrawIntegrationSpec extends IntegrationSpec(new Environment) {
       val deposit = Deposit(1, 10000, Rmb, 500000000L, TransferStatus.Pending)
       client ! DoRequestCashDeposit(deposit)
       val RequestCashDepositSucceeded(d) = receiveOne(4 seconds)
-      d.status shouldEqual TransferStatus.Pending
-      d.created shouldNot (be(None))
-      d.id shouldBe 0L
+      d.status should be(TransferStatus.Pending)
+      d.created shouldNot be(None)
+      d.id should be(0L)
       Thread.sleep(1000)
     }
   }

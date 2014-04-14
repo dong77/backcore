@@ -13,7 +13,10 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 // Filter out ClusterHeartbeat messages
 class LogFilter extends Filter[ILoggingEvent] {
   def decide(event: ILoggingEvent) = {
-    if (event.getLoggerName == "akka.cluster.ClusterHeartbeatSender") FilterReply.DENY
-    else FilterReply.ACCEPT
+    event.getLoggerName() match {
+      case "akka.cluster.ClusterHeartbeatSender" => FilterReply.DENY
+      case "org.hbase.async.RegionClient" => FilterReply.DENY
+      case _ => FilterReply.ACCEPT
+    }
   }
 }
