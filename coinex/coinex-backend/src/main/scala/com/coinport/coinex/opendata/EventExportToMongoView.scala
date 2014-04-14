@@ -17,18 +17,21 @@ abstract class EventExportToMongoView(db: MongoDB, pid: String) extends View wit
   override val viewId = pid + "_export"
   val manager = new EventExportToMongoManager
 
-  val collection = db(pid + "_events")
+  val eventColl = db(pid + "_events")
+  val metaColl = db(pid + "_metadata")
+
   def shouldExport(event: AnyRef): Boolean
 
   def receive = LoggingReceive {
     case cmd: TakeSnapshotNow => takeSnapshot(cmd) {
       saveSnapshot(manager.getSnapshot)
       log.info("===== export data generated new snapshot: " + manager.getSnapshot)
+      metaColl += manager.getSnapshotAsJSon
       manager.increaseSnapshotIndex()
     }
 
     case Persistent(m: AnyRef, _) if shouldExport(m) =>
-      collection += manager.generateJson(m)
+      eventColl += manager.generateJson(m)
 
     case m: QueryExportToMongoState => sender ! manager.getSnapshot
   }
@@ -43,6 +46,11 @@ class EventExportToMongoManager extends Manager[TExportToMongoState] {
 
   def increaseSnapshotIndex() = {
     state = state.copy(snapshotIndex = state.snapshotIndex + 1, lastSnapshotTimestamp = System.currentTimeMillis)
+  }
+
+  def getSnapshotAsJSon = {
+    val data = JSON.parse(new String(serializer.toBinary(state)))
+    MongoDBObject("_id" -> state.snapshotIndex, "metadata" -> data)
   }
 
   def generateJson(m: AnyRef) = {
