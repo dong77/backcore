@@ -19,6 +19,19 @@ class MarketManagerSpec extends Specification {
   val makerSide = takerSide.reverse
 
   "MarketManager" should {
+    "fix the dust bug from robot test" in {
+      val manager = new MarketManager(Btc ~> Rmb)
+      manager.addOrder(makerSide, Order(-6771488127296557565L, 32, 21930, Some(1.1499999999999999E-4), None, Some(1397457555749L), None, Some(-6771488127296557565L), None, 0))
+      manager.addOrder(takerSide, Order(-245561917658914311L, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 0)) mustEqual OrderSubmitted(
+        OrderInfo(MarketSide(Btc, Rmb), Order(-245561917658914311L, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 0), 2, 17391, PartiallyExecuted, Some(1397457555805L)),
+        List(Transaction(330000, 1397457555805L, MarketSide(Btc, Rmb), OrderUpdate(Order(-245561917658914311L, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 0),
+          Order(-245561917658914311L, 33, 6, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 17391)),
+          OrderUpdate(Order(-6771488127296557565L, 32, 21930, Some(1.1499999999999999E-4), None, Some(1397457555749L), None, Some(-6771488127296557565L), None, 0), Order(-6771488127296557565L, 32, 4539, Some(1.1499999999999999E-4), None, Some(1397457555749L), None, Some(-6771488127296557565L), None, 2)), None)))
+      manager().orderMap mustEqual Map(33 -> Order(-245561917658914311L, 33, 6, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 17391))
+      manager().orderPool(makerSide) mustEqual EmptyOrderPool
+      manager().orderPool(takerSide) mustEqual SortedSet(Order(-245561917658914311L, 33, 6, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 17391))
+    }
+
     "match limit-price order market-price orders can't exists in the market" in {
       val manager = new MarketManager(Btc ~> Rmb)
       val mpo1 = Order(userId = 1, id = 1, price = None, quantity = 30000) // higher priority
@@ -66,8 +79,8 @@ class MarketManagerSpec extends Specification {
         OrderInfo(takerSide, taker, 10, 45000, FullyExecuted, Some(0)),
         Seq(Transaction(30000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker)))
 
-      manager().orderMap mustEqual Map(1 -> updatedMaker)
-      manager().orderPool(makerSide) mustEqual SortedSet(updatedMaker)
+      manager().orderMap mustEqual Map()
+      manager().orderPool(makerSide) mustEqual EmptyOrderPool
       manager().orderPool(takerSide) mustEqual EmptyOrderPool
     }
 

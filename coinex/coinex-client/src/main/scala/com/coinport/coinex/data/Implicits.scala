@@ -32,18 +32,21 @@ class RichOrder(raw: Order) {
   def vprice = raw.price.getOrElse(.0)
 
   def maxOutAmount(price: Double): Long = raw.takeLimit match {
-    case Some(limit) if limit / price < raw.quantity => Math.round(limit / price)
+    case Some(limit) if limit / price < raw.quantity => (limit / price).toLong
     case _ => raw.quantity
   }
 
   def maxInAmount(price: Double): Long = raw.takeLimit match {
     case Some(limit) if limit < raw.quantity * price => limit
-    case _ => Math.round(raw.quantity * price)
+    case _ => (raw.quantity * price).toLong
   }
 
-  def hitTakeLimit = raw.takeLimit == Some(0)
+  def hitTakeLimit =
+    raw.takeLimit != None && (if (raw.price != None) raw.takeLimit.get < vprice else raw.takeLimit == Some(0))
 
-  def isFullyExecuted: Boolean = raw.quantity == 0 || hitTakeLimit
+  def soldOut = if (raw.price != None) raw.quantity * vprice < 1 else raw.quantity == 0
+
+  def isFullyExecuted: Boolean = soldOut || hitTakeLimit
 
   def -->(another: Order) = OrderUpdate(raw, another)
 }

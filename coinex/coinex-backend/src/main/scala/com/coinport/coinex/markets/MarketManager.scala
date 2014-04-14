@@ -80,7 +80,7 @@ class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
   @tailrec
   private final def addOrderRec(makerSide: MarketSide, takerSide: MarketSide, takerOrder: Order,
     market: MarketState, totalOutAmount: Long, totalInAmount: Long, txsBuffer: ListBuffer[Transaction],
-    txId: Long): ( /*totalOutAmount*/ Long, /*totalInAmount*/ Long, /*updatedSellOrder*/ Order, /*after order match*/ MarketState) = {
+    txId: Long): ( /*totalOutAmount*/ Long, /*totalInAmount*/ Long, /*updatedTaker*/ Order, /*after order match*/ MarketState) = {
     val makerOrderOption = market.orderPool(makerSide).headOption
     if (makerOrderOption == None || makerOrderOption.get.vprice * takerOrder.vprice > 1) {
       // Return point. Market-price order doesn't pending
@@ -92,21 +92,21 @@ class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
       val lvOutAmount = Math.min(takerOrder.maxOutAmount(price), makerOrder.maxInAmount(1 / price))
       val lvInAmount = Math.round(lvOutAmount * price)
 
-      val updatedSellOrder = takerOrder.copy(quantity = takerOrder.quantity - lvOutAmount,
+      val updatedTaker = takerOrder.copy(quantity = takerOrder.quantity - lvOutAmount,
         takeLimit = takerOrder.takeLimit.map(_ - lvInAmount), inAmount = takerOrder.inAmount + lvInAmount)
-      val updatedBuyOrder = makerOrder.copy(quantity = makerOrder.quantity - lvInAmount,
+      val updatedMaker = makerOrder.copy(quantity = makerOrder.quantity - lvInAmount,
         takeLimit = makerOrder.takeLimit.map(_ - lvOutAmount), inAmount = makerOrder.inAmount + lvOutAmount)
       txsBuffer += Transaction(txId, takerOrder.timestamp.getOrElse(0), takerSide,
-        takerOrder --> updatedSellOrder, makerOrder --> updatedBuyOrder)
+        takerOrder --> updatedTaker, makerOrder --> updatedMaker)
 
       val leftMarket = market.removeOrder(makerSide, makerOrder.id)
-      if (updatedSellOrder.isFullyExecuted) {
+      if (updatedTaker.isFullyExecuted) {
         // return point
-        (totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, updatedSellOrder, if (!updatedBuyOrder.isFullyExecuted)
-          leftMarket.addOrder(makerSide, updatedBuyOrder) else leftMarket)
+        (totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, updatedTaker, if (!updatedMaker.isFullyExecuted)
+          leftMarket.addOrder(makerSide, updatedMaker) else leftMarket)
       } else {
         // return point
-        addOrderRec(makerSide, takerSide, updatedSellOrder, leftMarket,
+        addOrderRec(makerSide, takerSide, updatedTaker, leftMarket,
           totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, txsBuffer, txId + 1)
       }
     }
