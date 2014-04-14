@@ -159,7 +159,8 @@ trait AccountManagerBehavior extends CountFeeSupport {
       // need refund the rest locked currency for the market-price order
       val order = originOrderInfo.order
       originOrderInfo.status match {
-        case OrderStatus.MarketAutoCancelled | OrderStatus.MarketAutoPartiallyCancelled =>
+        case OrderStatus.MarketAutoCancelled | OrderStatus.MarketAutoPartiallyCancelled |
+          OrderStatus.FullyExecuted if (order.quantity > 0) =>
           manager.refund(order.userId, side.outCurrency, order.quantity - originOrderInfo.outAmount)
         case _ =>
       }
