@@ -22,6 +22,7 @@ class AccountView(val feeConfig: FeeConfig) extends ExtendedView with AccountMan
 
   def receive = LoggingReceive {
     case Persistent(msg, _) => updateState(msg)
+    case QueryAccount(-1L) => sender ! QueryAccountResult(manager.aggregation)
     case QueryAccount(userId) => sender ! QueryAccountResult(manager.getUserAccounts(userId))
   }
 }

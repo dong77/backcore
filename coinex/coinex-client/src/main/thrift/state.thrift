@@ -38,6 +38,7 @@ struct TUserState {
 struct TAccountState {
     1: map<i64, UserAccount> userAccountsMap
     2: RedeliverFilters filters
+    3: UserAccount aggregation
 }
 
 struct TMarketState {

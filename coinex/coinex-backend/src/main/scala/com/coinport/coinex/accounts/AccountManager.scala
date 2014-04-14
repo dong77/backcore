@@ -24,13 +24,15 @@ import Implicits._
 class AccountManager extends Manager[TAccountState] {
   // Internal mutable state ----------------------------------------------
   private val accountMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]
+  var aggregation = UserAccount(-1L, Map.empty[Currency, CashAccount])
 
   // Thrift conversions     ----------------------------------------------
-  def getSnapshot = TAccountState(accountMap.clone, getFiltersSnapshot)
+  def getSnapshot = TAccountState(accountMap.clone, getFiltersSnapshot, aggregation)
 
   def loadSnapshot(snapshot: TAccountState) = {
     accountMap.clear
     accountMap ++= snapshot.userAccountsMap
+    aggregation = snapshot.aggregation
     loadFiltersSnapshot(snapshot.filters)
   }
 
@@ -68,6 +70,10 @@ class AccountManager extends Manager[TAccountState] {
     val updated = current + adjustment
     assert(updated.isValid)
     setUserCashAccount(userId, updated)
+
+    val updateAggregation = aggregation.cashAccounts.getOrElse(adjustment.currency, CashAccount(adjustment.currency, 0, 0, 0)) + adjustment
+    assert(updateAggregation.isValid)
+    aggregation = aggregation.copy(cashAccounts = aggregation.cashAccounts + (adjustment.currency -> updateAggregation))
   }
 
   def getUserAccounts(userId: Long): UserAccount =
