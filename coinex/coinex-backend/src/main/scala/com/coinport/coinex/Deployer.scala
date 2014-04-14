@@ -80,9 +80,6 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploy(Props(new MetricsView with StackableView[TMetricsState, MetricsManager]), metrics_view <<)
     deploy(Props(new ApiAuthView(apiAuthSecret)), api_auth_view <<)
 
-    deploy(Props(new DepositWithdrawEventExportView(dbForEventExport) with StackableView[TExportToMongoState, EventExportToMongoManager]), dw_processor_event_export <<)
-    deploy(Props(new MarketUpdateEventExportView(dbForEventExport) with StackableView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export <<)
-
     deploy(Props(new TransactionReader(dbForViews)), transaction_mongo_reader <<)
     deploy(Props(new OrderReader(dbForViews)), order_mongo_reader <<)
     deploy(Props(new DepositWithdrawReader(dbForViews)), dw_mongo_reader <<)
@@ -104,6 +101,9 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploySingleton(Props(new ApiAuthProcessor(apiAuthSecret) with StackableCmdsourced[TApiSecretState, ApiAuthManager]), api_auth_processor <<)
     deploySingleton(Props(new RobotProcessor(routers) with StackableCmdsourced[RobotState, RobotManager]), robot_processor <<)
     deploySingleton(Props(new DepositWithdrawProcessor(dbForViews, routers.accountProcessor.path) with StackableEventsourced[TSimpleState, SimpleManager]), dw_processor <<)
+
+    deploySingleton(Props(new DepositWithdrawEventExportView(dbForEventExport) with StackableView[TExportToMongoState, EventExportToMongoManager]), dw_processor_event_export <<)
+    deploySingleton(Props(new MarketUpdateEventExportView(dbForEventExport) with StackableView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export <<)
 
     deploySingleton(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer <<)
     deploySingleton(Props(new OrderWriter(dbForViews)), order_mongo_writer <<)

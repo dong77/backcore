@@ -15,7 +15,7 @@ class DepositWithdrawSpec extends EmbeddedMongoForTestWithBF {
 
   "DepositWithdrawSpec" should {
     val dw = new DWClass(database)
-    "can save deposits and query them" in {
+    "be able to save deposits and query them" in {
       val d1 = Deposit(id = 1, userId = 1, currency = Currency.Rmb, amount = 1000, created = Some(100), updated = Some(800))
       val d2 = Deposit(id = 2, userId = 1, currency = Currency.Btc, amount = 2000, created = Some(200), updated = Some(800))
       val d3 = Deposit(id = 3, userId = 2, currency = Currency.Rmb, amount = 1000, created = Some(300), updated = Some(800))

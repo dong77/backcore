@@ -120,6 +120,7 @@ object MapSerializer extends Serializer[Map[Any, Any]] {
     }).toList)
   }
 
+  // TODO(d): https://github.com/json4s/json4s/blob/master/tests/src/test/scala/org/json4s/native/SerializationExamples.scala
   def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), Map[Any, Any]] = {
     sys.error("Not interested.")
   }
@@ -127,7 +128,7 @@ object MapSerializer extends Serializer[Map[Any, Any]] {
 
 object %s {
 %s
-  implicit val formats = Serialization.formats(NoTypeHints) + MapSerializer%s
+  implicit val formats = Serialization.formats(NoTypeHints)%s
 }
 """
 

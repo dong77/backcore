@@ -24,6 +24,7 @@ object MapSerializer extends Serializer[Map[Any, Any]] {
           case ks: Direction => ks.name
           case ks: EmailType => ks.name
           case ks: ErrorCode => ks.name
+          case ks: ExportedEventType => ks.name
           case ks: OrderStatus => ks.name
           case ks: TransferStatus => ks.name
           case ks: UserStatus => ks.name
@@ -33,6 +34,7 @@ object MapSerializer extends Serializer[Map[Any, Any]] {
     }).toList)
   }
 
+  // TODO(d): https://github.com/json4s/json4s/blob/master/tests/src/test/scala/org/json4s/native/SerializationExamples.scala
   def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), Map[Any, Any]] = {
     sys.error("Not interested.")
   }
@@ -65,6 +67,11 @@ object ThriftEnumJson4sSerialization {
       case x: ErrorCode => JString(x.name)
     }))
 
+  class ExportedEventTypeSerializer extends CustomSerializer[ExportedEventType](format => (
+    { case JString(s) => ExportedEventType.valueOf(s).get }, {
+      case x: ExportedEventType => JString(x.name)
+    }))
+
   class OrderStatusSerializer extends CustomSerializer[OrderStatus](format => (
     { case JString(s) => OrderStatus.valueOf(s).get }, {
       case x: OrderStatus => JString(x.name)
@@ -80,12 +87,13 @@ object ThriftEnumJson4sSerialization {
       case x: UserStatus => JString(x.name)
     }))
 
-  implicit val formats = Serialization.formats(NoTypeHints) + MapSerializer +
+  implicit val formats = Serialization.formats(NoTypeHints) +
     new ChartTimeDimensionSerializer +
     new CurrencySerializer +
     new DirectionSerializer +
     new EmailTypeSerializer +
     new ErrorCodeSerializer +
+    new ExportedEventTypeSerializer +
     new OrderStatusSerializer +
     new TransferStatusSerializer +
     new UserStatusSerializer

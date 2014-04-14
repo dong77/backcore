@@ -85,6 +85,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cQueryCandleDataResult = JsonScalaCodec(QueryCandleDataResult)
   lazy val _cQueryDeposit = JsonScalaCodec(QueryDeposit)
   lazy val _cQueryDepositResult = JsonScalaCodec(QueryDepositResult)
+  lazy val _cQueryExportToMongoState = JsonScalaCodec(QueryExportToMongoState)
   lazy val _cQueryMarketDepth = JsonScalaCodec(QueryMarketDepth)
   lazy val _cQueryMarketDepthResult = JsonScalaCodec(QueryMarketDepthResult)
   lazy val _cQueryOrder = JsonScalaCodec(QueryOrder)
@@ -192,6 +193,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: QueryCandleDataResult => _cQueryCandleDataResult(m)
     case m: QueryDeposit => _cQueryDeposit(m)
     case m: QueryDepositResult => _cQueryDepositResult(m)
+    case m: QueryExportToMongoState => _cQueryExportToMongoState(m)
     case m: QueryMarketDepth => _cQueryMarketDepth(m)
     case m: QueryMarketDepthResult => _cQueryMarketDepthResult(m)
     case m: QueryOrder => _cQueryOrder(m)
@@ -303,6 +305,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[QueryCandleDataResult.Immutable] => _cQueryCandleDataResult.invert(bytes).get
     case Some(c) if c == classOf[QueryDeposit.Immutable] => _cQueryDeposit.invert(bytes).get
     case Some(c) if c == classOf[QueryDepositResult.Immutable] => _cQueryDepositResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryExportToMongoState.Immutable] => _cQueryExportToMongoState.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepth.Immutable] => _cQueryMarketDepth.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepthResult.Immutable] => _cQueryMarketDepthResult.invert(bytes).get
     case Some(c) if c == classOf[QueryOrder.Immutable] => _cQueryOrder.invert(bytes).get

@@ -28,18 +28,20 @@ abstract class EventExportToMongoView(db: MongoDB, pid: String) extends View wit
 
     case Persistent(m: AnyRef, _) if shouldExport(m) =>
       collection += manager.generateJson(m)
+
+    case m: QueryExportToMongoState => sender ! manager.getSnapshot
   }
 }
 
 class EventExportToMongoManager extends Manager[TExportToMongoState] {
-  private var state = TExportToMongoState(0, 0, "0" * 32)
+  private var state = TExportToMongoState(0, 0, "0" * 32, 0)
   private val serializer = new ThriftJsonSerializer
 
   def getSnapshot = state
   def loadSnapshot(snapshot: TExportToMongoState) = state = snapshot
 
   def increaseSnapshotIndex() = {
-    state = state.copy(snapshotIndex = state.snapshotIndex + 1)
+    state = state.copy(snapshotIndex = state.snapshotIndex + 1, lastSnapshotTimestamp = System.currentTimeMillis)
   }
 
   def generateJson(m: AnyRef) = {

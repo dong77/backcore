@@ -63,6 +63,7 @@ struct TExportToMongoState {
     1: i64 snapshotIndex
     2: i64 index
     3: string hash
+    4: i64 lastSnapshotTimestamp
 }
 
 struct TCandleDataState {

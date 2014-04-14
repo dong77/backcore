@@ -93,8 +93,8 @@ trait DepositWithdrawBehavior {
     def getQueryDBObject(q: QueryDeposit): MongoDBObject = {
       var query = MongoDBObject()
       if (q.uid.isDefined) query ++= MongoDBObject(DATA + "." + Deposit.UserIdField.name -> q.uid.get)
-      if (q.currency.isDefined) query ++= MongoDBObject(DATA + "." + Deposit.CurrencyField.name -> q.currency.get.getValue())
-      if (q.status.isDefined) query ++= MongoDBObject(DATA + "." + Deposit.StatusField.name -> q.status.get.getValue())
+      if (q.currency.isDefined) query ++= MongoDBObject(DATA + "." + Deposit.CurrencyField.name -> q.currency.get.name)
+      if (q.status.isDefined) query ++= MongoDBObject(DATA + "." + Deposit.StatusField.name -> q.status.get.name)
       if (q.spanCur.isDefined) query ++= (DATA + "." + Deposit.CreatedField.name $lte q.spanCur.get.from $gte q.spanCur.get.to)
       query
     }
@@ -106,8 +106,8 @@ trait DepositWithdrawBehavior {
     def getQueryDBObject(q: QueryWithdrawal): MongoDBObject = {
       var query = MongoDBObject()
       if (q.uid.isDefined) query ++= MongoDBObject(DATA + "." + Withdrawal.UserIdField.name -> q.uid.get)
-      if (q.currency.isDefined) query ++= MongoDBObject(DATA + "." + Withdrawal.CurrencyField.name -> q.currency.get.getValue())
-      if (q.status.isDefined) query ++= MongoDBObject(DATA + "." + Withdrawal.StatusField.name -> q.status.get.getValue())
+      if (q.currency.isDefined) query ++= MongoDBObject(DATA + "." + Withdrawal.CurrencyField.name -> q.currency.get.name)
+      if (q.status.isDefined) query ++= MongoDBObject(DATA + "." + Withdrawal.StatusField.name -> q.status.get.name)
       if (q.spanCur.isDefined) query ++= (DATA + "." + Withdrawal.CreatedField.name $lte q.spanCur.get.from $gte q.spanCur.get.to)
       query
     }

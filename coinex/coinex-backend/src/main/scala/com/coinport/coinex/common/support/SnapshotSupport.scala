@@ -8,7 +8,7 @@ import akka.actor.ActorLogging
 import java.io.FileOutputStream
 import akka.serialization.SerializationExtension
 import com.mongodb.util.JSON
-import com.coinport.coinex.serializers.ThriftEnumJson4sSerialization
+import com.coinport.coinex.serializers._
 import ThriftEnumJson4sSerialization._
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -18,6 +18,7 @@ import org.json4s.native.JsonMethods._
 
 trait SnapshotSupport extends Actor with ActorLogging {
   implicit val executeContext = context.system.dispatcher
+  implicit val formats = ThriftEnumJson4sSerialization.formats + MapSerializer
   private var cancellable: Cancellable = null
 
   abstract override def preStart() = {

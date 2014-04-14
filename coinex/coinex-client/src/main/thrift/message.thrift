@@ -35,6 +35,7 @@ typedef data.ChartTimeDimension    ChartTimeDimension
 typedef data.QueryMarketSide       QueryMarketSide
 typedef data.UserAsset             UserAsset
 typedef data.MarketPrice           MarketPrice
+typedef data.ExportedEventType     ExportedEventType
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -156,3 +157,8 @@ typedef data.MarketPrice           MarketPrice
 ////////// AssetQuery
 /* Q    */ struct QueryAsset                          {1: i64 uid, 2: i64 from, 3: i64 to}
 /* R    */ struct QueryAssetResult                    {1: map<i64, UserAsset> userAssets, 2: MarketPrice marketPrice}
+
+
+////////// OpenData Query
+/* Q    */ struct QueryExportToMongoState                {1: ExportedEventType eventType}
+/* R              TExportToMongoState */

@@ -3,7 +3,7 @@ package com.coinport.coinex.common.mongo
 import com.mongodb.casbah.Imports._
 import com.coinport.coinex.serializers._
 import com.mongodb.util.JSON
-import com.coinport.coinex.serializers.ThriftEnumJson4sSerialization.formats
+import com.coinport.coinex.serializers.ThriftEnumJson4sSerialization
 import org.json4s.native.Serialization.{ read, write }
 
 sealed trait SimpleMongoCollection[T <: AnyRef] {
@@ -17,8 +17,8 @@ sealed trait SimpleMongoCollection[T <: AnyRef] {
 }
 
 abstract class SimpleJsonMongoCollection[T <: AnyRef, S <: T](implicit man: Manifest[S]) extends SimpleMongoCollection[T] {
-  import ThriftEnumJson4sSerialization._
   import org.json4s.native.Serialization.{ read, write }
+  implicit val formats = ThriftEnumJson4sSerialization.formats
   def get(id: Long) = coll.findOne(MongoDBObject(ID -> id)) map { json => read[S](json.get(DATA).toString) }
   def put(data: T) = coll += MongoDBObject(ID -> extractId(data), DATA -> JSON.parse(write(data)))
 
