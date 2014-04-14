@@ -10,10 +10,11 @@ import com.coinport.coinex.common.ExtendedView
 import akka.event.LoggingReceive
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Implicits._
+import com.coinport.coinex.common.PersistentId._
 
 class AssetView(val feeConfig: FeeConfig) extends ExtendedView {
-  override val processorId = "coinex_ap"
-  override val viewId = "coinex_asset_view"
+  override val processorId = ACCOUNT_PROCESSOR <<
+  override val viewId = USER_ASSET <<
   val manager = new AssetManager()
 
   def receive = LoggingReceive {

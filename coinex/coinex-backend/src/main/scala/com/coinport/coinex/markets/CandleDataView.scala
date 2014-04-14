@@ -14,7 +14,7 @@ import Implicits._
 
 class CandleDataView(market: MarketSide) extends ExtendedView {
   override def processorId = MARKET_UPDATE_PROCESSOR <<
-  override val viewId = CANDEL_DATA_VIEW << market
+  override val viewId = CANDLE_DATA_VIEW << market
   private val manager = new CandleDataManager(market)
 
   def receive = LoggingReceive {
@@ -26,7 +26,7 @@ class CandleDataView(market: MarketSide) extends ExtendedView {
   }
 }
 
-class CandleDataManager(market: MarketSide) extends Manager[CandleDataState] {
+class CandleDataManager(market: MarketSide) extends Manager[TCandleDataState] {
 
   var state = CandleDataState()
 

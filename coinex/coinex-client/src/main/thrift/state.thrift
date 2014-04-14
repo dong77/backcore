@@ -67,7 +67,6 @@ struct TExportToMongoState {
 
 struct TCandleDataState {
     1: map<ChartTimeDimension, map<i64, CandleDataItem>> candleMap
-    2: map<ChartTimeDimension, map<i64, CandleDataItem>> reverseCandleMap
 }
 
 struct TAssetState {
