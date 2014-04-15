@@ -43,7 +43,7 @@ class MarketProcessor(
       if (!manager.isOrderPriceInGoodRange(side, order.price)) {
         sender ! SubmitOrderFailed(side, order, PriceOutOfRange)
         val unfrozen = OrderCancelled(side, order)
-        channelToAccountProcessor ! Deliver(p.withPayload(unfrozen), accountProcessorPath)
+        channelToAccountProcessor forward Deliver(p.withPayload(unfrozen), accountProcessorPath)
       } else {
         persist(m)(updateState)
       }
@@ -57,6 +57,6 @@ class MarketProcessor(
 
     case OrderFundFrozen(side, order: Order) =>
       val orderSubmitted = manager.addOrder(side, order)
-      channelToAccountProcessor ! Deliver(Persistent(orderSubmitted), accountProcessorPath)
+      channelToAccountProcessor forward Deliver(Persistent(orderSubmitted), accountProcessorPath)
   }
 }

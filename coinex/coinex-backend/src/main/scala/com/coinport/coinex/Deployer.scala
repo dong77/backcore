@@ -70,16 +70,16 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     // Deploy views first
     markets foreach { m =>
-      deploy(Props(new MarketDepthView(m)), market_depth_view << m)
-      deploy(Props(new CandleDataView(m)), candle_data_view << m)
+      deploy(Props(new MarketDepthView(m) with StackableView[TMarketDepthState, MarketDepthManager]), market_depth_view << m)
+      deploy(Props(new CandleDataView(m) with StackableView[TCandleDataState, CandleDataManager]), candle_data_view << m)
     }
 
     deploy(Props(new UserView(userManagerSecret)), user_view <<)
     deploy(Props(new UserWriter(dbForViews, userManagerSecret)), user_mongo_writer <<)
     deploy(Props(new AccountView(feeConfig) with StackableView[TAccountState, AccountManager]), account_view <<)
-    deploy(Props(new AssetView), asset_view <<)
+    deploy(Props(new AssetView with StackableView[TAssetState, AssetManager]), asset_view <<)
     deploy(Props(new MetricsView with StackableView[TMetricsState, MetricsManager]), metrics_view <<)
-    deploy(Props(new ApiAuthView(apiAuthSecret)), api_auth_view <<)
+    deploy(Props(new ApiAuthView(apiAuthSecret) with StackableView[TApiSecretState, ApiAuthManager]), api_auth_view <<)
 
     deploy(Props(new TransactionReader(dbForViews)), transaction_mongo_reader <<)
     deploy(Props(new OrderReader(dbForViews)), order_mongo_reader <<)

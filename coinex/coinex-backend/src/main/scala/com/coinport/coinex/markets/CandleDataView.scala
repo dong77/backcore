@@ -18,7 +18,7 @@ class CandleDataView(market: MarketSide) extends ExtendedView {
   override def processorId = MARKET_UPDATE_PROCESSOR <<
   override val viewId = CANDLE_DATA_VIEW << market
 
-  private val manager = new CandleDataManager(market)
+  val manager = new CandleDataManager(market)
 
   def receive = LoggingReceive {
     case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
