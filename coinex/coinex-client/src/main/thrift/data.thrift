@@ -104,6 +104,12 @@ enum ExportedEventType {
     MARKET_EVENT = 1
 }
 
+enum RefundType {
+    DUST = 0
+    HIT_TAKE_LIMIT = 1
+    MARKET_CANCELLED = 2
+}
+
 ///////////////////////////////////////////////////////////////////////
 ////////////////////////// PERSISTENT DATA ////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -147,6 +153,7 @@ struct Order {
     8: optional i64 robotId
     9: optional bool onlyTaker
     10: i64 inAmount = 0
+    11: optional RefundType refund
 }
 
 struct OrderInfo {

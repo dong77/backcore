@@ -23,6 +23,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import Implicits._
 import OrderStatus._
+import RefundType._
 
 class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
 
@@ -64,9 +65,32 @@ class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
       } else if (takerOrder.price == None || takerOrder.onlyTaker.getOrElse(false)) OrderStatus.MarketAutoCancelled
       else OrderStatus.Pending
 
+    val refundType: Option[RefundType] = {
+      if (takerOrder.quantity == 0) {
+        None
+      } else {
+        if (takerOrder.hitTakeLimit) {
+          Some(HitTakeLimit)
+        } else if (takerOrder.isDust) {
+          Some(Dust)
+        } else if (status == MarketAutoPartiallyCancelled || status == MarketAutoCancelled) {
+          Some(MarketCancelled)
+        } else {
+          None
+        }
+      }
+    }
+
+    if (txsBuffer.size != 0 && refundType != None) {
+      val lastTx = txsBuffer.last
+      lastTx.copy(takerUpdate = lastTx.takerUpdate.copy(current = lastTx.takerUpdate.current.copy(refund = refundType)))
+      txsBuffer.trimEnd(1)
+      txsBuffer += lastTx
+    }
+
     val txs = txsBuffer.toSeq
-    val orderInfo = OrderInfo(takerSide, order, totalOutAmount, totalInAmount,
-      status, txs.lastOption.map(_.timestamp))
+    val orderInfo = OrderInfo(takerSide, if (txs.size == 0) order.copy(refund = refundType) else order,
+      totalOutAmount, totalInAmount, status, txs.lastOption.map(_.timestamp))
 
     OrderSubmitted(orderInfo, txs)
   }
@@ -90,24 +114,37 @@ class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
       val makerOrder = makerOrderOption.get
       val price = 1 / makerOrder.vprice
       val lvOutAmount = Math.min(takerOrder.maxOutAmount(price), makerOrder.maxInAmount(1 / price))
-      val lvInAmount = Math.round(lvOutAmount * price)
-
-      val updatedTaker = takerOrder.copy(quantity = takerOrder.quantity - lvOutAmount,
-        takeLimit = takerOrder.takeLimit.map(_ - lvInAmount), inAmount = takerOrder.inAmount + lvInAmount)
-      val updatedMaker = makerOrder.copy(quantity = makerOrder.quantity - lvInAmount,
-        takeLimit = makerOrder.takeLimit.map(_ - lvOutAmount), inAmount = makerOrder.inAmount + lvOutAmount)
-      txsBuffer += Transaction(txId, takerOrder.timestamp.getOrElse(0), takerSide,
-        takerOrder --> updatedTaker, makerOrder --> updatedMaker)
-
-      val leftMarket = market.removeOrder(makerSide, makerOrder.id)
-      if (updatedTaker.isFullyExecuted) {
+      if (lvOutAmount == 0) {
         // return point
-        (totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, updatedTaker, if (!updatedMaker.isFullyExecuted)
-          leftMarket.addOrder(makerSide, updatedMaker) else leftMarket)
+        (totalOutAmount, totalInAmount, takerOrder, market)
       } else {
-        // return point
-        addOrderRec(makerSide, takerSide, updatedTaker, leftMarket,
-          totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, txsBuffer, txId + 1)
+        val lvInAmount = Math.round(lvOutAmount * price)
+
+        val updatedTaker = takerOrder.copy(quantity = takerOrder.quantity - lvOutAmount,
+          takeLimit = takerOrder.takeLimit.map(_ - lvInAmount), inAmount = takerOrder.inAmount + lvInAmount)
+        val updatedMaker = makerOrder.copy(quantity = makerOrder.quantity - lvInAmount,
+          takeLimit = makerOrder.takeLimit.map(_ - lvOutAmount), inAmount = makerOrder.inAmount + lvOutAmount)
+        val refundType: Option[RefundType] = if (updatedMaker.hitTakeLimit) {
+          Some(HitTakeLimit)
+        } else if (updatedMaker.isDust) {
+          Some(Dust)
+        } else {
+          None
+        }
+
+        txsBuffer += Transaction(txId, takerOrder.timestamp.getOrElse(0), takerSide,
+          takerOrder --> updatedTaker, makerOrder --> updatedMaker.copy(refund = refundType))
+
+        val leftMarket = market.removeOrder(makerSide, makerOrder.id)
+        if (updatedMaker.isFullyExecuted) {
+          // return point
+          addOrderRec(makerSide, takerSide, updatedTaker, leftMarket,
+            totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, txsBuffer, txId + 1)
+        } else {
+          // return point
+          (totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, updatedTaker,
+            leftMarket.addOrder(makerSide, updatedMaker))
+        }
       }
     }
   }

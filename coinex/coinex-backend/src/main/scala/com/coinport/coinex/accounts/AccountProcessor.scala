@@ -151,19 +151,12 @@ trait AccountManagerBehavior extends CountFeeSupport {
         tx.fees.getOrElse(Nil) foreach { f =>
           manager.transferFundFromAvailable(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
         }
-        manager.conditionalRefund(takerOrderUpdate.current.isFullyExecuted && takerOrderUpdate.current.quantity > 0)(
-          side.outCurrency, takerOrderUpdate.current)
-        manager.conditionalRefund(makerOrderUpdate.current.isFullyExecuted && makerOrderUpdate.current.quantity > 0)(
-          side.inCurrency, makerOrderUpdate.current)
+        manager.conditionalRefund(takerOrderUpdate.current.refund != None)(side.outCurrency, takerOrderUpdate.current)
+        manager.conditionalRefund(makerOrderUpdate.current.refund != None)(side.inCurrency, makerOrderUpdate.current)
       }
-      // need refund the rest locked currency for the market-price order
       val order = originOrderInfo.order
-      originOrderInfo.status match {
-        case OrderStatus.MarketAutoCancelled | OrderStatus.MarketAutoPartiallyCancelled |
-          OrderStatus.FullyExecuted if (order.quantity > 0) =>
-          manager.refund(order.userId, side.outCurrency, order.quantity - originOrderInfo.outAmount)
-        case _ =>
-      }
+      if (txs.size == 0 && order.refund != None)
+        manager.refund(order.userId, side.outCurrency, order.quantity - originOrderInfo.outAmount)
 
     case OrderCancelled(side, order) =>
       manager.conditionalRefund(true)(side.outCurrency, order)

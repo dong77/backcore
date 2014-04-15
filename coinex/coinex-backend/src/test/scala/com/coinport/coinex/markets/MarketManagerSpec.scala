@@ -12,6 +12,7 @@ import com.coinport.coinex.data.mutable.MarketState._
 import Implicits._
 import Currency._
 import OrderStatus._
+import RefundType._
 
 class MarketManagerSpec extends Specification {
 
@@ -22,11 +23,17 @@ class MarketManagerSpec extends Specification {
     "fix the dust bug from robot test" in {
       val manager = new MarketManager(Btc ~> Rmb)
       manager.addOrder(makerSide, Order(-6771488127296557565L, 32, 21930, Some(1.1499999999999999E-4), None, Some(1397457555749L), None, Some(-6771488127296557565L), None, 0))
-      manager.addOrder(takerSide, Order(-245561917658914311L, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 0)) mustEqual OrderSubmitted(
-        OrderInfo(MarketSide(Btc, Rmb), Order(-245561917658914311L, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 0), 2, 17391, PartiallyExecuted, Some(1397457555805L)),
-        List(Transaction(330000, 1397457555805L, MarketSide(Btc, Rmb), OrderUpdate(Order(-245561917658914311L, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 0),
-          Order(-245561917658914311L, 33, 6, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 17391)),
-          OrderUpdate(Order(-6771488127296557565L, 32, 21930, Some(1.1499999999999999E-4), None, Some(1397457555749L), None, Some(-6771488127296557565L), None, 0), Order(-6771488127296557565L, 32, 4539, Some(1.1499999999999999E-4), None, Some(1397457555749L), None, Some(-6771488127296557565L), None, 2)), None)))
+      manager.addOrder(takerSide, Order(-245561917658914311L, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 0)) mustEqual
+        OrderSubmitted(
+          OrderInfo(MarketSide(Btc, Rmb), Order(-245561917658914311L, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 0), 2, 17391, PartiallyExecuted, Some(1397457555805L)),
+          List(
+            Transaction(330000, 1397457555805L, MarketSide(Btc, Rmb),
+              OrderUpdate(
+                Order(-245561917658914311L, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 0),
+                Order(-245561917658914311L, 33, 6, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 17391)),
+              OrderUpdate(
+                Order(-6771488127296557565L, 32, 21930, Some(1.1499999999999999E-4), None, Some(1397457555749L), None, Some(-6771488127296557565L), None, 0),
+                Order(-6771488127296557565L, 32, 4539, Some(1.1499999999999999E-4), None, Some(1397457555749L), None, Some(-6771488127296557565L), None, 2, Some(Dust))), None)))
       manager().orderMap mustEqual Map(33 -> Order(-245561917658914311L, 33, 6, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 17391))
       manager().orderPool(makerSide) mustEqual EmptyOrderPool
       manager().orderPool(takerSide) mustEqual SortedSet(Order(-245561917658914311L, 33, 6, Some(4920.0), None, Some(1397457555805L), None, Some(-245561917658914311L), None, 17391))
@@ -77,7 +84,7 @@ class MarketManagerSpec extends Specification {
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 10, 45000, FullyExecuted, Some(0)),
-        Seq(Transaction(30000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker)))
+        Seq(Transaction(30000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker.copy(refund = Some(Dust)))))
 
       manager().orderMap mustEqual Map()
       manager().orderPool(makerSide) mustEqual EmptyOrderPool
@@ -101,10 +108,10 @@ class MarketManagerSpec extends Specification {
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 4, 19500, PartiallyExecuted, Some(0)),
         Seq(
-          Transaction(30000, 0, takerSide,
-            taker --> taker.copy(quantity = 7, inAmount = 15000), maker2 --> updatedMaker2),
-          Transaction(30001, 0, takerSide,
-            taker.copy(quantity = 7, inAmount = 15000) --> updatedTaker, maker1 --> updatedMaker1)))
+          Transaction(30000, 0, takerSide, taker --> taker.copy(quantity = 7, inAmount = 15000),
+            maker2 --> updatedMaker2.copy(refund = Some(HitTakeLimit))),
+          Transaction(30001, 0, takerSide, taker.copy(quantity = 7, inAmount = 15000) --> updatedTaker,
+            maker1 --> updatedMaker1.copy(refund = Some(HitTakeLimit)))))
 
       manager().orderMap mustEqual Map(3 -> taker.copy(quantity = 6, inAmount = 19500))
       manager().orderPool(takerSide) mustEqual SortedSet(updatedTaker)
@@ -125,8 +132,10 @@ class MarketManagerSpec extends Specification {
       val updatedMaker1 = maker1
       val updatedMaker2 = maker2
 
-      result1 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker1, 0, 0, MarketAutoCancelled, None), Nil)
-      result2 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker2, 0, 0, MarketAutoCancelled, None), Nil)
+      result1 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker1.copy(refund = Some(MarketCancelled)), 0, 0,
+        MarketAutoCancelled, None), Nil)
+      result2 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker2.copy(refund = Some(MarketCancelled)), 0, 0,
+        MarketAutoCancelled, None), Nil)
 
       manager().orderMap mustEqual Map()
       manager().orderPool(makerSide) mustEqual EmptyOrderPool
