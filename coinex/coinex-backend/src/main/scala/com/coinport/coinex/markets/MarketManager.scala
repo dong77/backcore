@@ -48,7 +48,7 @@ class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
 
   private[markets] def apply(): MarketState = state.copy
 
-  def orderExist(orderId: Long) = state.getOrder(orderId).isDefined
+  def getOrderSide(orderId: Long) = state.getOrderSide(orderId)
 
   def addOrder(takerSide: MarketSide, order: Order): OrderSubmitted = {
     val txsBuffer = new ListBuffer[Transaction]

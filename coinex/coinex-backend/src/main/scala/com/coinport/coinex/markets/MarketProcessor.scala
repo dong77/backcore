@@ -31,11 +31,12 @@ class MarketProcessor(
   def receiveRecover = PartialFunction.empty[Any, Unit]
 
   def receiveCommand = LoggingReceive {
-    case m @ DoCancelOrder(side, orderId, userId) =>
-      if (!manager.orderExist(orderId)) {
+    case m @ DoCancelOrder(_, orderId, userId) =>
+      val side = manager.getOrderSide(orderId)
+      if (side.isEmpty) {
         sender ! CancelOrderFailed(OrderNotExist)
       } else {
-        persist(m)(updateState)
+        persist(m.copy(side = side.get))(updateState)
       }
 
     case p @ ConfirmablePersistent(m @ OrderFundFrozen(side, order: Order), seq, _) =>

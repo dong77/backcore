@@ -34,8 +34,7 @@ object MarketState {
     Map.empty[MarketSide, MarketState.OrderPool] ++ tms.orderPools.map(
       item => (item._1 -> (SortedSet.empty[Order] ++ item._2))),
     Map.empty[Long, Order] ++ tms.orderMap,
-    tms.priceRestriction
-  )
+    tms.priceRestriction)
 }
 
 case class MarketState(
@@ -83,6 +82,12 @@ case class MarketState(
   }
 
   def getOrder(id: Long): Option[Order] = orderMap.get(id)
+
+  def getOrder(side: MarketSide, id: Long): Option[Order] = orderMap.get(id) filter { orderPools(side).contains }
+
+  def getOrderSide(id: Long): Option[MarketSide] = orderMap.get(id) map { order =>
+    if (orderPools(tailSide).contains(order)) tailSide else headSide
+  }
 
   def removeOrder(side: MarketSide, id: Long): MarketState = {
     orderMap.get(id) match {
