@@ -109,7 +109,7 @@ class MarketManagerSpec extends Specification {
         OrderInfo(takerSide, taker, 4, 19500, PartiallyExecuted, Some(0)),
         Seq(
           Transaction(30000, 0, takerSide, taker --> taker.copy(quantity = 7, inAmount = 15000),
-            maker2 --> updatedMaker2.copy(refund = Some(HitTakeLimit))),
+            maker2 --> updatedMaker2),
           Transaction(30001, 0, takerSide, taker.copy(quantity = 7, inAmount = 15000) --> updatedTaker,
             maker1 --> updatedMaker1.copy(refund = Some(HitTakeLimit)))))
 

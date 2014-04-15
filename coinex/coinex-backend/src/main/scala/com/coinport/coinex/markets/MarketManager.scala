@@ -124,12 +124,18 @@ class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
           takeLimit = takerOrder.takeLimit.map(_ - lvInAmount), inAmount = takerOrder.inAmount + lvInAmount)
         val updatedMaker = makerOrder.copy(quantity = makerOrder.quantity - lvInAmount,
           takeLimit = makerOrder.takeLimit.map(_ - lvOutAmount), inAmount = makerOrder.inAmount + lvOutAmount)
-        val refundType: Option[RefundType] = if (updatedMaker.hitTakeLimit) {
-          Some(HitTakeLimit)
-        } else if (updatedMaker.isDust) {
-          Some(Dust)
-        } else {
-          None
+        val refundType: Option[RefundType] = {
+          if (updatedMaker.quantity == 0) {
+            None
+          } else {
+            if (updatedMaker.hitTakeLimit) {
+              Some(HitTakeLimit)
+            } else if (updatedMaker.isDust) {
+              Some(Dust)
+            } else {
+              None
+            }
+          }
         }
 
         txsBuffer += Transaction(txId, takerOrder.timestamp.getOrElse(0), takerSide,
