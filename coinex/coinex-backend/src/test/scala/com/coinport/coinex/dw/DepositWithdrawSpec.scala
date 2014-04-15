@@ -9,7 +9,6 @@ import com.mongodb.casbah._
 import com.coinport.coinex.common.EmbeddedMongoForTestWithBF
 
 class DepositWithdrawSpec extends EmbeddedMongoForTestWithBF {
-  //  step(embeddedMongoStartup())
 
   class DWClass(val db: MongoDB) extends DepositWithdrawBehavior
 
@@ -43,5 +42,4 @@ class DepositWithdrawSpec extends EmbeddedMongoForTestWithBF {
     }
   }
 
-  //  step(embeddedMongoShutdown())
 }

@@ -11,7 +11,6 @@ import com.coinport.coinex.data.Implicits._
 
 class TransactionHandlerSpec extends EmbeddedMongoForTestWithBF {
   val market = Btc ~> Rmb
-  //  step(embeddedMongoStartup())
 
   class TransactionClass extends TransactionMongoHandler {
     val coll = database("transaction")
@@ -36,5 +35,4 @@ class TransactionHandlerSpec extends EmbeddedMongoForTestWithBF {
     }
   }
 
-  //  step(embeddedMongoShutdown())
 }

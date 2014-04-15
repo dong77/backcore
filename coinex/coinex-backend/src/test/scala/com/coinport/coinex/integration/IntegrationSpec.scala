@@ -31,9 +31,8 @@ final class Environment extends Object with EmbeddedMongoForTest {
 
 }
 
-abstract class IntegrationSpec(val env: Environment) extends TestKit(env.system)
+abstract class IntegrationSpec(val env: Environment = new Environment) extends TestKit(env.system)
     with ImplicitSender with WordSpecLike with Matchers with BeforeAndAfterAll {
-  def this() = this(new Environment)
 
   override def afterAll {
     try {

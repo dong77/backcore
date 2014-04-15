@@ -13,7 +13,6 @@ class OrderMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
 
   class OrderClass extends OrderMongoHandler {
     val coll = database("OrderMongoHandlerSpec")
-    //    val coll = MongoConnection("localhost", 27017)("test")("OrderMongoHandlerSpec")
   }
 
   val market = Btc ~> Rmb
@@ -69,5 +68,4 @@ class OrderMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
     }
   }
 
-  //  step(embeddedMongoShutdown())
 }

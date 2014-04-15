@@ -5,7 +5,6 @@ import com.coinport.coinex.data.Currency._
 import com.coinport.coinex.common._
 
 class SimpleMongoCollectionSpec extends EmbeddedMongoForTestWithBF {
-  //  step(embeddedMongoStartup())
 
   val jsonDeposits = new SimpleJsonMongoCollection[Deposit, Deposit.Immutable]() {
     val coll = database("deposits_json")
@@ -34,5 +33,4 @@ class SimpleMongoCollectionSpec extends EmbeddedMongoForTestWithBF {
       binaryDeposits.get(2) should be(None)
     }
   }
-  //  step(embeddedMongoShutdown())
 }

@@ -58,7 +58,7 @@ trait EmbeddedMongoForTest {
 
   def embeddedMongoShutdown() {
     try {
-      //      connection.close()
+      //  connection.close()
       mongod.stop()
       mongodExe.stop()
     } catch {
