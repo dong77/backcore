@@ -83,10 +83,10 @@ case class MarketState(
 
   def getOrder(id: Long): Option[Order] = orderMap.get(id)
 
-  def getOrder(side: MarketSide, id: Long): Option[Order] = orderMap.get(id) filter { orderPools(side).contains }
+  def getOrder(side: MarketSide, id: Long): Option[Order] = orderMap.get(id) filter { orderPool(side).contains }
 
   def getOrderSide(id: Long): Option[MarketSide] = orderMap.get(id) map { order =>
-    if (orderPools(tailSide).contains(order)) tailSide else headSide
+    if (orderPool(tailSide).contains(order)) tailSide else headSide
   }
 
   def removeOrder(side: MarketSide, id: Long): MarketState = {
