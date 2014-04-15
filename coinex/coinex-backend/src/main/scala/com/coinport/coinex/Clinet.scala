@@ -75,4 +75,10 @@ object Client {
       Client.backend ! DoSubmitRobot(robot)
     }
   }
+
+  def removeGofvRobots() {
+    players foreach { uid =>
+      Client.backend ! DoCancelRobot(uid)
+    }
+  }
 }
