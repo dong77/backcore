@@ -61,7 +61,7 @@ class CandleDataManager(marketSide: MarketSide) extends Manager[TCandleDataState
         val item = itemMap.get(key) match {
           case Some(item) =>
             CandleDataItem(key, item.inAoumt + in, item.outAoumt + out,
-              item.open, item.close, Math.min(item.low, mprice), Math.max(item.high, mprice))
+              item.open, price, Math.min(item.low, price), Math.max(item.high, price))
           case None =>
             CandleDataItem(key, in, out, price, price, price, price)
         }
