@@ -20,6 +20,49 @@ class MarketManagerSpec extends Specification {
   val makerSide = takerSide.reverse
 
   "MarketManager" should {
+    "take limit can't block the current transaction" in {
+      val manager = new MarketManager(Btc ~> Rmb)
+      val maker1 = Order(userId = 1, id = 1, price = Some(1.0 / 2000), quantity = 20000)
+      val maker2 = Order(userId = 2, id = 2, price = Some(1.0 / 5000), quantity = 50000)
+      val taker = Order(userId = 3, id = 3, price = Some(2000), quantity = 1, takeLimit = Some(2000))
+      manager.addOrder(makerSide, maker1)
+      manager.addOrder(makerSide, maker2)
+      manager.addOrder(takerSide, taker) mustEqual OrderSubmitted(
+        OrderInfo(MarketSide(Btc, Rmb),
+          Order(3, 3, 1, Some(2000.0), Some(2000), None, None, None, None, 0, None), 1, 5000, FullyExecuted, Some(0)),
+        List(Transaction(30000, 0, MarketSide(Btc, Rmb),
+          OrderUpdate(
+            Order(3, 3, 1, Some(2000.0), Some(2000), None, None, None, None, 0, None),
+            Order(3, 3, 0, Some(2000.0), Some(-3000), None, None, None, None, 5000, None)),
+          OrderUpdate(
+            Order(2, 2, 50000, Some(2.0E-4), None, None, None, None, None, 0, None),
+            Order(2, 2, 45000, Some(2.0E-4), None, None, None, None, None, 1, None)), None)))
+    }
+
+    "refund first dust taker" in {
+      val manager = new MarketManager(Btc ~> Rmb)
+      val taker = Order(userId = 1, id = 1, price = Some(1.0 / 2000), quantity = 200)
+      manager.addOrder(makerSide, taker) mustEqual OrderSubmitted(OrderInfo(MarketSide(Rmb, Btc),
+        Order(1, 1, 200, Some(5.0E-4), None, None, None, None, None, 0, Some(Dust)), 0, 0, FullyExecuted, None), List())
+    }
+
+    "change the last taker order in tx" in {
+      val manager = new MarketManager(Btc ~> Rmb)
+      val maker = Order(userId = 0, id = 0, price = Some(2000), quantity = 1)
+      val taker = Order(userId = 1, id = 1, price = Some(1.0 / 2000), quantity = 2200)
+      manager.addOrder(makerSide, maker)
+      manager.addOrder(takerSide, taker) mustEqual OrderSubmitted(
+        OrderInfo(MarketSide(Btc, Rmb),
+          Order(1, 1, 2200, Some(5.0E-4), None, None, None, None, None, 0, None), 2000, 1, FullyExecuted, Some(0)),
+        List(Transaction(10000, 0, MarketSide(Btc, Rmb),
+          OrderUpdate(
+            Order(1, 1, 2200, Some(5.0E-4), None, None, None, None, None, 0, None),
+            Order(1, 1, 200, Some(5.0E-4), None, None, None, None, None, 1, Some(Dust))),
+          OrderUpdate(
+            Order(0, 0, 1, Some(2000.0), None, None, None, None, None, 0, None),
+            Order(0, 0, 0, Some(2000.0), None, None, None, None, None, 2000, None)), None)))
+    }
+
     "fix the dust bug from robot test" in {
       val manager = new MarketManager(Btc ~> Rmb)
       manager.addOrder(makerSide, Order(-6771488127296557565L, 32, 21930, Some(1.1499999999999999E-4), None, Some(1397457555749L), None, Some(-6771488127296557565L), None, 0))
@@ -221,7 +264,8 @@ class MarketManagerSpec extends Specification {
 
         result mustEqual OrderSubmitted(
           OrderInfo(takerSide, taker, 10, 10, PartiallyExecutedThenCancelledByMarket, Some(0)),
-          Seq(Transaction(20000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker)))
+          Seq(Transaction(20000, 0, takerSide, taker --> updatedTaker.copy(refundReason = Some(AutoCancelled)),
+            maker --> updatedMaker)))
 
         manager().orderMap mustEqual Map()
         manager().orderPool(makerSide) mustEqual EmptyOrderPool
@@ -278,7 +322,8 @@ class MarketManagerSpec extends Specification {
             Transaction(100000, 0, takerSide,
               taker --> taker.copy(quantity = 70, inAmount = 100), maker2 --> updatedMaker2),
             Transaction(100001, 0, takerSide,
-              taker.copy(quantity = 70, inAmount = 100) --> updatedTaker, maker1 --> updatedMaker1)))
+              taker.copy(quantity = 70, inAmount = 100) --> updatedTaker.copy(refundReason = Some(AutoCancelled)),
+              maker1 --> updatedMaker1)))
 
         manager().orderMap mustEqual Map()
         manager().orderPool(makerSide) mustEqual EmptyOrderPool
@@ -400,7 +445,8 @@ class MarketManagerSpec extends Specification {
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 500, 1, PartiallyExecutedThenCancelledByMarket, Some(0)),
-        Seq(Transaction(50000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker)))
+        Seq(Transaction(50000, 0, takerSide, taker --> updatedTaker.copy(refundReason = Some(AutoCancelled)),
+          maker --> updatedMaker)))
     }
 
     "be able to handle dust when price is really small" in {
@@ -416,7 +462,8 @@ class MarketManagerSpec extends Specification {
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 150, 1000, PartiallyExecutedThenCancelledByMarket, Some(0)),
-        Seq(Transaction(50000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker)))
+        Seq(Transaction(50000, 0, takerSide, taker --> updatedTaker.copy(refundReason = Some(AutoCancelled)),
+          maker --> updatedMaker)))
     }
   }
 
@@ -445,7 +492,7 @@ class MarketManagerSpec extends Specification {
       result mustEqual OrderSubmitted(
         OrderInfo(side, taker, 100, 500000, PartiallyExecutedThenCancelledByMarket, Some(0)),
         Seq(Transaction(20000, 0, side,
-          taker --> taker.copy(quantity = 900, inAmount = 5000 * 100),
+          taker --> taker.copy(quantity = 900, inAmount = 5000 * 100, refundReason = Some(AutoCancelled)),
           maker --> maker.copy(quantity = 0, inAmount = 100)))
       )
 

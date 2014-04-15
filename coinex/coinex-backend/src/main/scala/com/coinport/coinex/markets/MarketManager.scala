@@ -74,9 +74,9 @@ class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
 
     if (txsBuffer.size != 0 && refundReason != None) {
       val lastTx = txsBuffer.last
-      lastTx.copy(takerUpdate = lastTx.takerUpdate.copy(current = lastTx.takerUpdate.current.copy(refundReason = refundReason)))
       txsBuffer.trimEnd(1)
-      txsBuffer += lastTx
+      txsBuffer += lastTx.copy(takerUpdate = lastTx.takerUpdate.copy(current = lastTx.takerUpdate.current.copy(
+        refundReason = refundReason)))
     }
 
     val txs = txsBuffer.toSeq
