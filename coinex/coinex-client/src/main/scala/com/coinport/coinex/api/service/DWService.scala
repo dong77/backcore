@@ -20,7 +20,7 @@ object DWService extends AkkaService {
               d.currency,
               d.amount.externalValue(d.currency).toString,
               d.amount.externalValue(d.currency).toString,
-              d.amount,
+              d.amount.externalValue(d.currency),
               d.amount),
             d.status.value, d.created.getOrElse(0), d.updated.getOrElse(0))
         }
@@ -42,7 +42,7 @@ object DWService extends AkkaService {
               d.currency,
               d.amount.externalValue(d.currency).toString,
               d.amount.externalValue(d.currency).toString,
-              d.amount,
+              d.amount.externalValue(d.currency),
               d.amount),
             d.status.value, d.created.getOrElse(0), d.updated.getOrElse(0))
         }
