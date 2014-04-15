@@ -19,3 +19,7 @@ case class MarketDepth(bids: Seq[MarketDepthItem], asks: Seq[MarketDepthItem])
 case class Ticker(price: CurrencyObject, high: CurrencyObject, low: CurrencyObject, volume: CurrencyObject, gain: Option[Double] = None, trend: Option[String] = None)
 
 case class Transaction(id: Long, timestamp: Long, price: Double, amount: Double, total: Double, maker: Long, taker: Long, sell: Boolean)
+
+case class ApiDeposit(id: Long, userId: Long, deposit: CurrencyObject, status: Int, created: Long, updated: Long)
+
+case class ApiWithdrawal(id: Long, userId: Long, withdrawal: CurrencyObject, status: Int, created: Long, updated: Long)
