@@ -12,7 +12,7 @@ import com.coinport.coinex.data.mutable.MarketState._
 import Implicits._
 import Currency._
 import OrderStatus._
-import RefundType._
+import RefundReason._
 
 class MarketManagerSpec extends Specification {
 
@@ -84,7 +84,7 @@ class MarketManagerSpec extends Specification {
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 10, 45000, FullyExecuted, Some(0)),
-        Seq(Transaction(30000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker.copy(refund = Some(Dust)))))
+        Seq(Transaction(30000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker.copy(refundReason = Some(Dust)))))
 
       manager().orderMap mustEqual Map()
       manager().orderPool(makerSide) mustEqual EmptyOrderPool
@@ -111,7 +111,7 @@ class MarketManagerSpec extends Specification {
           Transaction(30000, 0, takerSide, taker --> taker.copy(quantity = 7, inAmount = 15000),
             maker2 --> updatedMaker2),
           Transaction(30001, 0, takerSide, taker.copy(quantity = 7, inAmount = 15000) --> updatedTaker,
-            maker1 --> updatedMaker1.copy(refund = Some(HitTakeLimit)))))
+            maker1 --> updatedMaker1.copy(refundReason = Some(HitTakeLimit)))))
 
       manager().orderMap mustEqual Map(3 -> taker.copy(quantity = 6, inAmount = 19500))
       manager().orderPool(takerSide) mustEqual SortedSet(updatedTaker)
@@ -132,10 +132,10 @@ class MarketManagerSpec extends Specification {
       val updatedMaker1 = maker1
       val updatedMaker2 = maker2
 
-      result1 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker1.copy(refund = Some(MarketCancelled)), 0, 0,
-        MarketAutoCancelled, None), Nil)
-      result2 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker2.copy(refund = Some(MarketCancelled)), 0, 0,
-        MarketAutoCancelled, None), Nil)
+      result1 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker1.copy(refundReason = Some(AutoCancelled)), 0, 0,
+        CancelledByMarket, None), Nil)
+      result2 mustEqual OrderSubmitted(OrderInfo(makerSide, updatedMaker2.copy(refundReason = Some(AutoCancelled)), 0, 0,
+        CancelledByMarket, None), Nil)
 
       manager().orderMap mustEqual Map()
       manager().orderPool(makerSide) mustEqual EmptyOrderPool
@@ -220,7 +220,7 @@ class MarketManagerSpec extends Specification {
         val updatedTaker = taker.copy(quantity = 90, inAmount = 10)
 
         result mustEqual OrderSubmitted(
-          OrderInfo(takerSide, taker, 10, 10, MarketAutoPartiallyCancelled, Some(0)),
+          OrderInfo(takerSide, taker, 10, 10, PartiallyExecutedThenCancelledByMarket, Some(0)),
           Seq(Transaction(20000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker)))
 
         manager().orderMap mustEqual Map()
@@ -273,7 +273,7 @@ class MarketManagerSpec extends Specification {
         val updatedTaker = taker.copy(quantity = 50, inAmount = 120)
 
         result mustEqual OrderSubmitted(
-          OrderInfo(takerSide, taker, 70, 120, MarketAutoPartiallyCancelled, Some(0)),
+          OrderInfo(takerSide, taker, 70, 120, PartiallyExecutedThenCancelledByMarket, Some(0)),
           Seq(
             Transaction(100000, 0, takerSide,
               taker --> taker.copy(quantity = 70, inAmount = 100), maker2 --> updatedMaker2),
@@ -399,7 +399,7 @@ class MarketManagerSpec extends Specification {
       val updatedTaker = taker.copy(quantity = 400, inAmount = 1)
 
       result mustEqual OrderSubmitted(
-        OrderInfo(takerSide, taker, 500, 1, MarketAutoPartiallyCancelled, Some(0)),
+        OrderInfo(takerSide, taker, 500, 1, PartiallyExecutedThenCancelledByMarket, Some(0)),
         Seq(Transaction(50000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker)))
     }
 
@@ -415,7 +415,7 @@ class MarketManagerSpec extends Specification {
       val updatedTaker = taker.copy(quantity = 30, inAmount = 1000)
 
       result mustEqual OrderSubmitted(
-        OrderInfo(takerSide, taker, 150, 1000, MarketAutoPartiallyCancelled, Some(0)),
+        OrderInfo(takerSide, taker, 150, 1000, PartiallyExecutedThenCancelledByMarket, Some(0)),
         Seq(Transaction(50000, 0, takerSide, taker --> updatedTaker, maker --> updatedMaker)))
     }
   }
@@ -443,7 +443,7 @@ class MarketManagerSpec extends Specification {
       val result = manager.addOrder(takerSide, taker)
 
       result mustEqual OrderSubmitted(
-        OrderInfo(side, taker, 100, 500000, MarketAutoPartiallyCancelled, Some(0)),
+        OrderInfo(side, taker, 100, 500000, PartiallyExecutedThenCancelledByMarket, Some(0)),
         Seq(Transaction(20000, 0, side,
           taker --> taker.copy(quantity = 900, inAmount = 5000 * 100),
           maker --> maker.copy(quantity = 0, inAmount = 100)))

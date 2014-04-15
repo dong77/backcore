@@ -46,6 +46,10 @@ typedef data.ExportedEventType     ExportedEventType
 // 'R-' stands for response to sender on command failure,
 // 'R' stands for response to sender regardless of failure or success.
 
+// WARNING: please avoid using map in event definitation, if you do, please
+// make sure all map keys are either i64, i32, double, float, or string;
+// do not use enum, struct as map keys so our serialization can still work.
+
 ////////// General
 /* R-   */ struct MessageNotSupported                 {1: string event}
 

@@ -98,6 +98,7 @@ class AccountProcessor(
     case p @ ConfirmablePersistent(event: OrderSubmitted, seq, _) =>
       persist(countFee(event)) { event =>
         p.confirm()
+        sender ! event
         updateState(event)
         channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)
       }
@@ -105,10 +106,10 @@ class AccountProcessor(
     case p @ ConfirmablePersistent(event: OrderCancelled, seq, _) =>
       persist(countFee(event)) { event =>
         p.confirm()
+        sender ! event
         updateState(event)
         channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)
       }
-
   }
 
   private def getProcessorPath(side: MarketSide): ActorPath = {
@@ -148,14 +149,16 @@ trait AccountManagerBehavior extends CountFeeSupport {
         val (takerOrderUpdate, makerOrderUpdate, fees) = (tx.takerUpdate, tx.makerUpdate, tx.fees)
         manager.transferFundFromLocked(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
         manager.transferFundFromLocked(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
+
         tx.fees.getOrElse(Nil) foreach { f =>
           manager.transferFundFromAvailable(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
         }
-        manager.conditionalRefund(takerOrderUpdate.current.refund != None)(side.outCurrency, takerOrderUpdate.current)
-        manager.conditionalRefund(makerOrderUpdate.current.refund != None)(side.inCurrency, makerOrderUpdate.current)
+
+        manager.conditionalRefund(takerOrderUpdate.current.refundReason != None)(side.outCurrency, takerOrderUpdate.current)
+        manager.conditionalRefund(makerOrderUpdate.current.refundReason != None)(side.inCurrency, makerOrderUpdate.current)
       }
       val order = originOrderInfo.order
-      if (txs.size == 0 && order.refund != None)
+      if (txs.size == 0 && order.refundReason != None)
         manager.refund(order.userId, side.outCurrency, order.quantity - originOrderInfo.outAmount)
 
     case OrderCancelled(side, order) =>

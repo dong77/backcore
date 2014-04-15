@@ -23,7 +23,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import Implicits._
 import OrderStatus._
-import RefundType._
+import RefundReason._
 
 class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
 
@@ -60,36 +60,28 @@ class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
     val status =
       if (takerOrder.isFullyExecuted) OrderStatus.FullyExecuted
       else if (totalOutAmount > 0) {
-        if (takerOrder.price == None || takerOrder.onlyTaker.getOrElse(false)) OrderStatus.MarketAutoPartiallyCancelled
+        if (takerOrder.price == None || takerOrder.onlyTaker.getOrElse(false)) OrderStatus.PartiallyExecutedThenCancelledByMarket
         else OrderStatus.PartiallyExecuted
-      } else if (takerOrder.price == None || takerOrder.onlyTaker.getOrElse(false)) OrderStatus.MarketAutoCancelled
+      } else if (takerOrder.price == None || takerOrder.onlyTaker.getOrElse(false)) OrderStatus.CancelledByMarket
       else OrderStatus.Pending
 
-    val refundType: Option[RefundType] = {
-      if (takerOrder.quantity == 0) {
-        None
-      } else {
-        if (takerOrder.hitTakeLimit) {
-          Some(HitTakeLimit)
-        } else if (takerOrder.isDust) {
-          Some(Dust)
-        } else if (status == MarketAutoPartiallyCancelled || status == MarketAutoCancelled) {
-          Some(MarketCancelled)
-        } else {
-          None
-        }
-      }
-    }
+    val refundReason: Option[RefundReason] =
+      if (takerOrder.quantity == 0) None
+      else if (takerOrder.hitTakeLimit) Some(HitTakeLimit)
+      else if (takerOrder.isDust) Some(Dust)
+      else if (status == PartiallyExecutedThenCancelledByMarket || status == CancelledByMarket) Some(AutoCancelled)
+      else None
 
-    if (txsBuffer.size != 0 && refundType != None) {
+    if (txsBuffer.size != 0 && refundReason != None) {
       val lastTx = txsBuffer.last
-      lastTx.copy(takerUpdate = lastTx.takerUpdate.copy(current = lastTx.takerUpdate.current.copy(refund = refundType)))
+      lastTx.copy(takerUpdate = lastTx.takerUpdate.copy(current = lastTx.takerUpdate.current.copy(refundReason = refundReason)))
       txsBuffer.trimEnd(1)
       txsBuffer += lastTx
     }
 
     val txs = txsBuffer.toSeq
-    val orderInfo = OrderInfo(takerSide, if (txs.size == 0) order.copy(refund = refundType) else order,
+    val orderInfo = OrderInfo(takerSide,
+      if (txs.size == 0) order.copy(refundReason = refundReason) else order,
       totalOutAmount, totalInAmount, status, txs.lastOption.map(_.timestamp))
 
     OrderSubmitted(orderInfo, txs)
@@ -107,49 +99,44 @@ class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
     txId: Long): ( /*totalOutAmount*/ Long, /*totalInAmount*/ Long, /*updatedTaker*/ Order, /*after order match*/ MarketState) = {
     val makerOrderOption = market.orderPool(makerSide).headOption
     if (makerOrderOption == None || makerOrderOption.get.vprice * takerOrder.vprice > 1) {
-      // Return point. Market-price order doesn't pending
-      (totalOutAmount, totalInAmount, takerOrder, if (!takerOrder.isFullyExecuted && takerOrder.price != None &&
-        !takerOrder.onlyTaker.getOrElse(false)) market.addOrder(takerSide, takerOrder) else market)
+      // Return point. Market-price order can not turn into a maker order
+      val updatedMarket =
+        if (takerOrder.isFullyExecuted || takerOrder.price == None || takerOrder.onlyTaker.getOrElse(false)) market
+        else market.addOrder(takerSide, takerOrder)
+
+      (totalOutAmount, totalInAmount, takerOrder, updatedMarket)
     } else {
       val makerOrder = makerOrderOption.get
       val price = 1 / makerOrder.vprice
       val lvOutAmount = Math.min(takerOrder.maxOutAmount(price), makerOrder.maxInAmount(1 / price))
-      if (lvOutAmount == 0) {
-        // return point
+
+      if (lvOutAmount == 0) { // return point
         (totalOutAmount, totalInAmount, takerOrder, market)
       } else {
         val lvInAmount = Math.round(lvOutAmount * price)
 
         val updatedTaker = takerOrder.copy(quantity = takerOrder.quantity - lvOutAmount,
           takeLimit = takerOrder.takeLimit.map(_ - lvInAmount), inAmount = takerOrder.inAmount + lvInAmount)
+
         val updatedMaker = makerOrder.copy(quantity = makerOrder.quantity - lvInAmount,
           takeLimit = makerOrder.takeLimit.map(_ - lvOutAmount), inAmount = makerOrder.inAmount + lvOutAmount)
-        val refundType: Option[RefundType] = {
-          if (updatedMaker.quantity == 0) {
-            None
-          } else {
-            if (updatedMaker.hitTakeLimit) {
-              Some(HitTakeLimit)
-            } else if (updatedMaker.isDust) {
-              Some(Dust)
-            } else {
-              None
-            }
-          }
-        }
+
+        val refundReason: Option[RefundReason] =
+          if (updatedMaker.quantity == 0) None
+          else if (updatedMaker.hitTakeLimit) Some(HitTakeLimit)
+          else if (updatedMaker.isDust) Some(Dust)
+          else None
 
         txsBuffer += Transaction(txId, takerOrder.timestamp.getOrElse(0), takerSide,
-          takerOrder --> updatedTaker, makerOrder --> updatedMaker.copy(refund = refundType))
+          takerOrder --> updatedTaker, makerOrder --> updatedMaker.copy(refundReason = refundReason))
 
-        val leftMarket = market.removeOrder(makerSide, makerOrder.id)
-        if (updatedMaker.isFullyExecuted) {
-          // return point
-          addOrderRec(makerSide, takerSide, updatedTaker, leftMarket,
+        val updatedMarket = market.removeOrder(makerSide, makerOrder.id)
+        if (updatedMaker.isFullyExecuted) { // return point
+          addOrderRec(makerSide, takerSide, updatedTaker, updatedMarket,
             totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, txsBuffer, txId + 1)
-        } else {
-          // return point
+        } else { // return point
           (totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, updatedTaker,
-            leftMarket.addOrder(makerSide, updatedMaker))
+            updatedMarket.addOrder(makerSide, updatedMaker))
         }
       }
     }

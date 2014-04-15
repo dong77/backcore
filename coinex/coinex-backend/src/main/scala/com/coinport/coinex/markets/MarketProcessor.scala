@@ -53,12 +53,10 @@ class MarketProcessor(
     case DoCancelOrder(side, orderId, userId) =>
       val order = manager.removeOrder(side, orderId, userId)
       val cancelled = OrderCancelled(side, order)
-      sender ! cancelled
       channelToAccountProcessor forward Deliver(Persistent(cancelled), accountProcessorPath)
 
     case OrderFundFrozen(side, order: Order) =>
       val orderSubmitted = manager.addOrder(side, order)
-      sender ! orderSubmitted
       channelToAccountProcessor ! Deliver(Persistent(orderSubmitted), accountProcessorPath)
   }
 }

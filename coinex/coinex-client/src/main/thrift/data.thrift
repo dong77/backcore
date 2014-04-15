@@ -56,8 +56,8 @@ enum OrderStatus {
     PARTIALLY_EXECUTED = 1
     FULLY_EXECUTED = 2
     CANCELLED = 3
-    MARKET_AUTO_CANCELLED = 4
-    MARKET_AUTO_PARTIALLY_CANCELLED = 5
+    CANCELLED_BY_MARKET = 4
+    PARTIALLY_EXECUTED_THEN_CANCELLED_BY_MARKET = 5
 }
 
 enum UserStatus {
@@ -104,10 +104,10 @@ enum ExportedEventType {
     MARKET_EVENT = 1
 }
 
-enum RefundType {
+enum RefundReason {
     DUST = 0
     HIT_TAKE_LIMIT = 1
-    MARKET_CANCELLED = 2
+    AUTO_CANCELLED = 2
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -153,7 +153,7 @@ struct Order {
     8: optional i64 robotId
     9: optional bool onlyTaker
     10: i64 inAmount = 0
-    11: optional RefundType refund
+    11: optional RefundReason refundReason
 }
 
 struct OrderInfo {
