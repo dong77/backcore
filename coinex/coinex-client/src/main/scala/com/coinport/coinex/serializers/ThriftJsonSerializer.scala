@@ -114,6 +114,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cTApiSecretState = JsonScalaCodec(TApiSecretState)
   lazy val _cTAssetState = JsonScalaCodec(TAssetState)
   lazy val _cTCandleDataState = JsonScalaCodec(TCandleDataState)
+  lazy val _cTDepositWithdrawState = JsonScalaCodec(TDepositWithdrawState)
   lazy val _cTExportToMongoState = JsonScalaCodec(TExportToMongoState)
   lazy val _cTMarketDepthState = JsonScalaCodec(TMarketDepthState)
   lazy val _cTMarketState = JsonScalaCodec(TMarketState)
@@ -222,6 +223,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: TApiSecretState => _cTApiSecretState(m)
     case m: TAssetState => _cTAssetState(m)
     case m: TCandleDataState => _cTCandleDataState(m)
+    case m: TDepositWithdrawState => _cTDepositWithdrawState(m)
     case m: TExportToMongoState => _cTExportToMongoState(m)
     case m: TMarketDepthState => _cTMarketDepthState(m)
     case m: TMarketState => _cTMarketState(m)
@@ -334,6 +336,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[TApiSecretState.Immutable] => _cTApiSecretState.invert(bytes).get
     case Some(c) if c == classOf[TAssetState.Immutable] => _cTAssetState.invert(bytes).get
     case Some(c) if c == classOf[TCandleDataState.Immutable] => _cTCandleDataState.invert(bytes).get
+    case Some(c) if c == classOf[TDepositWithdrawState.Immutable] => _cTDepositWithdrawState.invert(bytes).get
     case Some(c) if c == classOf[TExportToMongoState.Immutable] => _cTExportToMongoState.invert(bytes).get
     case Some(c) if c == classOf[TMarketDepthState.Immutable] => _cTMarketDepthState.invert(bytes).get
     case Some(c) if c == classOf[TMarketState.Immutable] => _cTMarketState.invert(bytes).get

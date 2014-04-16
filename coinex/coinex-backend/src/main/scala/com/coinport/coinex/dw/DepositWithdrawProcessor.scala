@@ -5,7 +5,6 @@ import akka.actor.Actor.Receive
 import akka.event.LoggingReceive
 import akka.persistence._
 import com.mongodb.casbah.Imports._
-
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.SimpleManager
 import com.coinport.coinex.common.mongo.SimpleJsonMongoCollection
@@ -14,19 +13,33 @@ import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import ErrorCode._
 import Implicits._
+import com.coinport.coinex.common.Manager
 
 class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath) extends ExtendedProcessor
     with EventsourcedProcessor with DepositWithdrawBehavior with ChannelSupport with ActorLogging {
   override def processorId = DEPOSIT_WITHDRAW_PROCESSOR <<
 
   val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
-  val manager = new SimpleManager()
+  val manager = new DepositWithdrawManager()
 
   def receiveRecover = updateState
 
   def receiveCommand = LoggingReceive {
-    case p @ ConfirmablePersistent(e: DoRequestCashWithdrawal, seq, _) => persist(e) { event => p.confirm(); updateState(event) }
-    case p @ ConfirmablePersistent(e: DoRequestCashDeposit, seq, _) => persist(e) { event => p.confirm(); updateState(event) }
+    case p @ ConfirmablePersistent(DoRequestCashWithdrawal(w), seq, _) =>
+      persist(DoRequestCashWithdrawal(w.copy(id = manager.getWithdrawId))) {
+        event =>
+          p.confirm()
+          sender ! RequestCashWithdrawalSucceeded(event.withdrawal)
+          updateState(event)
+      }
+
+    case p @ ConfirmablePersistent(DoRequestCashDeposit(d), seq, _) =>
+      persist(DoRequestCashDeposit(d.copy(id = manager.getDepositId))) {
+        event =>
+          p.confirm()
+          sender ! RequestCashDepositSucceeded(event.deposit)
+          updateState(event)
+      }
 
     case AdminConfirmCashDepositFailure(deposit, error) =>
       deposits.get(deposit.id) match {
@@ -82,6 +95,22 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
 
   private def deliverToAccountManager(event: Any) =
     channelToAccountProcessor forward Deliver(Persistent(event), accountProcessorPath)
+}
+
+final class DepositWithdrawManager extends Manager[TDepositWithdrawState] {
+  var lastDepositId = 0X1000000000000L
+  var lastWithdrawId = 0X2000000000000L
+
+  def getSnapshot = TDepositWithdrawState(lastDepositId, lastWithdrawId, getFiltersSnapshot)
+
+  override def loadSnapshot(s: TDepositWithdrawState) {
+    lastDepositId = s.lastDepositId
+    lastWithdrawId = s.lastWithdrawId
+    loadFiltersSnapshot(s.filters)
+  }
+
+  def getDepositId = { lastDepositId += 1; lastDepositId }
+  def getWithdrawId = { lastWithdrawId += 1; lastWithdrawId }
 }
 
 trait DepositWithdrawBehavior {

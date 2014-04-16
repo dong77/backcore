@@ -10,10 +10,8 @@ import com.coinport.coinex.common.EmbeddedMongoForTestWithBF
 
 class DepositWithdrawSpec extends EmbeddedMongoForTestWithBF {
 
-  class DWClass(val db: MongoDB) extends DepositWithdrawBehavior
-
   "DepositWithdrawSpec" should {
-    val dw = new DWClass(database)
+    val dw = new DepositWithdrawBehavior { val db = database }
     "be able to save deposits and query them" in {
       val d1 = Deposit(id = 1, userId = 1, currency = Currency.Rmb, amount = 1000, created = Some(100), updated = Some(800))
       val d2 = Deposit(id = 2, userId = 1, currency = Currency.Btc, amount = 2000, created = Some(200), updated = Some(800))

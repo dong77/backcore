@@ -11,7 +11,6 @@ import akka.persistence._
 import akka.event.LoggingReceive
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.data._
-import com.coinport.coinex.data.mutable.MarketState
 import Implicits._
 import ErrorCode._
 import com.coinport.coinex.common.support.ChannelSupport
@@ -26,17 +25,15 @@ class MarketProcessor(
 
   val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
 
-  val manager = new MarketManager(marketSide)
+  val manager = new MarketManager(marketSide, 0X8000000000000L, 0XA000000000000L)
 
   def receiveRecover = PartialFunction.empty[Any, Unit]
 
   def receiveCommand = LoggingReceive {
     case m @ DoCancelOrder(_, orderId, userId) =>
-      val side = manager.getOrderSide(orderId)
-      if (side.isEmpty) {
-        sender ! CancelOrderFailed(OrderNotExist)
-      } else {
-        persist(m.copy(side = side.get))(updateState)
+      manager.getOrderMarketSide(orderId, userId) match {
+        case Some(side) => persist(m.copy(side = side))(updateState)
+        case None => sender ! CancelOrderFailed(OrderNotExist)
       }
 
     case p @ ConfirmablePersistent(m @ OrderFundFrozen(side, order: Order), seq, _) =>
@@ -51,13 +48,13 @@ class MarketProcessor(
   }
 
   def updateState: Receive = {
-    case DoCancelOrder(side, orderId, userId) =>
-      val order = manager.removeOrder(side, orderId, userId)
+    case DoCancelOrder(_, orderId, userId) =>
+      val (side, order) = manager.removeOrder(orderId, userId)
       val cancelled = OrderCancelled(side, order)
       channelToAccountProcessor forward Deliver(Persistent(cancelled), accountProcessorPath)
 
     case OrderFundFrozen(side, order: Order) =>
-      val orderSubmitted = manager.addOrder(side, order)
+      val orderSubmitted = manager.addOrderToMarket(side, order)
       channelToAccountProcessor forward Deliver(Persistent(orderSubmitted), accountProcessorPath)
   }
 }

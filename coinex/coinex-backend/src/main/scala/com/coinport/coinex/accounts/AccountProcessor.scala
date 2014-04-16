@@ -50,11 +50,10 @@ class AccountProcessor(
       if (!manager.canUpdateCashAccount(w.userId, adjustment)) {
         sender ! RequestCashWithdrawalFailed(InsufficientFund)
       } else {
-        val updated = countFee(w.copy(id = lastSequenceNr, created = Some(System.currentTimeMillis)))
+        val updated = countFee(w.copy(created = Some(System.currentTimeMillis)))
         persist(DoRequestCashWithdrawal(updated)) { event =>
           updateState(event)
           channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
-          sender ! RequestCashWithdrawalSucceeded(updated)
         }
       }
 
@@ -62,11 +61,10 @@ class AccountProcessor(
       if (deposit.amount <= 0) {
         sender ! RequestCashDepositFailed(InvalidAmount)
       } else {
-        val updated = countFee(deposit.copy(id = lastSequenceNr, created = Some(System.currentTimeMillis)))
+        val updated = countFee(deposit.copy(created = Some(System.currentTimeMillis)))
         persist(m.copy(deposit = updated)) { event =>
           updateState(event)
           channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
-          sender ! RequestCashDepositSucceeded(updated)
         }
       }
 
@@ -87,7 +85,7 @@ class AccountProcessor(
         if (!manager.canUpdateCashAccount(order.userId, adjustment)) {
           sender ! SubmitOrderFailed(side, order, ErrorCode.InsufficientFund)
         } else {
-          val updated = order.copy(id = lastSequenceNr, timestamp = Some(System.currentTimeMillis))
+          val updated = order.copy(timestamp = Some(System.currentTimeMillis))
           persist(DoSubmitOrder(side, updated)) { event =>
             channelToMarketProcessors forward Deliver(Persistent(OrderFundFrozen(side, updated)), getProcessorPath(side))
             updateState(event)

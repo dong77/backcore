@@ -15,8 +15,9 @@
 
 package com.coinport.coinex.markets
 
+import scala.collection.mutable.Map
+import scala.collection.mutable.SortedSet
 import com.coinport.coinex.data._
-import com.coinport.coinex.data.mutable.MarketState
 import com.coinport.coinex.common.Manager
 import com.coinport.coinex.common.RedeliverFilter
 import scala.annotation.tailrec
@@ -25,37 +26,37 @@ import Implicits._
 import OrderStatus._
 import RefundReason._
 
-class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
-
-  var state = MarketState(headSide)
-
-  val MAX_TX_GROUP_SIZE = 10000
-  def isOrderPriceInGoodRange(takerSide: MarketSide, price: Option[Double]): Boolean = {
-    if (price.isEmpty) true
-    else if (price.get <= 0) false
-    else if (state.priceRestriction.isEmpty || state.orderPool(takerSide).isEmpty) true
-    else if (price.get / state.orderPool(takerSide).headOption.get.price.get - 1.0 <=
-      state.priceRestriction.get) true
-    else false
+object MarketManager {
+  private[markets] implicit val ordering = new Ordering[Order] {
+    def compare(a: Order, b: Order) = {
+      if (a.vprice < b.vprice) -1
+      else if (a.vprice > b.vprice) 1
+      else if (a.id < b.id) -1
+      else if (a.id > b.id) 1
+      else 0
+    }
   }
+}
 
-  override def getSnapshot = state.toThrift.copy(filters = getFiltersSnapshot)
+class MarketManager(headSide: MarketSide, initialLastOrderId: Long = 0L, initialLastTxId: Long = 0L) extends Manager[TMarketState] {
+  private[markets] var lastOrderId = initialLastTxId
+  private[markets] var lastTxId = initialLastTxId
+  private[markets] val orderPools = Map.empty[MarketSide, SortedSet[Order]]
+  private[markets] val orderMap = Map.empty[Long, Order]
+  private[markets] var priceRestriction: Option[Double] = None
 
-  override def loadSnapshot(s: TMarketState) {
-    state = MarketState(s)
-    loadFiltersSnapshot(s.filters)
-  }
+  private val tailSide = headSide.reverse
+  private val bothSides = Seq(headSide, tailSide)
 
-  private[markets] def apply(): MarketState = state.copy
+  import MarketManager._
 
-  def getOrderSide(orderId: Long) = state.getOrderSide(orderId)
+  def addOrderToMarket(takerSide: MarketSide, raw: Order): OrderSubmitted = {
+    val order = raw.copy(id = getOrderId)
 
-  def addOrder(takerSide: MarketSide, order: Order): OrderSubmitted = {
     val txsBuffer = new ListBuffer[Transaction]
 
-    val (totalOutAmount, totalInAmount, takerOrder, newMarket) =
-      addOrderRec(takerSide.reverse, takerSide, order, state, 0, 0, txsBuffer, order.id * MAX_TX_GROUP_SIZE)
-    state = newMarket
+    val (totalOutAmount, totalInAmount, takerOrder) =
+      addOrderToMarketRec(takerSide.reverse, takerSide, order, 0, 0, txsBuffer)
 
     val status =
       if (takerOrder.isFullyExecuted) OrderStatus.FullyExecuted
@@ -87,31 +88,22 @@ class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
     OrderSubmitted(orderInfo, txs)
   }
 
-  def removeOrder(side: MarketSide, id: Long, userId: Long): Order = {
-    val order = state.getOrder(id).get
-    state = state.removeOrder(side, id)
-    order
-  }
-
   @tailrec
-  private final def addOrderRec(makerSide: MarketSide, takerSide: MarketSide, takerOrder: Order,
-    market: MarketState, totalOutAmount: Long, totalInAmount: Long, txsBuffer: ListBuffer[Transaction],
-    txId: Long): ( /*totalOutAmount*/ Long, /*totalInAmount*/ Long, /*updatedTaker*/ Order, /*after order match*/ MarketState) = {
-    val makerOrderOption = market.orderPool(makerSide).headOption
+  private final def addOrderToMarketRec(makerSide: MarketSide, takerSide: MarketSide, takerOrder: Order,
+    totalOutAmount: Long, totalInAmount: Long, txsBuffer: ListBuffer[Transaction]): ( /*totalOutAmount*/ Long, /*totalInAmount*/ Long, /*updatedTaker*/ Order) = {
+    val makerOrderOption = orderPool(makerSide).headOption
     if (makerOrderOption == None || makerOrderOption.get.vprice * takerOrder.vprice > 1) {
       // Return point. Market-price order can not turn into a maker order
-      val updatedMarket =
-        if (takerOrder.isFullyExecuted || takerOrder.price == None || takerOrder.onlyTaker.getOrElse(false)) market
-        else market.addOrder(takerSide, takerOrder)
+      if (!takerOrder.isFullyExecuted && takerOrder.price != None && !takerOrder.onlyTaker.getOrElse(false)) addOrder(takerSide, takerOrder)
 
-      (totalOutAmount, totalInAmount, takerOrder, updatedMarket)
+      (totalOutAmount, totalInAmount, takerOrder)
     } else {
       val makerOrder = makerOrderOption.get
       val price = 1 / makerOrder.vprice
       val lvOutAmount = Math.min(takerOrder.maxOutAmount(price), makerOrder.maxInAmount(1 / price))
 
       if (lvOutAmount == 0) { // return point
-        (totalOutAmount, totalInAmount, takerOrder, market)
+        (totalOutAmount, totalInAmount, takerOrder)
       } else {
         val lvInAmount = Math.round(lvOutAmount * price)
 
@@ -127,18 +119,81 @@ class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
           else if (updatedMaker.isDust) Some(Dust)
           else None
 
-        txsBuffer += Transaction(txId, takerOrder.timestamp.getOrElse(0), takerSide,
+        txsBuffer += Transaction(getTxId, takerOrder.timestamp.getOrElse(0), takerSide,
           takerOrder --> updatedTaker, makerOrder --> updatedMaker.copy(refundReason = refundReason))
 
-        val updatedMarket = market.removeOrder(makerSide, makerOrder.id)
+        removeOrder(makerOrder.id)
         if (updatedMaker.isFullyExecuted) { // return point
-          addOrderRec(makerSide, takerSide, updatedTaker, updatedMarket,
-            totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, txsBuffer, txId + 1)
+          addOrderToMarketRec(makerSide, takerSide, updatedTaker, totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, txsBuffer)
         } else { // return point
-          (totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, updatedTaker,
-            updatedMarket.addOrder(makerSide, updatedMaker))
+          addOrder(makerSide, updatedMaker)
+          (totalOutAmount + lvOutAmount, totalInAmount + lvInAmount, updatedTaker)
         }
       }
     }
+  }
+
+  def getSnapshot = TMarketState(lastOrderId, lastTxId,
+    orderPools.map(item => (item._1 -> item._2.toList)),
+    orderMap.clone, priceRestriction, getFiltersSnapshot)
+
+  def loadSnapshot(s: TMarketState) {
+    lastOrderId = s.lastOrderId
+    lastTxId = s.lastTxId
+    orderPools.clear
+    orderPools ++= s.orderPools.map(item => (item._1 -> (SortedSet.empty[Order] ++ item._2)))
+    orderMap.clear
+    orderMap ++= s.orderMap
+    loadFiltersSnapshot(s.filters)
+  }
+
+  def isOrderPriceInGoodRange(takerSide: MarketSide, price: Option[Double]): Boolean = {
+    if (price.isEmpty) true
+    else if (price.get <= 0) false
+    else if (priceRestriction.isEmpty || orderPool(takerSide).isEmpty) true
+    else if (price.get / orderPool(takerSide).headOption.get.price.get - 1.0 <= priceRestriction.get) true
+    else false
+  }
+
+  def addOrder(side: MarketSide, order: Order) = {
+    assert(order.price.isDefined)
+    orderPools += (side -> (orderPool(side) + order))
+    orderMap += (order.id -> order)
+  }
+
+  def getOrderMarketSide(orderId: Long, userId: Long): Option[MarketSide] =
+    orderMap.get(orderId) filter (_.userId == userId) map { order =>
+      if (orderPool(tailSide).contains(order)) tailSide else headSide
+    }
+
+  def removeOrder(orderId: Long, userId: Long): (MarketSide, Order) = {
+    val order = orderMap(orderId)
+    assert(order.userId == userId)
+
+    orderMap -= orderId
+    if (orderPool(headSide).contains(order)) {
+      orderPools += (headSide -> (orderPool(headSide) - order))
+      (headSide, order)
+    } else {
+      orderPools += (tailSide -> (orderPool(tailSide) - order))
+      (tailSide, order)
+    }
+  }
+  private[markets] def orderPool(side: MarketSide) = orderPools.getOrElseUpdate(side, SortedSet.empty[Order])
+
+  private def removeOrder(orderId: Long) = {
+    val order = orderMap(orderId)
+    orderMap -= orderId
+    orderPools += (headSide -> (orderPool(headSide) - order))
+    orderPools += (tailSide -> (orderPool(tailSide) - order))
+  }
+
+  private def getOrderId(): Long = {
+    lastOrderId += 1
+    lastOrderId
+  }
+  private def getTxId(): Long = {
+    lastTxId += 1
+    lastTxId
   }
 }

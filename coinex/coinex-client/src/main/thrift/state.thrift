@@ -42,11 +42,12 @@ struct TAccountState {
 }
 
 struct TMarketState {
-    1: MarketSide side
-    2: map<MarketSide, list<Order>> orderPools
-    3: map<i64, Order> orderMap
-    4: optional double priceRestriction
-    5: RedeliverFilters filters
+    1: i64 lastOrderId
+    2: i64 lastTxId
+    3: map<MarketSide, list<Order>> orderPools
+    4: map<i64, Order> orderMap
+    5: optional double priceRestriction
+    6: RedeliverFilters filters
 }
 
 struct TApiSecretState {
@@ -55,6 +56,11 @@ struct TApiSecretState {
     3: string seed
 }
 
+struct TDepositWithdrawState {
+    1: i64 lastDepositId
+    2: i64 lastWithdrawId
+    3: RedeliverFilters filters
+}
 struct TMarketDepthState {
     1: map<double, i64> askMap
     2: map<double, i64> bidMap
