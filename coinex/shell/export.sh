@@ -5,7 +5,7 @@
 echo ================= Coinport Data Exporter =================
 echo export $1 events
 # data path
-path=/data
+path=/data/export
 tempFile=/tmp/export_cmd.sh
 touch $tempFile
 chmod +x $tempFile
