@@ -21,6 +21,8 @@ object Constants {
   // WARNING: this belongs to somewhere else
   type MarketEvent = (Option[Double], Option[Long]) // (price, volume)
 
+  type Action = (Robot, Option[Metrics]) => (Robot, Option[Any])
+
   // WARNING: this belongs to somewhere else
   val _24_HOURS: Long = 3600 * 24 * 1000
   val _10_SECONDS: Long = 10 * 1000

@@ -5,17 +5,23 @@
 
 package com.coinport.coinex
 
-import akka.actor.{ Props, ActorSystem }
-import akka.cluster.Cluster
-import com.typesafe.config.ConfigFactory
-
+import scala.concurrent.duration._
 import com.coinport.coinex.api.service._
+import com.coinport.coinex.data._
 import com.coinport.coinex.data.Currency._
 import com.coinport.coinex.data.EmailType._
 import com.coinport.coinex.data.Implicits._
-import com.coinport.coinex.data._
+import com.typesafe.config.ConfigFactory
+import akka.actor.ActorSystem
+import akka.actor.Props
+import akka.cluster.Cluster
+import akka.pattern.ask
+import akka.util.Timeout
+import com.coinport.coinex.robot.sample.StopOrderRobot
 
 object Client {
+  implicit val timeout = Timeout(10 seconds)
+
   private val config = ConfigFactory.load("client.conf")
   private implicit val system = ActorSystem("coinex", config)
   private implicit val cluster = Cluster(system)
@@ -26,6 +32,8 @@ object Client {
   println("Example: Client.backend ! SomeMessage()")
 
   System.setProperty("akka.config", "client.conf")
+
+  implicit val ec = AccountService.system.dispatcher
 
   val wd = -245561917658914311L
   val c = -6771488127296557565L
@@ -70,9 +78,11 @@ object Client {
         (robot -> "LOOP", action)
         """.format(risk(uid))
       )
-
-      val robot = Robot(uid, uid, uid, brain)
-      Client.backend ! DoSubmitRobot(robot)
+      Client.backend ? DoAddModel(brain) map { mid =>
+        val robot = Robot(uid, uid, uid, Map.empty[String, Option[Any]], "START", mid.asInstanceOf[Long])
+        println("generate robot >>>> id: " + robot.robotId)
+        Client.backend ! DoSubmitRobot(robot)
+      }
     }
   }
 

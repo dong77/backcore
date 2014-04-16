@@ -36,6 +36,10 @@ enum ErrorCode {
     ALREADY_CONFIRMED                = 6001
     DEPOSIT_NOT_EXIST                = 6002
     WITHDRAWAL_NOT_EXIST             = 6003
+
+    // Robot
+    ADD_ROBOT_FAILED                 = 7001
+    UPDATE_ROBOT_FAILED              = 7002
 }
 
 

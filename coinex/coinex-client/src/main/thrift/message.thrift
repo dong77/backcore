@@ -100,6 +100,12 @@ typedef data.ExportedEventType     ExportedEventType
 /* C,P  */ struct AdminConfirmCashWithdrawalFailure   {1: Withdrawal withdrawal, 2: ErrorCode error}
 /* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: Withdrawal withdrawal}
 
+/* R-   */ struct AddRobotModelFailed                 {1: ErrorCode error}
+/* R+   */ struct AddRobotModelSucceeded              {1: i64 robotId}
+
+/* R-   */ struct UpdateRobotModelFailed              {1: ErrorCode error}
+/* R+   */ struct UpdateRobotModelSucceeded           {1: i64 robotId}
+
 /* C,P  */ struct DoSubmitOrder                       {1: MarketSide side, 2: Order order}
 /* R-   */ struct SubmitOrderFailed                   {1: MarketSide side, 2: Order order, 3: ErrorCode error}
 /* I    */ struct OrderFundFrozen                     {1: MarketSide side, 2: Order order}
@@ -122,6 +128,10 @@ typedef data.ExportedEventType     ExportedEventType
 
 ////////// RobotProcessor commands
 /* C,P  */ struct DoUpdateMetrics                     {1: Metrics metrics}
+
+////////// RobotModelProcessor commands
+/* C,P  */ struct DoUpdateModel                       {1: i64 robotId, 2: map<string, string> states}
+/* C,P  */ struct DoAddModel                          {1: map<string, string> states}
 
 ////////// Mailer
 /* C    */ struct DoSendEmail                         {1: string email, 2: EmailType emailType, 3: map<string, string> params}

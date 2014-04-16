@@ -6,12 +6,14 @@
 package com.coinport.coinex.robot
 
 import com.coinport.coinex.data._
+import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.common.Manager
 import Implicits._
 
 class RobotManager extends Manager[RobotState] {
 
   var state = RobotState()
+  var models: Map[String, Map[String, String]] = Map.empty[String, Map[String, String]]
 
   override def getSnapshot = state
 
@@ -31,6 +33,19 @@ class RobotManager extends Manager[RobotState] {
       _ => state = state.removeRobot(id)
     }
     robot
+  }
+
+  def addRobotModel(states: scala.collection.immutable.Map[String, String]): Long = {
+    state = state.addRobotModel(states)
+    (state.robotModelMap.size.toLong - 1)
+  }
+
+  def updateRobotModel(id: Long, states: scala.collection.immutable.Map[String, String]) {
+    state = state.updateRobotModel(id, states)
+  }
+
+  def getModel(modelId: Long, currState: String): Action = {
+    state.robotModelMap(modelId)(currState)
   }
 
   def updateMetrics(m: Metrics) {

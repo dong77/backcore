@@ -57,6 +57,13 @@ class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor with Proce
 
     case Persistent(DoCancelRobot(id), _) =>
       manager.removeRobot(id)
+
+    case Persistent(DoAddModel(states), _) =>
+      val robotModelId = manager.addRobotModel(states.map(kv => (kv._1, kv._2)).toMap)
+      sender ! robotModelId
+
+    case Persistent(DoUpdateModel(robotModelId, states), _) =>
+      manager.updateRobotModel(robotModelId, states.map(kv => (kv._1, kv._2)).toMap)
   }
 
   private def scheduleActivateRobots() = {
@@ -68,7 +75,8 @@ class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor with Proce
     if (cancellable != null && !cancellable.isCancelled) cancellable.cancel()
 
   private def activateRobots() {
-    manager().getRobotPool.map(robot => robot.action(Some(manager().metrics))) foreach { res =>
+
+    manager().getRobotPool.map(robot => robot.action(Some(manager().metrics), manager.getModel(robot.modelId, robot.currentState))) foreach { res =>
       res match {
         case (newRobot, action) =>
           // robot doesn't change id

@@ -16,14 +16,13 @@ import com.coinport.coinex.data._
 // if user wrote: robot.setPayload("A", "1") we need change to r = robot.setPayload("A", "1")
 case class Robot(
     robotId: Long, userId: Long = COINPORT_UID, timestamp: Long = 0,
-    states: Map[String, String] = Map.empty[String, String],
     statesPayload: Map[String, Option[Any]] = Map.empty[String, Option[Any]],
-    currentState: String = "START") extends Object with Logging {
+    currentState: String = "START",
+    modelId: Long = 0) extends Object with Logging {
 
   // Option[Any] is the actual action of the robot, such as DoRequestCashDeposit.
   // This could be restrained from outter processor
   // TODO(c): try to make Metrics as T
-  type Action = (Robot, Option[Metrics]) => (Robot, Option[Any])
 
   private val START = "START"
   private val DONE = "DONE"
@@ -35,34 +34,23 @@ case class Robot(
   """
 
   // invoked by outter processor
-  def action(metrics: Option[Metrics] = None): (Robot, Option[Any]) = {
-    if (currentState == DONE) {
-      (this, None)
-    } else {
-      if (!states.contains(currentState)) {
-        log.error("robot #%d doesn't contain the state %s" format (this.robotId, currentState))
-        (this -> DONE, None)
-      } else {
-        val function = inflate(HEADER + states(currentState))
-        val result = try {
-          function(this, metrics)
-        } catch {
-          case ex: Throwable =>
-            log.error("exception occur in #%d robot's state %s handler" format (this.robotId, currentState), ex)
-            (this -> DONE, None)
-        }
-        result
+  def action(metrics: Option[Metrics] = None, actionFunction: Action): (Robot, Option[Any]) = currentState match {
+    case DONE => (this, None)
+    case cs if (actionFunction != null) =>
+      val function = actionFunction
+      try {
+        function(this, metrics)
+      } catch {
+        case ex: Throwable =>
+          log.error("exception occur in #%d robot's state %s handler" format (this.robotId, currentState), ex)
+          (this -> DONE, None)
       }
-    }
+    case _ =>
+      log.error("robot #%d doesn't contain the state %s" format (this.robotId, currentState))
+      (this, None)
   }
 
   def isDone = currentState == DONE
-
-  def addHandler(state: String)(handler: String): Robot = {
-    require(!states.contains(state), "can't set multiple handlers to one state")
-    require(state != null)
-    copy(states = states + (state -> handler))
-  }
 
   def getPayload[T](state: String) =
     Option(statesPayload.getOrElse(state, None).getOrElse(null).asInstanceOf[T])
