@@ -98,8 +98,8 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
 }
 
 final class DepositWithdrawManager extends Manager[TDepositWithdrawState] {
-  var lastDepositId = 0X1000000000000L
-  var lastWithdrawId = 0X2000000000000L
+  var lastDepositId = 1e10.toLong
+  var lastWithdrawId = 1e10.toLong
 
   def getSnapshot = TDepositWithdrawState(lastDepositId, lastWithdrawId, getFiltersSnapshot)
 
