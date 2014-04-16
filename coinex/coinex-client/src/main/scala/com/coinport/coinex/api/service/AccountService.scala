@@ -36,6 +36,21 @@ object AccountService extends AkkaService {
     }
   }
 
+  def withdrawal(uid: Long, currency: Currency, amount: Double): Future[ApiResult] = {
+    val internalAmount: Long = amount.internalValue(currency)
+
+    val withdrawal = Withdrawal(0L, uid.toLong, currency, internalAmount, TransferStatus.Pending)
+    backend ? DoRequestCashWithdrawal(withdrawal) map {
+      case result: RequestCashWithdrawalSucceeded =>
+        // TODO: confirm by admin dashboard
+        backend ! AdminConfirmCashWithdrawalSuccess(result.withdrawal)
+
+        ApiResult(true, 0, "提现申请已提交", Some(result))
+      case failed: RequestCashWithdrawalFailed =>
+        ApiResult(false, 1, "提现失败", Some(failed))
+    }
+  }
+
   def submitOrder(userOrder: UserOrder): Future[ApiResult] = {
     val command = userOrder.toDoSubmitOrder
     backend ? command map {

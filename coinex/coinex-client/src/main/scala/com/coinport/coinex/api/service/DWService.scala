@@ -34,10 +34,10 @@ object DWService extends AkkaService {
   }
 
   def getWithdrawal(userId: Option[Long], currency: Option[Currency], status: Option[TransferStatus], spanCur: Option[SpanCursor], cur: Cursor): Future[ApiResult] = {
-    backend ? QueryDeposit(userId, currency, status, spanCur, cur, false) map {
-      case result: QueryDepositResult =>
-        val items = result.deposits.map { d =>
-          ApiDeposit(d.id, d.userId,
+    backend ? QueryWithdrawal(userId, currency, status, spanCur, cur, false) map {
+      case result: QueryWithdrawalResult =>
+        val items = result.withdrawals.map { d =>
+          ApiWithdrawal(d.id, d.userId,
             CurrencyObject(
               d.currency,
               d.amount.externalValue(d.currency).toString,
