@@ -26,7 +26,7 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
 
   def receiveCommand = LoggingReceive {
     case p @ ConfirmablePersistent(DoRequestCashWithdrawal(w), seq, _) =>
-      persist(DoRequestCashWithdrawal(w.copy(id = manager.getWithdrawId))) {
+      persist(DoRequestCashWithdrawal(w.copy(id = manager.getDWId))) {
         event =>
           p.confirm()
           sender ! RequestCashWithdrawalSucceeded(event.withdrawal)
@@ -34,7 +34,7 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
       }
 
     case p @ ConfirmablePersistent(DoRequestCashDeposit(d), seq, _) =>
-      persist(DoRequestCashDeposit(d.copy(id = manager.getDepositId))) {
+      persist(DoRequestCashDeposit(d.copy(id = manager.getDWId))) {
         event =>
           p.confirm()
           sender ! RequestCashDepositSucceeded(event.deposit)
@@ -42,10 +42,10 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
       }
 
     case AdminConfirmCashDepositFailure(deposit, error) =>
-      deposits.get(deposit.id) match {
-        case Some(d) if d.status == TransferStatus.Pending =>
-          val updated = d.copy(updated = Some(System.currentTimeMillis), status = TransferStatus.Failed, reason = Some(error))
-          persist(AdminConfirmCashDepositFailure(updated, error)) { event =>
+      dwHandler.get(deposit.id) match {
+        case Some(dw: DWItem) if dw.status == TransferStatus.Pending =>
+          val updated = dw.copy(updated = Some(System.currentTimeMillis), status = TransferStatus.Failed, reason = Some(error))
+          persist(AdminConfirmCashDepositFailure(updated.toDeposit, error)) { event =>
             sender ! AdminCommandResult(Ok)
             updateState(event)
           }
@@ -54,10 +54,10 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
       }
 
     case AdminConfirmCashDepositSuccess(deposit) =>
-      deposits.get(deposit.id) match {
-        case Some(d) if d.status == TransferStatus.Pending =>
-          val updated = d.copy(updated = Some(System.currentTimeMillis), status = TransferStatus.Succeeded)
-          persist(AdminConfirmCashDepositSuccess(updated)) { event =>
+      dwHandler.get(deposit.id) match {
+        case Some(dw) if dw.status == TransferStatus.Pending =>
+          val updated = dw.copy(updated = Some(System.currentTimeMillis), status = TransferStatus.Succeeded)
+          persist(AdminConfirmCashDepositSuccess(updated.toDeposit)) { event =>
             deliverToAccountManager(event)
             updateState(event)
             sender ! AdminCommandResult(Ok)
@@ -67,10 +67,10 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
       }
 
     case AdminConfirmCashWithdrawalFailure(withdrawal, error) =>
-      withdrawals.get(withdrawal.id) match {
-        case Some(w) if w.status == TransferStatus.Pending =>
-          val updated = w.copy(updated = Some(System.currentTimeMillis), status = TransferStatus.Failed, reason = Some(error))
-          persist(AdminConfirmCashWithdrawalFailure(updated, error)) { event =>
+      dwHandler.get(withdrawal.id) match {
+        case Some(dw) if dw.status == TransferStatus.Pending =>
+          val updated = dw.copy(updated = Some(System.currentTimeMillis), status = TransferStatus.Failed, reason = Some(error))
+          persist(AdminConfirmCashWithdrawalFailure(updated.toWithdrawal, error)) { event =>
             deliverToAccountManager(event)
             updateState(event)
             sender ! AdminCommandResult(Ok)
@@ -80,10 +80,10 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
       }
 
     case AdminConfirmCashWithdrawalSuccess(withdrawal) =>
-      withdrawals.get(withdrawal.id) match {
-        case Some(w) if w.status == TransferStatus.Pending =>
-          val updated = w.copy(updated = Some(System.currentTimeMillis), status = TransferStatus.Succeeded)
-          persist(AdminConfirmCashWithdrawalSuccess(updated)) { event =>
+      dwHandler.get(withdrawal.id) match {
+        case Some(dw) if dw.status == TransferStatus.Pending =>
+          val updated = dw.copy(updated = Some(System.currentTimeMillis), status = TransferStatus.Succeeded)
+          persist(AdminConfirmCashWithdrawalSuccess(updated.toWithdrawal)) { event =>
             deliverToAccountManager(event)
             updateState(event)
             sender ! AdminCommandResult(Ok)
@@ -98,28 +98,25 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
 }
 
 final class DepositWithdrawManager extends Manager[TDepositWithdrawState] {
-  var lastDepositId = 1e10.toLong
-  var lastWithdrawId = 1e10.toLong
+  var lastDWId = 1e10.toLong
 
-  def getSnapshot = TDepositWithdrawState(lastDepositId, lastWithdrawId, getFiltersSnapshot)
+  def getSnapshot = TDepositWithdrawState(lastDWId, getFiltersSnapshot)
 
   override def loadSnapshot(s: TDepositWithdrawState) {
-    lastDepositId = s.lastDepositId
-    lastWithdrawId = s.lastWithdrawId
+    lastDWId = s.lastDWId
     loadFiltersSnapshot(s.filters)
   }
 
-  def getDepositId = { lastDepositId += 1; lastDepositId }
-  def getWithdrawId = { lastWithdrawId += 1; lastWithdrawId }
+  def getDWId = { lastDWId += 1; lastDWId }
 }
 
 trait DepositWithdrawBehavior {
   val db: MongoDB
 
-  val deposits = new SimpleJsonMongoCollection[Deposit, Deposit.Immutable] {
-    lazy val coll = db("deposits")
-    def extractId(deposit: Deposit) = deposit.id
-    def getQueryDBObject(q: QueryDeposit): MongoDBObject = {
+  val dwHandler = new SimpleJsonMongoCollection[DWItem, DWItem.Immutable]() {
+    lazy val coll = db("deposits_withdrawal")
+    def extractId(item: DWItem) = item.id
+    def getQueryDBObject(q: QueryDW): MongoDBObject = {
       var query = MongoDBObject()
       if (q.uid.isDefined) query ++= MongoDBObject(DATA + "." + Deposit.UserIdField.name -> q.uid.get)
       if (q.currency.isDefined) query ++= MongoDBObject(DATA + "." + Deposit.CurrencyField.name -> q.currency.get.name)
@@ -129,25 +126,12 @@ trait DepositWithdrawBehavior {
     }
   }
 
-  val withdrawals = new SimpleJsonMongoCollection[Withdrawal, Withdrawal.Immutable] {
-    lazy val coll = db("withdrawal")
-    def extractId(withdrawal: Withdrawal) = withdrawal.id
-    def getQueryDBObject(q: QueryWithdrawal): MongoDBObject = {
-      var query = MongoDBObject()
-      if (q.uid.isDefined) query ++= MongoDBObject(DATA + "." + Withdrawal.UserIdField.name -> q.uid.get)
-      if (q.currency.isDefined) query ++= MongoDBObject(DATA + "." + Withdrawal.CurrencyField.name -> q.currency.get.name)
-      if (q.status.isDefined) query ++= MongoDBObject(DATA + "." + Withdrawal.StatusField.name -> q.status.get.name)
-      if (q.spanCur.isDefined) query ++= (DATA + "." + Withdrawal.CreatedField.name $lte q.spanCur.get.from $gte q.spanCur.get.to)
-      query
-    }
-  }
-
   def updateState: Receive = {
-    case DoRequestCashDeposit(d) => deposits.put(d)
-    case DoRequestCashWithdrawal(w) => withdrawals.put(w)
-    case AdminConfirmCashDepositSuccess(d) => deposits.put(d)
-    case AdminConfirmCashDepositFailure(d, _) => deposits.put(d)
-    case AdminConfirmCashWithdrawalSuccess(w) => withdrawals.put(w)
-    case AdminConfirmCashWithdrawalFailure(w, _) => withdrawals.put(w)
+    case m: DoRequestCashDeposit => dwHandler.put(m.deposit)
+    case m: DoRequestCashWithdrawal => dwHandler.put(m.withdrawal)
+    case m: AdminConfirmCashDepositSuccess => dwHandler.put(m.deposit)
+    case m: AdminConfirmCashDepositFailure => dwHandler.put(m.deposit)
+    case m: AdminConfirmCashWithdrawalSuccess => dwHandler.put(m.withdrawal)
+    case m: AdminConfirmCashWithdrawalFailure => dwHandler.put(m.withdrawal)
   }
 }

@@ -19,6 +19,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cCandleDataItem = BinaryScalaCodec(CandleDataItem)
   lazy val _cCashAccount = BinaryScalaCodec(CashAccount)
   lazy val _cCursor = BinaryScalaCodec(Cursor)
+  lazy val _cDWItem = BinaryScalaCodec(DWItem)
   lazy val _cDeposit = BinaryScalaCodec(Deposit)
   lazy val _cFee = BinaryScalaCodec(Fee)
   lazy val _cMarketDepth = BinaryScalaCodec(MarketDepth)
@@ -83,8 +84,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cQueryAssetResult = BinaryScalaCodec(QueryAssetResult)
   lazy val _cQueryCandleData = BinaryScalaCodec(QueryCandleData)
   lazy val _cQueryCandleDataResult = BinaryScalaCodec(QueryCandleDataResult)
-  lazy val _cQueryDeposit = BinaryScalaCodec(QueryDeposit)
-  lazy val _cQueryDepositResult = BinaryScalaCodec(QueryDepositResult)
+  lazy val _cQueryDW = BinaryScalaCodec(QueryDW)
+  lazy val _cQueryDWResult = BinaryScalaCodec(QueryDWResult)
   lazy val _cQueryExportToMongoState = BinaryScalaCodec(QueryExportToMongoState)
   lazy val _cQueryMarketDepth = BinaryScalaCodec(QueryMarketDepth)
   lazy val _cQueryMarketDepthResult = BinaryScalaCodec(QueryMarketDepthResult)
@@ -92,8 +93,6 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cQueryOrderResult = BinaryScalaCodec(QueryOrderResult)
   lazy val _cQueryTransaction = BinaryScalaCodec(QueryTransaction)
   lazy val _cQueryTransactionResult = BinaryScalaCodec(QueryTransactionResult)
-  lazy val _cQueryWithdrawal = BinaryScalaCodec(QueryWithdrawal)
-  lazy val _cQueryWithdrawalResult = BinaryScalaCodec(QueryWithdrawalResult)
   lazy val _cRegisterUserFailed = BinaryScalaCodec(RegisterUserFailed)
   lazy val _cRegisterUserSucceeded = BinaryScalaCodec(RegisterUserSucceeded)
   lazy val _cRequestCashDepositFailed = BinaryScalaCodec(RequestCashDepositFailed)
@@ -128,6 +127,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: CandleDataItem => _cCandleDataItem(m)
     case m: CashAccount => _cCashAccount(m)
     case m: Cursor => _cCursor(m)
+    case m: DWItem => _cDWItem(m)
     case m: Deposit => _cDeposit(m)
     case m: Fee => _cFee(m)
     case m: MarketDepth => _cMarketDepth(m)
@@ -192,8 +192,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: QueryAssetResult => _cQueryAssetResult(m)
     case m: QueryCandleData => _cQueryCandleData(m)
     case m: QueryCandleDataResult => _cQueryCandleDataResult(m)
-    case m: QueryDeposit => _cQueryDeposit(m)
-    case m: QueryDepositResult => _cQueryDepositResult(m)
+    case m: QueryDW => _cQueryDW(m)
+    case m: QueryDWResult => _cQueryDWResult(m)
     case m: QueryExportToMongoState => _cQueryExportToMongoState(m)
     case m: QueryMarketDepth => _cQueryMarketDepth(m)
     case m: QueryMarketDepthResult => _cQueryMarketDepthResult(m)
@@ -201,8 +201,6 @@ class ThriftBinarySerializer extends Serializer {
     case m: QueryOrderResult => _cQueryOrderResult(m)
     case m: QueryTransaction => _cQueryTransaction(m)
     case m: QueryTransactionResult => _cQueryTransactionResult(m)
-    case m: QueryWithdrawal => _cQueryWithdrawal(m)
-    case m: QueryWithdrawalResult => _cQueryWithdrawalResult(m)
     case m: RegisterUserFailed => _cRegisterUserFailed(m)
     case m: RegisterUserSucceeded => _cRegisterUserSucceeded(m)
     case m: RequestCashDepositFailed => _cRequestCashDepositFailed(m)
@@ -241,6 +239,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[CandleDataItem.Immutable] => _cCandleDataItem.invert(bytes).get
     case Some(c) if c == classOf[CashAccount.Immutable] => _cCashAccount.invert(bytes).get
     case Some(c) if c == classOf[Cursor.Immutable] => _cCursor.invert(bytes).get
+    case Some(c) if c == classOf[DWItem.Immutable] => _cDWItem.invert(bytes).get
     case Some(c) if c == classOf[Deposit.Immutable] => _cDeposit.invert(bytes).get
     case Some(c) if c == classOf[Fee.Immutable] => _cFee.invert(bytes).get
     case Some(c) if c == classOf[MarketDepth.Immutable] => _cMarketDepth.invert(bytes).get
@@ -305,8 +304,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[QueryAssetResult.Immutable] => _cQueryAssetResult.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleData.Immutable] => _cQueryCandleData.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleDataResult.Immutable] => _cQueryCandleDataResult.invert(bytes).get
-    case Some(c) if c == classOf[QueryDeposit.Immutable] => _cQueryDeposit.invert(bytes).get
-    case Some(c) if c == classOf[QueryDepositResult.Immutable] => _cQueryDepositResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryDW.Immutable] => _cQueryDW.invert(bytes).get
+    case Some(c) if c == classOf[QueryDWResult.Immutable] => _cQueryDWResult.invert(bytes).get
     case Some(c) if c == classOf[QueryExportToMongoState.Immutable] => _cQueryExportToMongoState.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepth.Immutable] => _cQueryMarketDepth.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepthResult.Immutable] => _cQueryMarketDepthResult.invert(bytes).get
@@ -314,8 +313,6 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[QueryOrderResult.Immutable] => _cQueryOrderResult.invert(bytes).get
     case Some(c) if c == classOf[QueryTransaction.Immutable] => _cQueryTransaction.invert(bytes).get
     case Some(c) if c == classOf[QueryTransactionResult.Immutable] => _cQueryTransactionResult.invert(bytes).get
-    case Some(c) if c == classOf[QueryWithdrawal.Immutable] => _cQueryWithdrawal.invert(bytes).get
-    case Some(c) if c == classOf[QueryWithdrawalResult.Immutable] => _cQueryWithdrawalResult.invert(bytes).get
     case Some(c) if c == classOf[RegisterUserFailed.Immutable] => _cRegisterUserFailed.invert(bytes).get
     case Some(c) if c == classOf[RegisterUserSucceeded.Immutable] => _cRegisterUserSucceeded.invert(bytes).get
     case Some(c) if c == classOf[RequestCashDepositFailed.Immutable] => _cRequestCashDepositFailed.invert(bytes).get

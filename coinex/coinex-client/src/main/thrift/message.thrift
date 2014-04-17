@@ -36,6 +36,7 @@ typedef data.QueryMarketSide       QueryMarketSide
 typedef data.UserAsset             UserAsset
 typedef data.MarketPrice           MarketPrice
 typedef data.ExportedEventType     ExportedEventType
+typedef data.DWItem                DWItem
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -150,13 +151,9 @@ typedef data.ExportedEventType     ExportedEventType
 /* Q    */ struct QueryTransaction                    {1: optional i64 tid, 2: optional i64 uid, 3: optional i64 oid, 4:optional QueryMarketSide side, 5: Cursor cursor, 6: bool getCount}
 /* R    */ struct QueryTransactionResult              {1: list<TransactionItem> transactionItems, 2: i64 count}
 
-////////// DepositQuery
-/* Q    */ struct QueryDeposit                        {1: optional i64 uid, 2: optional Currency currency, 3: optional TransferStatus status, 4: optional SpanCursor spanCur, 5: Cursor cur, 6: bool getCount}
-/* R    */ struct QueryDepositResult                  {1: list<Deposit> deposits, 2: i64 count}
-
-////////// WithdrawalQuery
-/* Q    */ struct QueryWithdrawal                     {1: optional i64 uid, 2: optional Currency currency, 3: optional TransferStatus status,  4: optional SpanCursor spanCur, 5: Cursor cur, 6: bool getCount}
-/* R    */ struct QueryWithdrawalResult               {1: list<Withdrawal> withdrawals, 2: i64 count}
+////////// Deposit and WithDrawal Query
+/* Q    */ struct QueryDW                             {1: optional i64 uid, 2: optional Currency currency, 3: optional TransferStatus status, 4: optional SpanCursor spanCur, 5:optional bool isDeposit, 6: Cursor cur, 7: bool getCount}
+/* R    */ struct QueryDWResult                       {1: list<DWItem> dwitems, 2: i64 count}
 
 ////////// AssetQuery
 /* Q    */ struct QueryAsset                          {1: i64 uid, 2: i64 from, 3: i64 to}

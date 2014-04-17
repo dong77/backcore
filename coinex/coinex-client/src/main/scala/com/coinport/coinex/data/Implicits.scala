@@ -71,6 +71,14 @@ class RichOrderSubmitted(raw: OrderSubmitted) {
   def hasTransaction = raw.txs != null && raw.txs.nonEmpty
 }
 
+class RichDW(raw: DWItem) {
+  implicit def dConversion(d: Deposit) = DWItem(d.id, d.userId, d.currency, d.amount, d.status, true, d.created, d.updated, d.reason, d.fee)
+  implicit def wConversion(w: Withdrawal) = DWItem(w.id, w.userId, w.currency, w.amount, w.status, false, w.created, w.updated, w.reason, w.fee)
+
+  def toDeposit = Deposit(raw.id, raw.userId, raw.currency, raw.amount, raw.status, raw.created, raw.updated, raw.reason, raw.fee)
+  def toWithdrawal = Withdrawal(raw.id, raw.userId, raw.currency, raw.amount, raw.status, raw.created, raw.updated, raw.reason, raw.fee)
+}
+
 class RichCashAccount(raw: CashAccount) {
   def total: Long = raw.available + raw.locked + raw.pendingWithdrawal
 
@@ -130,6 +138,7 @@ object Implicits {
   implicit def orderSubmitted2Rich(raw: OrderSubmitted) = new RichOrderSubmitted(raw)
   implicit def cashAccont2Rich(raw: CashAccount) = new RichCashAccount(raw)
   implicit def candleDataItem2Rich(raw: CandleDataItem) = new RichCandleDataItem(raw)
+  implicit def dw2RichDW(raw: DWItem) = new RichDW(raw)
 
   implicit def constantRole2Rich(raw: ConstantRole.Value) = new RichConstRole(raw)
   implicit def marketRole2Rich(raw: MarketRole.Value) = new RichMarketRole(raw)
@@ -145,4 +154,7 @@ object Implicits {
     }
   }
   implicit def string2RichMarket(raw: String): Market = string2RichMarketSide(raw).market
+
+  implicit def dConversion(d: Deposit) = DWItem(d.id, d.userId, d.currency, d.amount, d.status, true, d.created, d.updated, d.reason, d.fee)
+  implicit def wConversion(w: Withdrawal) = DWItem(w.id, w.userId, w.currency, w.amount, w.status, false, w.created, w.updated, w.reason, w.fee)
 }

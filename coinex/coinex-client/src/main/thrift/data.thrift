@@ -268,6 +268,19 @@ struct Withdrawal {
     9: optional Fee fee
 }
 
+struct DWItem {
+    1: i64 id
+    2: i64 userId
+    3: Currency currency
+    4: i64 amount
+    5: TransferStatus status
+    6: bool isDeposit
+    7: optional i64 created
+    8: optional i64 updated
+    9: optional ErrorCode reason
+    10: optional Fee fee
+}
+
 struct Cursor {
     1: i32 skip
     2: i32 limit

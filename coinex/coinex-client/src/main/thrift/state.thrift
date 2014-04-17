@@ -57,10 +57,10 @@ struct TApiSecretState {
 }
 
 struct TDepositWithdrawState {
-    1: i64 lastDepositId
-    2: i64 lastWithdrawId
-    3: RedeliverFilters filters
+    1: i64 lastDWId
+    2: RedeliverFilters filters
 }
+
 struct TMarketDepthState {
     1: map<double, i64> askMap
     2: map<double, i64> bidMap
