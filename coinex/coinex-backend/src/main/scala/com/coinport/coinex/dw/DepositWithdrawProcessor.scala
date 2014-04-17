@@ -118,10 +118,11 @@ trait DepositWithdrawBehavior {
     def extractId(item: DWItem) = item.id
     def getQueryDBObject(q: QueryDW): MongoDBObject = {
       var query = MongoDBObject()
-      if (q.uid.isDefined) query ++= MongoDBObject(DATA + "." + Deposit.UserIdField.name -> q.uid.get)
-      if (q.currency.isDefined) query ++= MongoDBObject(DATA + "." + Deposit.CurrencyField.name -> q.currency.get.name)
-      if (q.status.isDefined) query ++= MongoDBObject(DATA + "." + Deposit.StatusField.name -> q.status.get.name)
-      if (q.spanCur.isDefined) query ++= (DATA + "." + Deposit.CreatedField.name $lte q.spanCur.get.from $gte q.spanCur.get.to)
+      if (q.uid.isDefined) query ++= MongoDBObject(DATA + "." + DWItem.UserIdField.name -> q.uid.get)
+      if (q.currency.isDefined) query ++= MongoDBObject(DATA + "." + DWItem.CurrencyField.name -> q.currency.get.name)
+      if (q.isDeposit.isDefined) query ++= MongoDBObject(DATA + "." + DWItem.IsDepositField.name -> q.isDeposit.get)
+      if (q.status.isDefined) query ++= MongoDBObject(DATA + "." + DWItem.StatusField.name -> q.status.get.name)
+      if (q.spanCur.isDefined) query ++= (DATA + "." + DWItem.CreatedField.name $lte q.spanCur.get.from $gte q.spanCur.get.to)
       query
     }
   }

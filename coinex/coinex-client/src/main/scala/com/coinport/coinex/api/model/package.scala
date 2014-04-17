@@ -91,19 +91,19 @@ package object model {
     duration.toMillis
   }
 
-  class CandleDataItemSerializer extends CustomSerializer[CandleDataItem](
+  class CandleDataItemSerializer() extends CustomSerializer[CandleDataItem](
     format => ({
       null // deserializer is not implemented
     }, {
       case candleDataItem: CandleDataItem =>
-        val side = Btc ~> Rmb // TODO: put side in CandleDataItem
+        val side = candleDataItem.side
         JArray(List(
           JDecimal(candleDataItem.timestamp),
           JDouble(candleDataItem.open.externalValue(side)),
           JDouble(candleDataItem.high.externalValue(side)),
           JDouble(candleDataItem.low.externalValue(side)),
           JDouble(candleDataItem.close.externalValue(side)),
-          JDouble(candleDataItem.inAoumt.externalValue(Btc)) // TODO: remove hardcoded subject
+          JDouble(candleDataItem.outAoumt.externalValue(side._1)) // TODO: remove hardcoded subject
         ))
     })
   )

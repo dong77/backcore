@@ -22,7 +22,7 @@ class CandleDataView(market: MarketSide) extends ExtendedView {
 
   def receive = LoggingReceive {
     case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
-      if (!txs.isEmpty) manager.updateCandleItem(txs.last)
+      txs.foreach(tx => manager.updateCandleItem(tx))
 
     case QueryCandleData(side, dimension, from, to) if side == market || side == market.reverse =>
       sender ! QueryCandleDataResult(CandleData(manager.getCandleItems(dimension, from, to), side))
@@ -61,9 +61,9 @@ class CandleDataManager(marketSide: MarketSide) extends Manager[TCandleDataState
         val item = itemMap.get(key) match {
           case Some(item) =>
             CandleDataItem(key, item.inAoumt + in, item.outAoumt + out,
-              item.open, price, Math.min(item.low, price), Math.max(item.high, price))
+              item.open, price, Math.min(item.low, price), Math.max(item.high, price), marketSide)
           case None =>
-            CandleDataItem(key, in, out, price, price, price, price)
+            CandleDataItem(key, in, out, price, price, price, price, marketSide)
         }
         itemMap.put(key, item)
     }

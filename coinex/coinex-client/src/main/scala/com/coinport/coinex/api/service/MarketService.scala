@@ -32,9 +32,9 @@ object MarketService extends AkkaService {
             map.get(key) match {
               case Some(item) =>
                 open = item.close
-                CandleDataItem(key * timeSkip, item.inAoumt, item.outAoumt, item.open, item.close, item.low, item.high)
+                CandleDataItem(key * timeSkip, item.inAoumt, item.outAoumt, item.open, item.close, item.low, item.high, item.side)
               case None =>
-                CandleDataItem(key * timeSkip, 0, 0, open, open, open, open)
+                CandleDataItem(key * timeSkip, 0, 0, open, open, open, open, marketSide)
             }
         }.toSeq
         ApiResult(data = Some(data))

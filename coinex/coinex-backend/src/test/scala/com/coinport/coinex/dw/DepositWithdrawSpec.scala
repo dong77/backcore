@@ -40,5 +40,4 @@ class DepositWithdrawSpec extends EmbeddedMongoForTestWithBF {
       dw.dwHandler.find(dw.dwHandler.getQueryDBObject(q), 0, 10).map(_.id) should equal(Seq(3, 2))
     }
   }
-
 }

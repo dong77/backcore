@@ -112,7 +112,8 @@ class RichCandleDataItem(raw: CandleDataItem) {
       another.open,
       raw.close,
       Math.min(raw.low, another.low),
-      Math.max(raw.high, another.high))
+      Math.max(raw.high, another.high),
+      raw.side)
 }
 
 class RichConstRole(v: ConstantRole.Value) {
