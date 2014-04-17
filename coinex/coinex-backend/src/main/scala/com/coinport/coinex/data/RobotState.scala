@@ -80,7 +80,7 @@ case class RobotState(
     var stateAction: Map[String, Action] = states map { state =>
       (state._1 -> inflate(state._2))
     }
-    val brainId = MHash.murmur3((SortedMap[String, Action]() ++ stateAction).toString)
+    val brainId = MHash.murmur3((SortedMap[String, Action]() ++ states).toString)
     robotBrainMap.contains(brainId)
   }
 
