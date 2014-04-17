@@ -42,7 +42,7 @@ case class RobotState(
     var stateAction: Map[String, Action] = states map { state =>
       (state._1 -> inflate(state._2))
     }
-    val brainId = MHash.murmur3((SortedMap[String, Action]() ++ states).toString)
+    val brainId = genBrainId(states)
 
     if (robotBrainMap.contains(brainId)) {
       log.debug("[EXIST ROBOT BRAIN] id: %d".format(brainId))
@@ -77,11 +77,7 @@ case class RobotState(
   }
 
   def isExistRobotBrain(states: scala.collection.immutable.Map[String, String]): Boolean = {
-    var stateAction: Map[String, Action] = states map { state =>
-      (state._1 -> inflate(state._2))
-    }
-    val brainId = MHash.murmur3((SortedMap[String, Action]() ++ states).toString)
-    robotBrainMap.contains(brainId)
+    robotBrainMap.contains(genBrainId(states))
   }
 
   def getUsingRobots(brainId: Long): SortedSet[Long] = {
@@ -100,6 +96,10 @@ case class RobotState(
     } else {
       copy(robotBrainMap = robotBrainMap - brainId)
     }
+  }
+
+  private def genBrainId(states: scala.collection.immutable.Map[String, String]): Long = {
+    MHash.murmur3((SortedMap[String, String]() ++ states).toString)
   }
 
 }
