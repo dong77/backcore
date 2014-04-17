@@ -23,7 +23,7 @@ import com.coinport.coinex.api.model.Operations._
 
 // Order from the view of users
 case class UserOrder(
-    uid: Long,
+    uid: String,
     operation: Operation,
     subject: Currency,
     currency: Currency,
@@ -31,7 +31,7 @@ case class UserOrder(
     amount: Option[Double],
     total: Option[Double],
     status: Int = 0,
-    id: Long = 0L,
+    id: String = "0",
     submitTime: Long = 0L,
     finishedQuantity: Double = 0.0,
     remainingQuantity: Double = 0.0,
@@ -57,7 +57,7 @@ case class UserOrder(
           case None => (amount.get * price.get).internalValue(currency)
         }
         val limit = amount.map(_.internalValue(subject))
-        DoSubmitOrder(marketSide, Order(uid, id, quantity, newPrice, limit))
+        DoSubmitOrder(marketSide, Order(uid.toLong, id.toLong, quantity, newPrice, limit))
       case Sell =>
         // TODO: handle None total or price
         val newPrice = price.map(p => p.internalValue(marketSide))
@@ -72,7 +72,7 @@ case class UserOrder(
         val limit = total map {
           total => total.internalValue(currency)
         }
-        DoSubmitOrder(marketSide, Order(uid, id, quantity, newPrice, limit))
+        DoSubmitOrder(marketSide, Order(uid.toLong, id.toLong, quantity, newPrice, limit))
     }
   }
 }
@@ -107,10 +107,10 @@ object UserOrder {
         }
 
         val status = orderInfo.status
-        val tid = order.id
+        val id = order.id
         val timestamp = order.timestamp.getOrElse(0L)
 
-        UserOrder(order.userId, Sell, unit1, unit2, price, amount, total, status.value, tid, timestamp)
+        UserOrder(order.userId.toString, Sell, unit1, unit2, price, amount, total, status.value, id.toString, timestamp)
           .copy(finishedQuantity = finishedQuantity,
             remainingQuantity = remainingQuantity,
             finishedAmount = finishedAmount,
@@ -137,10 +137,10 @@ object UserOrder {
         val remainingAmount = (order.quantity - orderInfo.outAmount).externalValue(unit1)
 
         val status = orderInfo.status
-        val tid = order.id
+        val id = order.id
         val timestamp = order.timestamp.getOrElse(0L)
 
-        UserOrder(order.userId, Buy, unit2, unit1, price, amount, total, status.value, tid, timestamp)
+        UserOrder(order.userId.toString, Buy, unit2, unit1, price, amount, total, status.value, id.toString, timestamp)
           .copy(finishedQuantity = finishedQuantity,
             remainingQuantity = remainingQuantity,
             finishedAmount = finishedAmount,

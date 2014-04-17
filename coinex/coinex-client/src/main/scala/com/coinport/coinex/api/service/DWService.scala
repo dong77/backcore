@@ -15,7 +15,7 @@ object DWService extends AkkaService {
     backend ? QueryDeposit(userId, currency, status, spanCur, cur, false) map {
       case result: QueryDepositResult =>
         val items = result.deposits.map { d =>
-          ApiDeposit(d.id, d.userId,
+          ApiDeposit(d.id.toString, d.userId.toString,
             CurrencyObject(
               d.currency,
               d.amount.externalValue(d.currency).toString,
@@ -37,7 +37,7 @@ object DWService extends AkkaService {
     backend ? QueryWithdrawal(userId, currency, status, spanCur, cur, false) map {
       case result: QueryWithdrawalResult =>
         val items = result.withdrawals.map { d =>
-          ApiWithdrawal(d.id, d.userId,
+          ApiWithdrawal(d.id.toString, d.userId.toString,
             CurrencyObject(
               d.currency,
               d.amount.externalValue(d.currency).toString,

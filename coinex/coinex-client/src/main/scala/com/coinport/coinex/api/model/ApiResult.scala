@@ -10,7 +10,7 @@ case class CurrencyObject(currency: String, display: String, display_short: Stri
 
 case class SubmitOrderResult(order: UserOrder)
 
-case class UserAccount(uid: Long, accounts: Map[String, Double] = Map())
+case class UserAccount(uid: String, accounts: Map[String, Double] = Map())
 
 case class MarketDepthItem(price: Double, amount: Double)
 
@@ -18,8 +18,8 @@ case class MarketDepth(bids: Seq[MarketDepthItem], asks: Seq[MarketDepthItem])
 
 case class Ticker(price: CurrencyObject, high: CurrencyObject, low: CurrencyObject, volume: CurrencyObject, gain: Option[Double] = None, trend: Option[String] = None)
 
-case class Transaction(id: Long, timestamp: Long, price: Double, amount: Double, total: Double, maker: Long, taker: Long, sell: Boolean)
+case class Transaction(id: String, timestamp: Long, price: Double, amount: Double, total: Double, maker: String, taker: String, sell: Boolean)
 
-case class ApiDeposit(id: Long, userId: Long, deposit: CurrencyObject, status: Int, created: Long, updated: Long)
+case class ApiDeposit(id: String, uid: String, deposit: CurrencyObject, status: Int, created: Long, updated: Long)
 
-case class ApiWithdrawal(id: Long, userId: Long, withdrawal: CurrencyObject, status: Int, created: Long, updated: Long)
+case class ApiWithdrawal(id: String, uid: String, withdrawal: CurrencyObject, status: Int, created: Long, updated: Long)

@@ -64,13 +64,13 @@ object MarketService extends AkkaService {
             val maker = item.maker
 
             com.coinport.coinex.api.model.Transaction(
-              id = id,
+              id = id.toString,
               timestamp = timestamp,
               price = price,
               amount = volume,
               total = total,
-              taker = taker,
-              maker = maker,
+              taker = taker.toString,
+              maker = maker.toString,
               sell = isSell
             )
         }

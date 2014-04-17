@@ -55,7 +55,7 @@ package object model {
         currency -> v.available.externalValue(k)
     }.toMap
 
-    com.coinport.coinex.api.model.UserAccount(uid, accounts = map)
+    com.coinport.coinex.api.model.UserAccount(uid.toString, accounts = map)
   }
 
   // market depth conversions
@@ -66,8 +66,8 @@ package object model {
       item: com.coinport.coinex.data.MarketDepthItem =>
         com.coinport.coinex.api.model.MarketDepthItem(item.price.externalValue(side), item.quantity.externalValue(subject))
     }
-    val bids = backendObj.bids.map(mapper)
-    val asks = backendObj.asks.map(mapper)
+    val bids = backendObj.bids.map(mapper).toSeq
+    val asks = backendObj.asks.map(mapper).toSeq
     com.coinport.coinex.api.model.MarketDepth(bids = bids, asks = asks)
   }
 
