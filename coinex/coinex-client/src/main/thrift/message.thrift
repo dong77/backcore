@@ -101,6 +101,12 @@ typedef data.DWItem                DWItem
 /* C,P  */ struct AdminConfirmCashWithdrawalFailure   {1: Withdrawal withdrawal, 2: ErrorCode error}
 /* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: Withdrawal withdrawal}
 
+/* R-   */ struct AddRobotBrainFailed                 {1: ErrorCode error}
+/* R+   */ struct AddRobotBrainSucceeded              {1: i64 brainId}
+
+/* R-   */ struct RemoveRobotBrainFailed              {1: ErrorCode error, 2: string robotIds}
+/* R+   */ struct RemoveRobotBrainSucceeded           {1: i64 brainId}
+
 /* C,P  */ struct DoSubmitOrder                       {1: MarketSide side, 2: Order order}
 /* R-   */ struct SubmitOrderFailed                   {1: MarketSide side, 2: Order order, 3: ErrorCode error}
 /* I    */ struct OrderFundFrozen                     {1: MarketSide side, 2: Order order}
@@ -123,6 +129,8 @@ typedef data.DWItem                DWItem
 
 ////////// RobotProcessor commands
 /* C,P  */ struct DoUpdateMetrics                     {1: Metrics metrics}
+/* C,P  */ struct DoAddRobotBrain                     {1: map<string, string> states}
+/* C,P  */ struct DoRemoveRobotBrain                  {1: i64 brainId}
 
 ////////// Mailer
 /* C    */ struct DoSendEmail                         {1: string email, 2: EmailType emailType, 3: map<string, string> params}

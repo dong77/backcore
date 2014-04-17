@@ -6,6 +6,13 @@
 package com.coinport.coinex.data
 
 import scala.collection.immutable.SortedSet
+import com.twitter.util.Eval
+import com.coinport.coinex.common.Constants._
+import org.slf4s.Logging
+import com.coinport.coinex.robot.RobotBrain
+import com.coinport.coinex.robot.RobotBrain
+import scala.collection.immutable.SortedMap
+import com.coinport.coinex.util.MHash
 
 object RobotState {
   implicit val ordering = new Ordering[Robot] {
@@ -13,19 +20,37 @@ object RobotState {
   }
 
   val EmptyRobotPool = SortedSet.empty[Robot]
+
 }
 
 case class RobotState(
     robotPool: SortedSet[Robot] = RobotState.EmptyRobotPool,
     robotMap: Map[Long, Robot] = Map.empty[Long, Robot],
-    metrics: Metrics = Metrics()) {
+    metrics: Metrics = Metrics(),
+    robotBrainMap: Map[Long, RobotBrain] = Map.empty[Long, RobotBrain]) extends Object with Logging {
 
   def getRobot(id: Long): Option[Robot] = robotMap.get(id)
 
   def getRobotPool = robotPool
 
   def addRobot(robot: Robot): RobotState = {
+    log.debug("[ADD ROBOT] robotId: %d, brainId: %s".format(robot.robotId, robot.brainId))
     copy(robotPool = robotPool + robot, robotMap = robotMap + (robot.robotId -> robot))
+  }
+
+  def addRobotBrain(states: scala.collection.immutable.Map[String, String]): (Long, RobotState) = {
+    var stateAction: Map[String, Action] = states map { state =>
+      (state._1 -> inflate(state._2))
+    }
+    val brainId = genBrainId(states)
+
+    if (robotBrainMap.contains(brainId)) {
+      log.debug("[EXIST ROBOT BRAIN] id: %d".format(brainId))
+      (brainId, this)
+    } else {
+      log.debug("[ADD ROBOT BRAIN] id: %d, state: %s".format(robotBrainMap.size, stateAction.keySet.mkString(",")))
+      (brainId, copy(robotBrainMap = robotBrainMap + (brainId -> RobotBrain(brainId, stateAction))))
+    }
   }
 
   def removeRobot(rid: Long): RobotState = {
@@ -39,4 +64,42 @@ case class RobotState(
   def updateMetrics(m: Metrics): RobotState = {
     copy(metrics = m)
   }
+
+  def inflate(source: String): Action = {
+
+    val HEADER = """
+      import com.coinport.coinex.data._
+      import com.coinport.coinex.data.Currency._
+      (robot: Robot, metrics: Option[Metrics]) =>
+
+    """
+    (new Eval()(HEADER + source)).asInstanceOf[Action]
+  }
+
+  def isExistRobotBrain(states: scala.collection.immutable.Map[String, String]): Boolean = {
+    robotBrainMap.contains(genBrainId(states))
+  }
+
+  def getUsingRobots(brainId: Long): SortedSet[Long] = {
+
+    var robots: SortedSet[Long] = SortedSet.empty[Long]
+    robotPool foreach {
+      robot => if (brainId == robot.brainId) robots += robot.robotId
+    }
+    robots
+  }
+
+  def removeRobotBrain(brainId: Long): RobotState = {
+
+    if (getUsingRobots(brainId).size > 0) {
+      this
+    } else {
+      copy(robotBrainMap = robotBrainMap - brainId)
+    }
+  }
+
+  private def genBrainId(states: scala.collection.immutable.Map[String, String]): Long = {
+    MHash.murmur3((SortedMap[String, String]() ++ states).toString)
+  }
+
 }
