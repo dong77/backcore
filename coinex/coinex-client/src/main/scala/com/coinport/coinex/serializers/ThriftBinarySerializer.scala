@@ -46,8 +46,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cUserLogsState = BinaryScalaCodec(UserLogsState)
   lazy val _cUserProfile = BinaryScalaCodec(UserProfile)
   lazy val _cWithdrawal = BinaryScalaCodec(Withdrawal)
-  lazy val _cAddRobotModelFailed = BinaryScalaCodec(AddRobotModelFailed)
-  lazy val _cAddRobotModelSucceeded = BinaryScalaCodec(AddRobotModelSucceeded)
+  lazy val _cAddRobotBrainFailed = BinaryScalaCodec(AddRobotBrainFailed)
+  lazy val _cAddRobotBrainSucceeded = BinaryScalaCodec(AddRobotBrainSucceeded)
   lazy val _cAdminCommandResult = BinaryScalaCodec(AdminCommandResult)
   lazy val _cAdminConfirmCashDepositFailure = BinaryScalaCodec(AdminConfirmCashDepositFailure)
   lazy val _cAdminConfirmCashDepositSuccess = BinaryScalaCodec(AdminConfirmCashDepositSuccess)
@@ -55,7 +55,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cAdminConfirmCashWithdrawalSuccess = BinaryScalaCodec(AdminConfirmCashWithdrawalSuccess)
   lazy val _cApiSecretOperationResult = BinaryScalaCodec(ApiSecretOperationResult)
   lazy val _cCancelOrderFailed = BinaryScalaCodec(CancelOrderFailed)
-  lazy val _cDoAddModel = BinaryScalaCodec(DoAddModel)
+  lazy val _cDoAddBrain = BinaryScalaCodec(DoAddBrain)
   lazy val _cDoAddNewApiSecret = BinaryScalaCodec(DoAddNewApiSecret)
   lazy val _cDoCancelOrder = BinaryScalaCodec(DoCancelOrder)
   lazy val _cDoDeleteApiSecret = BinaryScalaCodec(DoDeleteApiSecret)
@@ -67,7 +67,6 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cDoSendEmail = BinaryScalaCodec(DoSendEmail)
   lazy val _cDoSubmitOrder = BinaryScalaCodec(DoSubmitOrder)
   lazy val _cDoUpdateMetrics = BinaryScalaCodec(DoUpdateMetrics)
-  lazy val _cDoUpdateModel = BinaryScalaCodec(DoUpdateModel)
   lazy val _cDoUpdateUserProfile = BinaryScalaCodec(DoUpdateUserProfile)
   lazy val _cDumpStateToFile = BinaryScalaCodec(DumpStateToFile)
   lazy val _cGoogleAuthCodeVerificationResult = BinaryScalaCodec(GoogleAuthCodeVerificationResult)
@@ -110,8 +109,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cResetPasswordSucceeded = BinaryScalaCodec(ResetPasswordSucceeded)
   lazy val _cSubmitOrderFailed = BinaryScalaCodec(SubmitOrderFailed)
   lazy val _cTakeSnapshotNow = BinaryScalaCodec(TakeSnapshotNow)
-  lazy val _cUpdateRobotModelFailed = BinaryScalaCodec(UpdateRobotModelFailed)
-  lazy val _cUpdateRobotModelSucceeded = BinaryScalaCodec(UpdateRobotModelSucceeded)
+  lazy val _cUpdateRobotBrainFailed = BinaryScalaCodec(UpdateRobotBrainFailed)
+  lazy val _cUpdateRobotBrainSucceeded = BinaryScalaCodec(UpdateRobotBrainSucceeded)
   lazy val _cUpdateUserProfileFailed = BinaryScalaCodec(UpdateUserProfileFailed)
   lazy val _cUpdateUserProfileSucceeded = BinaryScalaCodec(UpdateUserProfileSucceeded)
   lazy val _cValidatePasswordResetToken = BinaryScalaCodec(ValidatePasswordResetToken)
@@ -125,7 +124,6 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cTMarketDepthState = BinaryScalaCodec(TMarketDepthState)
   lazy val _cTMarketState = BinaryScalaCodec(TMarketState)
   lazy val _cTMetricsState = BinaryScalaCodec(TMetricsState)
-  lazy val _cTRobotModelState = BinaryScalaCodec(TRobotModelState)
   lazy val _cTSimpleState = BinaryScalaCodec(TSimpleState)
   lazy val _cTUserState = BinaryScalaCodec(TUserState)
 
@@ -162,8 +160,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: UserLogsState => _cUserLogsState(m)
     case m: UserProfile => _cUserProfile(m)
     case m: Withdrawal => _cWithdrawal(m)
-    case m: AddRobotModelFailed => _cAddRobotModelFailed(m)
-    case m: AddRobotModelSucceeded => _cAddRobotModelSucceeded(m)
+    case m: AddRobotBrainFailed => _cAddRobotBrainFailed(m)
+    case m: AddRobotBrainSucceeded => _cAddRobotBrainSucceeded(m)
     case m: AdminCommandResult => _cAdminCommandResult(m)
     case m: AdminConfirmCashDepositFailure => _cAdminConfirmCashDepositFailure(m)
     case m: AdminConfirmCashDepositSuccess => _cAdminConfirmCashDepositSuccess(m)
@@ -171,7 +169,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: AdminConfirmCashWithdrawalSuccess => _cAdminConfirmCashWithdrawalSuccess(m)
     case m: ApiSecretOperationResult => _cApiSecretOperationResult(m)
     case m: CancelOrderFailed => _cCancelOrderFailed(m)
-    case m: DoAddModel => _cDoAddModel(m)
+    case m: DoAddBrain => _cDoAddBrain(m)
     case m: DoAddNewApiSecret => _cDoAddNewApiSecret(m)
     case m: DoCancelOrder => _cDoCancelOrder(m)
     case m: DoDeleteApiSecret => _cDoDeleteApiSecret(m)
@@ -183,7 +181,6 @@ class ThriftBinarySerializer extends Serializer {
     case m: DoSendEmail => _cDoSendEmail(m)
     case m: DoSubmitOrder => _cDoSubmitOrder(m)
     case m: DoUpdateMetrics => _cDoUpdateMetrics(m)
-    case m: DoUpdateModel => _cDoUpdateModel(m)
     case m: DoUpdateUserProfile => _cDoUpdateUserProfile(m)
     case m: DumpStateToFile => _cDumpStateToFile(m)
     case m: GoogleAuthCodeVerificationResult => _cGoogleAuthCodeVerificationResult(m)
@@ -226,8 +223,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: ResetPasswordSucceeded => _cResetPasswordSucceeded(m)
     case m: SubmitOrderFailed => _cSubmitOrderFailed(m)
     case m: TakeSnapshotNow => _cTakeSnapshotNow(m)
-    case m: UpdateRobotModelFailed => _cUpdateRobotModelFailed(m)
-    case m: UpdateRobotModelSucceeded => _cUpdateRobotModelSucceeded(m)
+    case m: UpdateRobotBrainFailed => _cUpdateRobotBrainFailed(m)
+    case m: UpdateRobotBrainSucceeded => _cUpdateRobotBrainSucceeded(m)
     case m: UpdateUserProfileFailed => _cUpdateUserProfileFailed(m)
     case m: UpdateUserProfileSucceeded => _cUpdateUserProfileSucceeded(m)
     case m: ValidatePasswordResetToken => _cValidatePasswordResetToken(m)
@@ -241,7 +238,6 @@ class ThriftBinarySerializer extends Serializer {
     case m: TMarketDepthState => _cTMarketDepthState(m)
     case m: TMarketState => _cTMarketState(m)
     case m: TMetricsState => _cTMetricsState(m)
-    case m: TRobotModelState => _cTRobotModelState(m)
     case m: TSimpleState => _cTSimpleState(m)
     case m: TUserState => _cTUserState(m)
 
@@ -282,8 +278,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[UserLogsState.Immutable] => _cUserLogsState.invert(bytes).get
     case Some(c) if c == classOf[UserProfile.Immutable] => _cUserProfile.invert(bytes).get
     case Some(c) if c == classOf[Withdrawal.Immutable] => _cWithdrawal.invert(bytes).get
-    case Some(c) if c == classOf[AddRobotModelFailed.Immutable] => _cAddRobotModelFailed.invert(bytes).get
-    case Some(c) if c == classOf[AddRobotModelSucceeded.Immutable] => _cAddRobotModelSucceeded.invert(bytes).get
+    case Some(c) if c == classOf[AddRobotBrainFailed.Immutable] => _cAddRobotBrainFailed.invert(bytes).get
+    case Some(c) if c == classOf[AddRobotBrainSucceeded.Immutable] => _cAddRobotBrainSucceeded.invert(bytes).get
     case Some(c) if c == classOf[AdminCommandResult.Immutable] => _cAdminCommandResult.invert(bytes).get
     case Some(c) if c == classOf[AdminConfirmCashDepositFailure.Immutable] => _cAdminConfirmCashDepositFailure.invert(bytes).get
     case Some(c) if c == classOf[AdminConfirmCashDepositSuccess.Immutable] => _cAdminConfirmCashDepositSuccess.invert(bytes).get
@@ -291,7 +287,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[AdminConfirmCashWithdrawalSuccess.Immutable] => _cAdminConfirmCashWithdrawalSuccess.invert(bytes).get
     case Some(c) if c == classOf[ApiSecretOperationResult.Immutable] => _cApiSecretOperationResult.invert(bytes).get
     case Some(c) if c == classOf[CancelOrderFailed.Immutable] => _cCancelOrderFailed.invert(bytes).get
-    case Some(c) if c == classOf[DoAddModel.Immutable] => _cDoAddModel.invert(bytes).get
+    case Some(c) if c == classOf[DoAddBrain.Immutable] => _cDoAddBrain.invert(bytes).get
     case Some(c) if c == classOf[DoAddNewApiSecret.Immutable] => _cDoAddNewApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoCancelOrder.Immutable] => _cDoCancelOrder.invert(bytes).get
     case Some(c) if c == classOf[DoDeleteApiSecret.Immutable] => _cDoDeleteApiSecret.invert(bytes).get
@@ -303,7 +299,6 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[DoSendEmail.Immutable] => _cDoSendEmail.invert(bytes).get
     case Some(c) if c == classOf[DoSubmitOrder.Immutable] => _cDoSubmitOrder.invert(bytes).get
     case Some(c) if c == classOf[DoUpdateMetrics.Immutable] => _cDoUpdateMetrics.invert(bytes).get
-    case Some(c) if c == classOf[DoUpdateModel.Immutable] => _cDoUpdateModel.invert(bytes).get
     case Some(c) if c == classOf[DoUpdateUserProfile.Immutable] => _cDoUpdateUserProfile.invert(bytes).get
     case Some(c) if c == classOf[DumpStateToFile.Immutable] => _cDumpStateToFile.invert(bytes).get
     case Some(c) if c == classOf[GoogleAuthCodeVerificationResult.Immutable] => _cGoogleAuthCodeVerificationResult.invert(bytes).get
@@ -346,8 +341,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[ResetPasswordSucceeded.Immutable] => _cResetPasswordSucceeded.invert(bytes).get
     case Some(c) if c == classOf[SubmitOrderFailed.Immutable] => _cSubmitOrderFailed.invert(bytes).get
     case Some(c) if c == classOf[TakeSnapshotNow.Immutable] => _cTakeSnapshotNow.invert(bytes).get
-    case Some(c) if c == classOf[UpdateRobotModelFailed.Immutable] => _cUpdateRobotModelFailed.invert(bytes).get
-    case Some(c) if c == classOf[UpdateRobotModelSucceeded.Immutable] => _cUpdateRobotModelSucceeded.invert(bytes).get
+    case Some(c) if c == classOf[UpdateRobotBrainFailed.Immutable] => _cUpdateRobotBrainFailed.invert(bytes).get
+    case Some(c) if c == classOf[UpdateRobotBrainSucceeded.Immutable] => _cUpdateRobotBrainSucceeded.invert(bytes).get
     case Some(c) if c == classOf[UpdateUserProfileFailed.Immutable] => _cUpdateUserProfileFailed.invert(bytes).get
     case Some(c) if c == classOf[UpdateUserProfileSucceeded.Immutable] => _cUpdateUserProfileSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ValidatePasswordResetToken.Immutable] => _cValidatePasswordResetToken.invert(bytes).get
@@ -361,7 +356,6 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[TMarketDepthState.Immutable] => _cTMarketDepthState.invert(bytes).get
     case Some(c) if c == classOf[TMarketState.Immutable] => _cTMarketState.invert(bytes).get
     case Some(c) if c == classOf[TMetricsState.Immutable] => _cTMetricsState.invert(bytes).get
-    case Some(c) if c == classOf[TRobotModelState.Immutable] => _cTRobotModelState.invert(bytes).get
     case Some(c) if c == classOf[TSimpleState.Immutable] => _cTSimpleState.invert(bytes).get
     case Some(c) if c == classOf[TUserState.Immutable] => _cTUserState.invert(bytes).get
 

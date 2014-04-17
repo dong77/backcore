@@ -13,7 +13,6 @@ import Implicits._
 class RobotManager extends Manager[RobotState] {
 
   var state = RobotState()
-  var models: Map[String, Map[String, String]] = Map.empty[String, Map[String, String]]
 
   override def getSnapshot = state
 
@@ -35,17 +34,14 @@ class RobotManager extends Manager[RobotState] {
     robot
   }
 
-  def addRobotModel(states: scala.collection.immutable.Map[String, String]): Long = {
-    state = state.addRobotModel(states)
-    (state.robotModelMap.size.toLong - 1)
+  def addRobotBrain(states: scala.collection.immutable.Map[String, String]): String = {
+    val (brainId, resultState) = state.addRobotBrain(states)
+    state = resultState
+    brainId
   }
 
-  def updateRobotModel(id: Long, states: scala.collection.immutable.Map[String, String]) {
-    state = state.updateRobotModel(id, states)
-  }
-
-  def getModel(modelId: Long, currState: String): Action = {
-    state.robotModelMap(modelId)(currState)
+  def getAction(brainId: String, currState: String): Action = {
+    state.robotBrainMap(brainId).brain(currState)
   }
 
   def updateMetrics(m: Metrics) {

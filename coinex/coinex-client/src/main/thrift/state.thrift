@@ -90,8 +90,3 @@ struct TMetricsState {
     1: map<MarketSide, TMetricsObserver> observers
     2: RedeliverFilters filters
 }
-
-struct TRobotModelState {
-    1: map<string, map<string, string>> models
-    2: i64 numUsers
-}

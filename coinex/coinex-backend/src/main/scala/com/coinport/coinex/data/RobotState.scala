@@ -9,6 +9,8 @@ import scala.collection.immutable.SortedSet
 import com.twitter.util.Eval
 import com.coinport.coinex.common.Constants._
 import org.slf4s.Logging
+import com.coinport.coinex.robot.RobotBrain
+import com.coinport.coinex.robot.RobotBrain
 
 object RobotState {
   implicit val ordering = new Ordering[Robot] {
@@ -23,31 +25,24 @@ case class RobotState(
     robotPool: SortedSet[Robot] = RobotState.EmptyRobotPool,
     robotMap: Map[Long, Robot] = Map.empty[Long, Robot],
     metrics: Metrics = Metrics(),
-    robotModelMap: Map[Long, Map[String, Action]] = Map.empty[Long, Map[String, Action]]) extends Object with Logging {
+    robotBrainMap: Map[String, RobotBrain] = Map.empty[String, RobotBrain]) extends Object with Logging {
 
   def getRobot(id: Long): Option[Robot] = robotMap.get(id)
 
   def getRobotPool = robotPool
 
   def addRobot(robot: Robot): RobotState = {
-    log.debug("[ADD ROBOT] robotId: %d, modelId: %d".format(robot.robotId, robot.modelId))
+    log.debug("[ADD ROBOT] robotId: %d, brainId: %s".format(robot.robotId, robot.brainId))
     copy(robotPool = robotPool + robot, robotMap = robotMap + (robot.robotId -> robot))
   }
 
-  def addRobotModel(states: scala.collection.immutable.Map[String, String]): RobotState = {
+  def addRobotBrain(states: scala.collection.immutable.Map[String, String]): (String, RobotState) = {
     var stateAction: Map[String, Action] = states map { state =>
       (state._1 -> inflate(state._2))
     }
-    log.debug("[ADD ROBOT MODEL] id: %d, state: %s".format(robotModelMap.size, stateAction.keySet.mkString(",")))
-    copy(robotModelMap = robotModelMap + (robotModelMap.size.toLong -> stateAction))
-  }
-
-  def updateRobotModel(modelId: Long, states: scala.collection.immutable.Map[String, String]): RobotState = {
-    robotModelMap - modelId
-    var stateAction: Map[String, Action] = states map { state =>
-      (state._1 -> inflate(state._2))
-    }
-    copy(robotModelMap = robotModelMap + (modelId -> stateAction))
+    val brainId = stateAction.hashCode.toString
+    log.debug("[ADD ROBOT BRAIN] id: %d, state: %s".format(robotBrainMap.size, stateAction.keySet.mkString(",")))
+    (brainId, copy(robotBrainMap = robotBrainMap + (stateAction.hashCode.toString -> RobotBrain(brainId, stateAction))))
   }
 
   def removeRobot(rid: Long): RobotState = {
