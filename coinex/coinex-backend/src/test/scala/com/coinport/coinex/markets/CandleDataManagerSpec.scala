@@ -26,7 +26,7 @@ class CandleDataManagerSpec extends Specification {
       manager.updateCandleItem(t)
 
       manager.getCandleItems(OneMinute, 800000, 1200000) mustEqual
-        Seq(CandleDataItem(16, 1, 3000, 1 / 3000.0, 1 / 3000.0, 1 / 3000.0, 1 / 3000.0))
+        Seq(CandleDataItem(16, 1, 3000, 1 / 3000.0, 1 / 3000.0, 1 / 3000.0, 1 / 3000.0, market))
     }
   }
 }
