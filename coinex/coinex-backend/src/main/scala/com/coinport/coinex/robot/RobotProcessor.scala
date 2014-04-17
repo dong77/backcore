@@ -11,7 +11,6 @@ import akka.pattern._
 import akka.persistence._
 import akka.util.Timeout
 import scala.concurrent.duration._
-
 import com.coinport.coinex.LocalRouters
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.PersistentId._
@@ -19,6 +18,7 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.data.Currency._
 import com.coinport.coinex.robot.sample._
 import Implicits._
+import scala.collection.immutable.SortedSet
 
 class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor with Processor {
   override def processorId = ROBOT_PROCESSOR <<
@@ -58,9 +58,22 @@ class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor with Proce
     case Persistent(DoCancelRobot(id), _) =>
       manager.removeRobot(id)
 
-    case Persistent(DoAddBrain(states), _) =>
-      val robotBrainId = manager.addRobotBrain(states.map(kv => (kv._1, kv._2)).toMap)
-      sender ! robotBrainId
+    case Persistent(DoAddRobotBrain(states), _) =>
+      if (manager.isExistRobotBrain(states.map(kv => (kv._1, kv._2)).toMap)) {
+        sender ! AddRobotBrainFailed(ErrorCode.RobotBrainExist)
+      } else {
+        val brainId = manager.addRobotBrain(states.map(kv => (kv._1, kv._2)).toMap)
+        sender ! brainId
+      }
+
+    case Persistent(DoRemoveRobotBrain(brainId), _) =>
+      val usingRobots: SortedSet[Long] = manager.getUsingRobots(brainId)
+      if (usingRobots.size > 0) {
+        sender ! RemoveRobotBrainFailed(ErrorCode.InUsingRobotBrain, "robotIds: " + usingRobots.mkString(","))
+      } else {
+        manager.removeRobotBrain(brainId)
+        sender ! brainId
+      }
   }
 
   private def scheduleActivateRobots() = {

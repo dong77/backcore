@@ -38,8 +38,8 @@ enum ErrorCode {
     WITHDRAWAL_NOT_EXIST             = 6003
 
     // Robot
-    ADD_ROBOT_FAILED                 = 7001
-    UPDATE_ROBOT_FAILED              = 7002
+    ROBOT_BRAIN_EXIST                = 7001
+    IN_USING_ROBOT_BRAIN             = 7002
 }
 
 

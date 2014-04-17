@@ -18,7 +18,7 @@ case class Robot(
     robotId: Long, userId: Long = COINPORT_UID, timestamp: Long = 0,
     statesPayload: Map[String, Option[Any]] = Map.empty[String, Option[Any]],
     currentState: String = "START",
-    brainId: String = "") extends Object with Logging {
+    brainId: Long = 0L) extends Object with Logging {
 
   // Option[Any] is the actual action of the robot, such as DoRequestCashDeposit.
   // This could be restrained from outter processor
