@@ -321,6 +321,7 @@ struct QueryMarketSide {
 struct TMarketEvent {
     1: optional double price
     2: optional i64 volume
+    3: optional i64 timestamp
 }
 
 struct TWindowQueue {
@@ -331,6 +332,11 @@ struct TWindowQueue {
     5: i64 lastTick
 }
 
+struct TWindowVector {
+    1: i64 range
+    2: list<TMarketEvent> elems
+}
+
 struct TStackQueue {
     1: list<double> elems
     2: i32 head
@@ -339,7 +345,7 @@ struct TStackQueue {
 
 struct TMetricsObserver {
     1: MarketSide side
-    2: TWindowQueue transactionQueue
+    2: TWindowVector transactionQueue
     3: TStackQueue minMaintainer
     4: TStackQueue maxMaintainer
     5: TStackQueue preMaintainer

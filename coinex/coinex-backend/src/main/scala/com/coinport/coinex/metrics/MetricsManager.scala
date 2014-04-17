@@ -25,8 +25,8 @@ class MetricsManager extends Manager[TMetricsState] {
     state = state.pushEvent(side.reverse, (Some(1 / price), Some(reverseVolume)), tick)
   }
 
-  def getMetrics(tick: Long): Metrics = {
-    state.getMetrics(tick)
+  def getMetrics: Metrics = {
+    state.getMetrics
   }
 
 }

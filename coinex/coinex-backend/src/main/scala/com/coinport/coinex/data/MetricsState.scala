@@ -25,8 +25,8 @@ case class MetricsState(
     copy(observers = observers + (side -> observer))
   }
 
-  def getMetrics(tick: Long): Metrics = {
-    Metrics(observers.map(item => (item._1 -> item._2.getMetrics(tick))))
+  def getMetrics: Metrics = {
+    Metrics(observers.map(item => (item._1 -> item._2.getMetrics)))
   }
 
   def snapshot: MetricsState = {

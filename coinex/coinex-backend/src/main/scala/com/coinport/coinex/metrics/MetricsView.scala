@@ -23,13 +23,13 @@ class MetricsView extends ExtendedView {
 
   def receive = LoggingReceive {
     case e @ Persistent(OrderSubmitted(orderInfo, txs), _) =>
-      txs.lastOption foreach { tx =>
+      txs foreach { tx =>
         val Transaction(_, _, _, _, makerOrderUpdate, _) = tx
         makerOrderUpdate.current.price foreach { price =>
-          manager.update(orderInfo.side, 1 / price, orderInfo.outAmount, orderInfo.inAmount, System.currentTimeMillis)
+          manager.update(orderInfo.side, 1 / price, orderInfo.outAmount, orderInfo.inAmount, tx.timestamp)
         }
       }
     case QueryMetrics =>
-      sender() ! manager.getMetrics(System.currentTimeMillis)
+      sender() ! manager.getMetrics
   }
 }
