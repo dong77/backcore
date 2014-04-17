@@ -39,6 +39,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cTMetricsObserver = JsonScalaCodec(TMetricsObserver)
   lazy val _cTStackQueue = JsonScalaCodec(TStackQueue)
   lazy val _cTWindowQueue = JsonScalaCodec(TWindowQueue)
+  lazy val _cTWindowVector = JsonScalaCodec(TWindowVector)
   lazy val _cTimePrice = JsonScalaCodec(TimePrice)
   lazy val _cTransaction = JsonScalaCodec(Transaction)
   lazy val _cTransactionItem = JsonScalaCodec(TransactionItem)
@@ -153,6 +154,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: TMetricsObserver => _cTMetricsObserver(m)
     case m: TStackQueue => _cTStackQueue(m)
     case m: TWindowQueue => _cTWindowQueue(m)
+    case m: TWindowVector => _cTWindowVector(m)
     case m: TimePrice => _cTimePrice(m)
     case m: Transaction => _cTransaction(m)
     case m: TransactionItem => _cTransactionItem(m)
@@ -271,6 +273,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[TMetricsObserver.Immutable] => _cTMetricsObserver.invert(bytes).get
     case Some(c) if c == classOf[TStackQueue.Immutable] => _cTStackQueue.invert(bytes).get
     case Some(c) if c == classOf[TWindowQueue.Immutable] => _cTWindowQueue.invert(bytes).get
+    case Some(c) if c == classOf[TWindowVector.Immutable] => _cTWindowVector.invert(bytes).get
     case Some(c) if c == classOf[TimePrice.Immutable] => _cTimePrice.invert(bytes).get
     case Some(c) if c == classOf[Transaction.Immutable] => _cTransaction.invert(bytes).get
     case Some(c) if c == classOf[TransactionItem.Immutable] => _cTransactionItem.invert(bytes).get
