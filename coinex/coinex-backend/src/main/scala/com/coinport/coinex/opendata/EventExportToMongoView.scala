@@ -27,7 +27,7 @@ abstract class EventExportToMongoView(db: MongoDB, pid: String) extends View wit
     case cmd: TakeSnapshotNow => takeSnapshot(cmd) {
       manager.increaseSnapshotIndex()
       saveSnapshot(manager.getSnapshot)
-      metaColl += manager.getSnapshotAsJSon
+      metaColl += manager.getSnapshotAsJson
       log.info("===== export data generated new snapshot: " + manager.getSnapshot)
     }
 
@@ -39,19 +39,20 @@ abstract class EventExportToMongoView(db: MongoDB, pid: String) extends View wit
 }
 
 class EventExportToMongoManager extends Manager[TExportToMongoState] {
-  private var state = TExportToMongoState(0, 0, "0" * 32, 0)
+  private val version = "v1"
+  private var state = TExportToMongoState(0, 0, "0" * 32, 0, version)
   private val serializer = new ThriftJsonSerializer
 
   def getSnapshot = state
   def loadSnapshot(snapshot: TExportToMongoState) = state = snapshot
 
   def increaseSnapshotIndex() = {
-    state = state.copy(snapshotIndex = state.snapshotIndex + 1, lastSnapshotTimestamp = System.currentTimeMillis)
+    state = state.copy(height = state.height + 1, lastSnapshotTimestamp = System.currentTimeMillis)
   }
 
-  def getSnapshotAsJSon = {
+  def getSnapshotAsJson = {
     val data = JSON.parse(new String(serializer.toBinary(state)))
-    MongoDBObject("_id" -> state.snapshotIndex, "metadata" -> data)
+    MongoDBObject("_id" -> state.height, "metadata" -> data)
   }
 
   def generateJson(m: AnyRef) = {
@@ -60,14 +61,14 @@ class EventExportToMongoManager extends Manager[TExportToMongoState] {
 
     val json = MongoDBObject(
       "_id" -> state.index,
-      "snapshot" -> state.snapshotIndex,
+      "height" -> state.height,
       "prehash" -> state.hash,
       event -> data)
 
     val hash = MHash.sha1Base32(json.toString)
     val jsonWithHash = MongoDBObject(
       "_id" -> state.index,
-      "snapshot" -> state.snapshotIndex,
+      "height" -> state.height,
       "prehash" -> state.hash,
       "hash" -> hash,
       event -> data)
