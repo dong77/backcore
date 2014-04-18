@@ -131,5 +131,5 @@ class UserProcessor(mailer: ActorRef, secret: String)
   private val hexTokenSecret = MHash.sha256Base64(secret + "hexTokenSecret")
 
   private def generateRandomHexToken(email: String) =
-    MHash.sha256Base32(email + rand.nextLong + hexTokenSecret).substring(0, 77)
+    MHash.sha256Base32(email + rand.nextLong + hexTokenSecret).substring(0, 40)
 }
