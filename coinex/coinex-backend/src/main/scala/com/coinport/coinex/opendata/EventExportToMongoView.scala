@@ -12,20 +12,19 @@ import com.coinport.coinex.common.support.SnapshotSupport
 import com.coinport.coinex.common.Manager
 
 // This view is not defined for querying data.
-abstract class EventExportToMongoView(db: MongoDB, pid: String) extends View with SnapshotSupport {
+abstract class EventExportToMongoView(db: MongoDB, pid: String, collectionPrefix: String, val snapshotIntervalSec: Int) extends View with SnapshotSupport {
   override val processorId = pid
   override val viewId = pid + "_export"
   val manager = new EventExportToMongoManager
-  val snapshotIntervalSec = 15 * 60
 
-  val eventColl = db(pid + "_events")
-  val metaColl = db(pid + "_metadata")
+  val eventColl = db(collectionPrefix + "_events")
+  val metaColl = db(collectionPrefix + "_metadata")
 
   def shouldExport(event: AnyRef): Boolean
 
   def receive = LoggingReceive {
     case cmd: TakeSnapshotNow => takeSnapshot(cmd) {
-      manager.increaseSnapshotIndex()
+      manager.increaseHeight()
       saveSnapshot(manager.getSnapshot)
       metaColl += manager.getSnapshotAsJson
       log.info("===== export data generated new snapshot: " + manager.getSnapshot)
@@ -46,7 +45,7 @@ class EventExportToMongoManager extends Manager[TExportToMongoState] {
   def getSnapshot = state
   def loadSnapshot(snapshot: TExportToMongoState) = state = snapshot
 
-  def increaseSnapshotIndex() = {
+  def increaseHeight() = {
     state = state.copy(height = state.height + 1, lastSnapshotTimestamp = System.currentTimeMillis)
   }
 

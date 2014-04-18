@@ -58,6 +58,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
   val mongoForEventExport = MongoConnection(mongoUriForEventExport)
   val dbForEventExport = mongoForEventExport(mongoUriForEventExport.database.get)
 
+  val snapshotIntervalSec = config.getInt("akka.exchange.opendata.export-interval-seconds")
+
   def shutdown() {
     mongoForViews.close()
     mongoForEventExport.close()
@@ -106,8 +108,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploySingleton(Props(new RobotProcessor(routers) with StackableCmdsourced[RobotState, RobotManager]), robot_processor <<)
     deploySingleton(Props(new DepositWithdrawProcessor(dbForViews, routers.accountProcessor.path) with StackableEventsourced[TDepositWithdrawState, DepositWithdrawManager]), deposit_withdraw_processor <<)
 
-    deploySingleton(Props(new DepositWithdrawEventExportView(dbForEventExport) with StackableView[TExportToMongoState, EventExportToMongoManager]), deposit_withdraw_processor_event_export <<)
-    deploySingleton(Props(new MarketUpdateEventExportView(dbForEventExport) with StackableView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export <<)
+    deploySingleton(Props(new DepositWithdrawEventExportView(dbForEventExport, snapshotIntervalSec) with StackableView[TExportToMongoState, EventExportToMongoManager]), deposit_withdraw_processor_event_export <<)
+    deploySingleton(Props(new MarketUpdateEventExportView(dbForEventExport, snapshotIntervalSec) with StackableView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export <<)
 
     deploySingleton(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer <<)
     deploySingleton(Props(new OrderWriter(dbForViews)), order_mongo_writer <<)
