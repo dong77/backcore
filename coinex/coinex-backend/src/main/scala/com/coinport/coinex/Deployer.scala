@@ -74,7 +74,6 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       deploy(Props(new CandleDataView(m) with StackableView[TCandleDataState, CandleDataManager]), candle_data_view << m)
     }
 
-    deploy(Props(new UserView(userManagerSecret)), user_view <<)
     deploy(Props(new UserWriter(dbForViews, userManagerSecret)), user_mongo_writer <<)
     deploy(Props(new AccountView(feeConfig) with StackableView[TAccountState, AccountManager]), account_view <<)
     deploy(Props(new AssetView with StackableView[TAssetState, AssetManager]), asset_view <<)

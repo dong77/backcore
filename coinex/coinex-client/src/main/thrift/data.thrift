@@ -18,7 +18,6 @@ enum ErrorCode {
     USER_NOT_EXIST                   = 1003
     PASSWORD_NOT_MATCH               = 1004
     TOKEN_NOT_MATCH                  = 1005
-    TOKEN_NOT_UNIQUE                 = 1006
 
     // Account related
     PRICE_OUT_OF_RANGE               = 2001

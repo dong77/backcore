@@ -2,7 +2,6 @@ package com.coinport.coinex.common
 
 object ConstantRole extends Enumeration {
   val user_processor = Value
-  val user_view = Value
   val user_mongo_writer = Value
 
   val account_processor = Value

@@ -11,12 +11,12 @@ import Implicits._
 
 // This view persists user manager state into MongoDB but also keeps an inmemory copy of the state.
 // THis view shall not serve any queries.
-class UserWriter(db: MongoDB, userManagerSecret: String) extends ExtendedView {
+class UserWriter(db: MongoDB, secret: String) extends ExtendedView {
   override val processorId = USER_PROCESSOR <<
   override val viewId = USER_WRITER_VIEW <<
 
   val totpAuthenticator = new GoogleAuthenticator
-  val manager = new UserManager(totpAuthenticator, userManagerSecret)
+  val manager = new UserManager(totpAuthenticator, secret)
 
   def receive = LoggingReceive {
     case Persistent(m, seq) => updateState(m)
@@ -24,9 +24,10 @@ class UserWriter(db: MongoDB, userManagerSecret: String) extends ExtendedView {
 
   def updateState(event: Any) = event match {
     case DoRegisterUser(profile, _) => profiles.put(manager.registerUser(profile))
-    case DoUpdateUserProfile(profile) => profiles.put(profile)
-    case DoRequestPasswordReset(email) => profiles.put(manager.requestPasswordReset(email, lastSequenceNr))
-    case DoResetPassword(email, password, token) => profiles.put(manager.resetPassword(email, password, token))
+    case DoUpdateUserProfile(profile) => profiles.put(manager.updateUser(profile))
+    case DoRequestPasswordReset(email, token) => profiles.put(manager.requestPasswordReset(email, token.get))
+    case DoResetPassword(password, token) => profiles.put(manager.resetPassword(password, token))
+    case VerifyEmail(token) => profiles.put(manager.verifyEmail(token))
   }
 
   val profiles = new SimpleJsonMongoCollection[UserProfile, UserProfile.Immutable] {

@@ -115,6 +115,9 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cUpdateUserProfileFailed = BinaryScalaCodec(UpdateUserProfileFailed)
   lazy val _cUpdateUserProfileSucceeded = BinaryScalaCodec(UpdateUserProfileSucceeded)
   lazy val _cValidatePasswordResetToken = BinaryScalaCodec(ValidatePasswordResetToken)
+  lazy val _cVerifyEmail = BinaryScalaCodec(VerifyEmail)
+  lazy val _cVerifyEmailFailed = BinaryScalaCodec(VerifyEmailFailed)
+  lazy val _cVerifyEmailSucceeded = BinaryScalaCodec(VerifyEmailSucceeded)
   lazy val _cVerifyGoogleAuthCode = BinaryScalaCodec(VerifyGoogleAuthCode)
   lazy val _cTAccountState = BinaryScalaCodec(TAccountState)
   lazy val _cTApiSecretState = BinaryScalaCodec(TApiSecretState)
@@ -230,6 +233,9 @@ class ThriftBinarySerializer extends Serializer {
     case m: UpdateUserProfileFailed => _cUpdateUserProfileFailed(m)
     case m: UpdateUserProfileSucceeded => _cUpdateUserProfileSucceeded(m)
     case m: ValidatePasswordResetToken => _cValidatePasswordResetToken(m)
+    case m: VerifyEmail => _cVerifyEmail(m)
+    case m: VerifyEmailFailed => _cVerifyEmailFailed(m)
+    case m: VerifyEmailSucceeded => _cVerifyEmailSucceeded(m)
     case m: VerifyGoogleAuthCode => _cVerifyGoogleAuthCode(m)
     case m: TAccountState => _cTAccountState(m)
     case m: TApiSecretState => _cTApiSecretState(m)
@@ -349,6 +355,9 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[UpdateUserProfileFailed.Immutable] => _cUpdateUserProfileFailed.invert(bytes).get
     case Some(c) if c == classOf[UpdateUserProfileSucceeded.Immutable] => _cUpdateUserProfileSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ValidatePasswordResetToken.Immutable] => _cValidatePasswordResetToken.invert(bytes).get
+    case Some(c) if c == classOf[VerifyEmail.Immutable] => _cVerifyEmail.invert(bytes).get
+    case Some(c) if c == classOf[VerifyEmailFailed.Immutable] => _cVerifyEmailFailed.invert(bytes).get
+    case Some(c) if c == classOf[VerifyEmailSucceeded.Immutable] => _cVerifyEmailSucceeded.invert(bytes).get
     case Some(c) if c == classOf[VerifyGoogleAuthCode.Immutable] => _cVerifyGoogleAuthCode.invert(bytes).get
     case Some(c) if c == classOf[TAccountState.Immutable] => _cTAccountState.invert(bytes).get
     case Some(c) if c == classOf[TApiSecretState.Immutable] => _cTApiSecretState.invert(bytes).get

@@ -115,6 +115,9 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cUpdateUserProfileFailed = JsonScalaCodec(UpdateUserProfileFailed)
   lazy val _cUpdateUserProfileSucceeded = JsonScalaCodec(UpdateUserProfileSucceeded)
   lazy val _cValidatePasswordResetToken = JsonScalaCodec(ValidatePasswordResetToken)
+  lazy val _cVerifyEmail = JsonScalaCodec(VerifyEmail)
+  lazy val _cVerifyEmailFailed = JsonScalaCodec(VerifyEmailFailed)
+  lazy val _cVerifyEmailSucceeded = JsonScalaCodec(VerifyEmailSucceeded)
   lazy val _cVerifyGoogleAuthCode = JsonScalaCodec(VerifyGoogleAuthCode)
   lazy val _cTAccountState = JsonScalaCodec(TAccountState)
   lazy val _cTApiSecretState = JsonScalaCodec(TApiSecretState)
@@ -230,6 +233,9 @@ class ThriftJsonSerializer extends Serializer {
     case m: UpdateUserProfileFailed => _cUpdateUserProfileFailed(m)
     case m: UpdateUserProfileSucceeded => _cUpdateUserProfileSucceeded(m)
     case m: ValidatePasswordResetToken => _cValidatePasswordResetToken(m)
+    case m: VerifyEmail => _cVerifyEmail(m)
+    case m: VerifyEmailFailed => _cVerifyEmailFailed(m)
+    case m: VerifyEmailSucceeded => _cVerifyEmailSucceeded(m)
     case m: VerifyGoogleAuthCode => _cVerifyGoogleAuthCode(m)
     case m: TAccountState => _cTAccountState(m)
     case m: TApiSecretState => _cTApiSecretState(m)
@@ -349,6 +355,9 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[UpdateUserProfileFailed.Immutable] => _cUpdateUserProfileFailed.invert(bytes).get
     case Some(c) if c == classOf[UpdateUserProfileSucceeded.Immutable] => _cUpdateUserProfileSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ValidatePasswordResetToken.Immutable] => _cValidatePasswordResetToken.invert(bytes).get
+    case Some(c) if c == classOf[VerifyEmail.Immutable] => _cVerifyEmail.invert(bytes).get
+    case Some(c) if c == classOf[VerifyEmailFailed.Immutable] => _cVerifyEmailFailed.invert(bytes).get
+    case Some(c) if c == classOf[VerifyEmailSucceeded.Immutable] => _cVerifyEmailSucceeded.invert(bytes).get
     case Some(c) if c == classOf[VerifyGoogleAuthCode.Immutable] => _cVerifyGoogleAuthCode.invert(bytes).get
     case Some(c) if c == classOf[TAccountState.Immutable] => _cTAccountState.invert(bytes).get
     case Some(c) if c == classOf[TApiSecretState.Immutable] => _cTApiSecretState.invert(bytes).get

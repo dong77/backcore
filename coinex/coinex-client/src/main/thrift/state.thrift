@@ -29,10 +29,11 @@ typedef data.Currency              Currency
 
 
 struct TUserState {
-    1: map<i64, UserProfile> profileMap
-    2: map<string, i64> passwordResetTokenMap
-    3: map<string, i64> verificationTokenMap
-    4: i64 numUsers
+    1: map<i64, i64> idMap
+    2: map<i64, UserProfile> profileMap
+    3: map<string, i64> passwordResetTokenMap
+    4: map<string, i64> verificationTokenMap
+    5: i64 lastUserId
 }
 
 struct TAccountState {

@@ -65,24 +65,28 @@ typedef data.DWItem                DWItem
 /* R-   */ struct RegisterUserFailed                  {1: ErrorCode error}
 /* R+   */ struct RegisterUserSucceeded               {1: UserProfile userProfile}
 
+/* C    */ struct VerifyEmail                         {1: string token} // TODO: this may also be a persistent command
+/* R-   */ struct VerifyEmailFailed                   {1: ErrorCode error}
+/* R+   */ struct VerifyEmailSucceeded                {1: i64 id, 2: string email}
+
 /* C,P  */ struct DoUpdateUserProfile                 {1: UserProfile userProfile}
 /* R-   */ struct UpdateUserProfileFailed             {1: ErrorCode error}
 /* R+   */ struct UpdateUserProfileSucceeded          {1: UserProfile userProfile /* previous profile */}
 
-/* C,P  */ struct DoRequestPasswordReset              {1: string email}
+/* C,P  */ struct DoRequestPasswordReset              {1: string email, 2: optional string passwordResetToken /* ignored */}
 /* R-   */ struct RequestPasswordResetFailed          {1: ErrorCode error}
-/* R+   */ struct RequestPasswordResetSucceeded       {1: i64 id, 2: string email, 3: string passwordResetToken}
+/* R+   */ struct RequestPasswordResetSucceeded       {1: i64 id, 2: string email}
 
-/* C,P  */ struct DoResetPassword                     {1: string email, 2: string password, 3: optional string passwordResetToken}
+/* Q    */ struct ValidatePasswordResetToken          {1: string passwordResetToken}
+/* R    */ struct PasswordResetTokenValidationResult  {1: optional UserProfile userProfile}
+
+/* C,P  */ struct DoResetPassword                     {1: string newPassword, 2: string passwordResetToken}
 /* R-   */ struct ResetPasswordFailed                 {1: ErrorCode error}
 /* R+   */ struct ResetPasswordSucceeded              {1: i64 id, 2: string email}
 
 /* C    */ struct Login                               {1: string email, 2: string password} // TODO: this may also be a persistent command
 /* R-   */ struct LoginFailed                         {1: ErrorCode error}
 /* R+   */ struct LoginSucceeded                      {1: i64 id, 2: string email}
-
-/* Q    */ struct ValidatePasswordResetToken          {1: string passwordResetToken}
-/* R    */ struct PasswordResetTokenValidationResult  {1: optional UserProfile userProfile}
 
 /* Q    */ struct VerifyGoogleAuthCode                {1: string email, 2: i32 code}
 /* R    */ struct GoogleAuthCodeVerificationResult    {1: optional UserProfile userProfile}
