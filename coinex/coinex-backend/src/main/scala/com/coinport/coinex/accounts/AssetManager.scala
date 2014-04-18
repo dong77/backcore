@@ -5,9 +5,10 @@ import scala.collection.mutable.Map
 import com.coinport.coinex.data._
 
 class AssetManager extends Manager[TAssetState] {
-  private val currencyMap = Map[Currency, Long]()
+  private val currencyMap = Map.empty[Currency, Long]
   private val timeAsset = Map.empty[Long, Map[Currency, Long]]
-  private var assetMap = Map.empty[Long, Map[Long, Map[Currency, Long]]]
+  private var historyAssetMap = Map.empty[Long, Map[Long, Map[Currency, Long]]]
+  private var currentAssetMap = Map.empty[Long, Map[Currency, Long]]
 
   private val timePrice = Map.empty[Long, Double]
   private var priceMap = Map.empty[MarketSide, Map[Long, Double]]
@@ -15,25 +16,36 @@ class AssetManager extends Manager[TAssetState] {
   val day = 1000 * 60 * 60 * 24
 
   // Thrift conversions     ----------------------------------------------
-  def getSnapshot = TAssetState(assetMap, priceMap)
+  def getSnapshot = TAssetState(currentAssetMap, historyAssetMap, priceMap)
 
   def loadSnapshot(snapshot: TAssetState) = {
-    assetMap = assetMap.empty ++ snapshot.userAssetMap.map(
+    currentAssetMap = currentAssetMap.empty ++ snapshot.currentAssetMap.map(
+      x => x._1 -> (currencyMap.empty ++ x._2))
+
+    historyAssetMap = historyAssetMap.empty ++ snapshot.historyAssetMap.map(
       x => x._1 -> (timeAsset.empty ++ x._2.map(
         y => y._1 -> (currencyMap.empty ++ y._2))))
 
-    priceMap = priceMap.take(0) ++ snapshot.marketPriceMap.map(
+    priceMap = priceMap.empty ++ snapshot.marketPriceMap.map(
       x => x._1 -> (timePrice.empty ++ x._2))
   }
 
   def updateAsset(user: Long, timestamp: Long, currency: Currency, volume: Long) = {
     val timeDay = timestamp / day
-    assetMap.get(user) match {
+    historyAssetMap.get(user) match {
       case Some(t) => t.get(timeDay) match {
         case Some(ua) => ua.put(currency, ua.getOrElse(currency, 0L) + volume)
         case None => t.put(timeDay, Map(currency -> volume))
       }
-      case None => assetMap.put(user, Map(timeDay -> Map(currency -> volume)))
+      case None => historyAssetMap.put(user, Map(timeDay -> Map(currency -> volume)))
+    }
+
+    currentAssetMap.get(user) match {
+      case Some(curMap) => curMap.get(currency) match {
+        case Some(old) => curMap.put(currency, old + volume)
+        case None => curMap.put(currency, volume)
+      }
+      case None => currentAssetMap.put(user, Map(currency -> volume))
     }
   }
 
@@ -45,12 +57,13 @@ class AssetManager extends Manager[TAssetState] {
     }
   }
 
-  def getAsset(userId: Long, from: Long, to: Long) =
-    assetMap.get(userId) match {
-      case Some(timeAsset) =>
-        (from / day to to / day).map(i => timeAsset.get(i).map(i -> _)).filter(_.isDefined).map(_.get).toMap
-      case None => Map[Long, Map[Currency, Long]]().toMap
-    }
+  def getHistoryAsset(userId: Long, from: Long, to: Long) = historyAssetMap.get(userId) match {
+    case Some(timeAsset) =>
+      (from / day to to / day).map(i => timeAsset.get(i).map(i -> _)).filter(_.isDefined).map(_.get).toMap
+    case None => Map[Long, Map[Currency, Long]]().toMap
+  }
+
+  def getCurrentAsset(userId: Long) = currentAssetMap.get(userId).getOrElse(Map.empty[Currency, Long])
 
   def getPrice(from: Long, to: Long) = {
     priceMap.map {

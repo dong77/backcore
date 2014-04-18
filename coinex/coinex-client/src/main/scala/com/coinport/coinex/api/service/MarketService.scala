@@ -9,6 +9,7 @@ import com.coinport.coinex.api.model._
 import akka.pattern.ask
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import com.coinport.coinex.data.Implicits._
 
 object MarketService extends AkkaService {
   def getDepth(marketSide: MarketSide, depth: Int): Future[ApiResult] = {
@@ -48,7 +49,6 @@ object MarketService extends AkkaService {
     // struct QueryTransaction {1: optional i64 tid, 2: optional i64 uid, 3: optional i64 oid, 4:optional MarketSide side, 5: Cursor cursor, 6: bool getCount}
     backend ? QueryTransaction(tid, uid, orderId, Some(QueryMarketSide(marketSide, true)), cursor, false) map {
       case result: QueryTransactionResult =>
-        println("transaction: " + marketSide + " -> " + result)
         val subject = marketSide._1
         val currency = marketSide._2
         val items = result.transactionItems map {
@@ -83,6 +83,48 @@ object MarketService extends AkkaService {
   def getTransactionsByUser(marketSide: MarketSide, uid: Long, skip: Int, limit: Int): Future[ApiResult] = getTransactions(marketSide, None, Some(uid), None, skip, limit)
 
   def getTransactionsByOrder(marketSide: MarketSide, orderId: Long, skip: Int, limit: Int): Future[ApiResult] = getTransactions(marketSide, None, None, Some(orderId), skip, limit)
+
+  def getAsset(userId: Long, from: Long, to: Long, baseCurrency: Currency) = {
+    val timeSkip: Long = ChartTimeDimension.OneDay
+    val start = from / timeSkip
+    val stop = to / timeSkip
+    backend ? QueryAsset(userId, from, to) map {
+      case result: QueryAssetResult =>
+        val history = result.historyAsset
+
+        val currencyPriceMap = result.marketPrice.marketPriceMap.map {
+          case (side, map) =>
+            val priceMap: Map[Long, Double] = if (side._2 == baseCurrency) map.priceMap.toMap
+            else if (side._1 == baseCurrency) map.priceMap.map(x => x._1 -> 1 / x._2).toMap
+            else Map.empty[Long, Double]
+            baseCurrency -> priceMap
+        }
+
+        var currentAsset = scala.collection.mutable.Map.empty[Currency, Long] ++ result.currentAsset.currentAsset
+        val assetList = (Math.max(start, stop) to Math.min(start, stop)).map { timeSpot =>
+          currentAsset = history.currencyMap.get(timeSpot) match {
+            case Some(curMap) =>
+              curMap.foreach {
+                case (cur, volume) =>
+                  currentAsset.put(cur, currentAsset.get(cur).get + volume)
+              }
+              currentAsset
+            case None => currentAsset
+          }
+          (timeSpot, currentAsset.clone)
+        }
+
+        val items = assetList.map {
+          case (timeSpot, assetMap) =>
+            val amount = assetMap.map { case (cur, volume) => currencyPriceMap.get(cur).get.get(timeSpot).get * volume }.sum
+            AssetItem(uid = userId.toString,
+              assetMap = assetMap.map(a => a._1.toString -> a._2.toDouble).toMap,
+              amount = amount,
+              timestamp = timeSpot * timeSkip)
+        }
+        ApiResult(data = Some(items.reverse))
+    }
+  }
 
   def getTickers(marketSides: Set[MarketSide]) = {
     backend ? QueryMetrics map {

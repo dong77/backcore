@@ -18,10 +18,13 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cCandleData = JsonScalaCodec(CandleData)
   lazy val _cCandleDataItem = JsonScalaCodec(CandleDataItem)
   lazy val _cCashAccount = JsonScalaCodec(CashAccount)
+  lazy val _cCurrentAsset = JsonScalaCodec(CurrentAsset)
   lazy val _cCursor = JsonScalaCodec(Cursor)
   lazy val _cDWItem = JsonScalaCodec(DWItem)
   lazy val _cDeposit = JsonScalaCodec(Deposit)
   lazy val _cFee = JsonScalaCodec(Fee)
+  lazy val _cHistoryAsset = JsonScalaCodec(HistoryAsset)
+  lazy val _cHistoryPrice = JsonScalaCodec(HistoryPrice)
   lazy val _cMarketDepth = JsonScalaCodec(MarketDepth)
   lazy val _cMarketDepthItem = JsonScalaCodec(MarketDepthItem)
   lazy val _cMarketPrice = JsonScalaCodec(MarketPrice)
@@ -40,11 +43,10 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cTStackQueue = JsonScalaCodec(TStackQueue)
   lazy val _cTWindowQueue = JsonScalaCodec(TWindowQueue)
   lazy val _cTWindowVector = JsonScalaCodec(TWindowVector)
-  lazy val _cTimePrice = JsonScalaCodec(TimePrice)
+  lazy val _cTWindowVector = JsonScalaCodec(TWindowVector)
   lazy val _cTransaction = JsonScalaCodec(Transaction)
   lazy val _cTransactionItem = JsonScalaCodec(TransactionItem)
   lazy val _cUserAccount = JsonScalaCodec(UserAccount)
-  lazy val _cUserAsset = JsonScalaCodec(UserAsset)
   lazy val _cUserLogsState = JsonScalaCodec(UserLogsState)
   lazy val _cUserProfile = JsonScalaCodec(UserProfile)
   lazy val _cWithdrawal = JsonScalaCodec(Withdrawal)
@@ -136,10 +138,13 @@ class ThriftJsonSerializer extends Serializer {
     case m: CandleData => _cCandleData(m)
     case m: CandleDataItem => _cCandleDataItem(m)
     case m: CashAccount => _cCashAccount(m)
+    case m: CurrentAsset => _cCurrentAsset(m)
     case m: Cursor => _cCursor(m)
     case m: DWItem => _cDWItem(m)
     case m: Deposit => _cDeposit(m)
     case m: Fee => _cFee(m)
+    case m: HistoryAsset => _cHistoryAsset(m)
+    case m: HistoryPrice => _cHistoryPrice(m)
     case m: MarketDepth => _cMarketDepth(m)
     case m: MarketDepthItem => _cMarketDepthItem(m)
     case m: MarketPrice => _cMarketPrice(m)
@@ -158,11 +163,10 @@ class ThriftJsonSerializer extends Serializer {
     case m: TStackQueue => _cTStackQueue(m)
     case m: TWindowQueue => _cTWindowQueue(m)
     case m: TWindowVector => _cTWindowVector(m)
-    case m: TimePrice => _cTimePrice(m)
+    case m: TWindowVector => _cTWindowVector(m)
     case m: Transaction => _cTransaction(m)
     case m: TransactionItem => _cTransactionItem(m)
     case m: UserAccount => _cUserAccount(m)
-    case m: UserAsset => _cUserAsset(m)
     case m: UserLogsState => _cUserLogsState(m)
     case m: UserProfile => _cUserProfile(m)
     case m: Withdrawal => _cWithdrawal(m)
@@ -258,10 +262,13 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[CandleData.Immutable] => _cCandleData.invert(bytes).get
     case Some(c) if c == classOf[CandleDataItem.Immutable] => _cCandleDataItem.invert(bytes).get
     case Some(c) if c == classOf[CashAccount.Immutable] => _cCashAccount.invert(bytes).get
+    case Some(c) if c == classOf[CurrentAsset.Immutable] => _cCurrentAsset.invert(bytes).get
     case Some(c) if c == classOf[Cursor.Immutable] => _cCursor.invert(bytes).get
     case Some(c) if c == classOf[DWItem.Immutable] => _cDWItem.invert(bytes).get
     case Some(c) if c == classOf[Deposit.Immutable] => _cDeposit.invert(bytes).get
     case Some(c) if c == classOf[Fee.Immutable] => _cFee.invert(bytes).get
+    case Some(c) if c == classOf[HistoryAsset.Immutable] => _cHistoryAsset.invert(bytes).get
+    case Some(c) if c == classOf[HistoryPrice.Immutable] => _cHistoryPrice.invert(bytes).get
     case Some(c) if c == classOf[MarketDepth.Immutable] => _cMarketDepth.invert(bytes).get
     case Some(c) if c == classOf[MarketDepthItem.Immutable] => _cMarketDepthItem.invert(bytes).get
     case Some(c) if c == classOf[MarketPrice.Immutable] => _cMarketPrice.invert(bytes).get
@@ -280,11 +287,10 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[TStackQueue.Immutable] => _cTStackQueue.invert(bytes).get
     case Some(c) if c == classOf[TWindowQueue.Immutable] => _cTWindowQueue.invert(bytes).get
     case Some(c) if c == classOf[TWindowVector.Immutable] => _cTWindowVector.invert(bytes).get
-    case Some(c) if c == classOf[TimePrice.Immutable] => _cTimePrice.invert(bytes).get
+    case Some(c) if c == classOf[TWindowVector.Immutable] => _cTWindowVector.invert(bytes).get
     case Some(c) if c == classOf[Transaction.Immutable] => _cTransaction.invert(bytes).get
     case Some(c) if c == classOf[TransactionItem.Immutable] => _cTransactionItem.invert(bytes).get
     case Some(c) if c == classOf[UserAccount.Immutable] => _cUserAccount.invert(bytes).get
-    case Some(c) if c == classOf[UserAsset.Immutable] => _cUserAsset.invert(bytes).get
     case Some(c) if c == classOf[UserLogsState.Immutable] => _cUserLogsState.invert(bytes).get
     case Some(c) if c == classOf[UserProfile.Immutable] => _cUserProfile.invert(bytes).get
     case Some(c) if c == classOf[Withdrawal.Immutable] => _cWithdrawal.invert(bytes).get

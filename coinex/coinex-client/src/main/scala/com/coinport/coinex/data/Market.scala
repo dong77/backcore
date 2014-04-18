@@ -1,7 +1,7 @@
 package com.coinport.coinex.data
 
 case class Market(currency1: Currency, currency2: Currency) {
-  private val sorted = if (currency1.getValue > currency2.getValue) (currency1, currency2) else (currency2, currency1)
+  val sorted = if (currency1.getValue > currency2.getValue) (currency1, currency2) else (currency2, currency1)
 
   def getMarketSide(ordered: Boolean = true) = if (ordered) MarketSide(sorted._1, sorted._2) else MarketSide(sorted._2, sorted._1)
 

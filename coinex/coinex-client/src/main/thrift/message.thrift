@@ -33,10 +33,11 @@ typedef data.TransactionItem       TransactionItem
 typedef data.CandleData            CandleData
 typedef data.ChartTimeDimension    ChartTimeDimension
 typedef data.QueryMarketSide       QueryMarketSide
-typedef data.UserAsset             UserAsset
 typedef data.MarketPrice           MarketPrice
 typedef data.ExportedEventType     ExportedEventType
 typedef data.DWItem                DWItem
+typedef data.HistoryAsset          HistoryAsset
+typedef data.CurrentAsset          CurrentAsset
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -169,7 +170,7 @@ typedef data.DWItem                DWItem
 
 ////////// AssetQuery
 /* Q    */ struct QueryAsset                          {1: i64 uid, 2: i64 from, 3: i64 to}
-/* R    */ struct QueryAssetResult                    {1: map<i64, UserAsset> userAssets, 2: MarketPrice marketPrice}
+/* R    */ struct QueryAssetResult                    {1: CurrentAsset currentAsset, 2: HistoryAsset historyAsset, 3: MarketPrice marketPrice}
 
 
 ////////// OpenData Query

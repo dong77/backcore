@@ -51,8 +51,9 @@ class AssetView extends ExtendedView {
         manager.updatePrice(side.reverse, timestamp, txs.last.makerUpdate.current.price.get)
       }
     case q: QueryAsset =>
-      val userAssets = manager.getAsset(q.uid, q.from, q.to).map(x => x._1 -> UserAsset(x._2))
-      val marketPrice = MarketPrice(manager.getPrice(q.from, q.to).map(x => x._1 -> TimePrice(x._2)))
-      sender ! QueryAssetResult(userAssets, marketPrice)
+      val historyAsset = HistoryAsset(manager.getHistoryAsset(q.uid, q.from, q.to))
+      val currentAsset = CurrentAsset(manager.getCurrentAsset(q.uid))
+      val marketPrice = MarketPrice(manager.getPrice(q.from, q.to).map(x => x._1 -> HistoryPrice(x._2)))
+      sender ! QueryAssetResult(currentAsset, historyAsset, marketPrice)
   }
 }
