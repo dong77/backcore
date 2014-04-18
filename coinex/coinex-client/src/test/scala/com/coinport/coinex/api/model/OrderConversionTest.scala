@@ -134,6 +134,28 @@ class OrderConversionTest extends Specification {
       backOrder = OrderInfo(
         Rmb ~> Btc,
         Order(uid, 0L, 3 * 4000 * 100, Some(1.0 / 4000 * 1000 / 100), Some(3 * 1000)),
+        3 * 4000 * 100, // out
+        3 * 1000, // in
+        OrderStatus.FullyExecuted)
+      frontOrder = UserOrder(
+        uid.toString,
+        operation = Buy,
+        subject = Btc,
+        currency = Rmb,
+        price = Some(4000),
+        amount = Some(3),
+        total = Some(3 * 4000),
+        finishedQuantity = 3.0,
+        finishedAmount = 12000.0,
+        status = OrderStatus.FullyExecuted.getValue
+      )
+
+      UserOrder.fromOrderInfo(backOrder) mustEqual frontOrder
+
+      // buy 3 BTC at 4000 RMB/BTC
+      backOrder = OrderInfo(
+        Rmb ~> Btc,
+        Order(uid, 0L, 3 * 4000 * 100, Some(1.0 / 4000 * 1000 / 100), Some(3 * 1000)),
         3000 * 100, // outAmount, spent 3000 CNY
         1 * 1000, // inAmount, bought 1 BTC
         OrderStatus.PartiallyExecuted)
