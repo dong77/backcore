@@ -57,7 +57,7 @@ class MarketProcessor(
     case OrderFundFrozen(side, order: Order) =>
       val orderSubmitted = manager.addOrderToMarket(side, order)
       channelToAccountProcessor forward Deliver(Persistent(orderSubmitted), accountProcessorPath)
-      /*
+    /*
       val sb = new StringBuilder()
       sb.append("\n" + "~" * 100 + "\n")
       sb.append("%s:\n%s\n\n".format(if (manager.headSide == side) "卖单" else "买单",
