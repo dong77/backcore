@@ -12,7 +12,7 @@ import AssemblyKeys._
 //import NativePackagerKeys._
 
 object CoinexBuild extends Build {
-  val coinexVersion = "1.1.2-SNAPSHOT"
+  val coinexVersion = "1.1.3-SNAPSHOT"
   val akkaVersion = "2.3.2"
   val bijectionVersion = "0.6.2"
   val sprayVersion = "1.3.1"

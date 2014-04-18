@@ -34,9 +34,7 @@ case class UserOrder(
     id: String = "0",
     submitTime: Long = 0L,
     finishedQuantity: Double = 0.0,
-    remainingQuantity: Double = 0.0,
-    finishedAmount: Double = 0.0,
-    remainingAmount: Double = 0.0) {
+    finishedAmount: Double = 0.0) {
   //  buy: money   out, subject in
   // sell: subject out, money   in
   val marketSide = operation match {
@@ -85,10 +83,9 @@ object UserOrder {
 
     val unit1 = marketSide._1
     val unit2 = marketSide._2
-
     unit2 match {
       case Rmb => // sell
-        val price = order.price.map {
+        val price: Option[Double] = order.price.map {
           p => p.externalValue(marketSide)
         }
         val amount: Option[Double] = Some(order.quantity.externalValue(unit1))
@@ -96,25 +93,15 @@ object UserOrder {
 
         // finished quantity = out
         val finishedQuantity = orderInfo.outAmount.externalValue(unit1)
-        // remaining quantity = quantity - out
-        val remainingQuantity = (order.quantity - orderInfo.outAmount).externalValue(unit1)
         // finished amount = in
         val finishedAmount = orderInfo.inAmount.externalValue(unit2)
-        // remaining amount = take - in
-        val remainingAmount = order.takeLimit match {
-          case Some(t) => (t - orderInfo.inAmount).externalValue(unit2)
-          case None => 0
-        }
 
         val status = orderInfo.status
         val id = order.id
         val timestamp = order.timestamp.getOrElse(0L)
 
         UserOrder(order.userId.toString, Sell, unit1, unit2, price, amount, total, status.value, id.toString, timestamp)
-          .copy(finishedQuantity = finishedQuantity,
-            remainingQuantity = remainingQuantity,
-            finishedAmount = finishedAmount,
-            remainingAmount = remainingAmount)
+          .copy(finishedQuantity = finishedQuantity, finishedAmount = finishedAmount)
 
       case _ => // buy
         val price: Option[Double] = order.price.map {
@@ -126,25 +113,16 @@ object UserOrder {
 
         // finished quantity = in
         val finishedQuantity = orderInfo.inAmount.externalValue(unit2)
-        // remaining quantity = take - in
-        val remainingQuantity = order.takeLimit match {
-          case Some(t) => (t - orderInfo.inAmount).externalValue(unit2)
-          case None => 0
-        }
+
         // finished amount = out
         val finishedAmount = orderInfo.outAmount.externalValue(unit1)
-        // remaining amount = quantity - out
-        val remainingAmount = (order.quantity - orderInfo.outAmount).externalValue(unit1)
 
         val status = orderInfo.status
         val id = order.id
         val timestamp = order.timestamp.getOrElse(0L)
 
         UserOrder(order.userId.toString, Buy, unit2, unit1, price, amount, total, status.value, id.toString, timestamp)
-          .copy(finishedQuantity = finishedQuantity,
-            remainingQuantity = remainingQuantity,
-            finishedAmount = finishedAmount,
-            remainingAmount = remainingAmount)
+          .copy(finishedQuantity = finishedQuantity, finishedAmount = finishedAmount)
     }
   }
 }

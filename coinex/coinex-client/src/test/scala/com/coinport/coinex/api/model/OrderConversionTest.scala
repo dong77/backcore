@@ -81,13 +81,76 @@ class OrderConversionTest extends Specification {
       order mustEqual command
 
       // convert back
-      var userOrder = UserOrder(uid.toString, Sell, Btc, Rmb, Some(1234), Some(12), None, remainingQuantity = 12)
+      var userOrder = UserOrder(uid.toString, Sell, Btc, Rmb, Some(1234), Some(12), None)
       userOrder mustEqual UserOrder.fromOrderInfo(OrderInfo(Btc ~> Rmb, userOrder.toDoSubmitOrder.order, 0, 0, OrderStatus.Pending))
 
-      userOrder = UserOrder(uid.toString, Buy, Btc, Rmb, Some(1234), Some(12), Some(1234 * 12), remainingQuantity = 12, remainingAmount = 1234 * 12)
+      userOrder = UserOrder(uid.toString, Buy, Btc, Rmb, Some(1234), Some(12), Some(1234 * 12))
       userOrder mustEqual UserOrder.fromOrderInfo(OrderInfo(Rmb ~> Btc, userOrder.toDoSubmitOrder.order, 0, 0, OrderStatus.Pending))
 
-      // TODO: cover corner cases
+      // inAmount / outAmount
+      var backOrder = OrderInfo(
+        Btc ~> Rmb,
+        Order(uid, 0L, 2000, Some(5000 * 100 / 1000), None),
+        2000, // out
+        5000 * 2 * 100, // in
+        OrderStatus.FullyExecuted)
+      var frontOrder = UserOrder(
+        uid.toString,
+        operation = Sell,
+        subject = Btc,
+        currency = Rmb,
+        price = Some(5000),
+        amount = Some(2),
+        total = None,
+        finishedQuantity = 2.0,
+        finishedAmount = 10000.0,
+        status = OrderStatus.FullyExecuted.getValue
+      )
+
+      UserOrder.fromOrderInfo(backOrder) mustEqual frontOrder
+
+      backOrder = OrderInfo(
+        Btc ~> Rmb,
+        Order(uid, 0L, 3000, Some(5000 * 100 / 1000), None),
+        1000, // out
+        5000 * 1 * 100, // in
+        OrderStatus.PartiallyExecuted)
+      frontOrder = UserOrder(
+        uid.toString,
+        operation = Sell,
+        subject = Btc,
+        currency = Rmb,
+        price = Some(5000),
+        amount = Some(3),
+        total = None,
+        finishedQuantity = 1.0,
+        finishedAmount = 5000.0,
+        status = OrderStatus.PartiallyExecuted.getValue
+      )
+
+      UserOrder.fromOrderInfo(backOrder) mustEqual frontOrder
+
+      // buy 3 BTC at 4000 RMB/BTC
+      backOrder = OrderInfo(
+        Rmb ~> Btc,
+        Order(uid, 0L, 3 * 4000 * 100, Some(1.0 / 4000 * 1000 / 100), Some(3 * 1000)),
+        3000 * 100, // outAmount, spent 3000 CNY
+        1 * 1000, // inAmount, bought 1 BTC
+        OrderStatus.PartiallyExecuted)
+      frontOrder = UserOrder(
+        uid.toString,
+        operation = Buy,
+        subject = Btc,
+        currency = Rmb,
+        price = Some(4000),
+        amount = Some(3),
+        total = Some(4000 * 3), // total amount
+        finishedQuantity = 1.0, // bought 1 BTC
+        finishedAmount = 3000.0, // spent 3000 CNY
+        status = OrderStatus.PartiallyExecuted.getValue
+      )
+
+      UserOrder.fromOrderInfo(backOrder) mustEqual frontOrder
     }
   }
 }
