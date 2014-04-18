@@ -59,8 +59,9 @@ class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor with Proce
       manager.removeRobot(id)
 
     case Persistent(DoAddRobotBrain(states), _) =>
-      if (manager.isExistRobotBrain(states.map(kv => (kv._1, kv._2)).toMap)) {
-        sender ! AddRobotBrainFailed(ErrorCode.RobotBrainExist)
+      val (existBrainId, isExist) = manager.isExistRobotBrain(states.map(kv => (kv._1, kv._2)).toMap)
+      if (isExist) {
+        sender ! AddRobotBrainFailed(ErrorCode.RobotBrainExist, existBrainId)
       } else {
         val brainId = manager.addRobotBrain(states.map(kv => (kv._1, kv._2)).toMap)
         sender ! brainId

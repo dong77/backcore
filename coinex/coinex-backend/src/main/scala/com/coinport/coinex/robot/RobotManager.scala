@@ -45,7 +45,7 @@ class RobotManager extends Manager[RobotState] {
     state = state.removeRobotBrain(brainId)
   }
 
-  def isExistRobotBrain(states: scala.collection.immutable.Map[String, String]): Boolean = {
+  def isExistRobotBrain(states: scala.collection.immutable.Map[String, String]): (Long, Boolean) = {
     state.isExistRobotBrain(states)
   }
 

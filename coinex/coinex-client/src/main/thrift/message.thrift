@@ -101,7 +101,7 @@ typedef data.DWItem                DWItem
 /* C,P  */ struct AdminConfirmCashWithdrawalFailure   {1: Withdrawal withdrawal, 2: ErrorCode error}
 /* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: Withdrawal withdrawal}
 
-/* R-   */ struct AddRobotBrainFailed                 {1: ErrorCode error}
+/* R-   */ struct AddRobotBrainFailed                 {1: ErrorCode error, 2: i64 brainId}
 /* R+   */ struct AddRobotBrainSucceeded              {1: i64 brainId}
 
 /* R-   */ struct RemoveRobotBrainFailed              {1: ErrorCode error, 2: string robotIds}

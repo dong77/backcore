@@ -76,8 +76,10 @@ case class RobotState(
     (new Eval()(HEADER + source)).asInstanceOf[Action]
   }
 
-  def isExistRobotBrain(states: scala.collection.immutable.Map[String, String]): Boolean = {
-    robotBrainMap.contains(genBrainId(states))
+  def isExistRobotBrain(states: scala.collection.immutable.Map[String, String]): (Long, Boolean) = {
+    val brainId = genBrainId(states)
+    robotBrainMap.contains(brainId)
+    (brainId, robotBrainMap.contains(brainId))
   }
 
   def getUsingRobots(brainId: Long): SortedSet[Long] = {
