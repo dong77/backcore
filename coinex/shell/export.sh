@@ -19,8 +19,8 @@ if [ ! -f "$snapshotFile" ]; then
 fi
 
 echo from last snapshot $lastSnapshot
-query="'{\"metadata.snapshotIndex\": {\$gt: $lastSnapshot}}'"
-echo mongoexport -d coinex_events -c p_${1}_metadata -f metadata.snapshotIndex -q $query --csv -o /tmp/snapshot > $tempFile
+query="'{\"metadata.height\": {\$gt: $lastSnapshot}}'"
+echo mongoexport -d coinex_events -c p_${1}_metadata -f metadata.height -q $query --csv -o /tmp/snapshot > $tempFile
 $tempFile
 
 # for each snapshot
@@ -32,7 +32,7 @@ for i in `sed -n '2,$p' /tmp/snapshot`; do
     query="'{snapshot: $snapshot}'"
 
     if [ ! -f "$file" ]; then
-           echo mongoexport -d coinex_events -c p_${1}_events -q $query -o $file > $tempFile
+           echo mongoexport -d coinex_events -c p_${1}_events -q $query --jsonArray -o $file > $tempFile
            $tempFile
            # remove empty files
            if [ ! -s "$file" ]; then
