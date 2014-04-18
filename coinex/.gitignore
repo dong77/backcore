@@ -10,3 +10,5 @@ log/
 lib_src/
 *.orig
 *.jar
+ctags
+filenametags
