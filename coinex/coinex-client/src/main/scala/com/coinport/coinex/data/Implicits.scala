@@ -38,7 +38,10 @@ class RichOrder(raw: Order) {
 
   def maxInAmount(price: Double): Long = raw.takeLimit match {
     case Some(limit) if limit < raw.quantity * price => limit
-    case _ => (raw.quantity * price).toLong
+    case _ =>
+      // this check ensure that the amount couldn't buyed definately be a dust in future check
+      val firstTry = Math.round(raw.quantity * price)
+      if ((firstTry / price).toLong > raw.quantity) firstTry.toLong - 1 else firstTry.toLong
   }
 
   def hitTakeLimit = raw.takeLimit != None && raw.takeLimit.get <= 0

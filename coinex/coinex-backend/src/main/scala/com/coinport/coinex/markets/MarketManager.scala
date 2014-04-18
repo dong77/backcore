@@ -38,7 +38,7 @@ object MarketManager {
   }
 }
 
-class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
+class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
   private[markets] val orderPools = Map.empty[MarketSide, SortedSet[Order]]
   private[markets] val orderMap = Map.empty[Long, Order]
   private[markets] var priceRestriction: Option[Double] = None

@@ -156,7 +156,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
         manager.conditionalRefund(makerOrderUpdate.current.refundReason != None)(side.inCurrency, makerOrderUpdate.current)
       }
       val order = originOrderInfo.order
-      if (txs.size == 0 && order.refundReason != None)
+      if (txs.isEmpty && order.refundReason.isDefined)
         manager.refund(order.userId, side.outCurrency, order.quantity - originOrderInfo.outAmount)
 
     case OrderCancelled(side, order) =>

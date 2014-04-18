@@ -23,8 +23,9 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
       manager.adjustAmount(side, order, false)
 
     case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
-      manager.adjustAmount(orderInfo.side, orderInfo.order, true)
-      txs foreach { manager.reductAmount(orderInfo.side, _) }
+      if (!orderInfo.order.refundReason.isDefined)
+        manager.adjustAmount(orderInfo.side, orderInfo.order, true)
+      txs foreach { manager.reduceAmount(orderInfo.side, _) }
 
     case QueryMarketDepth(side, maxDepth) if side == market =>
       val (asks, bids) = manager.get(maxDepth)
@@ -73,18 +74,22 @@ class MarketDepthManager(market: MarketSide) extends Manager[TMarketDepthState] 
     }
   }
 
-  def reductAmount(side: MarketSide, tx: Transaction) = {
+  def reduceAmount(side: MarketSide, tx: Transaction) = {
     val Transaction(_, _, _, taker, maker, _) = tx
     val (ask, bid) = if (side == market) (taker, maker) else (maker, taker)
 
     if (ask.previous.price.isDefined) {
       val diff = ask.current.maxOutAmount(ask.current.price.get) - ask.previous.maxOutAmount(ask.previous.price.get)
       adjustAsk(ask.previous.price.get, diff)
+      if (ask.current.refundReason.isDefined)
+        adjustAsk(ask.previous.price.get, -ask.current.maxOutAmount(ask.current.price.get))
     }
 
     if (bid.previous.price.isDefined) {
       val diff = bid.current.maxInAmount(bid.current.price.get) - bid.previous.maxInAmount(bid.previous.price.get)
       adjustBid(bid.previous.price.get, diff)
+      if (bid.current.refundReason.isDefined)
+        adjustBid(bid.previous.price.get, -bid.current.maxInAmount(bid.current.price.get))
     }
   }
 }

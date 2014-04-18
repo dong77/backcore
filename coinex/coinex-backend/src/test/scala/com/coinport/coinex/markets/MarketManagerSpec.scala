@@ -8,6 +8,7 @@ import org.specs2.mutable._
 import scala.collection.immutable.SortedSet
 
 import com.coinport.coinex.data._
+// import com.coinport.coinex.debug.Debugger
 import Implicits._
 import Currency._
 import OrderStatus._
@@ -20,6 +21,33 @@ class MarketManagerSpec extends Specification {
   import MarketManager._
 
   "MarketManager" should {
+
+    "very low sell order should take all much higher buy order" in {
+      val manager = new MarketManager(Btc ~> Rmb)
+      val buySide = Rmb ~> Btc
+      val sellSide = Btc ~> Rmb
+
+      manager.addOrderToMarket(buySide, Order(91990591289398244L, 10000000124L, 8999, Some(1.3332077064322006E-4), None, Some(1397829420604L), None, Some(91990591289398244L), None, 10, None))
+      manager.addOrderToMarket(buySide, Order(877800447188483646L, 10000000129L, 78351, Some(1.4039210295437187E-4), None, Some(1397829425596L), None, Some(877800447188483646L), None, 0, None))
+      manager.addOrderToMarket(buySide, Order(-245561917658914311L, 10000000101L, 13190, Some(1.4403404685562162E-4), None, Some(1397829400476L), None, Some(-245561917658914311L), None, 9, None))
+      manager.addOrderToMarket(buySide, Order(877800447188483646L, 10000000111L, 86187, Some(1.6011661328680426E-4), None, Some(1397829410477L), None, Some(877800447188483646L), None, 0, None))
+      manager.addOrderToMarket(buySide, Order(5742988204510593740L, 10000000103L, 75676, Some(1.625338326902886E-4), None, Some(1397829400560L), None, Some(5742988204510593740L), None, 0, None))
+      manager.addOrderToMarket(buySide, Order(5742988204510593740L, 10000000125L, 78351, Some(1.6336535616508726E-4), None, Some(1397829425430L), None, Some(5742988204510593740L), None, 0, None))
+      manager.addOrderToMarket(buySide, Order(877800447188483646L, 10000000106L, 69428, Some(1.685198348210773E-4), None, Some(1397829405477L), None, Some(877800447188483646L), None, 0, None))
+      manager.addOrderToMarket(buySide, Order(5742988204510593740L, 10000000083L, 58270, Some(1.698959923591867E-4), None, Some(1397829380583L), None, Some(5742988204510593740L), None, 0, None))
+      manager.addOrderToMarket(buySide, Order(5742988204510593740L, 10000000108L, 69428, Some(1.7140051575818973E-4), None, Some(1397829405560L), None, Some(5742988204510593740L), None, 0, None))
+      manager.addOrderToMarket(buySide, Order(-6771488127296557565L, 10000000115L, 69428, Some(1.7716187763241458E-4), None, Some(1397829415462L), None, Some(-6771488127296557565L), None, 0, None))
+      manager.addOrderToMarket(buySide, Order(91990591289398244L, 10000000077L, 57694, Some(2.131937285937552E-4), None, Some(1397829375607L), None, Some(91990591289398244L), None, 0, None))
+      manager.addOrderToMarket(buySide, Order(91990591289398244L, 10000000105L, 69428, Some(2.1605107028343243E-4), None, Some(1397829405436L), None, Some(91990591289398244L), None, 0, None))
+      manager.addOrderToMarket(buySide, Order(91990591289398244L, 10000000096L, 72304, Some(2.1713760484859542E-4), None, Some(1397829395484L), None, Some(91990591289398244L), None, 0, None))
+
+      manager.addOrderToMarket(sellSide, Order(7410102373723916141L, 0, 10000, Some(10.0), None, Some(1397829427785L), None, None, None, 0, None))
+
+      manager.getSnapshot mustEqual TMarketState(Map(MarketSide(Rmb, Btc) -> List(), MarketSide(Btc, Rmb) -> List(
+        Order(7410102373723916141L, 0, 9865, Some(10.0), None, Some(1397829427785L), None, None, None, 766229, None))),
+        Map(0L -> Order(7410102373723916141L, 0, 9865, Some(10.0), None, Some(1397829427785L), None, None, None, 766229, None)), None, RedeliverFilters(Map()))
+    }
+
     "take limit can't block the current transaction" in {
       val manager = new MarketManager(Btc ~> Rmb)
       val maker1 = Order(userId = 1, id = 1, price = Some(1.0 / 2000), quantity = 20000)
@@ -452,6 +480,23 @@ class MarketManagerSpec extends Specification {
 
       result mustEqual OrderSubmitted(
         OrderInfo(takerSide, taker, 500, 1, PartiallyExecutedThenCancelledByMarket, Some(0)),
+        Seq(Transaction(2000001, 0, takerSide, taker --> updatedTaker.copy(refundReason = Some(AutoCancelled)),
+          maker --> updatedMaker)))
+    }
+
+    "be able to handle dust" in {
+      val manager = new MarketManager(Btc ~> Rmb)
+      val maker = Order(userId = 1, id = 1, price = Some(500.9), quantity = 1)
+      val taker = Order(userId = 5, id = 2, price = None, quantity = 900)
+
+      manager.addOrderToMarket(makerSide, maker)
+      val result = manager.addOrderToMarket(takerSide, taker)
+
+      val updatedMaker = maker.copy(quantity = 0, inAmount = 501)
+      val updatedTaker = taker.copy(quantity = 399, inAmount = 1)
+
+      result mustEqual OrderSubmitted(
+        OrderInfo(takerSide, taker, 501, 1, PartiallyExecutedThenCancelledByMarket, Some(0)),
         Seq(Transaction(2000001, 0, takerSide, taker --> updatedTaker.copy(refundReason = Some(AutoCancelled)),
           maker --> updatedMaker)))
     }
