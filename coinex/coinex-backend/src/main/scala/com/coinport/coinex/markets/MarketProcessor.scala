@@ -25,7 +25,7 @@ class MarketProcessor(
 
   val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
 
-  val manager = new MarketManager(marketSide, 1e10.toLong, 1e10.toLong)
+  val manager = new MarketManager(marketSide)
 
   def receiveRecover = PartialFunction.empty[Any, Unit]
 

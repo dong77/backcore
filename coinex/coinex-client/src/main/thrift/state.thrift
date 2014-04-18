@@ -40,15 +40,14 @@ struct TAccountState {
     1: map<i64, UserAccount> userAccountsMap
     2: RedeliverFilters filters
     3: UserAccount aggregation
+    4: i64 lastOrderId
 }
 
 struct TMarketState {
-    1: i64 lastOrderId
-    2: i64 lastTxId
-    3: map<MarketSide, list<Order>> orderPools
-    4: map<i64, Order> orderMap
-    5: optional double priceRestriction
-    6: RedeliverFilters filters
+    1: map<MarketSide, list<Order>> orderPools
+    2: map<i64, Order> orderMap
+    3: optional double priceRestriction
+    4: RedeliverFilters filters
 }
 
 struct TApiSecretState {

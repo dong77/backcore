@@ -32,7 +32,7 @@ class AccountProcessor(
   val channelToMarketProcessors = createChannelTo(MARKET_PROCESSOR <<) // DO NOT CHANGE
   val channelToMarketUpdateProcessor = createChannelTo(MARKET_UPDATE_PROCESSOR<<) // DO NOT CHANGE
   val channelToDepositWithdrawalProcessor = createChannelTo(DEPOSIT_WITHDRAW_PROCESSOR<<) // DO NOT CHANGE
-  val manager = new AccountManager()
+  val manager = new AccountManager(1E12.toLong)
 
   override def identifyChannel: PartialFunction[Any, String] = {
     case r: AdminConfirmCashWithdrawalSuccess => "dwp"

@@ -10,7 +10,7 @@ import com.coinport.coinex.common.PersistentId._
 import akka.persistence.Persistent
 
 class OrderReader(db: MongoDB) extends Actor with OrderMongoHandler with ActorLogging {
-  val coll = db("order")
+  val coll = db("orders")
 
   def receive = LoggingReceive {
     case q: QueryOrder =>
@@ -21,7 +21,7 @@ class OrderReader(db: MongoDB) extends Actor with OrderMongoHandler with ActorLo
 
 class OrderWriter(db: MongoDB) extends ExtendedView with OrderMongoHandler with ActorLogging {
   val processorId = MARKET_UPDATE_PROCESSOR <<
-  val coll = db("order")
+  val coll = db("orders")
 
   def receive = LoggingReceive {
     case Persistent(OrderCancelled(side, order), _) => cancelItem(order.id)

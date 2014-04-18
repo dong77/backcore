@@ -38,22 +38,20 @@ object MarketManager {
   }
 }
 
-class MarketManager(headSide: MarketSide, initialLastOrderId: Long = 0L, initialLastTxId: Long = 0L) extends Manager[TMarketState] {
-  private[markets] var lastOrderId = initialLastTxId
-  private[markets] var lastTxId = initialLastTxId
+class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
   private[markets] val orderPools = Map.empty[MarketSide, SortedSet[Order]]
   private[markets] val orderMap = Map.empty[Long, Order]
   private[markets] var priceRestriction: Option[Double] = None
 
   private val tailSide = headSide.reverse
   private val bothSides = Seq(headSide, tailSide)
+  private var lastTxId = -1L
 
   import MarketManager._
 
-  def addOrderToMarket(takerSide: MarketSide, raw: Order): OrderSubmitted = {
-    val order = raw.copy(id = getOrderId)
-
+  def addOrderToMarket(takerSide: MarketSide, order: Order): OrderSubmitted = {
     val txsBuffer = new ListBuffer[Transaction]
+    lastTxId = order.id * 10000
 
     val (totalOutAmount, totalInAmount, takerOrder) =
       addOrderToMarketRec(takerSide.reverse, takerSide, order, 0, 0, txsBuffer)
@@ -119,6 +117,8 @@ class MarketManager(headSide: MarketSide, initialLastOrderId: Long = 0L, initial
           else if (updatedMaker.isDust) Some(Dust)
           else None
 
+        def getTxId = { lastTxId += 1; lastTxId }
+
         txsBuffer += Transaction(getTxId, takerOrder.timestamp.getOrElse(0), takerSide,
           takerOrder --> updatedTaker, makerOrder --> updatedMaker.copy(refundReason = refundReason))
 
@@ -133,13 +133,11 @@ class MarketManager(headSide: MarketSide, initialLastOrderId: Long = 0L, initial
     }
   }
 
-  def getSnapshot = TMarketState(lastOrderId, lastTxId,
+  def getSnapshot = TMarketState(
     orderPools.map(item => (item._1 -> item._2.toList)),
     orderMap.clone, priceRestriction, getFiltersSnapshot)
 
   def loadSnapshot(s: TMarketState) {
-    lastOrderId = s.lastOrderId
-    lastTxId = s.lastTxId
     orderPools.clear
     orderPools ++= s.orderPools.map(item => (item._1 -> (SortedSet.empty[Order] ++ item._2)))
     orderMap.clear
@@ -186,14 +184,5 @@ class MarketManager(headSide: MarketSide, initialLastOrderId: Long = 0L, initial
     orderMap -= orderId
     orderPools += (headSide -> (orderPool(headSide) - order))
     orderPools += (tailSide -> (orderPool(tailSide) - order))
-  }
-
-  private def getOrderId(): Long = {
-    lastOrderId += 1
-    lastOrderId
-  }
-  private def getTxId(): Long = {
-    lastTxId += 1
-    lastTxId
   }
 }

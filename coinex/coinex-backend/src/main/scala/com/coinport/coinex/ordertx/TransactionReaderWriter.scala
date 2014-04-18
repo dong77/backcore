@@ -10,7 +10,7 @@ import Implicits._
 import akka.persistence.Persistent
 
 class TransactionReader(db: MongoDB) extends Actor with TransactionMongoHandler with ActorLogging {
-  val coll = db("transaction")
+  val coll = db("transactions")
 
   def receive = LoggingReceive {
     case q: QueryTransaction =>
@@ -21,7 +21,7 @@ class TransactionReader(db: MongoDB) extends Actor with TransactionMongoHandler 
 
 class TransactionWriter(db: MongoDB) extends ExtendedView with TransactionMongoHandler with ActorLogging {
   val processorId = MARKET_UPDATE_PROCESSOR <<
-  val coll = db("transaction")
+  val coll = db("transactions")
 
   def receive = LoggingReceive {
     case e @ Persistent(OrderSubmitted(orderInfo, txs), _) =>

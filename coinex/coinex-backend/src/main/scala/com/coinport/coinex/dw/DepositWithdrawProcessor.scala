@@ -57,6 +57,7 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
       dwHandler.get(deposit.id) match {
         case Some(dw) if dw.status == TransferStatus.Pending =>
           val updated = dw.copy(updated = Some(System.currentTimeMillis), status = TransferStatus.Succeeded)
+          dwHandler.put(updated)
           persist(AdminConfirmCashDepositSuccess(updated.toDeposit)) { event =>
             deliverToAccountManager(event)
             updateState(event)
@@ -98,7 +99,7 @@ class DepositWithdrawProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
 }
 
 final class DepositWithdrawManager extends Manager[TDepositWithdrawState] {
-  var lastDWId = 1e10.toLong
+  var lastDWId = 1E12.toLong
 
   def getSnapshot = TDepositWithdrawState(lastDWId, getFiltersSnapshot)
 

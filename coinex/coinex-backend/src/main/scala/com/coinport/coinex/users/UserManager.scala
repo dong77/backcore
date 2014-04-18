@@ -23,7 +23,7 @@ import com.google.common.io.BaseEncoding
 
 class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: String = "") extends Manager[TUserState] {
   // Internal mutable state ----------------------------------------------
-  var lastUserId = 1E7.toLong
+  var lastUserId = 1E9.toLong
   val idMap = Map.empty[Long, Long] // email hash to user Id
   val profileMap: Map[Long, UserProfile] = Map.empty[Long, UserProfile]
   val passwordResetTokenMap: Map[String, Long] = Map.empty[String, Long]

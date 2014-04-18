@@ -21,18 +21,20 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.common._
 import Implicits._
 
-class AccountManager extends Manager[TAccountState] {
+class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountState] {
   // Internal mutable state ----------------------------------------------
   private val accountMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]
   var aggregation = UserAccount(-1L, Map.empty[Currency, CashAccount])
+  var lastOrderId = initialLastOrderId
 
   // Thrift conversions     ----------------------------------------------
-  def getSnapshot = TAccountState(accountMap.clone, getFiltersSnapshot, aggregation)
+  def getSnapshot = TAccountState(accountMap.clone, getFiltersSnapshot, aggregation, lastOrderId)
 
   def loadSnapshot(snapshot: TAccountState) = {
     accountMap.clear
     accountMap ++= snapshot.userAccountsMap
     aggregation = snapshot.aggregation
+    lastOrderId = snapshot.lastOrderId
     loadFiltersSnapshot(snapshot.filters)
   }
 
@@ -90,4 +92,6 @@ class AccountManager extends Manager[TAccountState] {
     val updated = accounts.copy(cashAccounts = accounts.cashAccounts + (cashAccount.currency -> cashAccount))
     accountMap += userId -> updated
   }
+
+  def getOrderId(): Long = { lastOrderId += 1; lastOrderId }
 }
