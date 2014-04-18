@@ -78,10 +78,15 @@ object Client {
         (robot -> "LOOP", action)
         """.format(risk(uid))
       )
-      Client.backend ? DoAddRobotBrain(brain) map { mid =>
-        val robot = Robot(uid, uid, uid, Map.empty[String, Option[Any]], "START", mid.asInstanceOf[Long])
-        println("generate robot >>>> id: " + robot.robotId)
-        Client.backend ! DoSubmitRobot(robot)
+      Client.backend ? DoAddRobotBrain(brain) map {
+        case AddRobotBrainFailed(ErrorCode.RobotBrainExist, existBrainId) =>
+          val robot = Robot(uid, uid, uid, Map.empty[String, Option[Any]], "START", existBrainId)
+          println("exist robot brain >>>> id: " + existBrainId)
+          Client.backend ! DoSubmitRobot(robot)
+        case mid =>
+          val robot = Robot(uid, uid, uid, Map.empty[String, Option[Any]], "START", mid.asInstanceOf[Long])
+          println("generate robot >>>> id: " + robot.robotId)
+          Client.backend ! DoSubmitRobot(robot)
       }
     }
   }
