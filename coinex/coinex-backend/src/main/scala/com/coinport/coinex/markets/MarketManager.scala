@@ -51,7 +51,7 @@ class MarketManager(headSide: MarketSide) extends Manager[TMarketState] {
 
   def addOrderToMarket(takerSide: MarketSide, order: Order): OrderSubmitted = {
     val txsBuffer = new ListBuffer[Transaction]
-    lastTxId = order.id * 10000
+    lastTxId = order.id * 1000000
 
     val (totalOutAmount, totalInAmount, takerOrder) =
       addOrderToMarketRec(takerSide.reverse, takerSide, order, 0, 0, txsBuffer)
