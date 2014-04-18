@@ -22,12 +22,12 @@ class RobotStateSpec extends Specification {
       val (brainId, robotState2) = robotState.addRobotBrain(brain)
 
       robotState2.robotBrainMap.contains(brainId) mustEqual true
-      robotState2.isExistRobotBrain(brain) mustEqual true
+      robotState2.isExistRobotBrain(brain)._2 mustEqual true
 
       val (brainId2, robotState3) = robotState2.addRobotBrain(brain)
       brainId2 mustEqual brainId
       robotState3.getUsingRobots(brainId).contains(10) mustEqual false
-      robotState3.isExistRobotBrain(brain) mustEqual true
+      robotState3.isExistRobotBrain(brain)._2 mustEqual true
 
       val robotState4 = robotState3.addRobot(Robot(10, 1, 1, payload, "START", brainId))
       robotState4.getUsingRobots(brainId).contains(10) mustEqual true
