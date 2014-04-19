@@ -32,6 +32,9 @@ class RichOrder(raw: Order) {
   def vprice = raw.price.getOrElse(.0)
 
   def maxOutAmount(price: Double): Long = raw.takeLimit match {
+    // taker sell 1 BTC in price 2000 with takeLimit 2000, maker buy 10 BTC in price 10000
+    // we need sell taker's 1 BTC in price 10000 even the limit quantity is 2000 / 10000 = 0.2
+    // so need using "ceil"
     case Some(limit) if limit / price < raw.quantity => Math.ceil(limit / price).toLong
     case _ => raw.quantity
   }

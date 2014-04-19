@@ -41,12 +41,14 @@ object Debugger {
     os.txs foreach { tx =>
       val Transaction(_, _, _, takerUpdate, makerUpdate, _) = tx
       val price = makerUpdate.previous.price.get
-      sb.append("用户 %d %s %d %s %d. 价格: %f\n".format(
+      sb.append("用户 %d %s %d %s %d. 价格: %f 得到: %d\n".format(
         takerUpdate.previous.userId, if (isSell) "卖出" else "买入",
         if (isSell) takerUpdate.previous.quantity - takerUpdate.current.quantity else
           (takerUpdate.current.inAmount - takerUpdate.previous.inAmount).toLong,
         if (isSell) "给" else "从",
-        makerUpdate.previous.userId, if (isSell) 1 / price else price))
+        makerUpdate.previous.userId, if (isSell) 1 / price else price,
+        if (isSell) makerUpdate.previous.quantity - makerUpdate.current.quantity else
+          (makerUpdate.current.inAmount - makerUpdate.previous.inAmount).toLong))
     }
     sb.toString
   }

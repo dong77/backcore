@@ -103,7 +103,8 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
       if (lvOutAmount == 0) { // return point
         (totalOutAmount, totalInAmount, takerOrder)
       } else {
-        val lvInAmount = Math.round(lvOutAmount * price)
+        var lvInAmount = Math.round(lvOutAmount * price)
+        if (makerOrder.maxOutAmount(1 / price) < lvInAmount) lvInAmount -= 1
 
         val updatedTaker = takerOrder.copy(quantity = takerOrder.quantity - lvOutAmount,
           takeLimit = takerOrder.takeLimit.map(_ - lvInAmount), inAmount = takerOrder.inAmount + lvInAmount)

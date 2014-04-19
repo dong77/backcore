@@ -41,11 +41,14 @@ class MarketManagerSpec extends Specification {
       manager.addOrderToMarket(buySide, Order(91990591289398244L, 10000000105L, 69428, Some(2.1605107028343243E-4), None, Some(1397829405436L), None, Some(91990591289398244L), None, 0, None))
       manager.addOrderToMarket(buySide, Order(91990591289398244L, 10000000096L, 72304, Some(2.1713760484859542E-4), None, Some(1397829395484L), None, Some(91990591289398244L), None, 0, None))
 
-      manager.addOrderToMarket(sellSide, Order(7410102373723916141L, 0, 10000, Some(10.0), None, Some(1397829427785L), None, None, None, 0, None))
+      // println(Debugger.prettyOutput(sellSide, manager.getSnapshot))
+      val os = manager.addOrderToMarket(sellSide, Order(7410102373723916141L, 0, 10000, Some(10.0), None, Some(1397829427785L), None, None, None, 0, None))
 
+      // println(Debugger.prettyOutput(sellSide, manager.getSnapshot))
+      // println(Debugger.prettyOutput(manager.headSide, os))
       manager.getSnapshot mustEqual TMarketState(Map(MarketSide(Rmb, Btc) -> List(), MarketSide(Btc, Rmb) -> List(
-        Order(7410102373723916141L, 0, 9865, Some(10.0), None, Some(1397829427785L), None, None, None, 766229, None))),
-        Map(0L -> Order(7410102373723916141L, 0, 9865, Some(10.0), None, Some(1397829427785L), None, None, None, 766229, None)), None, RedeliverFilters(Map()))
+        Order(7410102373723916141L, 0, 9865, Some(10.0), None, Some(1397829427785L), None, None, None, 766228, None))),
+        Map(0L -> Order(7410102373723916141L, 0, 9865, Some(10.0), None, Some(1397829427785L), None, None, None, 766228, None)), None, RedeliverFilters(Map()))
     }
 
     "take limit can't block the current transaction" in {
