@@ -50,7 +50,7 @@ object Client {
       AccountService.deposit(uid, Btc, 10000 * 1000)
       AccountService.deposit(uid, Rmb, 1000000 * 100)
 
-      val brain = Map(
+      val dna = Map(
         "START" -> """
         (robot -> "LOOP", None)
         """,
@@ -78,10 +78,10 @@ object Client {
         (robot -> "LOOP", action)
         """.format(risk(uid))
       )
-      Client.backend ? DoAddRobotBrain(brain) map {
-        case AddRobotBrainFailed(ErrorCode.RobotBrainExist, existBrainId) =>
-          val robot = Robot(uid, uid, uid, Map.empty[String, Option[Any]], "START", existBrainId)
-          println("exist robot brain >>>> id: " + existBrainId)
+      Client.backend ? DoAddRobotDNA(dna) map {
+        case AddRobotDNAFailed(ErrorCode.RobotDnaExist, existingDNAId) =>
+          val robot = Robot(uid, uid, uid, Map.empty[String, Option[Any]], "START", existingDNAId)
+          println("exist robot dna >>>> id: " + existingDNAId)
           Client.backend ! DoSubmitRobot(robot)
         case mid =>
           val robot = Robot(uid, uid, uid, Map.empty[String, Option[Any]], "START", mid.asInstanceOf[Long])

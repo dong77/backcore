@@ -18,7 +18,7 @@ import Implicits._
 object TrailingStopOrderRobot {
   def apply(robotId: Long, userId: Long, timestamp: Long, basePrice: Double,
     stopPercentage: Double, side: MarketSide, order: Order): (Map[String, Option[Any]], Map[String, String]) = {
-    val brain = Map(
+    val dna = Map(
       "START" -> """
         val r = robot.setPayload("BP", Some(%f)).setPayload("SP", Some(1 - %f))
           .setPayload("SIDE", Some(%s)).setPayload("ORDER", Some(%s))
@@ -55,6 +55,6 @@ object TrailingStopOrderRobot {
       "basePrice" -> Some(basePrice),
       "order" -> Some(order))
 
-    (payload, brain)
+    (payload, dna)
   }
 }

@@ -66,7 +66,7 @@ typedef data.TransferType          TransferType
 /* R-   */ struct RegisterUserFailed                  {1: ErrorCode error}
 /* R+   */ struct RegisterUserSucceeded               {1: UserProfile userProfile}
 
-/* C    */ struct VerifyEmail                         {1: string token} // TODO: this may also be a persistent command
+/* C,P  */ struct VerifyEmail                         {1: string token}
 /* R-   */ struct VerifyEmailFailed                   {1: ErrorCode error}
 /* R+   */ struct VerifyEmailSucceeded                {1: i64 id, 2: string email}
 
@@ -99,11 +99,11 @@ typedef data.TransferType          TransferType
 /* C,P  */ struct AdminConfirmTransferFailure         {1: AccountTransfer transfer, 2:ErrorCode error}
 /* C,P  */ struct AdminConfirmTransferSuccess         {1: AccountTransfer transfer}
 
-/* R-   */ struct AddRobotBrainFailed                 {1: ErrorCode error, 2: i64 brainId}
-/* R+   */ struct AddRobotBrainSucceeded              {1: i64 brainId}
+/* R-   */ struct AddRobotDNAFailed                   {1: ErrorCode error, 2: i64 dnaId}
+/* R+   */ struct AddRobotDNASucceeded                {1: i64 dnaId}
 
-/* R-   */ struct RemoveRobotBrainFailed              {1: ErrorCode error, 2: string robotIds}
-/* R+   */ struct RemoveRobotBrainSucceeded           {1: i64 brainId}
+/* R-   */ struct RemoveRobotDNAFailed                {1: ErrorCode error, 2: string robotIds}
+/* R+   */ struct RemoveRobotDNASucceeded             {1: i64 dnaId}
 
 /* C,P  */ struct DoSubmitOrder                       {1: MarketSide side, 2: Order order}
 /* R-   */ struct SubmitOrderFailed                   {1: MarketSide side, 2: Order order, 3: ErrorCode error}
@@ -127,8 +127,8 @@ typedef data.TransferType          TransferType
 
 ////////// RobotProcessor commands
 /* C,P  */ struct DoUpdateMetrics                     {1: Metrics metrics}
-/* C,P  */ struct DoAddRobotBrain                     {1: map<string, string> states}
-/* C,P  */ struct DoRemoveRobotBrain                  {1: i64 brainId}
+/* C,P  */ struct DoAddRobotDNA                       {1: map<string, string> states}
+/* C,P  */ struct DoRemoveRobotDNA                    {1: i64 dnaId}
 
 ////////// Mailer
 /* C    */ struct DoSendEmail                         {1: string email, 2: EmailType emailType, 3: map<string, string> params}

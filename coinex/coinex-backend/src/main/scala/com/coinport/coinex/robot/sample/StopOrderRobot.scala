@@ -12,7 +12,7 @@ import Implicits._
 object StopOrderRobot {
   def apply(robotId: Long, userId: Long, timestamp: Long,
     stopPrice: Double, side: MarketSide, order: Order): (Map[String, Option[Any]], Map[String, String]) = {
-    val brain = Map(
+    val dna = Map(
       "START" -> """
         val r = robot.setPayload("SP", Some(%f))
           .setPayload("SIDE", Some(%s)).setPayload("ORDER", Some(%s))
@@ -42,6 +42,6 @@ object StopOrderRobot {
       "side" -> Some(side),
       "order" -> Some(order))
 
-    (payload, brain)
+    (payload, dna)
   }
 }

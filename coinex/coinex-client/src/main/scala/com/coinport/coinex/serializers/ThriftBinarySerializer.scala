@@ -47,19 +47,19 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cUserAccount = BinaryScalaCodec(UserAccount)
   lazy val _cUserLogsState = BinaryScalaCodec(UserLogsState)
   lazy val _cUserProfile = BinaryScalaCodec(UserProfile)
-  lazy val _cAddRobotBrainFailed = BinaryScalaCodec(AddRobotBrainFailed)
-  lazy val _cAddRobotBrainSucceeded = BinaryScalaCodec(AddRobotBrainSucceeded)
+  lazy val _cAddRobotDNAFailed = BinaryScalaCodec(AddRobotDNAFailed)
+  lazy val _cAddRobotDNASucceeded = BinaryScalaCodec(AddRobotDNASucceeded)
   lazy val _cAdminCommandResult = BinaryScalaCodec(AdminCommandResult)
   lazy val _cAdminConfirmTransferFailure = BinaryScalaCodec(AdminConfirmTransferFailure)
   lazy val _cAdminConfirmTransferSuccess = BinaryScalaCodec(AdminConfirmTransferSuccess)
   lazy val _cApiSecretOperationResult = BinaryScalaCodec(ApiSecretOperationResult)
   lazy val _cCancelOrderFailed = BinaryScalaCodec(CancelOrderFailed)
   lazy val _cDoAddNewApiSecret = BinaryScalaCodec(DoAddNewApiSecret)
-  lazy val _cDoAddRobotBrain = BinaryScalaCodec(DoAddRobotBrain)
+  lazy val _cDoAddRobotDNA = BinaryScalaCodec(DoAddRobotDNA)
   lazy val _cDoCancelOrder = BinaryScalaCodec(DoCancelOrder)
   lazy val _cDoDeleteApiSecret = BinaryScalaCodec(DoDeleteApiSecret)
   lazy val _cDoRegisterUser = BinaryScalaCodec(DoRegisterUser)
-  lazy val _cDoRemoveRobotBrain = BinaryScalaCodec(DoRemoveRobotBrain)
+  lazy val _cDoRemoveRobotDNA = BinaryScalaCodec(DoRemoveRobotDNA)
   lazy val _cDoRequestPasswordReset = BinaryScalaCodec(DoRequestPasswordReset)
   lazy val _cDoRequestTransfer = BinaryScalaCodec(DoRequestTransfer)
   lazy val _cDoResetPassword = BinaryScalaCodec(DoResetPassword)
@@ -96,8 +96,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cQueryTransferResult = BinaryScalaCodec(QueryTransferResult)
   lazy val _cRegisterUserFailed = BinaryScalaCodec(RegisterUserFailed)
   lazy val _cRegisterUserSucceeded = BinaryScalaCodec(RegisterUserSucceeded)
-  lazy val _cRemoveRobotBrainFailed = BinaryScalaCodec(RemoveRobotBrainFailed)
-  lazy val _cRemoveRobotBrainSucceeded = BinaryScalaCodec(RemoveRobotBrainSucceeded)
+  lazy val _cRemoveRobotDNAFailed = BinaryScalaCodec(RemoveRobotDNAFailed)
+  lazy val _cRemoveRobotDNASucceeded = BinaryScalaCodec(RemoveRobotDNASucceeded)
   lazy val _cRequestPasswordResetFailed = BinaryScalaCodec(RequestPasswordResetFailed)
   lazy val _cRequestPasswordResetSucceeded = BinaryScalaCodec(RequestPasswordResetSucceeded)
   lazy val _cRequestTransferFailed = BinaryScalaCodec(RequestTransferFailed)
@@ -159,19 +159,19 @@ class ThriftBinarySerializer extends Serializer {
     case m: UserAccount => _cUserAccount(m)
     case m: UserLogsState => _cUserLogsState(m)
     case m: UserProfile => _cUserProfile(m)
-    case m: AddRobotBrainFailed => _cAddRobotBrainFailed(m)
-    case m: AddRobotBrainSucceeded => _cAddRobotBrainSucceeded(m)
+    case m: AddRobotDNAFailed => _cAddRobotDNAFailed(m)
+    case m: AddRobotDNASucceeded => _cAddRobotDNASucceeded(m)
     case m: AdminCommandResult => _cAdminCommandResult(m)
     case m: AdminConfirmTransferFailure => _cAdminConfirmTransferFailure(m)
     case m: AdminConfirmTransferSuccess => _cAdminConfirmTransferSuccess(m)
     case m: ApiSecretOperationResult => _cApiSecretOperationResult(m)
     case m: CancelOrderFailed => _cCancelOrderFailed(m)
     case m: DoAddNewApiSecret => _cDoAddNewApiSecret(m)
-    case m: DoAddRobotBrain => _cDoAddRobotBrain(m)
+    case m: DoAddRobotDNA => _cDoAddRobotDNA(m)
     case m: DoCancelOrder => _cDoCancelOrder(m)
     case m: DoDeleteApiSecret => _cDoDeleteApiSecret(m)
     case m: DoRegisterUser => _cDoRegisterUser(m)
-    case m: DoRemoveRobotBrain => _cDoRemoveRobotBrain(m)
+    case m: DoRemoveRobotDNA => _cDoRemoveRobotDNA(m)
     case m: DoRequestPasswordReset => _cDoRequestPasswordReset(m)
     case m: DoRequestTransfer => _cDoRequestTransfer(m)
     case m: DoResetPassword => _cDoResetPassword(m)
@@ -208,8 +208,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: QueryTransferResult => _cQueryTransferResult(m)
     case m: RegisterUserFailed => _cRegisterUserFailed(m)
     case m: RegisterUserSucceeded => _cRegisterUserSucceeded(m)
-    case m: RemoveRobotBrainFailed => _cRemoveRobotBrainFailed(m)
-    case m: RemoveRobotBrainSucceeded => _cRemoveRobotBrainSucceeded(m)
+    case m: RemoveRobotDNAFailed => _cRemoveRobotDNAFailed(m)
+    case m: RemoveRobotDNASucceeded => _cRemoveRobotDNASucceeded(m)
     case m: RequestPasswordResetFailed => _cRequestPasswordResetFailed(m)
     case m: RequestPasswordResetSucceeded => _cRequestPasswordResetSucceeded(m)
     case m: RequestTransferFailed => _cRequestTransferFailed(m)
@@ -275,19 +275,19 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[UserAccount.Immutable] => _cUserAccount.invert(bytes).get
     case Some(c) if c == classOf[UserLogsState.Immutable] => _cUserLogsState.invert(bytes).get
     case Some(c) if c == classOf[UserProfile.Immutable] => _cUserProfile.invert(bytes).get
-    case Some(c) if c == classOf[AddRobotBrainFailed.Immutable] => _cAddRobotBrainFailed.invert(bytes).get
-    case Some(c) if c == classOf[AddRobotBrainSucceeded.Immutable] => _cAddRobotBrainSucceeded.invert(bytes).get
+    case Some(c) if c == classOf[AddRobotDNAFailed.Immutable] => _cAddRobotDNAFailed.invert(bytes).get
+    case Some(c) if c == classOf[AddRobotDNASucceeded.Immutable] => _cAddRobotDNASucceeded.invert(bytes).get
     case Some(c) if c == classOf[AdminCommandResult.Immutable] => _cAdminCommandResult.invert(bytes).get
     case Some(c) if c == classOf[AdminConfirmTransferFailure.Immutable] => _cAdminConfirmTransferFailure.invert(bytes).get
     case Some(c) if c == classOf[AdminConfirmTransferSuccess.Immutable] => _cAdminConfirmTransferSuccess.invert(bytes).get
     case Some(c) if c == classOf[ApiSecretOperationResult.Immutable] => _cApiSecretOperationResult.invert(bytes).get
     case Some(c) if c == classOf[CancelOrderFailed.Immutable] => _cCancelOrderFailed.invert(bytes).get
     case Some(c) if c == classOf[DoAddNewApiSecret.Immutable] => _cDoAddNewApiSecret.invert(bytes).get
-    case Some(c) if c == classOf[DoAddRobotBrain.Immutable] => _cDoAddRobotBrain.invert(bytes).get
+    case Some(c) if c == classOf[DoAddRobotDNA.Immutable] => _cDoAddRobotDNA.invert(bytes).get
     case Some(c) if c == classOf[DoCancelOrder.Immutable] => _cDoCancelOrder.invert(bytes).get
     case Some(c) if c == classOf[DoDeleteApiSecret.Immutable] => _cDoDeleteApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoRegisterUser.Immutable] => _cDoRegisterUser.invert(bytes).get
-    case Some(c) if c == classOf[DoRemoveRobotBrain.Immutable] => _cDoRemoveRobotBrain.invert(bytes).get
+    case Some(c) if c == classOf[DoRemoveRobotDNA.Immutable] => _cDoRemoveRobotDNA.invert(bytes).get
     case Some(c) if c == classOf[DoRequestPasswordReset.Immutable] => _cDoRequestPasswordReset.invert(bytes).get
     case Some(c) if c == classOf[DoRequestTransfer.Immutable] => _cDoRequestTransfer.invert(bytes).get
     case Some(c) if c == classOf[DoResetPassword.Immutable] => _cDoResetPassword.invert(bytes).get
@@ -324,8 +324,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[QueryTransferResult.Immutable] => _cQueryTransferResult.invert(bytes).get
     case Some(c) if c == classOf[RegisterUserFailed.Immutable] => _cRegisterUserFailed.invert(bytes).get
     case Some(c) if c == classOf[RegisterUserSucceeded.Immutable] => _cRegisterUserSucceeded.invert(bytes).get
-    case Some(c) if c == classOf[RemoveRobotBrainFailed.Immutable] => _cRemoveRobotBrainFailed.invert(bytes).get
-    case Some(c) if c == classOf[RemoveRobotBrainSucceeded.Immutable] => _cRemoveRobotBrainSucceeded.invert(bytes).get
+    case Some(c) if c == classOf[RemoveRobotDNAFailed.Immutable] => _cRemoveRobotDNAFailed.invert(bytes).get
+    case Some(c) if c == classOf[RemoveRobotDNASucceeded.Immutable] => _cRemoveRobotDNASucceeded.invert(bytes).get
     case Some(c) if c == classOf[RequestPasswordResetFailed.Immutable] => _cRequestPasswordResetFailed.invert(bytes).get
     case Some(c) if c == classOf[RequestPasswordResetSucceeded.Immutable] => _cRequestPasswordResetSucceeded.invert(bytes).get
     case Some(c) if c == classOf[RequestTransferFailed.Immutable] => _cRequestTransferFailed.invert(bytes).get

@@ -35,26 +35,26 @@ class RobotManager extends Manager[RobotState] {
     robot
   }
 
-  def addRobotBrain(states: scala.collection.immutable.Map[String, String]): Long = {
-    val (brainId, resultState) = state.addRobotBrain(states)
+  def addRobotDNA(states: scala.collection.immutable.Map[String, String]): Long = {
+    val (dnaId, resultState) = state.addRobotDNA(states)
     state = resultState
-    brainId
+    dnaId
   }
 
-  def removeRobotBrain(brainId: Long) {
-    state = state.removeRobotBrain(brainId)
+  def removeRobotDNA(dnaId: Long) {
+    state = state.removeRobotDNA(dnaId)
   }
 
-  def isExistRobotBrain(states: scala.collection.immutable.Map[String, String]): (Long, Boolean) = {
-    state.isExistRobotBrain(states)
+  def isExistRobotDNA(states: scala.collection.immutable.Map[String, String]): (Long, Boolean) = {
+    state.isExistRobotDNA(states)
   }
 
-  def getUsingRobots(brainId: Long): SortedSet[Long] = {
-    state.getUsingRobots(brainId)
+  def getUsingRobots(dnaId: Long): SortedSet[Long] = {
+    state.getUsingRobots(dnaId)
   }
 
-  def getAction(brainId: Long, currState: String): Action = {
-    state.robotBrainMap(brainId).brain(currState)
+  def getAction(dnaId: Long, currState: String): Action = {
+    state.robotDNAMap(dnaId).dna(currState)
   }
 
   def updateMetrics(m: Metrics) {

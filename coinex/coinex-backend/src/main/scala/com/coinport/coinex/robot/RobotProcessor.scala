@@ -58,22 +58,22 @@ class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor with Proce
     case Persistent(DoCancelRobot(id), _) =>
       manager.removeRobot(id)
 
-    case Persistent(DoAddRobotBrain(states), _) =>
-      val (existBrainId, isExist) = manager.isExistRobotBrain(states.map(kv => (kv._1, kv._2)).toMap)
+    case Persistent(DoAddRobotDNA(states), _) =>
+      val (existingDNAId, isExist) = manager.isExistRobotDNA(states.map(kv => (kv._1, kv._2)).toMap)
       if (isExist) {
-        sender ! AddRobotBrainFailed(ErrorCode.RobotBrainExist, existBrainId)
+        sender ! AddRobotDNAFailed(ErrorCode.RobotDnaExist, existingDNAId)
       } else {
-        val brainId = manager.addRobotBrain(states.map(kv => (kv._1, kv._2)).toMap)
-        sender ! brainId
+        val dnaId = manager.addRobotDNA(states.map(kv => (kv._1, kv._2)).toMap)
+        sender ! dnaId
       }
 
-    case Persistent(DoRemoveRobotBrain(brainId), _) =>
-      val usingRobots: SortedSet[Long] = manager.getUsingRobots(brainId)
+    case Persistent(DoRemoveRobotDNA(dnaId), _) =>
+      val usingRobots: SortedSet[Long] = manager.getUsingRobots(dnaId)
       if (usingRobots.size > 0) {
-        sender ! RemoveRobotBrainFailed(ErrorCode.InUsingRobotBrain, "robotIds: " + usingRobots.mkString(","))
+        sender ! RemoveRobotDNAFailed(ErrorCode.RobotDnaInUse, "robotIds: " + usingRobots.mkString(","))
       } else {
-        manager.removeRobotBrain(brainId)
-        sender ! brainId
+        manager.removeRobotDNA(dnaId)
+        sender ! dnaId
       }
   }
 
@@ -87,7 +87,7 @@ class RobotProcessor(routers: LocalRouters) extends ExtendedProcessor with Proce
 
   private def activateRobots() {
 
-    manager().getRobotPool.map(robot => robot.action(Some(manager().metrics), manager.getAction(robot.brainId, robot.currentState))) foreach { res =>
+    manager().getRobotPool.map(robot => robot.action(Some(manager().metrics), manager.getAction(robot.dnaId, robot.currentState))) foreach { res =>
       res match {
         case (newRobot, action) =>
           // robot doesn't change id
