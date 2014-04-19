@@ -94,4 +94,5 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
   }
 
   def getOrderId(): Long = { lastOrderId += 1; lastOrderId }
+  def setLastOrderId(id: Long) = { lastOrderId = id }
 }

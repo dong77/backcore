@@ -12,7 +12,10 @@ import com.coinport.coinex.data.Implicits._
 class TransferBehaviorSpec extends EmbeddedMongoForTestWithBF {
 
   "AccountTransferWithdrawSpec" should {
-    val dw = new TransferBehavior { val db = database }
+    val dw = new TransferBehavior {
+      val db = database
+      val manager = new AccountTransferManager
+    }
     "be able to save transferHandler and query them" in {
       val d1 = AccountTransfer(id = 1, userId = 1, `type` = TransferType.Deposit, currency = Currency.Rmb, amount = 1000, created = Some(100), updated = Some(800))
       val d2 = AccountTransfer(id = 2, userId = 1, `type` = TransferType.Deposit, currency = Currency.Btc, amount = 2000, created = Some(200), updated = Some(800))

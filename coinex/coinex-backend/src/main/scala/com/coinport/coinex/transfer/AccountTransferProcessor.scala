@@ -77,10 +77,12 @@ final class AccountTransferManager extends Manager[TAccountTransferState] {
   }
 
   def getTransferId = { lastTransferId += 1; lastTransferId }
+  def setLastTransferId(id: Long) = { lastTransferId = id }
 }
 
 trait TransferBehavior {
   val db: MongoDB
+  val manager: AccountTransferManager
 
   val transferHandler = new SimpleJsonMongoCollection[AccountTransfer, AccountTransfer.Immutable]() {
     lazy val coll = db("transfers")
@@ -97,7 +99,9 @@ trait TransferBehavior {
   }
 
   def updateState: Receive = {
-    case DoRequestTransfer(t) => transferHandler.put(t)
+    case DoRequestTransfer(t) =>
+      transferHandler.put(t)
+      manager.setLastTransferId(t.id)
     case AdminConfirmTransferSuccess(t) => transferHandler.put(t)
     case AdminConfirmTransferFailure(t, _) => transferHandler.put(t)
   }
