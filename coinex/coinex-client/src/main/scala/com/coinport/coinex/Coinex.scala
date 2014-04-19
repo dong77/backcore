@@ -30,8 +30,7 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
 
       //-------------------------------------------------------------------------
       // Account Processor
-      case m: DoRequestCashDeposit => routers.accountProcessor forward m
-      case m: DoRequestCashWithdrawal => routers.accountProcessor forward m
+      case m: DoRequestTransfer => routers.accountProcessor forward m
       case m: DoSubmitOrder => routers.accountProcessor forward m
 
       // Market Processors
@@ -44,10 +43,8 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: DoRemoveRobotBrain => routers.robotProcessor forward Persistent(m)
 
       // DepoistWithdraw Processor
-      case m: AdminConfirmCashDepositFailure => routers.depositWithdrawProcessor forward m
-      case m: AdminConfirmCashDepositSuccess => routers.depositWithdrawProcessor forward m
-      case m: AdminConfirmCashWithdrawalFailure => routers.depositWithdrawProcessor forward m
-      case m: AdminConfirmCashWithdrawalSuccess => routers.depositWithdrawProcessor forward m
+      case m: AdminConfirmTransferFailure => routers.depositWithdrawProcessor forward m
+      case m: AdminConfirmTransferSuccess => routers.depositWithdrawProcessor forward m
 
       //-------------------------------------------------------------------------
       // AccountView
@@ -68,7 +65,7 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       // Misc Queries
       case m: QueryTransaction => routers.transactionReader forward m
       case m: QueryOrder => routers.orderReader forward m
-      case m: QueryDW => routers.depositWithdrawReader forward m
+      case m: QueryTransfer => routers.depositWithdrawReader forward m
 
       // ApiAuthProcessor and View
       case m: DoAddNewApiSecret => routers.apiAuthProcessor forward Persistent(m)
@@ -78,7 +75,7 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       // User Asset
       case m: QueryAsset => routers.assetView forward m
 
-      case m @ QueryExportToMongoState(ExportedEventType.AccountEvent) => routers.dwProcessorEventExporter forward m
+      case m @ QueryExportToMongoState(ExportedEventType.AccountEvent) => routers.accountTransferProcessorEventExporter forward m
       case m @ QueryExportToMongoState(ExportedEventType.MarketEvent) => routers.marketUpdateProcessorEventExporter forward m
 
       //-------------------------------------------------------------------------

@@ -20,6 +20,6 @@ case class Ticker(price: CurrencyObject, high: CurrencyObject, low: CurrencyObje
 
 case class Transaction(id: String, timestamp: Long, price: Double, amount: Double, total: Double, maker: String, taker: String, sell: Boolean)
 
-case class ApiDWItem(id: String, uid: String, dw: CurrencyObject, status: Int, created: Long, updated: Long, isDeposit: Boolean)
+case class ApiTransferItem(id: String, uid: String, dw: CurrencyObject, status: Int, created: Long, updated: Long, isDeposit: Boolean)
 
 case class AssetItem(uid: String, assetMap: Map[String, Double], amount: Double, timestamp: Long)

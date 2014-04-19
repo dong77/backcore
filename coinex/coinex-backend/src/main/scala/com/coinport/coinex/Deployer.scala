@@ -30,7 +30,7 @@ import com.coinport.coinex.robot._
 import com.coinport.coinex.ordertx._
 import com.coinport.coinex.users._
 import com.coinport.coinex.fee._
-import com.coinport.coinex.dw._
+import com.coinport.coinex.transfer._
 import com.coinport.coinex.util._
 import Implicits._
 import scala.collection.mutable.ListBuffer
@@ -84,7 +84,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     deploy(Props(new TransactionReader(dbForViews)), transaction_mongo_reader <<)
     deploy(Props(new OrderReader(dbForViews)), order_mongo_reader <<)
-    deploy(Props(new DepositWithdrawReader(dbForViews)), deposit_withdraw_mongo_reader <<)
+    deploy(Props(new AccountTransferReader(dbForViews)), account_transfer_mongo_reader <<)
 
     // Then deploy routers
     val routers = new LocalRouters(markets)
@@ -106,9 +106,9 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploySingleton(Props(new UserProcessor(routers.mailer, userManagerSecret) with StackableEventsourced[TUserState, UserManager]), user_processor <<)
     deploySingleton(Props(new ApiAuthProcessor(apiAuthSecret) with StackableCmdsourced[TApiSecretState, ApiAuthManager]), api_auth_processor <<)
     deploySingleton(Props(new RobotProcessor(routers) with StackableCmdsourced[RobotState, RobotManager]), robot_processor <<)
-    deploySingleton(Props(new DepositWithdrawProcessor(dbForViews, routers.accountProcessor.path) with StackableEventsourced[TDepositWithdrawState, DepositWithdrawManager]), deposit_withdraw_processor <<)
+    deploySingleton(Props(new AccountTransferProcessor(dbForViews, routers.accountProcessor.path) with StackableEventsourced[TAccountTransferState, AccountTransferManager]), account_transfer_processor <<)
 
-    deploySingleton(Props(new DepositWithdrawEventExportView(dbForEventExport, snapshotIntervalSec) with StackableView[TExportToMongoState, EventExportToMongoManager]), deposit_withdraw_processor_event_export <<)
+    deploySingleton(Props(new AccountTransferEventExportView(dbForEventExport, snapshotIntervalSec) with StackableView[TExportToMongoState, EventExportToMongoManager]), account_transfer_processor_event_export <<)
     deploySingleton(Props(new MarketUpdateEventExportView(dbForEventExport, snapshotIntervalSec) with StackableView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export <<)
 
     deploySingleton(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer <<)

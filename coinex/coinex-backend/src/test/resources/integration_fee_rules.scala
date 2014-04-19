@@ -21,6 +21,6 @@ FeeConfig(
     TRAILING_STOP_ORDER_ROBOT_TYPE -> PercentageFee(0.003),
     STOP_ORDER_ROBOT_TYPE -> ConstantFee(10)),
 
-  withdrawalFeeRules = Map(
+  transferFeeRules = Map(
     Btc -> ConstantFee(1),
     Rmb -> PercentageFee(0.002)))

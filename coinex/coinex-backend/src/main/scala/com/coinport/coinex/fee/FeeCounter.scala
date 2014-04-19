@@ -37,14 +37,12 @@ final class FeeCounter(feeConfig: FeeConfig) {
 
       result.filter(_.amount > 0)
 
-    case w: Withdrawal =>
-      feeConfig.withdrawalFeeRules.get(w.currency) match {
+    case t: AccountTransfer if t.`type` == TransferType.Withdrawal =>
+      feeConfig.transferFeeRules.get(t.currency) match {
         case Some(rule) =>
-          Seq(Fee(w.userId, None, w.currency, rule.getFee(w.amount)))
+          Seq(Fee(t.userId, None, t.currency, rule.getFee(t.amount)))
         case None =>
           Nil
       }
-
-    case w: Deposit => Nil
   }
 }

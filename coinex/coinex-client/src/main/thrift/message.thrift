@@ -18,8 +18,7 @@ typedef data.Order                 Order
 typedef data.MarketDepth           MarketDepth
 typedef data.UserAccount           UserAccount
 typedef data.UserProfile           UserProfile
-typedef data.Deposit               Deposit
-typedef data.Withdrawal            Withdrawal
+typedef data.AccountTransfer       AccountTransfer
 typedef data.MarketSide            MarketSide
 typedef data.ApiSecret             ApiSecret
 typedef data.OrderInfo             OrderInfo
@@ -34,11 +33,11 @@ typedef data.CandleData            CandleData
 typedef data.ChartTimeDimension    ChartTimeDimension
 typedef data.QueryMarketSide       QueryMarketSide
 typedef data.ExportedEventType     ExportedEventType
-typedef data.DWItem                DWItem
 typedef data.HistoryAsset          HistoryAsset
 typedef data.CurrentAsset          CurrentAsset
 typedef data.HistoryPrice          HistoryPrice
 typedef data.CurrentPrice          CurrentPrice
+typedef data.TransferType          TransferType
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -93,19 +92,12 @@ typedef data.CurrentPrice          CurrentPrice
 /* Q    */ struct VerifyGoogleAuthCode                {1: string email, 2: i32 code}
 /* R    */ struct GoogleAuthCodeVerificationResult    {1: optional UserProfile userProfile}
 
-/* C,P  */ struct DoRequestCashDeposit                {1: Deposit deposit}
-/* R-   */ struct RequestCashDepositFailed            {1: ErrorCode error}
-/* R+   */ struct RequestCashDepositSucceeded         {1: Deposit deposit}
+/* C,P  */ struct DoRequestTransfer                   {1: AccountTransfer transfer}
+/* R-   */ struct RequestTransferFailed               {1: ErrorCode error}
+/* R+   */ struct RequestTransferSucceeded            {1: AccountTransfer transfer}
 
-/* C,P  */ struct DoRequestCashWithdrawal             {1: Withdrawal withdrawal}
-/* R-   */ struct RequestCashWithdrawalFailed         {1: ErrorCode error}
-/* R+   */ struct RequestCashWithdrawalSucceeded      {1: Withdrawal withdrawal}
-
-/* C,P  */ struct AdminConfirmCashDepositFailure      {1: Deposit deposit, 2:ErrorCode error}
-/* C,P  */ struct AdminConfirmCashDepositSuccess      {1: Deposit deposit}
-
-/* C,P  */ struct AdminConfirmCashWithdrawalFailure   {1: Withdrawal withdrawal, 2: ErrorCode error}
-/* C,P  */ struct AdminConfirmCashWithdrawalSuccess   {1: Withdrawal withdrawal}
+/* C,P  */ struct AdminConfirmTransferFailure         {1: AccountTransfer transfer, 2:ErrorCode error}
+/* C,P  */ struct AdminConfirmTransferSuccess         {1: AccountTransfer transfer}
 
 /* R-   */ struct AddRobotBrainFailed                 {1: ErrorCode error, 2: i64 brainId}
 /* R+   */ struct AddRobotBrainSucceeded              {1: i64 brainId}
@@ -165,15 +157,15 @@ typedef data.CurrentPrice          CurrentPrice
 /* Q    */ struct QueryTransaction                    {1: optional i64 tid, 2: optional i64 uid, 3: optional i64 oid, 4:optional QueryMarketSide side, 5: Cursor cursor, 6: bool getCount}
 /* R    */ struct QueryTransactionResult              {1: list<TransactionItem> transactionItems, 2: i64 count}
 
-////////// Deposit and WithDrawal Query
-/* Q    */ struct QueryDW                             {1: optional i64 uid, 2: optional Currency currency, 3: optional TransferStatus status, 4: optional SpanCursor spanCur, 5:optional bool isDeposit, 6: Cursor cur, 7: bool getCount}
-/* R    */ struct QueryDWResult                       {1: list<DWItem> dwitems, 2: i64 count}
+////////// which view?
+/* Q    */ struct QueryTransfer                       {1: optional i64 uid, 2: optional Currency currency, 3: optional TransferStatus status, 4: optional SpanCursor spanCur, 5:optional TransferType type, 6: Cursor cur, 7: bool getCount}
+/* R    */ struct QueryTransferResult                 {1: list<AccountTransfer> transfers, 2: i64 count}
 
-////////// AssetQuery
+////////// which view?
 /* Q    */ struct QueryAsset                          {1: i64 uid, 2: i64 from, 3: i64 to}
 /* R    */ struct QueryAssetResult                    {1: CurrentAsset currentAsset, 2: HistoryAsset historyAsset, 3: CurrentPrice currentPrice, 4: HistoryPrice historyPrice}
 
 
-////////// OpenData Query
-/* Q    */ struct QueryExportToMongoState                {1: ExportedEventType eventType}
+////////// EventExportToMongoView
+/* Q    */ struct QueryExportToMongoState             {1: ExportedEventType eventType}
 /* R              TExportToMongoState */

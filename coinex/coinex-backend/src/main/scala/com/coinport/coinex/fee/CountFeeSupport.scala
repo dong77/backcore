@@ -14,8 +14,7 @@ trait CountFeeSupport {
 
   protected def countFee[T](event: T): T = (event match {
     case m @ OrderSubmitted(_, txs) => m.copy(txs = txs.map(tx => tx.copy(fees = Some(feeCounter.count(tx)))))
-    case m: Withdrawal => m.copy(fee = feeCounter.count(m).headOption)
-    case m: Deposit => m.copy(fee = feeCounter.count(m).headOption)
+    case m: AccountTransfer => m.copy(fee = feeCounter.count(m).headOption)
     case m => m
   }).asInstanceOf[T]
 }

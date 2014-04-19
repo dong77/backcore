@@ -14,14 +14,13 @@ object ConstantRole extends Enumeration {
 
   val market_update_processor = Value
   val robot_processor = Value
-  val deposit_withdraw_processor = Value
+  val account_transfer_processor = Value
 
   val metrics_view = Value
   val mailer = Value
 
   val user_processor_event_export = Value
-  val account_processor_event_export = Value
-  val deposit_withdraw_processor_event_export = Value
+  val account_transfer_processor_event_export = Value
   val market_update_processor_event_export = Value
 
   val transaction_mongo_writer = Value
@@ -30,7 +29,7 @@ object ConstantRole extends Enumeration {
   val order_mongo_writer = Value
   val order_mongo_reader = Value
 
-  val deposit_withdraw_mongo_reader = Value
+  val account_transfer_mongo_reader = Value
 }
 
 object MarketRole extends Enumeration {

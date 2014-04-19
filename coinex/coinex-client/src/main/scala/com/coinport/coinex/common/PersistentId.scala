@@ -4,7 +4,7 @@ object PersistentId extends Enumeration {
   // Processor Ids
   val ACCOUNT_PROCESSOR = Value("p_a")
   val API_AUTH_PROCESSOR = Value("p_aa")
-  val DEPOSIT_WITHDRAW_PROCESSOR = Value("p_dw")
+  val ACCOUNT_TRANSFER_PROCESSOR = Value("p_dw")
   val MARKET_PROCESSOR = Value("p_m")
   val MARKET_UPDATE_PROCESSOR = Value("p_mu")
   val ROBOT_PROCESSOR = Value("p_r")

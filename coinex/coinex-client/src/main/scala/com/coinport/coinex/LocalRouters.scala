@@ -29,7 +29,7 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
   }: _*))
 
   val robotProcessor = routerForSingleton(robot_processor<<)
-  val depositWithdrawProcessor = routerForSingleton(deposit_withdraw_processor <<)
+  val depositWithdrawProcessor = routerForSingleton(account_transfer_processor <<)
 
   val accountView = routerFor(account_view <<)
   val apiAuthView = routerFor(api_auth_view <<)
@@ -44,7 +44,7 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
     m -> routerFor(market_depth_view << m)
   }: _*))
 
-  val dwProcessorEventExporter = routerForSingleton(deposit_withdraw_processor_event_export <<)
+  val accountTransferProcessorEventExporter = routerForSingleton(account_transfer_processor_event_export <<)
   val marketUpdateProcessorEventExporter = routerForSingleton(market_update_processor_event_export <<)
 
   val transactionReader = routerFor(transaction_mongo_reader <<)
@@ -53,7 +53,7 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
   val orderReader = routerFor(order_mongo_reader <<)
   val orderWriter = routerFor(order_mongo_writer <<)
 
-  val depositWithdrawReader = routerFor(deposit_withdraw_mongo_reader <<)
+  val depositWithdrawReader = routerFor(account_transfer_mongo_reader <<)
 
   val mailer = routerFor(ConstantRole.mailer <<)
 

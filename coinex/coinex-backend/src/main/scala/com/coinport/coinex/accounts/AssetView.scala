@@ -9,6 +9,7 @@ import com.coinport.coinex.fee.FeeConfig
 import com.coinport.coinex.common.ExtendedView
 import akka.event.LoggingReceive
 import com.coinport.coinex.data._
+import TransferType._
 import com.coinport.coinex.data.Implicits._
 import com.coinport.coinex.common.PersistentId._
 
@@ -18,10 +19,12 @@ class AssetView extends ExtendedView {
   val manager = new AssetManager()
 
   def receive = LoggingReceive {
-    case a: AdminConfirmCashDepositSuccess =>
-      manager.updateAsset(a.deposit.updated.get, a.deposit.userId, a.deposit.currency, a.deposit.amount)
-    case a: AdminConfirmCashWithdrawalSuccess =>
-      manager.updateAsset(a.withdrawal.updated.get, a.withdrawal.userId, a.withdrawal.currency, -a.withdrawal.amount)
+    case AdminConfirmTransferSuccess(t) =>
+      t.`type` match {
+        case Deposit => manager.updateAsset(t.updated.get, t.userId, t.currency, t.amount)
+        case Withdrawal => manager.updateAsset(t.updated.get, t.userId, t.currency, -t.amount)
+      }
+
     case OrderSubmitted(originOrderInfo, txs) =>
       if (!txs.isEmpty) {
         val side = originOrderInfo.side

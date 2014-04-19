@@ -21,17 +21,18 @@ object AccountService extends AkkaService {
     }
   }
 
+  // TODO(chunming): merge deposit and withdrawal methods
   def deposit(uid: Long, currency: Currency, amount: Double): Future[ApiResult] = {
     val internalAmount: Long = amount.internalValue(currency)
 
-    val deposit = Deposit(0L, uid.toLong, currency, internalAmount, TransferStatus.Pending)
-    backend ? DoRequestCashDeposit(deposit) map {
-      case result: RequestCashDepositSucceeded =>
+    val deposit = AccountTransfer(0L, uid.toLong, TransferType.Deposit, currency, internalAmount, TransferStatus.Pending)
+    backend ? DoRequestTransfer(deposit) map {
+      case result: RequestTransferSucceeded =>
         // TODO: confirm by admin dashboard
-        backend ! AdminConfirmCashDepositSuccess(result.deposit)
+        backend ! AdminConfirmTransferSuccess(result.transfer)
 
         ApiResult(true, 0, "充值申请已提交", Some(result))
-      case failed: RequestCashDepositFailed =>
+      case failed: RequestTransferFailed =>
         ApiResult(false, 1, "充值失败", Some(failed))
     }
   }
@@ -39,14 +40,14 @@ object AccountService extends AkkaService {
   def withdrawal(uid: Long, currency: Currency, amount: Double): Future[ApiResult] = {
     val internalAmount: Long = amount.internalValue(currency)
 
-    val withdrawal = Withdrawal(0L, uid.toLong, currency, internalAmount, TransferStatus.Pending)
-    backend ? DoRequestCashWithdrawal(withdrawal) map {
-      case result: RequestCashWithdrawalSucceeded =>
+    val withdrawal = AccountTransfer(0L, uid.toLong, TransferType.Withdrawal, currency, internalAmount, TransferStatus.Pending)
+    backend ? DoRequestTransfer(withdrawal) map {
+      case result: RequestTransferSucceeded =>
         // TODO: confirm by admin dashboard
-        backend ! AdminConfirmCashWithdrawalSuccess(result.withdrawal)
+        backend ! AdminConfirmTransferSuccess(result.transfer)
 
         ApiResult(true, 0, "提现申请已提交", Some(result))
-      case failed: RequestCashWithdrawalFailed =>
+      case failed: RequestTransferFailed =>
         ApiResult(false, 1, "提现失败", Some(failed))
     }
   }

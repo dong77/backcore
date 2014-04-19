@@ -28,6 +28,7 @@ object MapSerializer extends Serializer[Map[Any, Any]] {
           case ks: OrderStatus => ks.name
           case ks: RefundReason => ks.name
           case ks: TransferStatus => ks.name
+          case ks: TransferType => ks.name
           case ks: UserStatus => ks.name
           case ks: Any => ks.toString
         },
@@ -88,6 +89,11 @@ object ThriftEnumJson4sSerialization {
       case x: TransferStatus => JString(x.name)
     }))
 
+  class TransferTypeSerializer extends CustomSerializer[TransferType](format => (
+    { case JString(s) => TransferType.valueOf(s).get }, {
+      case x: TransferType => JString(x.name)
+    }))
+
   class UserStatusSerializer extends CustomSerializer[UserStatus](format => (
     { case JString(s) => UserStatus.valueOf(s).get }, {
       case x: UserStatus => JString(x.name)
@@ -103,5 +109,6 @@ object ThriftEnumJson4sSerialization {
     new OrderStatusSerializer +
     new RefundReasonSerializer +
     new TransferStatusSerializer +
+    new TransferTypeSerializer +
     new UserStatusSerializer
 }

@@ -26,7 +26,7 @@ class FeeCounterSpec extends Specification {
       TRAILING_STOP_ORDER_ROBOT_TYPE -> PercentageFee(0.003),
       STOP_ORDER_ROBOT_TYPE -> ConstantFee(10)),
 
-    withdrawalFeeRules = Map(
+    transferFeeRules = Map(
       Btc -> ConstantFee(1),
       Rmb -> PercentageFee(0.002)))
 
@@ -72,23 +72,23 @@ class FeeCounterSpec extends Specification {
 
   "FeeCounter" should {
     "withdrawal rmb with 0.2% fee" in {
-      val withdrawal = Withdrawal(1, 2, Rmb, 12000, TransferStatus.Pending)
+      val withdrawal = AccountTransfer(1, 2, TransferType.Withdrawal, Rmb, 12000, TransferStatus.Pending)
       val fees = feeCounter.count(withdrawal)
       fees mustEqual Seq(Fee(2, None, Rmb, 24, None))
     }
 
     "withdrawal btc with 1 fee" in {
-      val w1 = Withdrawal(1, 2, Btc, 12000, TransferStatus.Pending)
+      val w1 = AccountTransfer(1, 2, TransferType.Withdrawal, Btc, 12000, TransferStatus.Pending)
       val fees1 = feeCounter.count(w1)
       fees1 mustEqual Seq(Fee(2, None, Btc, 1, None))
 
-      val w2 = Withdrawal(1, 2, Btc, 12200, TransferStatus.Pending)
+      val w2 = AccountTransfer(1, 2, TransferType.Withdrawal, Btc, 12200, TransferStatus.Pending)
       val fees2 = feeCounter.count(w2)
       fees2 mustEqual Seq(Fee(2, None, Btc, 1, None))
     }
 
     "withdrawal pts with no result" in {
-      val w = AdminConfirmCashWithdrawalSuccess(Withdrawal(1, 2, Pts, 12000, TransferStatus.Pending))
+      val w = AdminConfirmTransferSuccess(AccountTransfer(1, 2, TransferType.Withdrawal, Pts, 12000, TransferStatus.Pending))
       val fees = feeCounter.count(w)
       fees mustEqual Seq.empty[Fee]
     }

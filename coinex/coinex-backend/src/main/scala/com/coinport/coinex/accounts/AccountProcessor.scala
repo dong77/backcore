@@ -20,6 +20,7 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.fee._
 import ErrorCode._
 import Implicits._
+import TransferType._
 
 class AccountProcessor(
   marketProcessors: Map[MarketSide, ActorRef],
@@ -31,13 +32,12 @@ class AccountProcessor(
   override val processorId = ACCOUNT_PROCESSOR <<
   val channelToMarketProcessors = createChannelTo(MARKET_PROCESSOR <<) // DO NOT CHANGE
   val channelToMarketUpdateProcessor = createChannelTo(MARKET_UPDATE_PROCESSOR<<) // DO NOT CHANGE
-  val channelToDepositWithdrawalProcessor = createChannelTo(DEPOSIT_WITHDRAW_PROCESSOR<<) // DO NOT CHANGE
+  val channelToDepositWithdrawalProcessor = createChannelTo(ACCOUNT_TRANSFER_PROCESSOR<<) // DO NOT CHANGE
   val manager = new AccountManager(1E12.toLong)
 
   override def identifyChannel: PartialFunction[Any, String] = {
-    case r: AdminConfirmCashWithdrawalSuccess => "dwp"
-    case r: AdminConfirmCashWithdrawalFailure => "dwp"
-    case r: AdminConfirmCashDepositSuccess => "dwp"
+    case r: AdminConfirmTransferSuccess => "tsf"
+    case r: AdminConfirmTransferFailure => "tsf"
     case OrderSubmitted(originOrderInfo, txs) => "mp_" + originOrderInfo.side.s
     case OrderCancelled(side, order) => "mp_" + side.s
   }
@@ -45,36 +45,35 @@ class AccountProcessor(
   def receiveRecover = PartialFunction.empty[Any, Unit]
 
   def receiveCommand = LoggingReceive {
-    case m @ DoRequestCashWithdrawal(w) =>
-      val adjustment = CashAccount(w.currency, -w.amount, 0, w.amount)
-      if (!manager.canUpdateCashAccount(w.userId, adjustment)) {
-        sender ! RequestCashWithdrawalFailed(InsufficientFund)
-      } else {
-        val updated = countFee(w.copy(created = Some(System.currentTimeMillis)))
-        persist(DoRequestCashWithdrawal(updated)) { event =>
-          updateState(event)
-          channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
+    case DoRequestTransfer(t) => t.`type` match {
+      case Withdrawal =>
+        val adjustment = CashAccount(t.currency, -t.amount, 0, t.amount)
+        if (!manager.canUpdateCashAccount(t.userId, adjustment)) {
+          sender ! RequestTransferFailed(InsufficientFund)
+        } else {
+          val updated = countFee(t.copy(created = Some(System.currentTimeMillis)))
+          persist(DoRequestTransfer(updated)) { event =>
+            updateState(event)
+            channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
+          }
         }
-      }
 
-    case m @ DoRequestCashDeposit(deposit) =>
-      if (deposit.amount <= 0) {
-        sender ! RequestCashDepositFailed(InvalidAmount)
-      } else {
-        val updated = countFee(deposit.copy(created = Some(System.currentTimeMillis)))
-        persist(m.copy(deposit = updated)) { event =>
-          updateState(event)
-          channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
+      case Deposit =>
+        if (t.amount <= 0) {
+          sender ! RequestTransferFailed(InvalidAmount)
+        } else {
+          val updated = countFee(t.copy(created = Some(System.currentTimeMillis)))
+          persist(DoRequestTransfer(updated)) { event =>
+            updateState(event)
+            channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
+          }
         }
-      }
+    }
 
-    case p @ ConfirmablePersistent(m: AdminConfirmCashWithdrawalSuccess, seq, _) =>
+    case p @ ConfirmablePersistent(m: AdminConfirmTransferSuccess, _, _) =>
       persist(m) { event => p.confirm(); updateState(event) }
 
-    case p @ ConfirmablePersistent(m: AdminConfirmCashWithdrawalFailure, seq, _) =>
-      persist(m) { event => p.confirm(); updateState(event) }
-
-    case p @ ConfirmablePersistent(m: AdminConfirmCashDepositSuccess, seq, _) =>
+    case p @ ConfirmablePersistent(m: AdminConfirmTransferFailure, _, _) =>
       persist(m) { event => p.confirm(); updateState(event) }
 
     case DoSubmitOrder(side, order) =>
@@ -119,24 +118,36 @@ trait AccountManagerBehavior extends CountFeeSupport {
   val manager: AccountManager
 
   def updateState: Receive = {
-    case m: DoRequestCashDeposit => // do nothing
-    case DoRequestCashWithdrawal(w) => manager.updateCashAccount(w.userId, CashAccount(w.currency, -w.amount, 0, w.amount))
-    case AdminConfirmCashDepositSuccess(d) =>
-      manager.updateCashAccount(d.userId, CashAccount(d.currency, d.amount, 0, 0))
-      d.fee match {
-        case Some(f) if (f.amount > 0) =>
-          manager.transferFundFromAvailable(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
-        case _ => None
+    case DoRequestTransfer(t) =>
+      t.`type` match {
+        case Withdrawal =>
+          manager.updateCashAccount(t.userId, CashAccount(t.currency, -t.amount, 0, t.amount))
+        case Deposit =>
       }
-    case AdminConfirmCashWithdrawalSuccess(w) =>
-      w.fee match {
-        case Some(f) if (f.amount > 0) =>
-          manager.transferFundFromPendingWithdrawal(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
-          manager.updateCashAccount(w.userId, CashAccount(w.currency, 0, 0, f.amount - w.amount))
-        case _ =>
-          manager.updateCashAccount(w.userId, CashAccount(w.currency, 0, 0, -w.amount))
+
+    case AdminConfirmTransferSuccess(t) =>
+      t.`type` match {
+        case Deposit =>
+          manager.updateCashAccount(t.userId, CashAccount(t.currency, t.amount, 0, 0))
+          t.fee match {
+            case Some(f) if (f.amount > 0) =>
+              manager.transferFundFromAvailable(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
+            case _ => None
+          }
+        case Withdrawal =>
+          t.fee match {
+            case Some(f) if (f.amount > 0) =>
+              manager.transferFundFromPendingWithdrawal(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
+              manager.updateCashAccount(t.userId, CashAccount(t.currency, 0, 0, f.amount - t.amount))
+            case _ =>
+              manager.updateCashAccount(t.userId, CashAccount(t.currency, 0, 0, -t.amount))
+          }
       }
-    case AdminConfirmCashWithdrawalFailure(w, _) => manager.updateCashAccount(w.userId, CashAccount(w.currency, w.amount, 0, -w.amount))
+
+    case AdminConfirmTransferFailure(t, _) => t.`type` match {
+      case Withdrawal => manager.updateCashAccount(t.userId, CashAccount(t.currency, t.amount, 0, -t.amount))
+      case Deposit =>
+    }
 
     case DoSubmitOrder(side: MarketSide, order) =>
       manager.updateCashAccount(order.userId, CashAccount(side.outCurrency, -order.quantity, order.quantity, 0))

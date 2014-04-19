@@ -96,6 +96,11 @@ enum Direction {
     KEEP = 3
 }
 
+enum TransferType {
+    DEPOSIT = 0
+    WITHDRAWAL = 1
+}
+
 enum TransferStatus {
     PENDING = 0
     SUCCEEDED = 1
@@ -248,40 +253,16 @@ struct ApiSecret {
     3: optional i64 userId
 }
 
-struct Deposit {
-    1: i64 id
-    2: i64 userId
-    3: Currency currency
-    4: i64 amount
-    5: TransferStatus status = TransferStatus.PENDING
-    6: optional i64 created
-    7: optional i64 updated
-    8: optional ErrorCode reason
-    9: optional Fee fee
-}
-
-struct Withdrawal {
-    1: i64 id
-    2: i64 userId
-    3: Currency currency
-    4: i64 amount
-    5: TransferStatus status
-    6: optional i64 created
-    7: optional i64 updated
-    8: optional ErrorCode reason
-    9: optional Fee fee
-}
-
-struct DWItem {
-    1: i64 id
-    2: i64 userId
-    3: Currency currency
-    4: i64 amount
-    5: TransferStatus status
-    6: bool isDeposit
-    7: optional i64 created
-    8: optional i64 updated
-    9: optional ErrorCode reason
+struct AccountTransfer {
+    1:  i64 id
+    2:  i64 userId
+    3:  TransferType type
+    4:  Currency currency
+    5:  i64 amount
+    6:  TransferStatus status = TransferStatus.PENDING
+    7:  optional i64 created
+    8:  optional i64 updated
+    9:  optional ErrorCode reason
     10: optional Fee fee
 }
 

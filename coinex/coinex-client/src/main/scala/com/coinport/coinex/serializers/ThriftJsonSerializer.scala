@@ -14,6 +14,7 @@ import com.coinport.coinex.data._
 class ThriftJsonSerializer extends Serializer {
   val includeManifest: Boolean = true
   val identifier = 607100416
+  lazy val _cAccountTransfer = JsonScalaCodec(AccountTransfer)
   lazy val _cApiSecret = JsonScalaCodec(ApiSecret)
   lazy val _cCandleData = JsonScalaCodec(CandleData)
   lazy val _cCandleDataItem = JsonScalaCodec(CandleDataItem)
@@ -21,8 +22,6 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cCurrentAsset = JsonScalaCodec(CurrentAsset)
   lazy val _cCurrentPrice = JsonScalaCodec(CurrentPrice)
   lazy val _cCursor = JsonScalaCodec(Cursor)
-  lazy val _cDWItem = JsonScalaCodec(DWItem)
-  lazy val _cDeposit = JsonScalaCodec(Deposit)
   lazy val _cFee = JsonScalaCodec(Fee)
   lazy val _cHistoryAsset = JsonScalaCodec(HistoryAsset)
   lazy val _cHistoryPrice = JsonScalaCodec(HistoryPrice)
@@ -48,14 +47,11 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cUserAccount = JsonScalaCodec(UserAccount)
   lazy val _cUserLogsState = JsonScalaCodec(UserLogsState)
   lazy val _cUserProfile = JsonScalaCodec(UserProfile)
-  lazy val _cWithdrawal = JsonScalaCodec(Withdrawal)
   lazy val _cAddRobotBrainFailed = JsonScalaCodec(AddRobotBrainFailed)
   lazy val _cAddRobotBrainSucceeded = JsonScalaCodec(AddRobotBrainSucceeded)
   lazy val _cAdminCommandResult = JsonScalaCodec(AdminCommandResult)
-  lazy val _cAdminConfirmCashDepositFailure = JsonScalaCodec(AdminConfirmCashDepositFailure)
-  lazy val _cAdminConfirmCashDepositSuccess = JsonScalaCodec(AdminConfirmCashDepositSuccess)
-  lazy val _cAdminConfirmCashWithdrawalFailure = JsonScalaCodec(AdminConfirmCashWithdrawalFailure)
-  lazy val _cAdminConfirmCashWithdrawalSuccess = JsonScalaCodec(AdminConfirmCashWithdrawalSuccess)
+  lazy val _cAdminConfirmTransferFailure = JsonScalaCodec(AdminConfirmTransferFailure)
+  lazy val _cAdminConfirmTransferSuccess = JsonScalaCodec(AdminConfirmTransferSuccess)
   lazy val _cApiSecretOperationResult = JsonScalaCodec(ApiSecretOperationResult)
   lazy val _cCancelOrderFailed = JsonScalaCodec(CancelOrderFailed)
   lazy val _cDoAddNewApiSecret = JsonScalaCodec(DoAddNewApiSecret)
@@ -64,9 +60,8 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cDoDeleteApiSecret = JsonScalaCodec(DoDeleteApiSecret)
   lazy val _cDoRegisterUser = JsonScalaCodec(DoRegisterUser)
   lazy val _cDoRemoveRobotBrain = JsonScalaCodec(DoRemoveRobotBrain)
-  lazy val _cDoRequestCashDeposit = JsonScalaCodec(DoRequestCashDeposit)
-  lazy val _cDoRequestCashWithdrawal = JsonScalaCodec(DoRequestCashWithdrawal)
   lazy val _cDoRequestPasswordReset = JsonScalaCodec(DoRequestPasswordReset)
+  lazy val _cDoRequestTransfer = JsonScalaCodec(DoRequestTransfer)
   lazy val _cDoResetPassword = JsonScalaCodec(DoResetPassword)
   lazy val _cDoSendEmail = JsonScalaCodec(DoSendEmail)
   lazy val _cDoSubmitOrder = JsonScalaCodec(DoSubmitOrder)
@@ -90,8 +85,6 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cQueryAssetResult = JsonScalaCodec(QueryAssetResult)
   lazy val _cQueryCandleData = JsonScalaCodec(QueryCandleData)
   lazy val _cQueryCandleDataResult = JsonScalaCodec(QueryCandleDataResult)
-  lazy val _cQueryDW = JsonScalaCodec(QueryDW)
-  lazy val _cQueryDWResult = JsonScalaCodec(QueryDWResult)
   lazy val _cQueryExportToMongoState = JsonScalaCodec(QueryExportToMongoState)
   lazy val _cQueryMarketDepth = JsonScalaCodec(QueryMarketDepth)
   lazy val _cQueryMarketDepthResult = JsonScalaCodec(QueryMarketDepthResult)
@@ -99,16 +92,16 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cQueryOrderResult = JsonScalaCodec(QueryOrderResult)
   lazy val _cQueryTransaction = JsonScalaCodec(QueryTransaction)
   lazy val _cQueryTransactionResult = JsonScalaCodec(QueryTransactionResult)
+  lazy val _cQueryTransfer = JsonScalaCodec(QueryTransfer)
+  lazy val _cQueryTransferResult = JsonScalaCodec(QueryTransferResult)
   lazy val _cRegisterUserFailed = JsonScalaCodec(RegisterUserFailed)
   lazy val _cRegisterUserSucceeded = JsonScalaCodec(RegisterUserSucceeded)
   lazy val _cRemoveRobotBrainFailed = JsonScalaCodec(RemoveRobotBrainFailed)
   lazy val _cRemoveRobotBrainSucceeded = JsonScalaCodec(RemoveRobotBrainSucceeded)
-  lazy val _cRequestCashDepositFailed = JsonScalaCodec(RequestCashDepositFailed)
-  lazy val _cRequestCashDepositSucceeded = JsonScalaCodec(RequestCashDepositSucceeded)
-  lazy val _cRequestCashWithdrawalFailed = JsonScalaCodec(RequestCashWithdrawalFailed)
-  lazy val _cRequestCashWithdrawalSucceeded = JsonScalaCodec(RequestCashWithdrawalSucceeded)
   lazy val _cRequestPasswordResetFailed = JsonScalaCodec(RequestPasswordResetFailed)
   lazy val _cRequestPasswordResetSucceeded = JsonScalaCodec(RequestPasswordResetSucceeded)
+  lazy val _cRequestTransferFailed = JsonScalaCodec(RequestTransferFailed)
+  lazy val _cRequestTransferSucceeded = JsonScalaCodec(RequestTransferSucceeded)
   lazy val _cResetPasswordFailed = JsonScalaCodec(ResetPasswordFailed)
   lazy val _cResetPasswordSucceeded = JsonScalaCodec(ResetPasswordSucceeded)
   lazy val _cSubmitOrderFailed = JsonScalaCodec(SubmitOrderFailed)
@@ -121,10 +114,10 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cVerifyEmailSucceeded = JsonScalaCodec(VerifyEmailSucceeded)
   lazy val _cVerifyGoogleAuthCode = JsonScalaCodec(VerifyGoogleAuthCode)
   lazy val _cTAccountState = JsonScalaCodec(TAccountState)
+  lazy val _cTAccountTransferState = JsonScalaCodec(TAccountTransferState)
   lazy val _cTApiSecretState = JsonScalaCodec(TApiSecretState)
   lazy val _cTAssetState = JsonScalaCodec(TAssetState)
   lazy val _cTCandleDataState = JsonScalaCodec(TCandleDataState)
-  lazy val _cTDepositWithdrawState = JsonScalaCodec(TDepositWithdrawState)
   lazy val _cTExportToMongoState = JsonScalaCodec(TExportToMongoState)
   lazy val _cTMarketDepthState = JsonScalaCodec(TMarketDepthState)
   lazy val _cTMarketState = JsonScalaCodec(TMarketState)
@@ -133,6 +126,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cTUserState = JsonScalaCodec(TUserState)
 
   def toBinary(obj: AnyRef): Array[Byte] = obj match {
+    case m: AccountTransfer => _cAccountTransfer(m)
     case m: ApiSecret => _cApiSecret(m)
     case m: CandleData => _cCandleData(m)
     case m: CandleDataItem => _cCandleDataItem(m)
@@ -140,8 +134,6 @@ class ThriftJsonSerializer extends Serializer {
     case m: CurrentAsset => _cCurrentAsset(m)
     case m: CurrentPrice => _cCurrentPrice(m)
     case m: Cursor => _cCursor(m)
-    case m: DWItem => _cDWItem(m)
-    case m: Deposit => _cDeposit(m)
     case m: Fee => _cFee(m)
     case m: HistoryAsset => _cHistoryAsset(m)
     case m: HistoryPrice => _cHistoryPrice(m)
@@ -167,14 +159,11 @@ class ThriftJsonSerializer extends Serializer {
     case m: UserAccount => _cUserAccount(m)
     case m: UserLogsState => _cUserLogsState(m)
     case m: UserProfile => _cUserProfile(m)
-    case m: Withdrawal => _cWithdrawal(m)
     case m: AddRobotBrainFailed => _cAddRobotBrainFailed(m)
     case m: AddRobotBrainSucceeded => _cAddRobotBrainSucceeded(m)
     case m: AdminCommandResult => _cAdminCommandResult(m)
-    case m: AdminConfirmCashDepositFailure => _cAdminConfirmCashDepositFailure(m)
-    case m: AdminConfirmCashDepositSuccess => _cAdminConfirmCashDepositSuccess(m)
-    case m: AdminConfirmCashWithdrawalFailure => _cAdminConfirmCashWithdrawalFailure(m)
-    case m: AdminConfirmCashWithdrawalSuccess => _cAdminConfirmCashWithdrawalSuccess(m)
+    case m: AdminConfirmTransferFailure => _cAdminConfirmTransferFailure(m)
+    case m: AdminConfirmTransferSuccess => _cAdminConfirmTransferSuccess(m)
     case m: ApiSecretOperationResult => _cApiSecretOperationResult(m)
     case m: CancelOrderFailed => _cCancelOrderFailed(m)
     case m: DoAddNewApiSecret => _cDoAddNewApiSecret(m)
@@ -183,9 +172,8 @@ class ThriftJsonSerializer extends Serializer {
     case m: DoDeleteApiSecret => _cDoDeleteApiSecret(m)
     case m: DoRegisterUser => _cDoRegisterUser(m)
     case m: DoRemoveRobotBrain => _cDoRemoveRobotBrain(m)
-    case m: DoRequestCashDeposit => _cDoRequestCashDeposit(m)
-    case m: DoRequestCashWithdrawal => _cDoRequestCashWithdrawal(m)
     case m: DoRequestPasswordReset => _cDoRequestPasswordReset(m)
+    case m: DoRequestTransfer => _cDoRequestTransfer(m)
     case m: DoResetPassword => _cDoResetPassword(m)
     case m: DoSendEmail => _cDoSendEmail(m)
     case m: DoSubmitOrder => _cDoSubmitOrder(m)
@@ -209,8 +197,6 @@ class ThriftJsonSerializer extends Serializer {
     case m: QueryAssetResult => _cQueryAssetResult(m)
     case m: QueryCandleData => _cQueryCandleData(m)
     case m: QueryCandleDataResult => _cQueryCandleDataResult(m)
-    case m: QueryDW => _cQueryDW(m)
-    case m: QueryDWResult => _cQueryDWResult(m)
     case m: QueryExportToMongoState => _cQueryExportToMongoState(m)
     case m: QueryMarketDepth => _cQueryMarketDepth(m)
     case m: QueryMarketDepthResult => _cQueryMarketDepthResult(m)
@@ -218,16 +204,16 @@ class ThriftJsonSerializer extends Serializer {
     case m: QueryOrderResult => _cQueryOrderResult(m)
     case m: QueryTransaction => _cQueryTransaction(m)
     case m: QueryTransactionResult => _cQueryTransactionResult(m)
+    case m: QueryTransfer => _cQueryTransfer(m)
+    case m: QueryTransferResult => _cQueryTransferResult(m)
     case m: RegisterUserFailed => _cRegisterUserFailed(m)
     case m: RegisterUserSucceeded => _cRegisterUserSucceeded(m)
     case m: RemoveRobotBrainFailed => _cRemoveRobotBrainFailed(m)
     case m: RemoveRobotBrainSucceeded => _cRemoveRobotBrainSucceeded(m)
-    case m: RequestCashDepositFailed => _cRequestCashDepositFailed(m)
-    case m: RequestCashDepositSucceeded => _cRequestCashDepositSucceeded(m)
-    case m: RequestCashWithdrawalFailed => _cRequestCashWithdrawalFailed(m)
-    case m: RequestCashWithdrawalSucceeded => _cRequestCashWithdrawalSucceeded(m)
     case m: RequestPasswordResetFailed => _cRequestPasswordResetFailed(m)
     case m: RequestPasswordResetSucceeded => _cRequestPasswordResetSucceeded(m)
+    case m: RequestTransferFailed => _cRequestTransferFailed(m)
+    case m: RequestTransferSucceeded => _cRequestTransferSucceeded(m)
     case m: ResetPasswordFailed => _cResetPasswordFailed(m)
     case m: ResetPasswordSucceeded => _cResetPasswordSucceeded(m)
     case m: SubmitOrderFailed => _cSubmitOrderFailed(m)
@@ -240,10 +226,10 @@ class ThriftJsonSerializer extends Serializer {
     case m: VerifyEmailSucceeded => _cVerifyEmailSucceeded(m)
     case m: VerifyGoogleAuthCode => _cVerifyGoogleAuthCode(m)
     case m: TAccountState => _cTAccountState(m)
+    case m: TAccountTransferState => _cTAccountTransferState(m)
     case m: TApiSecretState => _cTApiSecretState(m)
     case m: TAssetState => _cTAssetState(m)
     case m: TCandleDataState => _cTCandleDataState(m)
-    case m: TDepositWithdrawState => _cTDepositWithdrawState(m)
     case m: TExportToMongoState => _cTExportToMongoState(m)
     case m: TMarketDepthState => _cTMarketDepthState(m)
     case m: TMarketState => _cTMarketState(m)
@@ -256,6 +242,7 @@ class ThriftJsonSerializer extends Serializer {
 
   def fromBinary(bytes: Array[Byte],
     clazz: Option[Class[_]]): AnyRef = clazz match {
+    case Some(c) if c == classOf[AccountTransfer.Immutable] => _cAccountTransfer.invert(bytes).get
     case Some(c) if c == classOf[ApiSecret.Immutable] => _cApiSecret.invert(bytes).get
     case Some(c) if c == classOf[CandleData.Immutable] => _cCandleData.invert(bytes).get
     case Some(c) if c == classOf[CandleDataItem.Immutable] => _cCandleDataItem.invert(bytes).get
@@ -263,8 +250,6 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[CurrentAsset.Immutable] => _cCurrentAsset.invert(bytes).get
     case Some(c) if c == classOf[CurrentPrice.Immutable] => _cCurrentPrice.invert(bytes).get
     case Some(c) if c == classOf[Cursor.Immutable] => _cCursor.invert(bytes).get
-    case Some(c) if c == classOf[DWItem.Immutable] => _cDWItem.invert(bytes).get
-    case Some(c) if c == classOf[Deposit.Immutable] => _cDeposit.invert(bytes).get
     case Some(c) if c == classOf[Fee.Immutable] => _cFee.invert(bytes).get
     case Some(c) if c == classOf[HistoryAsset.Immutable] => _cHistoryAsset.invert(bytes).get
     case Some(c) if c == classOf[HistoryPrice.Immutable] => _cHistoryPrice.invert(bytes).get
@@ -290,14 +275,11 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[UserAccount.Immutable] => _cUserAccount.invert(bytes).get
     case Some(c) if c == classOf[UserLogsState.Immutable] => _cUserLogsState.invert(bytes).get
     case Some(c) if c == classOf[UserProfile.Immutable] => _cUserProfile.invert(bytes).get
-    case Some(c) if c == classOf[Withdrawal.Immutable] => _cWithdrawal.invert(bytes).get
     case Some(c) if c == classOf[AddRobotBrainFailed.Immutable] => _cAddRobotBrainFailed.invert(bytes).get
     case Some(c) if c == classOf[AddRobotBrainSucceeded.Immutable] => _cAddRobotBrainSucceeded.invert(bytes).get
     case Some(c) if c == classOf[AdminCommandResult.Immutable] => _cAdminCommandResult.invert(bytes).get
-    case Some(c) if c == classOf[AdminConfirmCashDepositFailure.Immutable] => _cAdminConfirmCashDepositFailure.invert(bytes).get
-    case Some(c) if c == classOf[AdminConfirmCashDepositSuccess.Immutable] => _cAdminConfirmCashDepositSuccess.invert(bytes).get
-    case Some(c) if c == classOf[AdminConfirmCashWithdrawalFailure.Immutable] => _cAdminConfirmCashWithdrawalFailure.invert(bytes).get
-    case Some(c) if c == classOf[AdminConfirmCashWithdrawalSuccess.Immutable] => _cAdminConfirmCashWithdrawalSuccess.invert(bytes).get
+    case Some(c) if c == classOf[AdminConfirmTransferFailure.Immutable] => _cAdminConfirmTransferFailure.invert(bytes).get
+    case Some(c) if c == classOf[AdminConfirmTransferSuccess.Immutable] => _cAdminConfirmTransferSuccess.invert(bytes).get
     case Some(c) if c == classOf[ApiSecretOperationResult.Immutable] => _cApiSecretOperationResult.invert(bytes).get
     case Some(c) if c == classOf[CancelOrderFailed.Immutable] => _cCancelOrderFailed.invert(bytes).get
     case Some(c) if c == classOf[DoAddNewApiSecret.Immutable] => _cDoAddNewApiSecret.invert(bytes).get
@@ -306,9 +288,8 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[DoDeleteApiSecret.Immutable] => _cDoDeleteApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoRegisterUser.Immutable] => _cDoRegisterUser.invert(bytes).get
     case Some(c) if c == classOf[DoRemoveRobotBrain.Immutable] => _cDoRemoveRobotBrain.invert(bytes).get
-    case Some(c) if c == classOf[DoRequestCashDeposit.Immutable] => _cDoRequestCashDeposit.invert(bytes).get
-    case Some(c) if c == classOf[DoRequestCashWithdrawal.Immutable] => _cDoRequestCashWithdrawal.invert(bytes).get
     case Some(c) if c == classOf[DoRequestPasswordReset.Immutable] => _cDoRequestPasswordReset.invert(bytes).get
+    case Some(c) if c == classOf[DoRequestTransfer.Immutable] => _cDoRequestTransfer.invert(bytes).get
     case Some(c) if c == classOf[DoResetPassword.Immutable] => _cDoResetPassword.invert(bytes).get
     case Some(c) if c == classOf[DoSendEmail.Immutable] => _cDoSendEmail.invert(bytes).get
     case Some(c) if c == classOf[DoSubmitOrder.Immutable] => _cDoSubmitOrder.invert(bytes).get
@@ -332,8 +313,6 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[QueryAssetResult.Immutable] => _cQueryAssetResult.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleData.Immutable] => _cQueryCandleData.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleDataResult.Immutable] => _cQueryCandleDataResult.invert(bytes).get
-    case Some(c) if c == classOf[QueryDW.Immutable] => _cQueryDW.invert(bytes).get
-    case Some(c) if c == classOf[QueryDWResult.Immutable] => _cQueryDWResult.invert(bytes).get
     case Some(c) if c == classOf[QueryExportToMongoState.Immutable] => _cQueryExportToMongoState.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepth.Immutable] => _cQueryMarketDepth.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepthResult.Immutable] => _cQueryMarketDepthResult.invert(bytes).get
@@ -341,16 +320,16 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[QueryOrderResult.Immutable] => _cQueryOrderResult.invert(bytes).get
     case Some(c) if c == classOf[QueryTransaction.Immutable] => _cQueryTransaction.invert(bytes).get
     case Some(c) if c == classOf[QueryTransactionResult.Immutable] => _cQueryTransactionResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryTransfer.Immutable] => _cQueryTransfer.invert(bytes).get
+    case Some(c) if c == classOf[QueryTransferResult.Immutable] => _cQueryTransferResult.invert(bytes).get
     case Some(c) if c == classOf[RegisterUserFailed.Immutable] => _cRegisterUserFailed.invert(bytes).get
     case Some(c) if c == classOf[RegisterUserSucceeded.Immutable] => _cRegisterUserSucceeded.invert(bytes).get
     case Some(c) if c == classOf[RemoveRobotBrainFailed.Immutable] => _cRemoveRobotBrainFailed.invert(bytes).get
     case Some(c) if c == classOf[RemoveRobotBrainSucceeded.Immutable] => _cRemoveRobotBrainSucceeded.invert(bytes).get
-    case Some(c) if c == classOf[RequestCashDepositFailed.Immutable] => _cRequestCashDepositFailed.invert(bytes).get
-    case Some(c) if c == classOf[RequestCashDepositSucceeded.Immutable] => _cRequestCashDepositSucceeded.invert(bytes).get
-    case Some(c) if c == classOf[RequestCashWithdrawalFailed.Immutable] => _cRequestCashWithdrawalFailed.invert(bytes).get
-    case Some(c) if c == classOf[RequestCashWithdrawalSucceeded.Immutable] => _cRequestCashWithdrawalSucceeded.invert(bytes).get
     case Some(c) if c == classOf[RequestPasswordResetFailed.Immutable] => _cRequestPasswordResetFailed.invert(bytes).get
     case Some(c) if c == classOf[RequestPasswordResetSucceeded.Immutable] => _cRequestPasswordResetSucceeded.invert(bytes).get
+    case Some(c) if c == classOf[RequestTransferFailed.Immutable] => _cRequestTransferFailed.invert(bytes).get
+    case Some(c) if c == classOf[RequestTransferSucceeded.Immutable] => _cRequestTransferSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ResetPasswordFailed.Immutable] => _cResetPasswordFailed.invert(bytes).get
     case Some(c) if c == classOf[ResetPasswordSucceeded.Immutable] => _cResetPasswordSucceeded.invert(bytes).get
     case Some(c) if c == classOf[SubmitOrderFailed.Immutable] => _cSubmitOrderFailed.invert(bytes).get
@@ -363,10 +342,10 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[VerifyEmailSucceeded.Immutable] => _cVerifyEmailSucceeded.invert(bytes).get
     case Some(c) if c == classOf[VerifyGoogleAuthCode.Immutable] => _cVerifyGoogleAuthCode.invert(bytes).get
     case Some(c) if c == classOf[TAccountState.Immutable] => _cTAccountState.invert(bytes).get
+    case Some(c) if c == classOf[TAccountTransferState.Immutable] => _cTAccountTransferState.invert(bytes).get
     case Some(c) if c == classOf[TApiSecretState.Immutable] => _cTApiSecretState.invert(bytes).get
     case Some(c) if c == classOf[TAssetState.Immutable] => _cTAssetState.invert(bytes).get
     case Some(c) if c == classOf[TCandleDataState.Immutable] => _cTCandleDataState.invert(bytes).get
-    case Some(c) if c == classOf[TDepositWithdrawState.Immutable] => _cTDepositWithdrawState.invert(bytes).get
     case Some(c) if c == classOf[TExportToMongoState.Immutable] => _cTExportToMongoState.invert(bytes).get
     case Some(c) if c == classOf[TMarketDepthState.Immutable] => _cTMarketDepthState.invert(bytes).get
     case Some(c) if c == classOf[TMarketState.Immutable] => _cTMarketState.invert(bytes).get

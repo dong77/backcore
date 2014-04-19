@@ -54,8 +54,8 @@ struct TApiSecretState {
     3: string seed
 }
 
-struct TDepositWithdrawState {
-    1: i64 lastDWId
+struct TAccountTransferState {
+    1: i64 lastTransferId
     2: RedeliverFilters filters
 }
 

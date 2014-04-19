@@ -12,13 +12,13 @@ object Debugger {
 
   def prettyOutput(side: MarketSide, state: TMarketState): String = {
     val sb = new StringBuilder("========================= MarketState ==========================\n")
-    sb.append("卖出挂单\n")
+    sb.append("Seller Orders\n")
     val sellList = state.orderPools.getOrElse(side, List.empty[Order])
     sellList.reverse foreach { order =>
       sb.append(prettyOutput(order, true))
     }
     sb.append("################################################################\n")
-    sb.append("买入挂单\n")
+    sb.append("Buyer Orders\n")
     val buyList = state.orderPools.getOrElse(side.reverse, List.empty[Order])
     buyList foreach { order =>
       sb.append(prettyOutput(order, false))
@@ -41,17 +41,16 @@ object Debugger {
     os.txs foreach { tx =>
       val Transaction(_, _, _, takerUpdate, makerUpdate, _) = tx
       val price = makerUpdate.previous.price.get
-      sb.append("用户 %d %s %d %s %d. 价格: %f %s: %d\n".format(
-        takerUpdate.previous.userId, if (isSell) "卖出" else "买入",
+      sb.append("User %d %s %d %s %d. Price: %f %s: %d\n".format(
+        takerUpdate.previous.userId, if (isSell) "sold" else "bought",
         if (isSell) takerUpdate.previous.quantity - takerUpdate.current.quantity else
           (takerUpdate.current.inAmount - takerUpdate.previous.inAmount).toLong,
-        if (isSell) "给" else "从",
+        if (isSell) "to" else "from",
         makerUpdate.previous.userId, if (isSell) 1 / price else price,
-        if (isSell) "得到" else "花费",
+        if (isSell) "received" else "paid",
         if (isSell) makerUpdate.previous.quantity - makerUpdate.current.quantity else
           (makerUpdate.current.inAmount - makerUpdate.previous.inAmount).toLong))
     }
     sb.toString
   }
-
 }

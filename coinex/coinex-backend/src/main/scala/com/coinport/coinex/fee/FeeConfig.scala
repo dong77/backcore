@@ -10,4 +10,4 @@ import com.coinport.coinex.data.Currency
 final case class FeeConfig(
   marketFeeRules: Map[MarketSide, FeeRule],
   robotFeeRules: Map[Int, FeeRule],
-  withdrawalFeeRules: Map[Currency, FeeRule])
+  transferFeeRules: Map[Currency, FeeRule])

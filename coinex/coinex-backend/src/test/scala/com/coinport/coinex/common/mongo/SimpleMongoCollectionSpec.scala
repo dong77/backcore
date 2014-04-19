@@ -6,31 +6,31 @@ import com.coinport.coinex.common._
 
 class SimpleMongoCollectionSpec extends EmbeddedMongoForTestWithBF {
 
-  val jsonDeposits = new SimpleJsonMongoCollection[Deposit, Deposit.Immutable]() {
-    val coll = database("deposits_json")
-    def extractId(deposit: Deposit) = deposit.id
+  val jsonTransfers = new SimpleJsonMongoCollection[AccountTransfer, AccountTransfer.Immutable]() {
+    val coll = database("transfer_json")
+    def extractId(t: AccountTransfer) = t.id
   }
 
   "SimpleJsonMongoCollection" must {
-    "save and retrieve deposits" in {
-      val deposit = Deposit(1, 2, Rmb, 123, TransferStatus.Pending)
-      jsonDeposits.put(deposit)
-      jsonDeposits.get(1) should be(Some(deposit))
-      jsonDeposits.get(2) should be(None)
+    "save and retrieve account transfers" in {
+      val deposit = AccountTransfer(1, 2, TransferType.Deposit, Rmb, 123, TransferStatus.Pending)
+      jsonTransfers.put(deposit)
+      jsonTransfers.get(1) should be(Some(deposit))
+      jsonTransfers.get(2) should be(None)
     }
   }
 
-  val binaryDeposits = new SimpleBinaryMongoCollection[Deposit, Deposit.Immutable]() {
-    val coll = database("deposits_binary")
-    def extractId(deposit: Deposit) = deposit.id
+  val binaryTransfers = new SimpleBinaryMongoCollection[AccountTransfer, AccountTransfer.Immutable]() {
+    val coll = database("transfer_binary")
+    def extractId(t: AccountTransfer) = t.id
   }
 
   "SimpleBinaryMongoCollection" must {
     "save and retrieve deposits" in {
-      val deposit = Deposit(1, 2, Rmb, 123, TransferStatus.Pending)
-      binaryDeposits.put(deposit)
-      binaryDeposits.get(1) should be(Some(deposit))
-      binaryDeposits.get(2) should be(None)
+      val deposit = AccountTransfer(1, 2, TransferType.Deposit, Rmb, 123, TransferStatus.Pending)
+      binaryTransfers.put(deposit)
+      binaryTransfers.get(1) should be(Some(deposit))
+      binaryTransfers.get(2) should be(None)
     }
   }
 }
