@@ -66,18 +66,31 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
 
     val refund: Option[Refund] =
       if (takerOrder.quantity == 0) None
-      else if (takerOrder.hitTakeLimit) Some(Refund(HitTakeLimit, 0))
-      else if (takerOrder.isDust) Some(Refund(Dust, 0))
-      else if (status == PartiallyExecutedThenCancelledByMarket || status == CancelledByMarket) Some(Refund(AutoCancelled, 0))
-      else None
+      else if (takerOrder.hitTakeLimit) Some(Refund(HitTakeLimit, takerOrder.quantity))
+      else if (takerOrder.isDust) Some(Refund(Dust, takerOrder.quantity))
+      else if (status == PartiallyExecutedThenCancelledByMarket || status == CancelledByMarket) Some(Refund(AutoCancelled, takerOrder.quantity))
+      else takerOrder.takeLimit match {
+        case Some(limit) =>
+          val overCharged = takerOrder.quantity - Math.ceil(limit / takerOrder.price.get).toLong
+          if (overCharged > 0) {
+            removeOrder(takerOrder.id)
+            addOrder(takerSide, takerOrder.copy(quantity = takerOrder.quantity - overCharged))
+            Some(Refund(OverCharged, overCharged))
+          } else None
+        case None => None
+      }
 
     if (txsBuffer.size != 0 && refund.isDefined) {
       val lastTx = txsBuffer.last
       txsBuffer.trimEnd(1)
+      // If there is a over-charge refund, the current order in takerUpdate will still
+      // show the quantity before the refund.
       txsBuffer += lastTx.copy(takerUpdate = lastTx.takerUpdate.copy(current = lastTx.takerUpdate.current.copy(refund = refund)))
     }
 
     val txs = txsBuffer.toSeq
+    // If there is a over-charge refund, the order inside originOrderInfo will still
+    // show the quantity before the refund.
     val orderInfo = OrderInfo(takerSide,
       if (txs.size == 0) order.copy(refund = refund) else order,
       totalOutAmount, totalInAmount, status, txs.lastOption.map(_.timestamp))
@@ -112,8 +125,8 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
 
         val refund: Option[Refund] =
           if (updatedMaker.quantity == 0) None
-          else if (updatedMaker.hitTakeLimit) Some(Refund(HitTakeLimit, 0))
-          else if (updatedMaker.isDust) Some(Refund(Dust, 0))
+          else if (updatedMaker.hitTakeLimit) Some(Refund(HitTakeLimit, updatedMaker.quantity))
+          else if (updatedMaker.isDust) Some(Refund(Dust, updatedMaker.quantity))
           else None
 
         def getTxId = { lastTxId += 1; lastTxId }

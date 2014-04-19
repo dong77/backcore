@@ -163,8 +163,8 @@ trait AccountManagerBehavior extends CountFeeSupport {
           manager.transferFundFromAvailable(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
         }
 
-        manager.conditionalRefund(takerOrderUpdate.current.refund.isDefined)(side.outCurrency, takerOrderUpdate.current)
-        manager.conditionalRefund(makerOrderUpdate.current.refund.isDefined)(side.inCurrency, makerOrderUpdate.current)
+        refund(side.outCurrency, takerOrderUpdate.current)
+        refund(side.inCurrency, makerOrderUpdate.current)
       }
       val order = originOrderInfo.order
       if (txs.isEmpty && order.refund.isDefined)
@@ -172,5 +172,11 @@ trait AccountManagerBehavior extends CountFeeSupport {
 
     case OrderCancelled(side, order) =>
       manager.conditionalRefund(true)(side.outCurrency, order)
+  }
+
+  private def refund(currency: Currency, order: Order) = order.refund match {
+    case Some(Refund(_, quantity)) if quantity > 0 =>
+      manager.refund(order.userId, currency, quantity)
+    case _ =>
   }
 }
