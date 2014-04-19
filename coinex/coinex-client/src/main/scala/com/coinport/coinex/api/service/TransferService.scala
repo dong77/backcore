@@ -1,7 +1,6 @@
 package com.coinport.coinex.api.service
 
 import com.coinport.coinex.data._
-import TransferType._
 import com.coinport.coinex.api.model._
 import akka.pattern.ask
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,7 +22,7 @@ object TransferService extends AkkaService {
               d.amount.externalValue(d.currency).toString,
               d.amount.externalValue(d.currency),
               d.amount),
-            d.status.value, d.created.getOrElse(0), d.updated.getOrElse(0), d.`type` == Deposit)
+            d.status.value, d.created.getOrElse(0), d.updated.getOrElse(0), d.`type`.getValue)
         }
         ApiResult(data = Some(items))
       case x => ApiResult(false)
