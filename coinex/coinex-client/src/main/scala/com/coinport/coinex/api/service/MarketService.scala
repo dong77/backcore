@@ -122,6 +122,12 @@ object MarketService extends AkkaService {
           (timeSpot, currentAsset.clone)
         }
 
+        println("#######################")
+        println("!!!!!assetList!!!!!!!!!" + assetList)
+        println("#######################")
+        println("!!!!!currentPriceMap!!!!!!!!!" + currencyPriceMap)
+        println("#######################")
+
         val items = assetList.map {
           case (timeSpot, assetMap) =>
             val amount = assetMap.map {

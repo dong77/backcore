@@ -5,7 +5,6 @@
 
 package com.coinport.coinex.accounts
 
-import com.coinport.coinex.fee.FeeConfig
 import com.coinport.coinex.common.ExtendedView
 import akka.event.LoggingReceive
 import com.coinport.coinex.data._
@@ -53,6 +52,7 @@ class AssetView extends ExtendedView {
         manager.updatePrice(side, timestamp, 1 / txs.last.makerUpdate.current.price.get)
         manager.updatePrice(side.reverse, timestamp, txs.last.makerUpdate.current.price.get)
       }
+
     case q: QueryAsset =>
       val historyAsset = HistoryAsset(manager.getHistoryAsset(q.uid, q.from, q.to))
       val currentAsset = CurrentAsset(manager.getCurrentAsset(q.uid))
