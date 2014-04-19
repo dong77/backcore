@@ -64,23 +64,22 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
       } else if (takerOrder.price == None || takerOrder.onlyTaker.getOrElse(false)) OrderStatus.CancelledByMarket
       else OrderStatus.Pending
 
-    val refundReason: Option[RefundReason] =
+    val refund: Option[Refund] =
       if (takerOrder.quantity == 0) None
-      else if (takerOrder.hitTakeLimit) Some(HitTakeLimit)
-      else if (takerOrder.isDust) Some(Dust)
-      else if (status == PartiallyExecutedThenCancelledByMarket || status == CancelledByMarket) Some(AutoCancelled)
+      else if (takerOrder.hitTakeLimit) Some(Refund(HitTakeLimit, 0))
+      else if (takerOrder.isDust) Some(Refund(Dust, 0))
+      else if (status == PartiallyExecutedThenCancelledByMarket || status == CancelledByMarket) Some(Refund(AutoCancelled, 0))
       else None
 
-    if (txsBuffer.size != 0 && refundReason != None) {
+    if (txsBuffer.size != 0 && refund.isDefined) {
       val lastTx = txsBuffer.last
       txsBuffer.trimEnd(1)
-      txsBuffer += lastTx.copy(takerUpdate = lastTx.takerUpdate.copy(current = lastTx.takerUpdate.current.copy(
-        refundReason = refundReason)))
+      txsBuffer += lastTx.copy(takerUpdate = lastTx.takerUpdate.copy(current = lastTx.takerUpdate.current.copy(refund = refund)))
     }
 
     val txs = txsBuffer.toSeq
     val orderInfo = OrderInfo(takerSide,
-      if (txs.size == 0) order.copy(refundReason = refundReason) else order,
+      if (txs.size == 0) order.copy(refund = refund) else order,
       totalOutAmount, totalInAmount, status, txs.lastOption.map(_.timestamp))
 
     OrderSubmitted(orderInfo, txs)
@@ -111,16 +110,16 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
         val updatedMaker = makerOrder.copy(quantity = makerOrder.quantity - lvInAmount,
           takeLimit = makerOrder.takeLimit.map(_ - lvOutAmount), inAmount = makerOrder.inAmount + lvOutAmount)
 
-        val refundReason: Option[RefundReason] =
+        val refund: Option[Refund] =
           if (updatedMaker.quantity == 0) None
-          else if (updatedMaker.hitTakeLimit) Some(HitTakeLimit)
-          else if (updatedMaker.isDust) Some(Dust)
+          else if (updatedMaker.hitTakeLimit) Some(Refund(HitTakeLimit, 0))
+          else if (updatedMaker.isDust) Some(Refund(Dust, 0))
           else None
 
         def getTxId = { lastTxId += 1; lastTxId }
 
         txsBuffer += Transaction(getTxId, takerOrder.timestamp.getOrElse(0), takerSide,
-          takerOrder --> updatedTaker, makerOrder --> updatedMaker.copy(refundReason = refundReason))
+          takerOrder --> updatedTaker, makerOrder --> updatedMaker.copy(refund = refund))
 
         removeOrder(makerOrder.id)
         if (updatedMaker.isFullyExecuted) { // return point

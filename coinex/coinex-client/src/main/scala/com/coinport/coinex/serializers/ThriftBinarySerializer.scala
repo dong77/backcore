@@ -36,6 +36,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cQueryMarketSide = BinaryScalaCodec(QueryMarketSide)
   lazy val _cRedeliverFilterData = BinaryScalaCodec(RedeliverFilterData)
   lazy val _cRedeliverFilters = BinaryScalaCodec(RedeliverFilters)
+  lazy val _cRefund = BinaryScalaCodec(Refund)
   lazy val _cSpanCursor = BinaryScalaCodec(SpanCursor)
   lazy val _cTMarketEvent = BinaryScalaCodec(TMarketEvent)
   lazy val _cTMetricsObserver = BinaryScalaCodec(TMetricsObserver)
@@ -148,6 +149,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: QueryMarketSide => _cQueryMarketSide(m)
     case m: RedeliverFilterData => _cRedeliverFilterData(m)
     case m: RedeliverFilters => _cRedeliverFilters(m)
+    case m: Refund => _cRefund(m)
     case m: SpanCursor => _cSpanCursor(m)
     case m: TMarketEvent => _cTMarketEvent(m)
     case m: TMetricsObserver => _cTMetricsObserver(m)
@@ -264,6 +266,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[QueryMarketSide.Immutable] => _cQueryMarketSide.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilterData.Immutable] => _cRedeliverFilterData.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilters.Immutable] => _cRedeliverFilters.invert(bytes).get
+    case Some(c) if c == classOf[Refund.Immutable] => _cRefund.invert(bytes).get
     case Some(c) if c == classOf[SpanCursor.Immutable] => _cSpanCursor.invert(bytes).get
     case Some(c) if c == classOf[TMarketEvent.Immutable] => _cTMarketEvent.invert(bytes).get
     case Some(c) if c == classOf[TMetricsObserver.Immutable] => _cTMetricsObserver.invert(bytes).get

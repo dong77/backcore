@@ -91,31 +91,32 @@ enum ChartTimeDimension {
 }
 
 enum Direction {
-    UP = 1
+    UP   = 1
     DOWN = 2
     KEEP = 3
 }
 
 enum TransferType {
-    DEPOSIT = 0
+    DEPOSIT    = 0
     WITHDRAWAL = 1
 }
 
 enum TransferStatus {
-    PENDING = 0
+    PENDING   = 0
     SUCCEEDED = 1
-    FAILED = 2
+    FAILED    = 2
 }
 
 enum ExportedEventType {
     ACCOUNT_EVENT = 0
-    MARKET_EVENT = 1
+    MARKET_EVENT  = 1
 }
 
 enum RefundReason {
-    DUST = 0
+    DUST           = 0
     HIT_TAKE_LIMIT = 1
     AUTO_CANCELLED = 2
+    OVER_CHARGED   = 3
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -150,6 +151,11 @@ struct Fee {
     5: optional string basis
 }
 
+struct Refund {
+    1: RefundReason reason
+    2: i64 amount
+}
+
 struct Order {
     1: i64 userId
     2: i64 id
@@ -161,7 +167,7 @@ struct Order {
     8: optional i64 robotId
     9: optional bool onlyTaker
     10: i64 inAmount = 0
-    11: optional RefundReason refundReason
+    11: optional Refund refund
 }
 
 struct OrderInfo {
