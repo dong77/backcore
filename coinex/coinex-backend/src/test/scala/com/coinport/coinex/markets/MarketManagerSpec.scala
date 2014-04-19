@@ -172,7 +172,7 @@ class MarketManagerSpec extends Specification {
       manager.orderPool(takerSide) mustEqual SortedSet.empty[Order]
     }
 
-    "match limit-price order with as many existing limit-price order with take-limit" in {
+    "match limit-price order with as many existing limit-price order, market should refund over-charged quantity" in {
       val manager = new MarketManager(Btc ~> Rmb)
       val maker1 = Order(userId = 666, id = 1, price = Some(1.0 / 4500), quantity = 10000, takeLimit = Some(1))
       val maker2 = Order(userId = 777, id = 2, price = Some(1.0 / 5000), quantity = 15000, takeLimit = Some(3))
