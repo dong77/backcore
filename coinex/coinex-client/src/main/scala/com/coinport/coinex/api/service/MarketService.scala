@@ -86,23 +86,31 @@ object MarketService extends AkkaService {
 
   def getAsset(userId: Long, from: Long, to: Long, baseCurrency: Currency) = {
     val timeSkip: Long = ChartTimeDimension.OneDay
-    val start = from / timeSkip
-    val stop = to / timeSkip
+    val start = Math.max(from / timeSkip, to / timeSkip)
+    val stop = Math.min(from / timeSkip, to / timeSkip)
+
     backend ? QueryAsset(userId, from, to) map {
       case result: QueryAssetResult =>
-        val history = result.historyAsset
+        val historyAsset = result.historyAsset
+        val historyPrice = result.historyPrice
 
-        val currencyPriceMap = result.marketPrice.marketPriceMap.map {
+        val currentPrice = result.currentPrice.priceMap
+        val currencyPriceMap = historyPrice.priceMap.map {
           case (side, map) =>
-            val priceMap: Map[Long, Double] = if (side._2 == baseCurrency) map.priceMap.toMap
-            else if (side._1 == baseCurrency) map.priceMap.map(x => x._1 -> 1 / x._2).toMap
-            else Map.empty[Long, Double]
+            var curPrice = currentPrice.get(side).get
+
+            val priceMap = (start to stop).map { timeSpot =>
+              val tmpPrice = map.get(timeSpot).getOrElse(curPrice)
+              curPrice = tmpPrice
+              if (side._2 == baseCurrency) timeSpot -> tmpPrice else timeSpot -> tmpPrice.reverse
+            }.toMap
+
             baseCurrency -> priceMap
         }
 
         var currentAsset = scala.collection.mutable.Map.empty[Currency, Long] ++ result.currentAsset.currentAsset
         val assetList = (Math.max(start, stop) to Math.min(start, stop)).map { timeSpot =>
-          currentAsset = history.currencyMap.get(timeSpot) match {
+          currentAsset = historyAsset.currencyMap.get(timeSpot) match {
             case Some(curMap) =>
               curMap.foreach {
                 case (cur, volume) =>
@@ -116,7 +124,10 @@ object MarketService extends AkkaService {
 
         val items = assetList.map {
           case (timeSpot, assetMap) =>
-            val amount = assetMap.map { case (cur, volume) => currencyPriceMap.get(cur).get.get(timeSpot).get * volume }.sum
+            val amount = assetMap.map {
+              case (cur, volume) =>
+                currencyPriceMap.get(cur).get.get(timeSpot).get * volume
+            }.sum
             AssetItem(uid = userId.toString,
               assetMap = assetMap.map(a => a._1.toString -> a._2.toDouble).toMap,
               amount = amount,

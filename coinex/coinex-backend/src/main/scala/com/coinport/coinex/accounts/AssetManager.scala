@@ -11,12 +11,13 @@ class AssetManager extends Manager[TAssetState] {
   private var currentAssetMap = Map.empty[Long, Map[Currency, Long]]
 
   private val timePrice = Map.empty[Long, Double]
-  private var priceMap = Map.empty[MarketSide, Map[Long, Double]]
+  private var historyPriceMap = Map.empty[MarketSide, Map[Long, Double]]
+  private var currentPriceMap = Map.empty[MarketSide, Double]
 
   val day = 1000 * 60 * 60 * 24
 
   // Thrift conversions     ----------------------------------------------
-  def getSnapshot = TAssetState(currentAssetMap, historyAssetMap, priceMap)
+  def getSnapshot = TAssetState(currentAssetMap, historyAssetMap, currentPriceMap, historyPriceMap)
 
   def loadSnapshot(snapshot: TAssetState) = {
     currentAssetMap = currentAssetMap.empty ++ snapshot.currentAssetMap.map(
@@ -26,7 +27,9 @@ class AssetManager extends Manager[TAssetState] {
       x => x._1 -> (timeAsset.empty ++ x._2.map(
         y => y._1 -> (currencyMap.empty ++ y._2))))
 
-    priceMap = priceMap.empty ++ snapshot.marketPriceMap.map(
+    currentPriceMap = currentPriceMap.empty ++ snapshot.currentPriceMap
+
+    historyPriceMap = historyPriceMap.empty ++ snapshot.historyPriceMap.map(
       x => x._1 -> (timePrice.empty ++ x._2))
   }
 
@@ -51,10 +54,12 @@ class AssetManager extends Manager[TAssetState] {
 
   def updatePrice(side: MarketSide, timestamp: Long, price: Double) = {
     val timeDay = timestamp / day
-    priceMap.get(side) match {
+    historyPriceMap.get(side) match {
       case Some(pm) => pm.put(timeDay, price)
-      case None => priceMap.put(side, Map(timeDay -> price))
+      case None => historyPriceMap.put(side, Map(timeDay -> price))
     }
+
+    currentPriceMap.put(side, price)
   }
 
   def getHistoryAsset(userId: Long, from: Long, to: Long) = historyAssetMap.get(userId) match {
@@ -65,10 +70,12 @@ class AssetManager extends Manager[TAssetState] {
 
   def getCurrentAsset(userId: Long) = currentAssetMap.get(userId).getOrElse(Map.empty[Currency, Long])
 
-  def getPrice(from: Long, to: Long) = {
-    priceMap.map {
+  def getHistoryPrice(from: Long, to: Long) = {
+    historyPriceMap.map {
       case (side, timePrice) =>
         side -> (from / day to to / day).map(i => timePrice.get(i).map(i -> _)).filter(_.isDefined).map(_.get).toMap
     }
   }
+
+  def getCurrentPrice = currentPriceMap
 }

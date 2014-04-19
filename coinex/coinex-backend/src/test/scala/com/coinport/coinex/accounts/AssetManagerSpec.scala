@@ -30,17 +30,17 @@ class AssetManagerSpec extends Specification {
         Map(Rmb -> 1500, Ltc -> 1000, Btc -> 1000, Pts -> 500)
     }
 
-    //    "update price of currency and can get them all" in {
-    //      val manager = new AssetManager()
-    //
-    //      manager.updatePrice(Btc ~> Rmb, day, 3000)
-    //      manager.updatePrice(Ltc ~> Rmb, day, 100)
-    //
-    //      manager.updatePrice(Btc ~> Rmb, day2, 4000)
-    //      manager.updatePrice(Ltc ~> Rmb, day2, 200)
-    //
-    //      manager.getPrice(0, day2) mustEqual
-    //        Map(Btc ~> Rmb -> Map(16174 -> 3000, 16175 -> 4000), Ltc ~> Rmb -> Map(16174 -> 100, 16175 -> 200))
-    //    }
+    "update price of currency and can get them all" in {
+      val manager = new AssetManager()
+
+      manager.updatePrice(Btc ~> Rmb, day, 3000)
+      manager.updatePrice(Ltc ~> Rmb, day2, 200)
+      manager.updatePrice(Pts ~> Rmb, day3, 100)
+      manager.updatePrice(Btc ~> Rmb, day3, 4000)
+
+      manager.getHistoryPrice(0, day3) mustEqual
+        Map(Btc ~> Rmb -> Map(16174 -> 3000, 16176 -> 4000), Ltc ~> Rmb -> Map(16175 -> 200), Pts ~> Rmb -> Map(16176 -> 100))
+      manager.getCurrentPrice mustEqual Map(Btc ~> Rmb -> 4000, Ltc ~> Rmb -> 200, Pts ~> Rmb -> 100)
+    }
   }
 }

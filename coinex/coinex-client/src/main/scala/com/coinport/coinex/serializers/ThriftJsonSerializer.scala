@@ -19,6 +19,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cCandleDataItem = JsonScalaCodec(CandleDataItem)
   lazy val _cCashAccount = JsonScalaCodec(CashAccount)
   lazy val _cCurrentAsset = JsonScalaCodec(CurrentAsset)
+  lazy val _cCurrentPrice = JsonScalaCodec(CurrentPrice)
   lazy val _cCursor = JsonScalaCodec(Cursor)
   lazy val _cDWItem = JsonScalaCodec(DWItem)
   lazy val _cDeposit = JsonScalaCodec(Deposit)
@@ -27,7 +28,6 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cHistoryPrice = JsonScalaCodec(HistoryPrice)
   lazy val _cMarketDepth = JsonScalaCodec(MarketDepth)
   lazy val _cMarketDepthItem = JsonScalaCodec(MarketDepthItem)
-  lazy val _cMarketPrice = JsonScalaCodec(MarketPrice)
   lazy val _cMarketSide = JsonScalaCodec(MarketSide)
   lazy val _cMetrics = JsonScalaCodec(Metrics)
   lazy val _cMetricsByMarket = JsonScalaCodec(MetricsByMarket)
@@ -138,6 +138,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: CandleDataItem => _cCandleDataItem(m)
     case m: CashAccount => _cCashAccount(m)
     case m: CurrentAsset => _cCurrentAsset(m)
+    case m: CurrentPrice => _cCurrentPrice(m)
     case m: Cursor => _cCursor(m)
     case m: DWItem => _cDWItem(m)
     case m: Deposit => _cDeposit(m)
@@ -146,7 +147,6 @@ class ThriftJsonSerializer extends Serializer {
     case m: HistoryPrice => _cHistoryPrice(m)
     case m: MarketDepth => _cMarketDepth(m)
     case m: MarketDepthItem => _cMarketDepthItem(m)
-    case m: MarketPrice => _cMarketPrice(m)
     case m: MarketSide => _cMarketSide(m)
     case m: Metrics => _cMetrics(m)
     case m: MetricsByMarket => _cMetricsByMarket(m)
@@ -261,6 +261,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[CandleDataItem.Immutable] => _cCandleDataItem.invert(bytes).get
     case Some(c) if c == classOf[CashAccount.Immutable] => _cCashAccount.invert(bytes).get
     case Some(c) if c == classOf[CurrentAsset.Immutable] => _cCurrentAsset.invert(bytes).get
+    case Some(c) if c == classOf[CurrentPrice.Immutable] => _cCurrentPrice.invert(bytes).get
     case Some(c) if c == classOf[Cursor.Immutable] => _cCursor.invert(bytes).get
     case Some(c) if c == classOf[DWItem.Immutable] => _cDWItem.invert(bytes).get
     case Some(c) if c == classOf[Deposit.Immutable] => _cDeposit.invert(bytes).get
@@ -269,7 +270,6 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[HistoryPrice.Immutable] => _cHistoryPrice.invert(bytes).get
     case Some(c) if c == classOf[MarketDepth.Immutable] => _cMarketDepth.invert(bytes).get
     case Some(c) if c == classOf[MarketDepthItem.Immutable] => _cMarketDepthItem.invert(bytes).get
-    case Some(c) if c == classOf[MarketPrice.Immutable] => _cMarketPrice.invert(bytes).get
     case Some(c) if c == classOf[MarketSide.Immutable] => _cMarketSide.invert(bytes).get
     case Some(c) if c == classOf[Metrics.Immutable] => _cMetrics.invert(bytes).get
     case Some(c) if c == classOf[MetricsByMarket.Immutable] => _cMetricsByMarket.invert(bytes).get

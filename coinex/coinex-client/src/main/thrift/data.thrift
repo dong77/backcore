@@ -358,18 +358,19 @@ struct TMetricsObserver {
     8: i64 volumeMaintainer
 }
 
-struct HistoryAsset {
-    1: map<i64, map<Currency, i64>> currencyMap
-}
-
 struct CurrentAsset {
     1: map<Currency, i64> currentAsset
 }
 
-struct HistoryPrice {
-    1: map<i64, double> priceMap
+struct HistoryAsset {
+    1: map<i64, map<Currency, i64>> currencyMap
 }
 
-struct MarketPrice {
-    1: map<MarketSide, HistoryPrice> marketPriceMap
+struct CurrentPrice {
+    1: map<MarketSide, double> priceMap
 }
+
+struct HistoryPrice {
+    1: map<MarketSide, map<i64, double>> priceMap
+}
+
