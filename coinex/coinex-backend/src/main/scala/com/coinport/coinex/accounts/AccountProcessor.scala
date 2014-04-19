@@ -85,7 +85,7 @@ class AccountProcessor(
         if (!manager.canUpdateCashAccount(order.userId, adjustment)) {
           sender ! SubmitOrderFailed(side, order, ErrorCode.InsufficientFund)
         } else {
-          val updated = order.copy(timestamp = Some(System.currentTimeMillis))
+          val updated = order.copy(id = manager.getOrderId, timestamp = Some(System.currentTimeMillis))
           persist(DoSubmitOrder(side, updated)) { event =>
             channelToMarketProcessors forward Deliver(Persistent(OrderFundFrozen(side, updated)), getProcessorPath(side))
             updateState(event)
