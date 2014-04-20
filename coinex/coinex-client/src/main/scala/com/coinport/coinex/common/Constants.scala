@@ -18,9 +18,6 @@ object Constants {
   val STOP_ORDER_ROBOT_TYPE = 1
   val TRAILING_STOP_ORDER_ROBOT_TYPE = 2
 
-  // WARNING: this belongs to somewhere else
-  type MarketEvent = (Option[Double], Option[Long]) // (price, volume)
-
   type Action = (Robot, Option[Metrics]) => (Robot, Option[Any])
 
   // WARNING: this belongs to somewhere else

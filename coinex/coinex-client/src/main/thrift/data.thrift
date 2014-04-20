@@ -309,7 +309,7 @@ struct QueryMarketSide {
     2: bool bothSide
 }
 
-struct TMarketEvent {
+struct MarketEvent {
     1: optional double price
     2: optional i64 volume
     3: optional i64 timestamp
@@ -318,14 +318,14 @@ struct TMarketEvent {
 struct TWindowQueue {
     1: i64 range
     2: i64 interval
-    3: list<TMarketEvent> elems
+    3: list<MarketEvent> elems
     4: i32 head
     5: i64 lastTick
 }
 
 struct TWindowVector {
     1: i64 range
-    2: list<TMarketEvent> elems
+    2: list<MarketEvent> elems
 }
 
 struct TStackQueue {

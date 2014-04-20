@@ -17,58 +17,58 @@ class MetricsObserverSpec extends Specification {
   "MetricsObserver" should {
     "maintain the ticker info" in {
       val observer = new MetricsObserver((Btc ~> Rmb), transactionQueue = new WindowVector[MarketEvent](3))
-      observer.pushEvent(create(12.5, 100), 0)
+      observer.pushEvent(create(12.5, 100, 0), 0)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 12.5, Some(12.5), Some(12.5), 100, Some(0.0), Keep)
-      observer.pushEvent(create(2.5, 90), 0)
+      observer.pushEvent(create(2.5, 90, 0), 0)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 2.5, Some(2.5), Some(12.5), 190, Some(-10 / 12.5), Down)
       observer.pushEvent(null, 3)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 2.5, None, None, 0, None, Down)
 
-      observer.pushEvent(create(2.5, 10), 11)
+      observer.pushEvent(create(2.5, 10, 11), 11)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 2.5, Some(2.5), Some(2.5), 10, Some(0.0), Keep)
-      observer.pushEvent(create(3.5, 8), 12)
+      observer.pushEvent(create(3.5, 8, 12), 12)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 3.5, Some(2.5), Some(3.5), 18, Some(1 / 2.5), Up)
-      observer.pushEvent(create(12.5, 7), 13)
+      observer.pushEvent(create(12.5, 7, 13), 13)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 12.5, Some(2.5), Some(12.5), 25, Some(10 / 2.5), Up)
-      observer.pushEvent(create(4.5, 1), 14)
+      observer.pushEvent(create(4.5, 1, 14), 14)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 4.5, Some(3.5), Some(12.5), 16, Some(1 / 3.5), Down)
-      observer.pushEvent(create(0.5, 12), 35)
+      observer.pushEvent(create(0.5, 12, 35), 35)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 0.5, Some(0.5), Some(0.5), 12, Some(0.0), Down)
     }
 
     "convert with thirft: TMetricsObserver" in {
       val observer = new MetricsObserver((Btc ~> Rmb), transactionQueue = new WindowVector[MarketEvent](3))
-      observer.pushEvent(create(12.5, 100), 0)
+      observer.pushEvent(create(12.5, 100, 0), 0)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 12.5, Some(12.5), Some(12.5), 100, Some(0.0), Keep)
-      observer.pushEvent(create(2.5, 90), 0)
+      observer.pushEvent(create(2.5, 90, 0), 0)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 2.5, Some(2.5), Some(12.5), 190, Some(-10 / 12.5), Down)
       observer.pushEvent(null, 3)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 2.5, None, None, 0, None, Down)
 
-      observer.pushEvent(create(2.5, 10), 11)
+      observer.pushEvent(create(2.5, 10, 11), 11)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 2.5, Some(2.5), Some(2.5), 10, Some(0.0), Keep)
-      observer.pushEvent(create(3.5, 8), 12)
+      observer.pushEvent(create(3.5, 8, 12), 12)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 3.5, Some(2.5), Some(3.5), 18, Some(1 / 2.5), Up)
-      observer.pushEvent(create(12.5, 7), 13)
+      observer.pushEvent(create(12.5, 7, 13), 13)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 12.5, Some(2.5), Some(12.5), 25, Some(10 / 2.5), Up)
-      observer.pushEvent(create(4.5, 1), 14)
+      observer.pushEvent(create(4.5, 1, 14), 14)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 4.5, Some(3.5), Some(12.5), 16, Some(1 / 3.5), Down)
-      observer.pushEvent(create(0.5, 12), 35)
+      observer.pushEvent(create(0.5, 12, 35), 35)
       observer.getMetrics mustEqual MetricsByMarket(
         MarketSide(Btc, Rmb), 0.5, Some(0.5), Some(0.5), 12, Some(0.0), Down)
 
@@ -76,5 +76,5 @@ class MetricsObserverSpec extends Specification {
     }
   }
 
-  private def create(p: Double, v: Long) = (Some(p), Some(v))
+  private def create(p: Double, v: Long, t: Long) = MarketEvent(Some(p), Some(v), Some(t))
 }

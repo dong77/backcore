@@ -21,8 +21,8 @@ class MetricsManager extends Manager[TMetricsState] {
   }
 
   def update(side: MarketSide, price: Double, volume: Long, reverseVolume: Long, tick: Long) {
-    state = state.pushEvent(side, (Some(price), Some(volume)), tick)
-    state = state.pushEvent(side.reverse, (Some(1 / price), Some(reverseVolume)), tick)
+    state = state.pushEvent(side, MarketEvent(Some(price), Some(volume), Some(tick)), tick)
+    state = state.pushEvent(side.reverse, MarketEvent(Some(1 / price), Some(reverseVolume), Some(tick)), tick)
   }
 
   def getMetrics: Metrics = {

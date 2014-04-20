@@ -19,8 +19,7 @@ object MetricsObserver {
     val tPre = tmo.preMaintainer
     new MetricsObserver(
       tmo.side,
-      new WindowVector[MarketEvent](ttq.range,
-        ttq.elems.map(i => (((i.price, i.volume), i.timestamp.get))).to[ArrayBuffer]),
+      new WindowVector[MarketEvent](ttq.range, ttq.elems.map(e => (e, e.timestamp.get)).to[ArrayBuffer]),
       new StackQueue[Double](tMin.elems.to[ArrayBuffer], tMin.head, ascending, tMin.cleanThreshold),
       new StackQueue[Double](tMax.elems.to[ArrayBuffer], tMax.head, ascending, tMax.cleanThreshold),
       new StackQueue[Double](tPre.elems.to[ArrayBuffer], tPre.head, ascending, tPre.cleanThreshold),
@@ -42,7 +41,8 @@ class MetricsObserver(
   def pushEvent(event: MarketEvent, tick: Long) {
     transactionQueue.addAtTick(event, tick) foreach { e =>
       e match {
-        case (Some(p), Some(v)) =>
+        case null => None
+        case MarketEvent(Some(p), Some(v), _) =>
           minMaintainer.dequeue(p)
           maxMaintainer.dequeue(p)
           preMaintainer.dequeue(p)
@@ -51,7 +51,8 @@ class MetricsObserver(
       }
     }
     event match {
-      case (Some(p), Some(v)) =>
+      case null => None
+      case MarketEvent(Some(p), Some(v), _) =>
         minMaintainer.push(p)
         maxMaintainer.push(p)
         preMaintainer.push(p)
@@ -79,8 +80,7 @@ class MetricsObserver(
     preMaintainer.copy, price, lastPrice, volumeMaintainer)
 
   def toThrift: TMetricsObserver = {
-    val tTransactionQueue = TWindowVector(transactionQueue.range,
-      transactionQueue.toList.map(i => TMarketEvent(i._1._1, i._1._2, Some(i._2))))
+    val tTransactionQueue = TWindowVector(transactionQueue.range, transactionQueue.toList.map(_._1))
     val tMinMaintainer = TStackQueue(minMaintainer.toList, 0, minMaintainer.cleanThreshold)
     val tMaxMaintainer = TStackQueue(maxMaintainer.toList, 0, maxMaintainer.cleanThreshold)
     val tPreMaintainer = TStackQueue(preMaintainer.toList, 0, preMaintainer.cleanThreshold)
