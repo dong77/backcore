@@ -14,8 +14,8 @@ class AssetManager extends Manager[TAssetState] {
   private var historyPriceMap = Map.empty[MarketSide, Map[Long, Double]]
   private var currentPriceMap = Map.empty[MarketSide, Double]
 
-  //  val day = 1000 * 60 * 60 * 24
-  val day = 1000 * 60
+  val day = 1000 * 60 * 60 * 24
+  //  val day = 1000 * 60
 
   // Thrift conversions     ----------------------------------------------
   def getSnapshot = TAssetState(currentAssetMap, historyAssetMap, currentPriceMap, historyPriceMap)
@@ -64,29 +64,24 @@ class AssetManager extends Manager[TAssetState] {
   }
 
   def getHistoryAsset(userId: Long, from: Long, to: Long) = {
-    println("getHistoryAsset>>>>>>>>>>>>>>>" + historyAssetMap)
     historyAssetMap.get(userId) match {
       case Some(timeAsset) =>
-        (from / day to to / day).map(i => timeAsset.get(i).map(i -> _)).filter(_.isDefined).map(_.get).toMap
+        (from / day to to / day).map { i =>
+          val x = timeAsset.get(i).map(i -> _)
+          x
+        }.filter(_.isDefined).map(_.get).toMap
       case None => Map[Long, Map[Currency, Long]]().toMap
     }
   }
 
-  def getCurrentAsset(userId: Long) = {
-    println("getCurrentAsset>>>>>>>>>>>>>>>" + currentAssetMap)
+  def getCurrentAsset(userId: Long) =
     currentAssetMap.get(userId).getOrElse(Map.empty[Currency, Long])
-  }
 
-  def getHistoryPrice(from: Long, to: Long) = {
-    println("getHistoryPrice>>>>>>>>>>>>>>>" + historyPriceMap)
+  def getHistoryPrice(from: Long, to: Long) =
     historyPriceMap.map {
       case (side, timePrice) =>
         side -> (from / day to to / day).map(i => timePrice.get(i).map(i -> _)).filter(_.isDefined).map(_.get).toMap
     }
-  }
 
-  def getCurrentPrice = {
-    println("getCurrentPrice>>>>>>>>>>>>>>>" + currentPriceMap)
-    currentPriceMap
-  }
+  def getCurrentPrice = currentPriceMap
 }

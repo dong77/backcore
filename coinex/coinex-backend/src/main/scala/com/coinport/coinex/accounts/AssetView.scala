@@ -54,9 +54,12 @@ class AssetView extends ExtendedView {
       }
 
     case q: QueryAsset =>
-      val historyAsset = HistoryAsset(manager.getHistoryAsset(q.uid, q.from, q.to))
+      val start = Math.min(q.from, q.to)
+      val stop = Math.max(q.from, q.to)
+
+      val historyAsset = HistoryAsset(manager.getHistoryAsset(q.uid, start, stop))
       val currentAsset = CurrentAsset(manager.getCurrentAsset(q.uid))
-      val historyPrice = HistoryPrice(manager.getHistoryPrice(q.from, q.to).map(x => x._1 -> x._2))
+      val historyPrice = HistoryPrice(manager.getHistoryPrice(start, stop).map(x => x._1 -> x._2))
       val currentPrice = CurrentPrice(manager.getCurrentPrice)
 
       sender ! QueryAssetResult(currentAsset, historyAsset, currentPrice, historyPrice)

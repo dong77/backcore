@@ -27,6 +27,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cHistoryPrice = JsonScalaCodec(HistoryPrice)
   lazy val _cMarketDepth = JsonScalaCodec(MarketDepth)
   lazy val _cMarketDepthItem = JsonScalaCodec(MarketDepthItem)
+  lazy val _cMarketEvent = JsonScalaCodec(MarketEvent)
   lazy val _cMarketSide = JsonScalaCodec(MarketSide)
   lazy val _cMetrics = JsonScalaCodec(Metrics)
   lazy val _cMetricsByMarket = JsonScalaCodec(MetricsByMarket)
@@ -38,7 +39,6 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cRedeliverFilters = JsonScalaCodec(RedeliverFilters)
   lazy val _cRefund = JsonScalaCodec(Refund)
   lazy val _cSpanCursor = JsonScalaCodec(SpanCursor)
-  lazy val _cTMarketEvent = JsonScalaCodec(TMarketEvent)
   lazy val _cTMetricsObserver = JsonScalaCodec(TMetricsObserver)
   lazy val _cTStackQueue = JsonScalaCodec(TStackQueue)
   lazy val _cTWindowQueue = JsonScalaCodec(TWindowQueue)
@@ -140,6 +140,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: HistoryPrice => _cHistoryPrice(m)
     case m: MarketDepth => _cMarketDepth(m)
     case m: MarketDepthItem => _cMarketDepthItem(m)
+    case m: MarketEvent => _cMarketEvent(m)
     case m: MarketSide => _cMarketSide(m)
     case m: Metrics => _cMetrics(m)
     case m: MetricsByMarket => _cMetricsByMarket(m)
@@ -151,7 +152,6 @@ class ThriftJsonSerializer extends Serializer {
     case m: RedeliverFilters => _cRedeliverFilters(m)
     case m: Refund => _cRefund(m)
     case m: SpanCursor => _cSpanCursor(m)
-    case m: TMarketEvent => _cTMarketEvent(m)
     case m: TMetricsObserver => _cTMetricsObserver(m)
     case m: TStackQueue => _cTStackQueue(m)
     case m: TWindowQueue => _cTWindowQueue(m)
@@ -257,6 +257,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[HistoryPrice.Immutable] => _cHistoryPrice.invert(bytes).get
     case Some(c) if c == classOf[MarketDepth.Immutable] => _cMarketDepth.invert(bytes).get
     case Some(c) if c == classOf[MarketDepthItem.Immutable] => _cMarketDepthItem.invert(bytes).get
+    case Some(c) if c == classOf[MarketEvent.Immutable] => _cMarketEvent.invert(bytes).get
     case Some(c) if c == classOf[MarketSide.Immutable] => _cMarketSide.invert(bytes).get
     case Some(c) if c == classOf[Metrics.Immutable] => _cMetrics.invert(bytes).get
     case Some(c) if c == classOf[MetricsByMarket.Immutable] => _cMetricsByMarket.invert(bytes).get
@@ -268,7 +269,6 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[RedeliverFilters.Immutable] => _cRedeliverFilters.invert(bytes).get
     case Some(c) if c == classOf[Refund.Immutable] => _cRefund.invert(bytes).get
     case Some(c) if c == classOf[SpanCursor.Immutable] => _cSpanCursor.invert(bytes).get
-    case Some(c) if c == classOf[TMarketEvent.Immutable] => _cTMarketEvent.invert(bytes).get
     case Some(c) if c == classOf[TMetricsObserver.Immutable] => _cTMetricsObserver.invert(bytes).get
     case Some(c) if c == classOf[TStackQueue.Immutable] => _cTStackQueue.invert(bytes).get
     case Some(c) if c == classOf[TWindowQueue.Immutable] => _cTWindowQueue.invert(bytes).get
