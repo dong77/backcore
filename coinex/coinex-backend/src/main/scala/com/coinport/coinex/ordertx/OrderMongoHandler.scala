@@ -41,7 +41,7 @@ trait OrderMongoHandler {
     val side = item.side
     val obj = MongoDBObject(
       OID -> item.order.id, UID -> item.order.userId, ORIGIN_ORDER -> converter.toBinary(item.order),
-      IN_AMOUNT -> item.inAmount, QUANTITY -> item.order.quantity, MARKET -> side.market.toString,
+      IN_AMOUNT -> item.inAmount, QUANTITY -> (item.order.quantity - item.outAmount), MARKET -> side.market.toString,
       SIDE -> side.ordered, CREATED_TIME -> item.order.timestamp.getOrElse(0), STATUS -> item.status.getValue())
 
     if (item.lastTxTimestamp.isDefined) obj ++ (UPDATED_TIME -> item.lastTxTimestamp.get)

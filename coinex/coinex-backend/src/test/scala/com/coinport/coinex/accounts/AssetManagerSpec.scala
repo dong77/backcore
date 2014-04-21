@@ -22,9 +22,10 @@ class AssetManagerSpec extends Specification {
       manager.updateAsset(1L, day3, Pts, -500)
       manager.updateAsset(1L, day3, Rmb, -500)
 
-      //      println(manager.historyAssetMap)
+      //            println(manager.getHistoryAsset(1L, 0, day2))
       manager.getHistoryAsset(1L, 0, day2) mustEqual
-        Map(16174 -> Map(Btc -> 1000, Rmb -> 1000), 16175 -> Map(Rmb -> 1000, Ltc -> 1000, Pts -> 1000))
+        //        Map(16174 -> Map(Btc -> 1000, Rmb -> 1000), 16175 -> Map(Rmb -> 1000, Ltc -> 1000, Pts -> 1000))
+        Map(23291442 -> Map(Btc -> 1000, Rmb -> 1000), 23292882 -> Map(Rmb -> 1000, Ltc -> 1000, Pts -> 1000))
 
       manager.getCurrentAsset(1L) mustEqual
         Map(Rmb -> 1500, Ltc -> 1000, Btc -> 1000, Pts -> 500)
@@ -38,8 +39,10 @@ class AssetManagerSpec extends Specification {
       manager.updatePrice(Pts ~> Rmb, day3, 100)
       manager.updatePrice(Btc ~> Rmb, day3, 4000)
 
+//      println(manager.getHistoryPrice(0, day3))
       manager.getHistoryPrice(0, day3) mustEqual
-        Map(Btc ~> Rmb -> Map(16174 -> 3000, 16176 -> 4000), Ltc ~> Rmb -> Map(16175 -> 200), Pts ~> Rmb -> Map(16176 -> 100))
+        Map(Pts ~> Rmb -> Map(23294322 -> 100.0), Btc ~> Rmb -> Map(23291442 -> 3000.0, 23294322 -> 4000.0), Ltc ~> Rmb -> Map(23292882 -> 200.0))
+      //        Map(Btc ~> Rmb -> Map(16174 -> 3000, 16176 -> 4000), Ltc ~> Rmb -> Map(16175 -> 200), Pts ~> Rmb -> Map(16176 -> 100))
       manager.getCurrentPrice mustEqual Map(Btc ~> Rmb -> 4000, Ltc ~> Rmb -> 200, Pts ~> Rmb -> 100)
     }
   }
