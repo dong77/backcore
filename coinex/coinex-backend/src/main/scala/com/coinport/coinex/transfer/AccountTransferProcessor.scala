@@ -91,7 +91,7 @@ trait TransferBehavior {
       var query = MongoDBObject()
       if (q.uid.isDefined) query ++= MongoDBObject(DATA + "." + AccountTransfer.UserIdField.name -> q.uid.get)
       if (q.currency.isDefined) query ++= MongoDBObject(DATA + "." + AccountTransfer.CurrencyField.name -> q.currency.get.name)
-      if (q.`type`.isDefined) query ++= MongoDBObject(DATA + "." + AccountTransfer.TypeField.name -> q.`type`.get)
+      if (q.`type`.isDefined) query ++= MongoDBObject(DATA + "." + AccountTransfer.TypeField.name -> q.`type`.get.toString)
       if (q.status.isDefined) query ++= MongoDBObject(DATA + "." + AccountTransfer.StatusField.name -> q.status.get.name)
       if (q.spanCur.isDefined) query ++= (DATA + "." + AccountTransfer.CreatedField.name $lte q.spanCur.get.from $gte q.spanCur.get.to)
       query
