@@ -23,8 +23,7 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
       manager.adjustAmount(side, order, false)
 
     case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
-      if (!orderInfo.order.refund.isDefined)
-        manager.adjustAmount(orderInfo.side, orderInfo.order, true)
+      manager.adjustAmount(orderInfo.side, orderInfo.order, true)
       txs foreach { manager.reduceAmount(orderInfo.side, _) }
 
     case QueryMarketDepth(side, maxDepth) if side == market =>
