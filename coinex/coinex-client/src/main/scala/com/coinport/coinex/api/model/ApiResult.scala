@@ -22,4 +22,4 @@ case class Transaction(id: String, timestamp: Long, price: Double, amount: Doubl
 
 case class ApiTransferItem(id: String, uid: String, amount: CurrencyObject, status: Int, created: Long, updated: Long, operation: Int)
 
-case class AssetItem(uid: String, assetMap: Map[String, Double], amount: Double, timestamp: Long)
+case class AssetItem(uid: String, assetMap: Map[String, Double], amountMap: Map[String, Double], timestamp: Long)

@@ -87,8 +87,7 @@ object MarketService extends AkkaService {
   def getAsset(userId: Long, from: Long, to: Long, baseCurrency: Currency) = {
     backend ? QueryAsset(userId, from, to) map {
       case result: QueryAssetResult =>
-
-        val timeSkip: Long = ChartTimeDimension.OneDay
+        val timeSkip: Long = ChartTimeDimension.OneMinute
         val start = Math.min(from / timeSkip, to / timeSkip)
         val stop = Math.max(from / timeSkip, to / timeSkip)
 
@@ -96,17 +95,18 @@ object MarketService extends AkkaService {
         val historyPrice = result.historyPrice
 
         val currentPrice = result.currentPrice.priceMap
-        val currencyPriceMap = historyPrice.priceMap.map {
+        val currencyPriceMap = scala.collection.mutable.Map.empty[Currency, Map[Long, Double]]
+        historyPrice.priceMap.foreach {
           case (side, map) =>
-            var curPrice = currentPrice.get(side).get
+            if (side._2 == baseCurrency) {
+              var curPrice = currentPrice.get(side).get
 
-            val priceMap = (start to stop).reverse.map { timeSpot =>
-              val tmpPrice = map.get(timeSpot).getOrElse(curPrice)
-              curPrice = tmpPrice
-              if (side._2 == baseCurrency) timeSpot -> tmpPrice else timeSpot -> tmpPrice.reverse
-            }.toMap
-
-            baseCurrency -> priceMap
+              val priceMap = (start to stop).reverse.map { timeSpot =>
+                curPrice = map.get(timeSpot).getOrElse(curPrice)
+                timeSpot -> curPrice.externalValue(side)
+              }.toMap
+              currencyPriceMap.put(side._1, priceMap)
+            }
         }
 
         val currentAsset = scala.collection.mutable.Map.empty[Currency, Long] ++ result.currentAsset.currentAsset
@@ -126,17 +126,19 @@ object MarketService extends AkkaService {
 
         val items = assetList.map {
           case (timeSpot, assetMap) =>
-            val amount = assetMap.map {
+            val amountMap = assetMap.map {
               case (cur, volume) =>
-                if (cur == baseCurrency) volume * 1
-                else currencyPriceMap.get(cur) match {
-                  case Some(curHisMap) => curHisMap.get(timeSpot).get * volume
-                  case None => 0
-                }
-            }.sum
+                val amount =
+                  if (cur == baseCurrency) volume * 1
+                  else currencyPriceMap.get(cur) match {
+                    case Some(curHisMap) => curHisMap.get(timeSpot).get * volume
+                    case None => 0.0
+                  }
+                cur.toString -> amount.externalValue(cur)
+            }.toMap
             AssetItem(uid = userId.toString,
               assetMap = assetMap.map(a => a._1.toString -> a._2.externalValue(a._1)).toMap,
-              amount = amount.externalValue(baseCurrency),
+              amountMap = amountMap,
               timestamp = timeSpot * timeSkip)
         }
         ApiResult(data = Some(items.reverse))

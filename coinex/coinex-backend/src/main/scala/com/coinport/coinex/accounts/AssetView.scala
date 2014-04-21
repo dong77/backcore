@@ -11,6 +11,7 @@ import com.coinport.coinex.data._
 import TransferType._
 import com.coinport.coinex.data.Implicits._
 import com.coinport.coinex.common.PersistentId._
+import akka.persistence.Persistent
 
 class AssetView extends ExtendedView {
   override val processorId = ACCOUNT_PROCESSOR <<
@@ -18,13 +19,14 @@ class AssetView extends ExtendedView {
   val manager = new AssetManager()
 
   def receive = LoggingReceive {
-    case AdminConfirmTransferSuccess(t) =>
+    case Persistent(acts: AdminConfirmTransferSuccess, _) =>
+      val t = acts.transfer
       t.`type` match {
-        case Deposit => manager.updateAsset(t.updated.get, t.userId, t.currency, t.amount)
-        case Withdrawal => manager.updateAsset(t.updated.get, t.userId, t.currency, -t.amount)
+        case Deposit => manager.updateAsset(t.userId, t.updated.get, t.currency, t.amount)
+        case Withdrawal => manager.updateAsset(t.userId, t.updated.get, t.currency, -t.amount)
       }
 
-    case OrderSubmitted(originOrderInfo, txs) =>
+    case e @ Persistent(OrderSubmitted(originOrderInfo, txs), _) =>
       if (!txs.isEmpty) {
         val side = originOrderInfo.side
 
