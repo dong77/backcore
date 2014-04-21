@@ -151,6 +151,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
 
     case DoSubmitOrder(side: MarketSide, order) =>
       manager.updateCashAccount(order.userId, CashAccount(side.outCurrency, -order.quantity, order.quantity, 0))
+      manager.setLastOrderId(order.id)
 
     case OrderSubmitted(originOrderInfo, txs) =>
       val side = originOrderInfo.side
