@@ -76,7 +76,7 @@ final class AccountTransferManager extends Manager[TAccountTransferState] {
     loadFiltersSnapshot(s.filters)
   }
 
-  def getTransferId = { lastTransferId += 1; lastTransferId }
+  def getTransferId = lastTransferId + 1
   def setLastTransferId(id: Long) = { lastTransferId = id }
 }
 
