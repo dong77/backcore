@@ -23,7 +23,8 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
       manager.adjustAmount(side, order, false)
 
     case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
-      manager.adjustAmount(orderInfo.side, orderInfo.order, true)
+      val order = txs.lastOption.map(_.takerUpdate.current).getOrElse(orderInfo.order)
+      manager.adjustAmount(orderInfo.side, order, true)
       txs foreach { manager.reduceAmount(orderInfo.side, _) }
 
     case QueryMarketDepth(side, maxDepth) if side == market =>
@@ -46,49 +47,36 @@ class MarketDepthManager(market: MarketSide) extends Manager[TMarketDepthState] 
   }
 
   // Business logics      ----------------------------------------------
-  def adjustAsk(price: Double, amount: Long) = {
-    val updatedAmount = askMap.getOrElse(price, 0L) + amount
-    if (updatedAmount > 0) askMap += (price -> updatedAmount)
-    else askMap -= price
-  }
-
-  def adjustBid(price: Double, amount: Long) = {
-    val updatedAmount = bidMap.getOrElse(price, 0L) + amount
-    if (updatedAmount > 0) bidMap += (price -> updatedAmount)
-    else bidMap -= price
-  }
-
   def get(maxDepth: Int): (Seq[MarketDepthItem], Seq[MarketDepthItem]) = {
     val asks = askMap.take(maxDepth).toSeq.map(i => MarketDepthItem(i._1, i._2))
     val bids = bidMap.take(maxDepth).toSeq.map(i => MarketDepthItem(1 / i._1, i._2))
     (asks, bids)
   }
 
-  def adjustAmount(side: MarketSide, order: Order, addOrRemove: Boolean /*true for increase, false for reduce*/ ) {
-    def adjust(amount: Long) = if (addOrRemove) amount else -amount
-    if (side == market && order.price.isDefined) {
-      adjustAsk(order.price.get, adjust(order.maxOutAmount(order.price.get)))
-    } else if (side == market.reverse && order.price.isDefined) {
-      adjustBid(order.price.get, adjust(order.maxInAmount(order.price.get)))
+  def adjustAmount(side: MarketSide, order: Order, addOrRemove: Boolean /*true for increase, false for reduce*/ ) =
+    if (order.price.isDefined) {
+      def adjust(amount: Long) = if (addOrRemove) amount else -amount
+      val price = order.price.get
+      if (side == market) adjustAsk(price, adjust(order.maxOutAmount(price)))
+      else adjustBid(price, adjust(order.maxInAmount(price)))
     }
-  }
 
   def reduceAmount(side: MarketSide, tx: Transaction) = {
-    val Transaction(_, _, _, taker, maker, _) = tx
-    val (ask, bid) = if (side == market) (taker, maker) else (maker, taker)
+    val maker = tx.makerUpdate
+    val price = maker.current.price.get
+    if (side == market) adjustAsk(price, maker.current.maxOutAmount(price) - maker.previous.maxOutAmount(price))
+    else adjustBid(price, maker.current.maxInAmount(price) - maker.previous.maxInAmount(price))
+  }
 
-    if (ask.previous.price.isDefined) {
-      val diff = ask.current.maxOutAmount(ask.current.price.get) - ask.previous.maxOutAmount(ask.previous.price.get)
-      adjustAsk(ask.previous.price.get, diff)
-      if (ask.current.refund.isDefined)
-        adjustAsk(ask.previous.price.get, -ask.current.maxOutAmount(ask.current.price.get))
-    }
+  private def adjustAsk(price: Double, amount: Long) = {
+    val updatedAmount = askMap.getOrElse(price, 0L) + amount
+    if (updatedAmount > 0) askMap += (price -> updatedAmount)
+    else askMap -= price
+  }
 
-    if (bid.previous.price.isDefined) {
-      val diff = bid.current.maxInAmount(bid.current.price.get) - bid.previous.maxInAmount(bid.previous.price.get)
-      adjustBid(bid.previous.price.get, diff)
-      if (bid.current.refund.isDefined)
-        adjustBid(bid.previous.price.get, -bid.current.maxInAmount(bid.current.price.get))
-    }
+  private def adjustBid(price: Double, amount: Long) = {
+    val updatedAmount = bidMap.getOrElse(price, 0L) + amount
+    if (updatedAmount > 0) bidMap += (price -> updatedAmount)
+    else bidMap -= price
   }
 }

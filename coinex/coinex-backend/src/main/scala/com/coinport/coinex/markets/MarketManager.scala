@@ -80,7 +80,7 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
         case None => None
       }
 
-    if (txsBuffer.size != 0 && refund.isDefined) {
+    if (txsBuffer.nonEmpty && refund.isDefined) {
       val lastTx = txsBuffer.last
       txsBuffer.trimEnd(1)
       // If there is a over-charge refund, the current order in takerUpdate will still
@@ -92,7 +92,7 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
     // If there is a over-charge refund, the order inside originOrderInfo will still
     // show the quantity before the refund.
     val orderInfo = OrderInfo(takerSide,
-      if (txs.size == 0) order.copy(refund = refund) else order,
+      if (txs.isEmpty) order.copy(refund = refund) else order,
       totalOutAmount, totalInAmount, status, txs.lastOption.map(_.timestamp))
 
     OrderSubmitted(orderInfo, txs)
