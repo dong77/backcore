@@ -62,21 +62,31 @@ class MarketDepthManager(market: MarketSide) extends Manager[TMarketDepthState] 
     }
 
   def reduceAmount(side: MarketSide, tx: Transaction) = {
-    val maker = tx.makerUpdate
-    val price = maker.current.price.get
-    if (side == market) adjustAsk(price, maker.current.maxOutAmount(price) - maker.previous.maxOutAmount(price))
-    else adjustBid(price, maker.current.maxInAmount(price) - maker.previous.maxInAmount(price))
+    val OrderUpdate(previous, current) = tx.makerUpdate
+    val price = current.price.get
+    if (side == market) adjustBid(price, current.maxInAmount(price) - previous.maxInAmount(price))
+    else adjustAsk(price, current.maxOutAmount(price) - previous.maxOutAmount(price))
   }
 
   private def adjustAsk(price: Double, amount: Long) = {
     val updatedAmount = askMap.getOrElse(price, 0L) + amount
+    assert(updatedAmount >= 0L)
+
     if (updatedAmount > 0) askMap += (price -> updatedAmount)
     else askMap -= price
+
+    println("====ask map after adjustAsk: " + askMap)
+    println("====bid map after adjustAsk: " + bidMap)
   }
 
   private def adjustBid(price: Double, amount: Long) = {
     val updatedAmount = bidMap.getOrElse(price, 0L) + amount
+    assert(updatedAmount >= 0L)
+
     if (updatedAmount > 0) bidMap += (price -> updatedAmount)
     else bidMap -= price
+
+    println("====ask map after adjustBid: " + askMap)
+    println("====bid map after adjustBid: " + bidMap)
   }
 }

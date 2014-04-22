@@ -15,7 +15,7 @@ class MarketDepthManagerSpec extends Specification {
   val side = Btc ~> Rmb
   "MarketDepthManager" should {
 
-    "NOT calculate change askMap for market price sell orders" in {
+    "NOT update askMap for market price sell orders" in {
       val manager = new MarketDepthManager(side)
       val order = Order(userId = 1L, id = 2L, quantity = 10, price = None)
       manager.adjustAmount(side, order, true)
@@ -49,11 +49,19 @@ class MarketDepthManagerSpec extends Specification {
       manager.adjustAmount(side, order, true)
       manager.askMap mustEqual SortedMap(100.0 -> 10)
     }
+
+    "calculate the right amount for new sell orders with refund" in {
+      val manager = new MarketDepthManager(side)
+      val reason = RefundReason.OverCharged // This doesn't matter
+      val order = Order(userId = 1L, id = 2L, quantity = 10, price = Some(100.0), refund = Some(Refund(reason, 4)))
+      manager.adjustAmount(side, order, true)
+      manager.askMap mustEqual SortedMap(100.0 -> 6)
+    }
   }
 
   "MarketDepthManager" should {
 
-    "NOT calculate change bidMap for market price buy orders" in {
+    "NOT update bidMap for market price buy orders" in {
       val manager = new MarketDepthManager(side)
       val order = Order(userId = 1L, id = 2L, quantity = 1000, price = None)
       manager.adjustAmount(side.reverse, order, true)
@@ -86,6 +94,14 @@ class MarketDepthManagerSpec extends Specification {
       val order = Order(userId = 1L, id = 2L, quantity = 1000, price = Some(1 / 100.0), takeLimit = Some(10))
       manager.adjustAmount(side.reverse, order, true)
       manager.bidMap mustEqual SortedMap(1 / 100.0 -> 10)
+    }
+
+    "calculate the right amount for new sell orders with refund" in {
+      val manager = new MarketDepthManager(side)
+      val reason = RefundReason.OverCharged // This doesn't matter
+      val order = Order(userId = 1L, id = 2L, quantity = 1000, price = Some(1 / 100.0), refund = Some(Refund(reason, 400)))
+      manager.adjustAmount(side.reverse, order, true)
+      manager.bidMap mustEqual SortedMap(1 / 100.0 -> 6)
     }
   }
 }
