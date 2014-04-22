@@ -9,7 +9,7 @@ import com.coinport.coinex.data.{ Cursor, QueryTransaction, TransactionItem }
 import com.coinport.coinex.common.EmbeddedMongoForTestWithBF
 import com.coinport.coinex.data.Implicits._
 
-class TransactionHandlerSpec extends EmbeddedMongoForTestWithBF {
+class TransactionMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
   val market = Btc ~> Rmb
 
   class TransactionClass extends TransactionMongoHandler {

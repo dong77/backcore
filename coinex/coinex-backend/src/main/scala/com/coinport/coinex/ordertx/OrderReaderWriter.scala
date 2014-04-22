@@ -35,9 +35,9 @@ class OrderWriter(db: MongoDB) extends ExtendedView with OrderMongoHandler with 
           if (tx.makerUpdate.current.isFullyExecuted) OrderStatus.FullyExecuted
           else OrderStatus.PartiallyExecuted
 
-        updateItem(tx.makerUpdate.current.id, inAmount, quantity, status.getValue(), orderInfo.side.reverse, tx.timestamp)
+        updateItem(tx.makerUpdate.current.id, inAmount, quantity, status.getValue(), orderInfo.side.reverse,
+          tx.timestamp, tx.makerUpdate.current.refund)
       }
-      addItem(orderInfo, takerQuantity)
+      addItem(orderInfo, if (txs.isEmpty) orderInfo.order.quantity else txs.last.takerUpdate.current.quantity)
   }
 }
-

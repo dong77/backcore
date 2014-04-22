@@ -16,6 +16,7 @@ trait OrderMongoHandler {
   val MARKET = "m"
   val SIDE = "s"
   val QUANTITY = "q"
+  val REFUND = "r"
 
   val converter = new ThriftBinarySerializer
 
@@ -23,9 +24,14 @@ trait OrderMongoHandler {
 
   def addItem(item: OrderInfo, quantity: Long) = coll.insert(toBson(item))
 
-  def updateItem(orderId: Long, inAmount: Long, quantity: Long, status: Int, side: MarketSide, timestamp: Long) =
-    coll.update(MongoDBObject(OID -> orderId), $set(IN_AMOUNT -> inAmount, QUANTITY -> quantity, STATUS -> status,
-      UPDATED_TIME -> timestamp, SIDE -> side.ordered), false, false)
+  def updateItem(orderId: Long, inAmount: Long, quantity: Long, status: Int, side: MarketSide, timestamp: Long, refund: Option[Refund]) = {
+    if (refund.isDefined)
+      coll.update(MongoDBObject(OID -> orderId), $set(IN_AMOUNT -> inAmount, QUANTITY -> quantity, STATUS -> status,
+        UPDATED_TIME -> timestamp, SIDE -> side.ordered, REFUND -> converter.toBinary(refund.get)), false, false)
+    else
+      coll.update(MongoDBObject(OID -> orderId), $set(IN_AMOUNT -> inAmount, QUANTITY -> quantity, STATUS -> status,
+        UPDATED_TIME -> timestamp, SIDE -> side.ordered), false, false)
+  }
 
   def cancelItem(orderId: Long) =
     coll.update(MongoDBObject(OID -> orderId), $set(STATUS -> OrderStatus.Cancelled.getValue()), false, false)
@@ -43,20 +49,31 @@ trait OrderMongoHandler {
       OID -> item.order.id, UID -> item.order.userId, ORIGIN_ORDER -> converter.toBinary(item.order),
       IN_AMOUNT -> item.inAmount, QUANTITY -> (item.order.quantity - item.outAmount), MARKET -> side.market.toString,
       SIDE -> side.ordered, CREATED_TIME -> item.order.timestamp.getOrElse(0), STATUS -> item.status.getValue())
+    if (item.order.refund.isDefined) obj.put(REFUND, converter.toBinary(item.order.refund.get))
 
     if (item.lastTxTimestamp.isDefined) obj ++ (UPDATED_TIME -> item.lastTxTimestamp.get)
     else obj
   }
 
   private def toClass(obj: MongoDBObject) = {
-    val originalOrder = converter.fromBinary(obj.getAsOrElse(ORIGIN_ORDER, null), Some(classOf[Order.Immutable])).asInstanceOf[Order]
+    val o = converter.fromBinary(obj.getAsOrElse(ORIGIN_ORDER, null), Some(classOf[Order.Immutable])).asInstanceOf[Order]
+    val refund = obj.getAs[Array[Byte]](REFUND) match {
+      case Some(bytes) => Some(converter.fromBinary(bytes, Some(classOf[Refund.Immutable])).asInstanceOf[Refund])
+      case None => None
+    }
+
     OrderInfo(
-      order = originalOrder, inAmount = obj.getAsOrElse[Long](IN_AMOUNT, 0),
-      outAmount = originalOrder.quantity - obj.getAsOrElse[Long](QUANTITY, 0),
+      order = mergeRefund(o, refund), inAmount = obj.getAsOrElse[Long](IN_AMOUNT, 0),
+      outAmount = o.quantity - obj.getAsOrElse[Long](QUANTITY, 0),
       side = obj.getAsOrElse[String](MARKET, "").getMarketSide(obj.getAsOrElse[Boolean](SIDE, true)),
       lastTxTimestamp = obj.getAs[Long](UPDATED_TIME),
       status = OrderStatus.get(obj.getAsOrElse[Int](STATUS, 0)).getOrElse(OrderStatus.Pending))
   }
+
+  private def mergeRefund(o: Order, refund: Option[Refund]) =
+    Order(userId = o.userId, id = o.id, quantity = o.quantity, price = o.price, takeLimit = o.takeLimit,
+      timestamp = o.timestamp, robotType = o.robotType, robotId = o.robotId, onlyTaker = o.onlyTaker,
+      inAmount = o.inAmount, refund = refund)
 
   private def mkQuery(q: QueryOrder) = {
     var query = MongoDBObject()

@@ -8,11 +8,14 @@ import com.coinport.coinex.data.Currency.{ Btc, Rmb }
 import com.coinport.coinex.common.EmbeddedMongoForTestWithBF
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Implicits._
+//import com.mongodb.casbah.MongoConnection
 
 class OrderMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
 
   class OrderClass extends OrderMongoHandler {
     val coll = database("OrderMongoHandlerSpec")
+    //    val database = MongoConnection("localhost", 27017)("test")
+    //    val coll = database("order")
   }
 
   val market = Btc ~> Rmb
@@ -21,6 +24,7 @@ class OrderMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
   "OrderDataStateSpec" should {
     val orderClass = new OrderClass()
     "can save update OrderInfo and can sort count data" in {
+      orderClass.coll.drop()
       orderClass.coll.size should be(0)
       var orderInfos = (0 to 3).map(i => OrderInfo(market, Order(i, i, i), 10, 10, OrderStatus.Pending, None))
       orderInfos.foreach(oi => orderClass.addItem(oi, 0))
@@ -31,7 +35,8 @@ class OrderMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
       orderInfos = (0 to 3).map(i => OrderInfo(market, Order(i, i, i), 10, 10, OrderStatus.Pending, None))
       orderInfos.foreach(oi => orderClass.addItem(oi, 20))
 
-      orderClass.updateItem(1, 10, 0, 1, market.reverse, 20)
+      val refund = Refund(reason = RefundReason.HitTakeLimit, amount = 10L)
+      orderClass.updateItem(1, 10, 0, 1, market.reverse, 20, Some(refund))
 
       var q = QueryOrder(oid = Some(1L), cursor = Cursor(0, 2), getCount = false)
 
@@ -43,6 +48,7 @@ class OrderMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
       order_info.outAmount should be(1)
       order_info.status.getValue() should be(1)
       order_info.lastTxTimestamp should be(Some(20))
+      order_info.order.refund should be(Some(refund))
 
       orderInfos = (0 to 10).map(i => OrderInfo(market, Order(i % 3, i, i), 10, 10, OrderStatus.Pending, None))
       orderInfos.foreach(oi => orderClass.addItem(oi, 0))
@@ -67,5 +73,4 @@ class OrderMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
       orderClass.getItems(q).map(_.order.id) should equal(Seq(3, 1))
     }
   }
-
 }

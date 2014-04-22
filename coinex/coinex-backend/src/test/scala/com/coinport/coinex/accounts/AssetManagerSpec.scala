@@ -39,7 +39,7 @@ class AssetManagerSpec extends Specification {
       manager.updatePrice(Pts ~> Rmb, day3, 100)
       manager.updatePrice(Btc ~> Rmb, day3, 4000)
 
-//      println(manager.getHistoryPrice(0, day3))
+      //      println(manager.getHistoryPrice(0, day3))
       manager.getHistoryPrice(0, day3) mustEqual
         Map(Pts ~> Rmb -> Map(23294322 -> 100.0), Btc ~> Rmb -> Map(23291442 -> 3000.0, 23294322 -> 4000.0), Ltc ~> Rmb -> Map(23292882 -> 200.0))
       //        Map(Btc ~> Rmb -> Map(16174 -> 3000, 16176 -> 4000), Ltc ~> Rmb -> Map(16175 -> 200), Pts ~> Rmb -> Map(16176 -> 100))
