@@ -59,13 +59,13 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
 
       val resultBuyBtc = receiveOne(4 seconds)
       println(resultBuyBtc)
-      Thread.sleep(100)
+      Thread.sleep(500)
 
       client ! QueryAccount(user1)
-      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(1000, Map(Rmb -> CashAccount(Rmb, 0, 6000000, 0)))))
+      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(1000, Map(Rmb -> CashAccount(Rmb, 900000, 600000, 0), Btc -> CashAccount(Btc, 8991, 0, 0)))))
 
       client ! QueryAccount(user2)
-      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 1000, 9000, 0)))))
+      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 1000, 0, 0), Rmb -> CashAccount(Rmb, 4495500, 0, 0)))))
     }
   }
 }
