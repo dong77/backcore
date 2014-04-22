@@ -156,20 +156,18 @@ trait AccountManagerBehavior extends CountFeeSupport {
     case OrderSubmitted(originOrderInfo, txs) =>
       val side = originOrderInfo.side
       txs foreach { tx =>
-        val (takerOrderUpdate, makerOrderUpdate, fees) = (tx.takerUpdate, tx.makerUpdate, tx.fees)
-        manager.transferFundFromLocked(takerOrderUpdate.userId, makerOrderUpdate.userId, side.outCurrency, takerOrderUpdate.outAmount)
-        manager.transferFundFromLocked(makerOrderUpdate.userId, takerOrderUpdate.userId, side.inCurrency, makerOrderUpdate.outAmount)
+        val (takerUpdate, makerUpdate, fees) = (tx.takerUpdate, tx.makerUpdate, tx.fees)
+        manager.transferFundFromLocked(takerUpdate.userId, makerUpdate.userId, side.outCurrency, takerUpdate.outAmount)
+        manager.transferFundFromLocked(makerUpdate.userId, takerUpdate.userId, side.inCurrency, makerUpdate.outAmount)
+        refund(side.inCurrency, makerUpdate.current)
 
         tx.fees.getOrElse(Nil) foreach { f =>
           manager.transferFundFromAvailable(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
         }
 
-        refund(side.outCurrency, takerOrderUpdate.current)
-        refund(side.inCurrency, makerOrderUpdate.current)
       }
-      val order = originOrderInfo.order
-      if (txs.isEmpty && order.refund.isDefined)
-        manager.refund(order.userId, side.outCurrency, order.quantity - originOrderInfo.outAmount)
+      val order = txs.lastOption.map(_.takerUpdate.current).getOrElse(originOrderInfo.order)
+      refund(side.outCurrency, order)
 
     case OrderCancelled(side, order) =>
       manager.conditionalRefund(true)(side.outCurrency, order)
