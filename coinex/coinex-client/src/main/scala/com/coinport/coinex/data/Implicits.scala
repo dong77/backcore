@@ -59,8 +59,6 @@ class RichOrder(raw: Order) {
     }
   }
 
-  def amountLocked = raw.quantity - raw.refund.map(_.amount).getOrElse(0L)
-
   def hitTakeLimit = raw.takeLimit != None && raw.takeLimit.get <= 0
 
   def soldOut = if (raw.price.isDefined) raw.quantity * vprice < 1 else raw.quantity == 0
@@ -80,7 +78,7 @@ class RichOrderUpdate(raw: OrderUpdate) {
   def userId = raw.previous.userId
   def id = raw.previous.id
   def price = raw.previous.price
-  def outAmount = new RichOrder(raw.previous).amountLocked - new RichOrder(raw.current).amountLocked
+  def outAmount = raw.previous.quantity - raw.current.quantity
 }
 
 class RichTransaction(raw: Transaction) {

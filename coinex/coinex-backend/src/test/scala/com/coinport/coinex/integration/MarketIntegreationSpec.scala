@@ -14,8 +14,8 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
     "submit orders and adjust account amounts correctly" in {
       val user1 = 1000L
       val user2 = 2000L
-      // deposit 60000 RMB
-      val depositRmb = AccountTransfer(1, user1, TransferType.Deposit, Rmb, 60000, TransferStatus.Pending)
+      // deposit 6000 RMB
+      val depositRmb = AccountTransfer(1, user1, TransferType.Deposit, Rmb, 6000 * 1000, TransferStatus.Pending)
       client ! DoRequestTransfer(depositRmb)
       val RequestTransferSucceeded(d1) = receiveOne(4 seconds)
 
@@ -24,7 +24,7 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
       ok1 should be(AdminCommandResult(ErrorCode.Ok))
 
       // deposit 10 BTC
-      val depositBtc = AccountTransfer(2, user2, TransferType.Deposit, Btc, 10, TransferStatus.Pending)
+      val depositBtc = AccountTransfer(2, user2, TransferType.Deposit, Btc, 10 * 1000, TransferStatus.Pending)
       client ! DoRequestTransfer(depositBtc)
       val RequestTransferSucceeded(d2) = receiveOne(4 seconds)
 
@@ -34,13 +34,13 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
       Thread.sleep(200)
 
       client ! QueryAccount(user1)
-      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(1000, Map(Rmb -> CashAccount(Rmb, 60000, 0, 0)))))
+      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(1000, Map(Rmb -> CashAccount(Rmb, 6000000, 0, 0)))))
 
       client ! QueryAccount(user2)
-      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 10, 0, 0)))))
+      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 10000, 0, 0)))))
 
       // submit a sell order
-      val sellBtc = Order(userId = user2, id = 0L, quantity = 10, price = Some(5000), takeLimit = Some(45000))
+      val sellBtc = Order(userId = user2, id = 0L, quantity = 10000, price = Some(500), takeLimit = Some(4500000))
       client ! DoSubmitOrder(market, sellBtc)
 
       val resultSellBtc = receiveOne(4 seconds)
@@ -48,13 +48,13 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
       Thread.sleep(500)
 
       client ! QueryAccount(user1)
-      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(1000, Map(Rmb -> CashAccount(Rmb, 60000, 0, 0)))))
+      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(1000, Map(Rmb -> CashAccount(Rmb, 6000000, 0, 0)))))
 
       client ! QueryAccount(user2)
-      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 1, 9, 0)))))
+      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 1000, 9000, 0)))))
 
       // submit a buy order
-      val buyBtc = Order(userId = user1, id = 0L, quantity = 60000, price = Some(1.0 / 6000), takeLimit = Some(10))
+      val buyBtc = Order(userId = user1, id = 0L, quantity = 6000000, price = Some(1.0 / 600), takeLimit = Some(10000))
       client ! DoSubmitOrder(reverse, buyBtc)
 
       val resultBuyBtc = receiveOne(4 seconds)
@@ -62,10 +62,10 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
       Thread.sleep(100)
 
       client ! QueryAccount(user1)
-      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(1000, Map(Rmb -> CashAccount(Rmb, 9000, 6000, 0), Btc -> CashAccount(Btc, 9, 0, 0)))))
+      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(1000, Map(Rmb -> CashAccount(Rmb, 0, 6000000, 0)))))
 
       client ! QueryAccount(user2)
-      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 1, 0, 0), Rmb -> CashAccount(Rmb, 44955, 0, 0)))))
+      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 1000, 9000, 0)))))
     }
   }
 }
