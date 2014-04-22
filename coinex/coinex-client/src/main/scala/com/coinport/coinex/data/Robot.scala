@@ -7,9 +7,26 @@ package com.coinport.coinex.data
 
 import com.twitter.util.Eval
 import org.slf4s.Logging
-
 import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.data._
+import java.nio.ByteBuffer
+import scala.util.Marshal
+
+object Robot {
+
+  def fromByteBuffer(bf: ByteBuffer): Map[String, Option[Any]] = {
+    Marshal.load[Map[String, Option[Any]]](bf.array())
+  }
+
+  def fromThrift(tRobot: TRobot): Robot = {
+    Robot(tRobot.robotId,
+      tRobot.userId,
+      tRobot.timestamp,
+      fromByteBuffer(tRobot.statesPayload),
+      tRobot.currentState,
+      tRobot.dnaId)
+  }
+}
 
 // TODO(c) use cache for state handler instead of inflating it from string every time
 // we need change 'robot' in user's code to r inorder to hide the immutable such as:
@@ -64,4 +81,18 @@ case class Robot(
   private def inflate(source: String): Action = {
     (new Eval()(source)).asInstanceOf[Action]
   }
+
+  def toThrift: TRobot = {
+    TRobot(robotId = robotId,
+      userId = userId,
+      timestamp = timestamp,
+      statesPayload = toByteBuffer(statesPayload),
+      currentState = currentState,
+      dnaId = dnaId)
+  }
+
+  def toByteBuffer(sp: Map[String, Option[Any]]): ByteBuffer = {
+    ByteBuffer.wrap(Marshal.dump(sp))
+  }
+
 }

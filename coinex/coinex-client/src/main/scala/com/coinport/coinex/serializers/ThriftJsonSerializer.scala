@@ -148,6 +148,8 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cTMarketDepthState = JsonScalaCodec(TMarketDepthState)
   lazy val _cTMarketState = JsonScalaCodec(TMarketState)
   lazy val _cTMetricsState = JsonScalaCodec(TMetricsState)
+  lazy val _cTRobot = JsonScalaCodec(TRobot)
+  lazy val _cTRobotState = JsonScalaCodec(TRobotState)
   lazy val _cTSimpleState = JsonScalaCodec(TSimpleState)
   lazy val _cTUserState = JsonScalaCodec(TUserState)
 
@@ -286,6 +288,8 @@ class ThriftJsonSerializer extends Serializer {
     case m: TMarketDepthState => _cTMarketDepthState(m)
     case m: TMarketState => _cTMarketState(m)
     case m: TMetricsState => _cTMetricsState(m)
+    case m: TRobot => _cTRobot(m)
+    case m: TRobotState => _cTRobotState(m)
     case m: TSimpleState => _cTSimpleState(m)
     case m: TUserState => _cTUserState(m)
 
@@ -428,6 +432,8 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[TMarketDepthState.Immutable] => _cTMarketDepthState.invert(bytes).get
     case Some(c) if c == classOf[TMarketState.Immutable] => _cTMarketState.invert(bytes).get
     case Some(c) if c == classOf[TMetricsState.Immutable] => _cTMetricsState.invert(bytes).get
+    case Some(c) if c == classOf[TRobot.Immutable] => _cTRobot.invert(bytes).get
+    case Some(c) if c == classOf[TRobotState.Immutable] => _cTRobotState.invert(bytes).get
     case Some(c) if c == classOf[TSimpleState.Immutable] => _cTSimpleState.invert(bytes).get
     case Some(c) if c == classOf[TUserState.Immutable] => _cTUserState.invert(bytes).get
 

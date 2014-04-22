@@ -53,7 +53,7 @@ object TrailingStopOrderRobot {
       "userId" -> Some(userId),
       "timestamp" -> Some(timestamp),
       "basePrice" -> Some(basePrice),
-      "order" -> Some(order))
+      "order" -> Some(order.toString))
 
     (payload, dna)
   }

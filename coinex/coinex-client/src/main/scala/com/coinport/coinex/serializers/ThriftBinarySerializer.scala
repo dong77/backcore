@@ -148,6 +148,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cTMarketDepthState = BinaryScalaCodec(TMarketDepthState)
   lazy val _cTMarketState = BinaryScalaCodec(TMarketState)
   lazy val _cTMetricsState = BinaryScalaCodec(TMetricsState)
+  lazy val _cTRobot = BinaryScalaCodec(TRobot)
+  lazy val _cTRobotState = BinaryScalaCodec(TRobotState)
   lazy val _cTSimpleState = BinaryScalaCodec(TSimpleState)
   lazy val _cTUserState = BinaryScalaCodec(TUserState)
 
@@ -286,6 +288,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: TMarketDepthState => _cTMarketDepthState(m)
     case m: TMarketState => _cTMarketState(m)
     case m: TMetricsState => _cTMetricsState(m)
+    case m: TRobot => _cTRobot(m)
+    case m: TRobotState => _cTRobotState(m)
     case m: TSimpleState => _cTSimpleState(m)
     case m: TUserState => _cTUserState(m)
 
@@ -428,6 +432,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[TMarketDepthState.Immutable] => _cTMarketDepthState.invert(bytes).get
     case Some(c) if c == classOf[TMarketState.Immutable] => _cTMarketState.invert(bytes).get
     case Some(c) if c == classOf[TMetricsState.Immutable] => _cTMetricsState.invert(bytes).get
+    case Some(c) if c == classOf[TRobot.Immutable] => _cTRobot.invert(bytes).get
+    case Some(c) if c == classOf[TRobotState.Immutable] => _cTRobotState.invert(bytes).get
     case Some(c) if c == classOf[TSimpleState.Immutable] => _cTSimpleState.invert(bytes).get
     case Some(c) if c == classOf[TUserState.Immutable] => _cTUserState.invert(bytes).get
 

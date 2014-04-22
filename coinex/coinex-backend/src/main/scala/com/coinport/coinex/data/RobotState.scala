@@ -5,14 +5,15 @@
 
 package com.coinport.coinex.data
 
-import scala.collection.immutable.SortedSet
-import com.twitter.util.Eval
-import com.coinport.coinex.common.Constants._
-import org.slf4s.Logging
-import com.coinport.coinex.robot.RobotDNA
-import com.coinport.coinex.robot.RobotDNA
 import scala.collection.immutable.SortedMap
+import scala.collection.immutable.SortedSet
+
+import org.slf4s.Logging
+
+import com.coinport.coinex.common.Constants.Action
+import com.coinport.coinex.robot.RobotDNA
 import com.coinport.coinex.util.MHash
+import com.twitter.util.Eval
 
 object RobotState {
   implicit val ordering = new Ordering[Robot] {
@@ -45,11 +46,11 @@ case class RobotState(
     val dnaId = genDNAId(states)
 
     if (robotDNAMap.contains(dnaId)) {
-      log.debug("[EXIST ROBOT BRAIN] id: %d".format(dnaId))
+      log.debug("[EXIST ROBOT DNA] id: %d".format(dnaId))
       (dnaId, this)
     } else {
-      log.debug("[ADD ROBOT BRAIN] id: %d, state: %s".format(robotDNAMap.size, stateAction.keySet.mkString(",")))
-      (dnaId, copy(robotDNAMap = robotDNAMap + (dnaId -> RobotDNA(dnaId, stateAction))))
+      log.debug("[ADD ROBOT DNA] id: %d, state: %s".format(robotDNAMap.size, stateAction.keySet.mkString(",")))
+      (dnaId, copy(robotDNAMap = robotDNAMap + (dnaId -> RobotDNA(dnaId, stateAction, states))))
     }
   }
 
@@ -104,4 +105,29 @@ case class RobotState(
     MHash.murmur3((SortedMap[String, String]() ++ states).toString)
   }
 
+  def toThrift: TRobotState = {
+    TRobotState.apply(
+      robotPool.map(rbt => rbt.toThrift),
+      robotMap.map(kv => (kv._1 -> kv._2.toThrift)),
+      metrics,
+      robotDNAMap.map(kv => (kv._1 -> kv._2.dnaStringMap)))
+  }
+
+  def fromThrift(tRobotState: TRobotState): RobotState = {
+    val rdsM = tRobotState.robotDNAMap.map(kv =>
+      (kv._1 ->
+        RobotDNA(
+          kv._1,
+          kv._2.map(state => (state._1 -> inflate(state._2))).toMap,
+          kv._2.map(kv => (kv._1, kv._2)).toMap
+        )
+      )
+    )
+
+    RobotState(
+      RobotState.EmptyRobotPool ++ tRobotState.robotPool.map(rbt => Robot.fromThrift(rbt)),
+      tRobotState.robotMap.map(kv => (kv._1 -> Robot.fromThrift(kv._2))).map(kv => (kv._1, kv._2)).toMap,
+      tRobotState.metrics,
+      rdsM.map(kv => (kv._1, kv._2)).toMap)
+  }
 }

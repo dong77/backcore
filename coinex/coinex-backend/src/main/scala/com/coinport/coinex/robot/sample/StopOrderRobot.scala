@@ -39,8 +39,8 @@ object StopOrderRobot {
     val payload = Map("robotId" -> Some(robotId),
       "userId" -> Some(userId),
       "timestamp" -> Some(timestamp),
-      "side" -> Some(side),
-      "order" -> Some(order))
+      "side" -> Some(side.toString),
+      "order" -> Some(order.toString))
 
     (payload, dna)
   }

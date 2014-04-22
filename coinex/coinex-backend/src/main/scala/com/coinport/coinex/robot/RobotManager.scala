@@ -11,14 +11,18 @@ import com.coinport.coinex.common.Manager
 import Implicits._
 import scala.collection.immutable.SortedSet
 
-class RobotManager extends Manager[RobotState] {
+class RobotManager extends Manager[TRobotState] {
 
   var state = RobotState()
 
-  override def getSnapshot = state
+  override def getSnapshot = {
+    println(state.toThrift)
+    state.toThrift
+  }
 
-  override def loadSnapshot(s: RobotState) {
-    state = s
+  override def loadSnapshot(s: TRobotState) {
+    println(s)
+    state = state.fromThrift(s)
   }
 
   def apply() = state

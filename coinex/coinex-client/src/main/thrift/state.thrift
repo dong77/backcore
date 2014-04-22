@@ -25,7 +25,7 @@ typedef data.TMetricsObserver      TMetricsObserver
 typedef data.CashAccount           CashAccount
 typedef data.Currency              Currency
 typedef data.RCDItem               RCDItem
-
+typedef data.Metrics               Metrics
 
 struct TUserState {
     1: map<i64, i64> idMap
@@ -94,4 +94,20 @@ struct TSimpleState {
 struct TMetricsState {
     1: map<MarketSide, TMetricsObserver> observers
     2: RedeliverFilters filters
+}
+
+struct TRobot {
+    1: i64 robotId
+    2: i64 userId
+    3: i64 timestamp
+    4: binary statesPayload
+    5: string currentState
+    6: i64 dnaId
+}
+
+struct TRobotState {
+    1: set<TRobot> robotPool
+    2: map<i64, TRobot> robotMap
+    3: Metrics metrics
+    4: map<i64, map<string, string>> robotDNAMap
 }
