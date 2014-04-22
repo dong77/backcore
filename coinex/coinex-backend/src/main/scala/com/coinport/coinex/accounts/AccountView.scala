@@ -24,5 +24,7 @@ class AccountView(val feeConfig: FeeConfig) extends ExtendedView with AccountMan
     case Persistent(msg, _) => updateState(msg)
     case QueryAccount(-1L) => sender ! QueryAccountResult(manager.aggregation)
     case QueryAccount(userId) => sender ! QueryAccountResult(manager.getUserAccounts(userId))
+    case QueryRCDepositRecord(userId) => sender ! QueryRCDepositRecordResult(manager.getRCDepositRecords(userId))
+    case QueryRCWithdrawalRecord(userId) => sender ! QueryRCWithdrawalRecordResult(manager.getRCWithdrawalRecords(userId))
   }
 }

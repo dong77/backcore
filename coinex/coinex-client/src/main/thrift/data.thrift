@@ -23,6 +23,9 @@ enum ErrorCode {
     PRICE_OUT_OF_RANGE               = 2001
     INSUFFICIENT_FUND                = 2002
     INVALID_AMOUNT                   = 2003
+    LOCKED_A_CODE                    = 2004
+    USED_B_CODE                      = 2005
+    INVALID_B_CODE                   = 2006
 
     // Market related
     ORDER_NOT_EXIST                  = 3001
@@ -99,6 +102,13 @@ enum Direction {
 enum TransferType {
     DEPOSIT    = 0
     WITHDRAWAL = 1
+}
+
+enum RechargeCodeStatus {
+    UNUSED = 0
+    FROZEN = 1
+    CONFIRMING = 2
+    RECHARGE_DONE = 3
 }
 
 enum TransferStatus {
@@ -276,6 +286,20 @@ struct AccountTransfer {
     8:  optional i64 updated
     9:  optional ErrorCode reason
     10: optional Fee fee
+}
+
+struct RCDItem {
+    1: i64 id
+    2: optional i64 dUserId
+    3: i64 wUserId
+    4: string codeA
+    5: string codeB
+    6: RechargeCodeStatus status
+    7: i64 amount
+    8: optional i64 qExpTime
+    9: optional i64 rExpTime
+    10: optional i64 created
+    11: optional i64 updated
 }
 
 struct Cursor {

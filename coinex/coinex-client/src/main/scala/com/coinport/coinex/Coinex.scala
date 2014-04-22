@@ -31,6 +31,10 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       //-------------------------------------------------------------------------
       // Account Processor
       case m: DoRequestTransfer => routers.accountProcessor forward m
+      case m: DoRequestRCWithdrawal => routers.accountProcessor forward m
+      case m: DoRequestACodeQuery => routers.accountProcessor forward m
+      case m: DoRequestBCodeRecharge => routers.accountProcessor forward m
+      case m: DoRequestConfirmRC => routers.accountProcessor forward m
       case m: DoSubmitOrder => routers.accountProcessor forward m
 
       // Market Processors
@@ -49,6 +53,8 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       //-------------------------------------------------------------------------
       // AccountView
       case m: QueryAccount => routers.accountView forward m
+      case m: QueryRCDepositRecord => routers.accountView forward m
+      case m: QueryRCWithdrawalRecord => routers.accountView forward m
 
       // MarketDepthViews
       case m: QueryMarketDepth => routers.marketDepthViews(m.side) forward m

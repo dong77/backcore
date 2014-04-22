@@ -96,4 +96,64 @@ object Client {
       Client.backend ! DoCancelRobot(uid)
     }
   }
+
+  def registerUser(uid: Long, mail: String, pwd: String) {
+    Client.backend ! DoRegisterUser(
+      UserProfile(
+        id = uid,
+        email = mail,
+        emailVerified = false,
+        mobileVerified = false,
+        status = UserStatus.Normal),
+      pwd)
+  }
+
+  def deposit(uid: Long, currency: Currency, amount: Double) =
+    AccountService.deposit(1001, Currency.Rmb, 10000.0)
+
+  def createABCode(wUserId: Long, amount: Long, dUserId: Long) {
+    Client.backend ? DoRequestRCWithdrawal(wUserId, amount, None, None) map {
+      case RequestRCWithdrawalFailed(ErrorCode.InsufficientFund) => println("create ab code failed")
+      case RequestRCWithdrawalSucceeded(a, b) => {
+        println("a code: " + a + " b code: " + b)
+        Client.backend ? DoRequestACodeQuery(dUserId, a) map {
+          case RequestACodeQuerySucceeded(x, y, z) => println(x, y, z)
+        }
+      }
+      case el => println(el)
+    }
+  }
+
+  def verifyAcode(userId: Long, codeA: String) {
+    Client.backend ? DoRequestACodeQuery(userId, codeA) map {
+      case RequestACodeQuerySucceeded(x, y, z) => println(x, y, z)
+      case RequestACodeQueryFailed(ErrorCode.LockedACode) => println("locked")
+    }
+  }
+
+  def recharge(userId: Long, codeB: String) {
+    Client.backend ? DoRequestBCodeRecharge(userId, codeB) map {
+      case m: RequestBCodeRechargeFailed => println(m)
+      case RequestBCodeRechargeSucceeded(x, y, z) => println(x, y, z)
+    }
+  }
+
+  def comfirm(userId: Long, codeB: String, amount: Long) {
+    Client.backend ? DoRequestConfirmRC(userId, codeB, amount) map {
+      case RequestConfirmRCSucceeded(x, y, z) => println(x, y, z)
+      case m => println(m)
+    }
+  }
+
+  def queryRCDepositRecord(userId: Long) {
+    Client.backend ? QueryRCDepositRecord(userId) map {
+      case m => println(m)
+    }
+  }
+
+  def queryRCWithdrawalRecord(userId: Long) {
+    Client.backend ? QueryRCWithdrawalRecord(userId) map {
+      case m => println(m)
+    }
+  }
 }

@@ -24,6 +24,7 @@ typedef data.CandleDataItem        CandleDataItem
 typedef data.TMetricsObserver      TMetricsObserver
 typedef data.CashAccount           CashAccount
 typedef data.Currency              Currency
+typedef data.RCDItem               RCDItem
 
 
 struct TUserState {
@@ -39,6 +40,9 @@ struct TAccountState {
     2: RedeliverFilters filters
     3: UserAccount aggregation
     4: i64 lastOrderId
+    5: map<i64, RCDItem> abCodeMap
+    6: map<string, i64> codeAIndexMap
+    7: map<string, i64> codeBIndexMap
 }
 
 struct TMarketState {

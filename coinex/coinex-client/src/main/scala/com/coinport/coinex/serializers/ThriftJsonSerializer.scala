@@ -37,8 +37,12 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cOrderInfo = JsonScalaCodec(OrderInfo)
   lazy val _cOrderUpdate = JsonScalaCodec(OrderUpdate)
   lazy val _cQueryMarketSide = JsonScalaCodec(QueryMarketSide)
+<<<<<<< HEAD
   lazy val _cQueryWalletRequest = JsonScalaCodec(QueryWalletRequest)
   lazy val _cQueryWalletResponse = JsonScalaCodec(QueryWalletResponse)
+=======
+  lazy val _cRCDItem = JsonScalaCodec(RCDItem)
+>>>>>>> add A/B code recharge module
   lazy val _cRedeliverFilterData = JsonScalaCodec(RedeliverFilterData)
   lazy val _cRedeliverFilters = JsonScalaCodec(RedeliverFilters)
   lazy val _cRefund = JsonScalaCodec(Refund)
@@ -69,7 +73,11 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cDoDeleteApiSecret = JsonScalaCodec(DoDeleteApiSecret)
   lazy val _cDoRegisterUser = JsonScalaCodec(DoRegisterUser)
   lazy val _cDoRemoveRobotDNA = JsonScalaCodec(DoRemoveRobotDNA)
+  lazy val _cDoRequestACodeQuery = JsonScalaCodec(DoRequestACodeQuery)
+  lazy val _cDoRequestBCodeRecharge = JsonScalaCodec(DoRequestBCodeRecharge)
+  lazy val _cDoRequestConfirmRC = JsonScalaCodec(DoRequestConfirmRC)
   lazy val _cDoRequestPasswordReset = JsonScalaCodec(DoRequestPasswordReset)
+  lazy val _cDoRequestRCWithdrawal = JsonScalaCodec(DoRequestRCWithdrawal)
   lazy val _cDoRequestTransfer = JsonScalaCodec(DoRequestTransfer)
   lazy val _cDoResetPassword = JsonScalaCodec(DoResetPassword)
   lazy val _cDoSendEmail = JsonScalaCodec(DoSendEmail)
@@ -99,6 +107,10 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cQueryMarketDepthResult = JsonScalaCodec(QueryMarketDepthResult)
   lazy val _cQueryOrder = JsonScalaCodec(QueryOrder)
   lazy val _cQueryOrderResult = JsonScalaCodec(QueryOrderResult)
+  lazy val _cQueryRCDepositRecord = JsonScalaCodec(QueryRCDepositRecord)
+  lazy val _cQueryRCDepositRecordResult = JsonScalaCodec(QueryRCDepositRecordResult)
+  lazy val _cQueryRCWithdrawalRecord = JsonScalaCodec(QueryRCWithdrawalRecord)
+  lazy val _cQueryRCWithdrawalRecordResult = JsonScalaCodec(QueryRCWithdrawalRecordResult)
   lazy val _cQueryTransaction = JsonScalaCodec(QueryTransaction)
   lazy val _cQueryTransactionResult = JsonScalaCodec(QueryTransactionResult)
   lazy val _cQueryTransfer = JsonScalaCodec(QueryTransfer)
@@ -107,8 +119,16 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cRegisterUserSucceeded = JsonScalaCodec(RegisterUserSucceeded)
   lazy val _cRemoveRobotDNAFailed = JsonScalaCodec(RemoveRobotDNAFailed)
   lazy val _cRemoveRobotDNASucceeded = JsonScalaCodec(RemoveRobotDNASucceeded)
+  lazy val _cRequestACodeQueryFailed = JsonScalaCodec(RequestACodeQueryFailed)
+  lazy val _cRequestACodeQuerySucceeded = JsonScalaCodec(RequestACodeQuerySucceeded)
+  lazy val _cRequestBCodeRechargeFailed = JsonScalaCodec(RequestBCodeRechargeFailed)
+  lazy val _cRequestBCodeRechargeSucceeded = JsonScalaCodec(RequestBCodeRechargeSucceeded)
+  lazy val _cRequestConfirmRCFailed = JsonScalaCodec(RequestConfirmRCFailed)
+  lazy val _cRequestConfirmRCSucceeded = JsonScalaCodec(RequestConfirmRCSucceeded)
   lazy val _cRequestPasswordResetFailed = JsonScalaCodec(RequestPasswordResetFailed)
   lazy val _cRequestPasswordResetSucceeded = JsonScalaCodec(RequestPasswordResetSucceeded)
+  lazy val _cRequestRCWithdrawalFailed = JsonScalaCodec(RequestRCWithdrawalFailed)
+  lazy val _cRequestRCWithdrawalSucceeded = JsonScalaCodec(RequestRCWithdrawalSucceeded)
   lazy val _cRequestTransferFailed = JsonScalaCodec(RequestTransferFailed)
   lazy val _cRequestTransferSucceeded = JsonScalaCodec(RequestTransferSucceeded)
   lazy val _cResetPasswordFailed = JsonScalaCodec(ResetPasswordFailed)
@@ -158,8 +178,12 @@ class ThriftJsonSerializer extends Serializer {
     case m: OrderInfo => _cOrderInfo(m)
     case m: OrderUpdate => _cOrderUpdate(m)
     case m: QueryMarketSide => _cQueryMarketSide(m)
+<<<<<<< HEAD
     case m: QueryWalletRequest => _cQueryWalletRequest(m)
     case m: QueryWalletResponse => _cQueryWalletResponse(m)
+=======
+    case m: RCDItem => _cRCDItem(m)
+>>>>>>> add A/B code recharge module
     case m: RedeliverFilterData => _cRedeliverFilterData(m)
     case m: RedeliverFilters => _cRedeliverFilters(m)
     case m: Refund => _cRefund(m)
@@ -190,7 +214,11 @@ class ThriftJsonSerializer extends Serializer {
     case m: DoDeleteApiSecret => _cDoDeleteApiSecret(m)
     case m: DoRegisterUser => _cDoRegisterUser(m)
     case m: DoRemoveRobotDNA => _cDoRemoveRobotDNA(m)
+    case m: DoRequestACodeQuery => _cDoRequestACodeQuery(m)
+    case m: DoRequestBCodeRecharge => _cDoRequestBCodeRecharge(m)
+    case m: DoRequestConfirmRC => _cDoRequestConfirmRC(m)
     case m: DoRequestPasswordReset => _cDoRequestPasswordReset(m)
+    case m: DoRequestRCWithdrawal => _cDoRequestRCWithdrawal(m)
     case m: DoRequestTransfer => _cDoRequestTransfer(m)
     case m: DoResetPassword => _cDoResetPassword(m)
     case m: DoSendEmail => _cDoSendEmail(m)
@@ -220,6 +248,10 @@ class ThriftJsonSerializer extends Serializer {
     case m: QueryMarketDepthResult => _cQueryMarketDepthResult(m)
     case m: QueryOrder => _cQueryOrder(m)
     case m: QueryOrderResult => _cQueryOrderResult(m)
+    case m: QueryRCDepositRecord => _cQueryRCDepositRecord(m)
+    case m: QueryRCDepositRecordResult => _cQueryRCDepositRecordResult(m)
+    case m: QueryRCWithdrawalRecord => _cQueryRCWithdrawalRecord(m)
+    case m: QueryRCWithdrawalRecordResult => _cQueryRCWithdrawalRecordResult(m)
     case m: QueryTransaction => _cQueryTransaction(m)
     case m: QueryTransactionResult => _cQueryTransactionResult(m)
     case m: QueryTransfer => _cQueryTransfer(m)
@@ -228,8 +260,16 @@ class ThriftJsonSerializer extends Serializer {
     case m: RegisterUserSucceeded => _cRegisterUserSucceeded(m)
     case m: RemoveRobotDNAFailed => _cRemoveRobotDNAFailed(m)
     case m: RemoveRobotDNASucceeded => _cRemoveRobotDNASucceeded(m)
+    case m: RequestACodeQueryFailed => _cRequestACodeQueryFailed(m)
+    case m: RequestACodeQuerySucceeded => _cRequestACodeQuerySucceeded(m)
+    case m: RequestBCodeRechargeFailed => _cRequestBCodeRechargeFailed(m)
+    case m: RequestBCodeRechargeSucceeded => _cRequestBCodeRechargeSucceeded(m)
+    case m: RequestConfirmRCFailed => _cRequestConfirmRCFailed(m)
+    case m: RequestConfirmRCSucceeded => _cRequestConfirmRCSucceeded(m)
     case m: RequestPasswordResetFailed => _cRequestPasswordResetFailed(m)
     case m: RequestPasswordResetSucceeded => _cRequestPasswordResetSucceeded(m)
+    case m: RequestRCWithdrawalFailed => _cRequestRCWithdrawalFailed(m)
+    case m: RequestRCWithdrawalSucceeded => _cRequestRCWithdrawalSucceeded(m)
     case m: RequestTransferFailed => _cRequestTransferFailed(m)
     case m: RequestTransferSucceeded => _cRequestTransferSucceeded(m)
     case m: ResetPasswordFailed => _cResetPasswordFailed(m)
@@ -283,8 +323,12 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[OrderInfo.Immutable] => _cOrderInfo.invert(bytes).get
     case Some(c) if c == classOf[OrderUpdate.Immutable] => _cOrderUpdate.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketSide.Immutable] => _cQueryMarketSide.invert(bytes).get
+<<<<<<< HEAD
     case Some(c) if c == classOf[QueryWalletRequest.Immutable] => _cQueryWalletRequest.invert(bytes).get
     case Some(c) if c == classOf[QueryWalletResponse.Immutable] => _cQueryWalletResponse.invert(bytes).get
+=======
+    case Some(c) if c == classOf[RCDItem.Immutable] => _cRCDItem.invert(bytes).get
+>>>>>>> add A/B code recharge module
     case Some(c) if c == classOf[RedeliverFilterData.Immutable] => _cRedeliverFilterData.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilters.Immutable] => _cRedeliverFilters.invert(bytes).get
     case Some(c) if c == classOf[Refund.Immutable] => _cRefund.invert(bytes).get
@@ -315,7 +359,11 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[DoDeleteApiSecret.Immutable] => _cDoDeleteApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoRegisterUser.Immutable] => _cDoRegisterUser.invert(bytes).get
     case Some(c) if c == classOf[DoRemoveRobotDNA.Immutable] => _cDoRemoveRobotDNA.invert(bytes).get
+    case Some(c) if c == classOf[DoRequestACodeQuery.Immutable] => _cDoRequestACodeQuery.invert(bytes).get
+    case Some(c) if c == classOf[DoRequestBCodeRecharge.Immutable] => _cDoRequestBCodeRecharge.invert(bytes).get
+    case Some(c) if c == classOf[DoRequestConfirmRC.Immutable] => _cDoRequestConfirmRC.invert(bytes).get
     case Some(c) if c == classOf[DoRequestPasswordReset.Immutable] => _cDoRequestPasswordReset.invert(bytes).get
+    case Some(c) if c == classOf[DoRequestRCWithdrawal.Immutable] => _cDoRequestRCWithdrawal.invert(bytes).get
     case Some(c) if c == classOf[DoRequestTransfer.Immutable] => _cDoRequestTransfer.invert(bytes).get
     case Some(c) if c == classOf[DoResetPassword.Immutable] => _cDoResetPassword.invert(bytes).get
     case Some(c) if c == classOf[DoSendEmail.Immutable] => _cDoSendEmail.invert(bytes).get
@@ -345,6 +393,10 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[QueryMarketDepthResult.Immutable] => _cQueryMarketDepthResult.invert(bytes).get
     case Some(c) if c == classOf[QueryOrder.Immutable] => _cQueryOrder.invert(bytes).get
     case Some(c) if c == classOf[QueryOrderResult.Immutable] => _cQueryOrderResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryRCDepositRecord.Immutable] => _cQueryRCDepositRecord.invert(bytes).get
+    case Some(c) if c == classOf[QueryRCDepositRecordResult.Immutable] => _cQueryRCDepositRecordResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryRCWithdrawalRecord.Immutable] => _cQueryRCWithdrawalRecord.invert(bytes).get
+    case Some(c) if c == classOf[QueryRCWithdrawalRecordResult.Immutable] => _cQueryRCWithdrawalRecordResult.invert(bytes).get
     case Some(c) if c == classOf[QueryTransaction.Immutable] => _cQueryTransaction.invert(bytes).get
     case Some(c) if c == classOf[QueryTransactionResult.Immutable] => _cQueryTransactionResult.invert(bytes).get
     case Some(c) if c == classOf[QueryTransfer.Immutable] => _cQueryTransfer.invert(bytes).get
@@ -353,8 +405,16 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[RegisterUserSucceeded.Immutable] => _cRegisterUserSucceeded.invert(bytes).get
     case Some(c) if c == classOf[RemoveRobotDNAFailed.Immutable] => _cRemoveRobotDNAFailed.invert(bytes).get
     case Some(c) if c == classOf[RemoveRobotDNASucceeded.Immutable] => _cRemoveRobotDNASucceeded.invert(bytes).get
+    case Some(c) if c == classOf[RequestACodeQueryFailed.Immutable] => _cRequestACodeQueryFailed.invert(bytes).get
+    case Some(c) if c == classOf[RequestACodeQuerySucceeded.Immutable] => _cRequestACodeQuerySucceeded.invert(bytes).get
+    case Some(c) if c == classOf[RequestBCodeRechargeFailed.Immutable] => _cRequestBCodeRechargeFailed.invert(bytes).get
+    case Some(c) if c == classOf[RequestBCodeRechargeSucceeded.Immutable] => _cRequestBCodeRechargeSucceeded.invert(bytes).get
+    case Some(c) if c == classOf[RequestConfirmRCFailed.Immutable] => _cRequestConfirmRCFailed.invert(bytes).get
+    case Some(c) if c == classOf[RequestConfirmRCSucceeded.Immutable] => _cRequestConfirmRCSucceeded.invert(bytes).get
     case Some(c) if c == classOf[RequestPasswordResetFailed.Immutable] => _cRequestPasswordResetFailed.invert(bytes).get
     case Some(c) if c == classOf[RequestPasswordResetSucceeded.Immutable] => _cRequestPasswordResetSucceeded.invert(bytes).get
+    case Some(c) if c == classOf[RequestRCWithdrawalFailed.Immutable] => _cRequestRCWithdrawalFailed.invert(bytes).get
+    case Some(c) if c == classOf[RequestRCWithdrawalSucceeded.Immutable] => _cRequestRCWithdrawalSucceeded.invert(bytes).get
     case Some(c) if c == classOf[RequestTransferFailed.Immutable] => _cRequestTransferFailed.invert(bytes).get
     case Some(c) if c == classOf[RequestTransferSucceeded.Immutable] => _cRequestTransferSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ResetPasswordFailed.Immutable] => _cResetPasswordFailed.invert(bytes).get

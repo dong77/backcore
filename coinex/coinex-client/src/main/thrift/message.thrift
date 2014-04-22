@@ -45,6 +45,8 @@ typedef data.QueryWalletRequest     _QueryWalletRequest
 typedef data.GenerateWalletResponse _GenerateWalletResponse
 typedef data.TransferResponse       _TransferResponse
 typedef data.QueryWalletResponse    _QueryWalletResponse
+typedef data.RechargeCodeStatus     _RechargeCodeStatus
+typedef data.RCDItem                _RCDItem
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -105,6 +107,22 @@ typedef data.QueryWalletResponse    _QueryWalletResponse
 /* C,P  */ struct AdminConfirmTransferFailure         {1: _AccountTransfer transfer, 2:_ErrorCode error}
 /* C,P  */ struct AdminConfirmTransferSuccess         {1: _AccountTransfer transfer}
 
+/* C,P  */ struct DoRequestRCWithdrawal               {1: i64 userId, 2: i64 amount, 3: optional string a, 4: optional string b}
+/* R-   */ struct RequestRCWithdrawalFailed           {1: _ErrorCode error}
+/* R+   */ struct RequestRCWithdrawalSucceeded        {1: string codeA, 2: string codeB}
+
+/* C,P  */ struct DoRequestACodeQuery                 {1: i64 userId, 2: string codeA}
+/* R-   */ struct RequestACodeQueryFailed             {1: _ErrorCode error}
+/* R+   */ struct RequestACodeQuerySucceeded          {1: string codeA, 2: _RechargeCodeStatus status, 3: i64 amount}
+
+/* C,P  */ struct DoRequestBCodeRecharge              {1: i64 userId, 2: string codeB}
+/* R-   */ struct RequestBCodeRechargeFailed          {1: _ErrorCode error}
+/* R+   */ struct RequestBCodeRechargeSucceeded       {1: string codeB, 2: _RechargeCodeStatus status, 3: i64 amount}
+
+/* C,P  */ struct DoRequestConfirmRC                  {1: i64 userId, 2: string codeB, 3: i64 amount}
+/* R-   */ struct RequestConfirmRCFailed              {1: _ErrorCode error}
+/* R+   */ struct RequestConfirmRCSucceeded           {1: string codeB, 2: _RechargeCodeStatus status, 3: i64 amount}
+
 /* R-   */ struct AddRobotDNAFailed                   {1: _ErrorCode error, 2: i64 dnaId}
 /* R+   */ struct AddRobotDNASucceeded                {1: i64 dnaId}
 
@@ -150,6 +168,10 @@ typedef data.QueryWalletResponse    _QueryWalletResponse
 ////////// AccountView
 /* Q    */ struct QueryAccount                        {1: i64 userId}
 /* R    */ struct QueryAccountResult                  {1: _UserAccount userAccount}
+/* Q    */ struct QueryRCDepositRecord                {1: i64 userId}
+/* R    */ struct QueryRCDepositRecordResult          {1: list<_RCDItem> items}
+/* Q    */ struct QueryRCWithdrawalRecord             {1: i64 userId}
+/* R    */ struct QueryRCWithdrawalRecordResult       {1: list<_RCDItem> items}
 
 ////////// MarketDepthView
 /* Q    */ struct QueryMarketDepth                    {1: _MarketSide side, 2: i32 maxDepth}

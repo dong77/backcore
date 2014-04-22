@@ -21,6 +21,7 @@ import com.coinport.coinex.fee._
 import ErrorCode._
 import Implicits._
 import TransferType._
+import Currency._
 
 class AccountProcessor(
   marketProcessors: Map[MarketSide, ActorRef],
@@ -73,6 +74,59 @@ class AccountProcessor(
     case p @ ConfirmablePersistent(m: AdminConfirmTransferSuccess, _, _) =>
       persist(m) { event => p.confirm(); updateState(event) }
 
+    case DoRequestRCWithdrawal(userId, amount, _, _) => {
+      val adjustment = CashAccount(Currency.Rmb, -amount, amount, 0)
+      if (!manager.canUpdateCashAccount(userId, adjustment)) {
+        sender ! RequestRCWithdrawalFailed(InsufficientFund)
+      } else {
+        val (a, b) = manager.generateABCode()
+        persist(DoRequestRCWithdrawal(userId, amount, Some(a), Some(b))) { event =>
+          updateState(event)
+          sender ! RequestRCWithdrawalSucceeded(a, b)
+        }
+      }
+    }
+
+    case DoRequestACodeQuery(userId, codeA) => {
+      if (manager.isCodeALocked(userId, codeA)) {
+        sender ! RequestACodeQueryFailed(LockedACode)
+      } else {
+        persist(DoRequestACodeQuery(userId, codeA)) { event =>
+          updateState(event)
+          sender ! RequestACodeQuerySucceeded(codeA, RechargeCodeStatus.Frozen,
+            manager.abCodeMap(manager.codeAIndexMap(codeA)).amount)
+        }
+      }
+    }
+
+    case DoRequestBCodeRecharge(userId, codeB) => {
+      val (canRecharge, error) = manager.verifyCodeB(userId, codeB)
+      canRecharge match {
+        case false => sender ! RequestBCodeRechargeFailed(error.asInstanceOf[ErrorCode])
+        case true => {
+          persist(DoRequestBCodeRecharge(userId, codeB)) { event =>
+            updateState(event)
+            sender ! RequestBCodeRechargeSucceeded(codeB, RechargeCodeStatus.Confirming,
+              manager.abCodeMap(manager.codeBIndexMap(codeB)).amount)
+          }
+        }
+      }
+    }
+
+    case DoRequestConfirmRC(userId, codeB, amount) => {
+      val (canRecharge, error) = manager.verifyConfirm(userId, codeB)
+      canRecharge match {
+        case false => sender ! RequestConfirmRCFailed(error.asInstanceOf[ErrorCode])
+        case true => {
+          persist(DoRequestConfirmRC(userId, codeB, amount)) { event =>
+            updateState(event)
+            sender ! RequestConfirmRCSucceeded(codeB, RechargeCodeStatus.RechargeDone,
+              manager.abCodeMap(manager.codeBIndexMap(codeB)).amount)
+          }
+        }
+      }
+    }
+
     case p @ ConfirmablePersistent(m: AdminConfirmTransferFailure, _, _) =>
       persist(m) { event => p.confirm(); updateState(event) }
 
@@ -118,6 +172,19 @@ trait AccountManagerBehavior extends CountFeeSupport {
   val manager: AccountManager
 
   def updateState: Receive = {
+
+    case DoRequestRCWithdrawal(userId, amount, Some(a), Some(b)) =>
+      manager.createABCodeTransaction(userId, a, b, amount)
+      manager.updateCashAccount(userId, CashAccount(Currency.Rmb, -amount, amount, 0))
+    case DoRequestACodeQuery(userId, codeA) => manager.freezeABCode(userId, codeA)
+    case DoRequestBCodeRecharge(userId, codeB) => manager.bCodeRecharge(userId, codeB)
+    case DoRequestConfirmRC(userId, codeB, amount) => {
+      manager.confirmRecharge(userId, codeB)
+      manager.updateCashAccount(userId, CashAccount(Currency.Rmb, 0, -amount, 0))
+      manager.updateCashAccount(manager.abCodeMap(manager.codeBIndexMap(codeB)).dUserId.get,
+        CashAccount(Currency.Rmb, amount, 0, 0))
+    }
+
     case DoRequestTransfer(t) =>
       t.`type` match {
         case Withdrawal =>
@@ -179,3 +246,4 @@ trait AccountManagerBehavior extends CountFeeSupport {
     case _ =>
   }
 }
+
