@@ -13,15 +13,18 @@ object UserService extends AkkaService {
   override def hashCode(): Int = super.hashCode()
 
   def register(user: User) = {
-    val email = user.username
+    val id = user.id
+    val email = user.email
+    val realName = user.realName
+    val nationalId = user.nationalId
     val password = user.password
 
     val profile = UserProfile(
-      id = 0L,
+      id = -1L,
       email = email,
-      realName = None,
-      nationalId = None,
-      passwordHash = None,
+      realName = realName,
+      nationalId = nationalId,
+      passwordHash = Some(password),
       emailVerified = false,
       mobile = None,
       mobileVerified = false,
@@ -53,7 +56,7 @@ object UserService extends AkkaService {
   }
 
   def login(user: User) = {
-    val email = user.username
+    val email = user.email
     val password = user.password
 
     val command = Login(email, password)
