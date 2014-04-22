@@ -69,6 +69,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cDoUpdateMetrics = JsonScalaCodec(DoUpdateMetrics)
   lazy val _cDoUpdateUserProfile = JsonScalaCodec(DoUpdateUserProfile)
   lazy val _cDumpStateToFile = JsonScalaCodec(DumpStateToFile)
+  lazy val _cGenerateWallet = JsonScalaCodec(GenerateWallet)
   lazy val _cGoogleAuthCodeVerificationResult = JsonScalaCodec(GoogleAuthCodeVerificationResult)
   lazy val _cLogin = JsonScalaCodec(Login)
   lazy val _cLoginFailed = JsonScalaCodec(LoginFailed)
@@ -182,6 +183,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: DoUpdateMetrics => _cDoUpdateMetrics(m)
     case m: DoUpdateUserProfile => _cDoUpdateUserProfile(m)
     case m: DumpStateToFile => _cDumpStateToFile(m)
+    case m: GenerateWallet => _cGenerateWallet(m)
     case m: GoogleAuthCodeVerificationResult => _cGoogleAuthCodeVerificationResult(m)
     case m: Login => _cLogin(m)
     case m: LoginFailed => _cLoginFailed(m)
@@ -299,6 +301,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[DoUpdateMetrics.Immutable] => _cDoUpdateMetrics.invert(bytes).get
     case Some(c) if c == classOf[DoUpdateUserProfile.Immutable] => _cDoUpdateUserProfile.invert(bytes).get
     case Some(c) if c == classOf[DumpStateToFile.Immutable] => _cDumpStateToFile.invert(bytes).get
+    case Some(c) if c == classOf[GenerateWallet.Immutable] => _cGenerateWallet.invert(bytes).get
     case Some(c) if c == classOf[GoogleAuthCodeVerificationResult.Immutable] => _cGoogleAuthCodeVerificationResult.invert(bytes).get
     case Some(c) if c == classOf[Login.Immutable] => _cLogin.invert(bytes).get
     case Some(c) if c == classOf[LoginFailed.Immutable] => _cLoginFailed.invert(bytes).get
