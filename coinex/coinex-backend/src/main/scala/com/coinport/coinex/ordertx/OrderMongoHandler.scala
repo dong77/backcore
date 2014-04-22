@@ -22,7 +22,7 @@ trait OrderMongoHandler {
 
   val coll: MongoCollection
 
-  def addItem(item: OrderInfo, quantity: Long) = coll.insert(toBson(item))
+  def addItem(item: OrderInfo, quantity: Long) = coll.insert(toBson(item, quantity))
 
   def updateItem(orderId: Long, inAmount: Long, quantity: Long, status: Int, side: MarketSide, timestamp: Long, refund: Option[Refund]) = {
     if (refund.isDefined)
@@ -43,11 +43,11 @@ trait OrderMongoHandler {
     else coll.find(mkQuery(q)).sort(DBObject(OID -> -1)).skip(q.cursor.skip).limit(q.cursor.limit).map(toClass(_)).toSeq
   }
 
-  private def toBson(item: OrderInfo) = {
+  private def toBson(item: OrderInfo, quantity: Long) = {
     val side = item.side
     val obj = MongoDBObject(
       OID -> item.order.id, UID -> item.order.userId, ORIGIN_ORDER -> converter.toBinary(item.order),
-      IN_AMOUNT -> item.inAmount, QUANTITY -> (item.order.quantity - item.outAmount), MARKET -> side.market.toString,
+      IN_AMOUNT -> item.inAmount, QUANTITY -> quantity, MARKET -> side.market.toString,
       SIDE -> side.ordered, CREATED_TIME -> item.order.timestamp.getOrElse(0), STATUS -> item.status.getValue())
     if (item.order.refund.isDefined) obj.put(REFUND, converter.toBinary(item.order.refund.get))
 
