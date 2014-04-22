@@ -24,5 +24,5 @@ ThriftBinarySerializer.prototype.fromBinary = function(obj, bytes) {
 };
 
 ThriftBinarySerializer.prototype.fromBuffers = function(obj, buffers) {
-    this.fromBinary(Buffer.concat(buffers));
+    this.fromBinary(obj, Buffer.concat(buffers));
 };
