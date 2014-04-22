@@ -16,6 +16,7 @@
 package com.coinport.coinex.accounts
 
 import scala.collection.mutable.Map
+
 import com.coinport.coinex.data._
 import com.coinport.coinex.common._
 import Implicits._
