@@ -2,7 +2,7 @@ package com.coinport.coinex.ordertx
 
 import com.coinport.coinex.data._
 import com.mongodb.casbah.MongoDB
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{ ActorLogging, Actor }
 import akka.event.LoggingReceive
 import Implicits._
 import com.coinport.coinex.common.ExtendedView
@@ -25,7 +25,7 @@ class OrderWriter(db: MongoDB) extends ExtendedView with OrderMongoHandler with 
   def receive = LoggingReceive {
     case Persistent(OrderCancelled(side, order), _) => cancelItem(order.id)
 
-    case e@Persistent(OrderSubmitted(orderInfo, txs), _) =>
+    case e @ Persistent(OrderSubmitted(orderInfo, txs), _) =>
       txs.foreach {
         tx =>
           val quantity = tx.makerUpdate.current.quantity

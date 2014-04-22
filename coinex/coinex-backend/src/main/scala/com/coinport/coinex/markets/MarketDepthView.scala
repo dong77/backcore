@@ -71,22 +71,14 @@ class MarketDepthManager(market: MarketSide) extends Manager[TMarketDepthState] 
   private def adjustAsk(price: Double, amount: Long) = {
     val updatedAmount = askMap.getOrElse(price, 0L) + amount
     assert(updatedAmount >= 0L)
-
     if (updatedAmount > 0) askMap += (price -> updatedAmount)
     else askMap -= price
-
-    println("====ask map after adjustAsk: " + askMap)
-    println("====bid map after adjustAsk: " + bidMap)
   }
 
   private def adjustBid(price: Double, amount: Long) = {
     val updatedAmount = bidMap.getOrElse(price, 0L) + amount
     assert(updatedAmount >= 0L)
-
     if (updatedAmount > 0) bidMap += (price -> updatedAmount)
     else bidMap -= price
-
-    println("====ask map after adjustBid: " + askMap)
-    println("====bid map after adjustBid: " + bidMap)
   }
 }
