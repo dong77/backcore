@@ -1,0 +1,1 @@
+../../coinex/coinex-client/src/main/thrift/message.thrift
