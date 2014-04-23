@@ -119,6 +119,12 @@ enum RefundReason {
     OVER_CHARGED   = 3
 }
 
+enum BitwayType {
+    GENERATE_WALLET     = 0
+    TRANSFER            = 1
+    QUERY_WALLET        = 2
+}
+
 ///////////////////////////////////////////////////////////////////////
 ////////////////////////// PERSISTENT DATA ////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -361,3 +367,28 @@ struct HistoryPrice {
     1: map<MarketSide, map<i64, double>> priceMap
 }
 
+struct GenerateWalletRequest {
+    1: optional string passwd
+}
+
+struct TransferRequest {
+    1: string from
+    2: string to
+    3: i32 amount
+}
+
+struct QueryWalletRequest {
+    1: string address
+}
+
+struct GenerateWalletResponse {
+    1: ErrorCode error
+}
+
+struct TransferResponse {
+    1: ErrorCode error
+}
+
+struct QueryWalletResponse {
+    1: ErrorCode error
+}

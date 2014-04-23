@@ -15,12 +15,17 @@ object BitwayClient {
   val client = new RedisClient("localhost", 6379)
 }
 
-class BitwayClient extends Actor with ActorLogging {
-
-  import BitwayClient._
+class BitwayPublisher(client: RedisClient) extends Actor with ActorLogging {
 
   def receive = LoggingReceive {
-    case request @ GenerateWallet(currency) =>
+    case _ => None
+  }
+}
+
+class BitwayReceiver(client: RedisClient) extends Actor with ActorLogging {
+
+  def receive = LoggingReceive {
+    case request @ GenerateWalletRequest(currency) =>
       client.rpush("list-1", "foo")
   }
 }

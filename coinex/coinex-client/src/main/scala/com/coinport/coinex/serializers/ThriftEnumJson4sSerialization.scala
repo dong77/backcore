@@ -19,6 +19,7 @@ object MapSerializer extends Serializer[Map[Any, Any]] {
       case (k, v) => JField(
         k match {
           case ks: String => ks
+          case ks: BitwayType => ks.name
           case ks: ChartTimeDimension => ks.name
           case ks: Currency => ks.name
           case ks: Direction => ks.name
@@ -43,6 +44,11 @@ object MapSerializer extends Serializer[Map[Any, Any]] {
 }
 
 object ThriftEnumJson4sSerialization {
+
+  class BitwayTypeSerializer extends CustomSerializer[BitwayType](format => (
+    { case JString(s) => BitwayType.valueOf(s).get }, {
+      case x: BitwayType => JString(x.name)
+    }))
 
   class ChartTimeDimensionSerializer extends CustomSerializer[ChartTimeDimension](format => (
     { case JString(s) => ChartTimeDimension.valueOf(s).get }, {
@@ -100,6 +106,7 @@ object ThriftEnumJson4sSerialization {
     }))
 
   implicit val formats = Serialization.formats(NoTypeHints) +
+    new BitwayTypeSerializer +
     new ChartTimeDimensionSerializer +
     new CurrencySerializer +
     new DirectionSerializer +
