@@ -32,6 +32,7 @@ import com.coinport.coinex.users._
 import com.coinport.coinex.fee._
 import com.coinport.coinex.transfer._
 import com.coinport.coinex.util._
+import com.coinport.coinex.bitway_client._
 import Implicits._
 import scala.collection.mutable.ListBuffer
 import com.coinport.coinex.common._
@@ -76,6 +77,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       deploy(Props(new CandleDataView(m) with StackableView[TCandleDataState, CandleDataManager]), candle_data_view << m)
     }
 
+    deploy(Props(new BitwayProxy()), bitway_proxy <<)
+
     deploy(Props(new UserWriter(dbForViews, userManagerSecret)), user_mongo_writer <<)
     deploy(Props(new AccountView(feeConfig) with StackableView[TAccountState, AccountManager]), account_view <<)
     deploy(Props(new AssetView with StackableView[TAssetState, AssetManager]), asset_view <<)
@@ -116,6 +119,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     // Deploy monitor at last
     deployMonitor(routers)
+
+    deploy(Props(new BitwayReceiver(routers.bitwayProxy.path)), bitway_receiver <<)
 
     routers
   }

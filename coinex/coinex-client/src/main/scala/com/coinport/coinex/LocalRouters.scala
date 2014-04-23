@@ -57,6 +57,10 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
 
   val mailer = routerFor(ConstantRole.mailer <<)
 
+  val bitwayReceiver = routerFor(ConstantRole.bitway_receiver <<)
+
+  val bitwayProxy = routerFor(ConstantRole.bitway_proxy <<)
+
   val metricsView = routerFor(metrics_view<<)
 
   private def routerForSingleton(name: String) = system.actorOf(

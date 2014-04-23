@@ -18,3 +18,5 @@ case object ActivateRobotsNow
 case class DoSubmitRobot(robot: Robot)
 
 case class DoCancelRobot(id: Long)
+
+case class ListenAtRedis()
