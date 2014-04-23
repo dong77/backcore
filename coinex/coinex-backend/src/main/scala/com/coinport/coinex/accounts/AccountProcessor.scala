@@ -80,7 +80,7 @@ class AccountProcessor(
         sender ! RequestGenerateABCodeFailed(InsufficientFund)
       } else {
         val (a, b) = manager.generateABCode()
-        persist(DoRequestRCWithdrawal(userId, amount, Some(a), Some(b))) { event =>
+        persist(DoRequestGenerateABCode(userId, amount, Some(a), Some(b))) { event =>
           updateState(event)
           sender ! RequestGenerateABCodeSucceeded(a, b)
         }
@@ -173,7 +173,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
 
   def updateState: Receive = {
 
-    case DoRequestRCWithdrawal(userId, amount, Some(a), Some(b)) =>
+    case DoRequestGenerateABCode(userId, amount, Some(a), Some(b)) =>
       manager.createABCodeTransaction(userId, a, b, amount)
       manager.updateCashAccount(userId, CashAccount(Currency.Rmb, -amount, amount, 0))
     case DoRequestACodeQuery(userId, codeA) => manager.freezeABCode(userId, codeA)

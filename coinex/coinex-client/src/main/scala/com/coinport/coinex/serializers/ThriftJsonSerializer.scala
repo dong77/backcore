@@ -37,12 +37,9 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cOrderInfo = JsonScalaCodec(OrderInfo)
   lazy val _cOrderUpdate = JsonScalaCodec(OrderUpdate)
   lazy val _cQueryMarketSide = JsonScalaCodec(QueryMarketSide)
-<<<<<<< HEAD
   lazy val _cQueryWalletRequest = JsonScalaCodec(QueryWalletRequest)
   lazy val _cQueryWalletResponse = JsonScalaCodec(QueryWalletResponse)
-=======
   lazy val _cRCDItem = JsonScalaCodec(RCDItem)
->>>>>>> add A/B code recharge module
   lazy val _cRedeliverFilterData = JsonScalaCodec(RedeliverFilterData)
   lazy val _cRedeliverFilters = JsonScalaCodec(RedeliverFilters)
   lazy val _cRefund = JsonScalaCodec(Refund)
@@ -178,12 +175,9 @@ class ThriftJsonSerializer extends Serializer {
     case m: OrderInfo => _cOrderInfo(m)
     case m: OrderUpdate => _cOrderUpdate(m)
     case m: QueryMarketSide => _cQueryMarketSide(m)
-<<<<<<< HEAD
     case m: QueryWalletRequest => _cQueryWalletRequest(m)
     case m: QueryWalletResponse => _cQueryWalletResponse(m)
-=======
     case m: RCDItem => _cRCDItem(m)
->>>>>>> add A/B code recharge module
     case m: RedeliverFilterData => _cRedeliverFilterData(m)
     case m: RedeliverFilters => _cRedeliverFilters(m)
     case m: Refund => _cRefund(m)
@@ -323,12 +317,9 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[OrderInfo.Immutable] => _cOrderInfo.invert(bytes).get
     case Some(c) if c == classOf[OrderUpdate.Immutable] => _cOrderUpdate.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketSide.Immutable] => _cQueryMarketSide.invert(bytes).get
-<<<<<<< HEAD
     case Some(c) if c == classOf[QueryWalletRequest.Immutable] => _cQueryWalletRequest.invert(bytes).get
     case Some(c) if c == classOf[QueryWalletResponse.Immutable] => _cQueryWalletResponse.invert(bytes).get
-=======
     case Some(c) if c == classOf[RCDItem.Immutable] => _cRCDItem.invert(bytes).get
->>>>>>> add A/B code recharge module
     case Some(c) if c == classOf[RedeliverFilterData.Immutable] => _cRedeliverFilterData.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilters.Immutable] => _cRedeliverFilters.invert(bytes).get
     case Some(c) if c == classOf[Refund.Immutable] => _cRefund.invert(bytes).get

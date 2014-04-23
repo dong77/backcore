@@ -112,9 +112,9 @@ object Client {
     AccountService.deposit(1001, Currency.Rmb, 10000.0)
 
   def createABCode(wUserId: Long, amount: Long, dUserId: Long) {
-    Client.backend ? DoRequestRCWithdrawal(wUserId, amount, None, None) map {
-      case RequestRCWithdrawalFailed(ErrorCode.InsufficientFund) => println("create ab code failed")
-      case RequestRCWithdrawalSucceeded(a, b) => {
+    Client.backend ? DoRequestGenerateABCode(wUserId, amount, None, None) map {
+      case RequestGenerateABCodeFailed(ErrorCode.InsufficientFund) => println("create ab code failed")
+      case RequestGenerateABCodeSucceeded(a, b) => {
         println("a code: " + a + " b code: " + b)
         Client.backend ? DoRequestACodeQuery(dUserId, a) map {
           case RequestACodeQuerySucceeded(x, y, z) => println(x, y, z)
