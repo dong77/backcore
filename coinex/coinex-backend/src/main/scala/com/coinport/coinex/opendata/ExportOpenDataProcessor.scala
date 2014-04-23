@@ -1,20 +1,22 @@
 package com.coinport.coinex.opendata
 
-import akka.actor.Cancellable
+import akka.actor.{ Cancellable, ActorContext }
 import akka.event.LoggingReceive
-import akka.persistence.{ EventsourcedProcessor, SnapshotMetadata, SnapshotOffer }
+import akka.persistence.{ PersistentRepr, EventsourcedProcessor }
 import akka.persistence.hbase.common.{ HdfsSnapshotDescriptor, RowKey, DeferredConversions }
 import akka.persistence.hbase.common.Columns._
 import akka.persistence.hbase.journal.PluginPersistenceSettings
 import akka.persistence.hbase.common.Const._
-import akka.serialization.SerializationExtension
+import akka.persistence.{ SnapshotMetadata, SnapshotOffer }
+import akka.persistence.serialization.Snapshot
+import akka.serialization.{ SerializationExtension, Serialization }
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import com.coinport.coinex.serializers.{ ThriftBinarySerializer, ThriftJsonSerializer }
-import com.coinport.coinex.common.support.SnapshotSupport
+import com.coinport.coinex.serializers.PrettyJsonSerializer
 import com.twitter.util.Eval
-import java.io.{ BufferedInputStream, BufferedOutputStream, Closeable, InputStream }
+import java.io._
 import java.util.{ ArrayList => JArrayList }
 import org.apache.commons.io.IOUtils
 import org.apache.hadoop.conf.Configuration
@@ -23,49 +25,27 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.hbase.async.KeyValue
 import scala.collection.mutable.Map
 import scala.concurrent.duration._
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 import scala.collection.JavaConverters._
-import scala.Tuple2
 
 import Implicits._
 import DeferredConversions._
-import akka.persistence.serialization.Snapshot
-import scala.util.{ Failure, Success }
 
 class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends ExtendedProcessor
-    with EventsourcedProcessor with ExportOpenDataManager {
+    with EventsourcedProcessor {
   override def processorId = EXPORT_OPEN_DATA_PROCESSOR <<
-
   private var cancellable: Cancellable = null
   private val scheduleInterval = 10 second
   private val pSeqMap = scala.collection.mutable.Map.empty[String, Long]
-
-  // Init parameters for ExportOpenDataManager
-  override var fs: FileSystem = null
-  override var messageItemsInterval: Long = 100L
-  override var snapshotHdfsDir: String = ""
-  override var exportSnapshotDir: String = ""
-  override var exportMessagesDir: String = ""
-  override var messagesTable: String = ""
-  override var messagesFamily: String = ""
-  override implicit var pluginPersistenceSettings: PluginPersistenceSettings = null
-
+  private val manager = new ExportOpenDataManager(asyncHBaseClient, context)
   override def preStart(): Unit = {
     super.preStart()
     val config = context.system.settings.config
     val exportData = config.getBoolean("akka.opendata.is-export")
     if (!exportData) return
     pSeqMap ++= loadOpenDataProcessors(context.system.settings.config.getString("akka.opendata.processors-map-path"))
-    fs = openHdfsSystem(config.getString("akka.opendata.hdfs-name"))
-    messageItemsInterval = config.getLong("akka.opendata.messages-interval")
-    snapshotHdfsDir = config.getString("hadoop-snapshot-store.snapshot-dir")
-    exportSnapshotDir = config.getString("akka.opendata.export-snapshot-dir")
-    exportMessagesDir = config.getString("akka.opendata.export-messages-dir")
-    messagesTable = config.getString("hbase-journal.table")
-    messagesFamily = config.getString("hbase-journal.family")
-    pluginPersistenceSettings = PluginPersistenceSettings(config, JOURNAL_CONFIG)
     scheduleExport()
-    System.out.println(s"""${">" * 20} In preStart""")
   }
 
   override def receiveCommand = LoggingReceive {
@@ -75,11 +55,18 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
 
   override def receiveRecover: Receive = {
     case SnapshotOffer(metadata: SnapshotMetadata, snapshot: Any) =>
-      pSeqMap ++= snapshot.asInstanceOf[Map[String, Long]]
-      System.out.println(s"""${">" * 20} In SnapshotOffer""")
-    case Tuple2(processorId: String, lastSeqNum: Long) =>
-      pSeqMap += processorId -> lastSequenceNr
-      System.out.println(s"""${">" * 20} In recovery messages""")
+      val snapMap = snapshot.asInstanceOf[Map[String, Long]]
+      snapMap.keySet foreach {
+        key => withCheck(key, pSeqMap)(pSeqMap.put(key, snapMap(key)))
+      }
+    case map: Map[String, Long] =>
+      map.keySet foreach {
+        key => withCheck(key, pSeqMap)(pSeqMap.put(key, map(key)))
+      }
+  }
+
+  private def withCheck(key: String, map: Map[String, Long])(f: => Unit) {
+    if (map.contains(key)) f
   }
 
   private def scheduleExport() = {
@@ -92,44 +79,68 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
   }
 
   private def exportData() {
-    System.out.println(s"""${">" * 40} exportData : pSeqMap = ${pSeqMap.toString()}, pSeqMap.keySet = ${pSeqMap.keySet.toString}""")
+    val map = scala.collection.mutable.Map.empty[String, Long]
     pSeqMap.keySet foreach {
       processorId =>
         if (processorId != null && !processorId.isEmpty) {
+          // "processedSeqNum" included in current process
           val processedSeqNum = pSeqMap(processorId)
-          val lastSeqNum = dumpSnapshot(processorId, processedSeqNum)
-          if (lastSeqNum - processedSeqNum > messageItemsInterval) {
-            dumpMessages(processorId, processedSeqNum, lastSeqNum)
-            persist(Tuple2(processorId, lastSeqNum))(_ => ())
-            pSeqMap += processorId -> lastSeqNum
+          // "lastSeqNum" included in current process, excluded in next process
+          val lastSeqNum = manager.dumpSnapshot(processorId, processedSeqNum)
+          if (lastSeqNum - processedSeqNum >= manager.messageItemsInterval) {
+            manager.dumpMessages(processorId, processedSeqNum, lastSeqNum + 1)
+            map += processorId -> (lastSeqNum + 1)
           }
         }
     }
+    if (!map.isEmpty) {
+      persist(map)(_ => ())
+      pSeqMap ++= map
+    }
   }
 
+  private def loadOpenDataProcessors(mapConfigPath: String): Map[String, Long] = {
+    val in: InputStream = this.getClass.getClassLoader.getResourceAsStream(mapConfigPath)
+    val set = (new Eval()(IOUtils.toString(in))).asInstanceOf[Set[String]]
+    val map = Map.empty[String, Long]
+    set.foreach(map.put(_, 0L))
+    map
+  }
 }
 
-trait ExportOpenDataManager { this: SnapshotSupport =>
-  var asyncHBaseClient: AsyncHBaseClient
-  var fs: FileSystem
-  var messageItemsInterval: Long
-  var snapshotHdfsDir: String
-  var exportSnapshotDir: String
-  var exportMessagesDir: String
-  var messagesTable: String
-  var messagesFamily: String
+class ExportOpenDataManager {
+  private var asyncHBaseClient: AsyncHBaseClient = null
+  private var fs: FileSystem = null
+  private var actorContext: ActorContext = null
+  var messageItemsInterval: Long = 100L
+  private var snapshotHdfsDir: String = ""
+  private var exportSnapshotDir: String = ""
+  private var exportMessagesDir: String = ""
+  private var messagesTable: String = ""
+  private var messagesFamily: String = ""
+  implicit var pluginPersistenceSettings: PluginPersistenceSettings = null
   val binarySerilizer = new ThriftBinarySerializer()
   val jsonSerilizer = new ThriftJsonSerializer()
   private val BUFFER_SIZE = 2048
   private val SCAN_MAX_NUM_ROWS = 50
-  implicit var pluginPersistenceSettings: PluginPersistenceSettings
-  val serialization = SerializationExtension(context.system)
+  implicit var executionContext: ExecutionContext = null
+  implicit var serialization: Serialization = null
 
-  protected def loadOpenDataProcessors(mapConfigPath: String): Map[String, Long] = {
-    val in: InputStream = this.getClass.getClassLoader.getResourceAsStream(mapConfigPath)
-    val map = (new Eval()(IOUtils.toString(in))).asInstanceOf[Map[String, Long]]
-    System.out.println(s"""${">" * 40} loadOpenDataProcessors : map.toString = ${map.toString()}""")
-    map
+  def this(asyncHBaseClient: AsyncHBaseClient, context: ActorContext) {
+    this()
+    actorContext = context
+    val config = context.system.settings.config
+    fs = openHdfsSystem(config.getString("akka.opendata.hdfs-name"))
+    messageItemsInterval = config.getLong("akka.opendata.messages-interval")
+    snapshotHdfsDir = config.getString("hadoop-snapshot-store.snapshot-dir")
+    exportSnapshotDir = config.getString("akka.opendata.export-snapshot-dir")
+    exportMessagesDir = config.getString("akka.opendata.export-messages-dir")
+    messagesTable = config.getString("hbase-journal.table")
+    messagesFamily = config.getString("hbase-journal.family")
+    pluginPersistenceSettings = PluginPersistenceSettings(config, JOURNAL_CONFIG)
+    this.asyncHBaseClient = asyncHBaseClient
+    executionContext = context.system.dispatcher
+    serialization = SerializationExtension(context.system)
   }
 
   protected def openHdfsSystem(defaultName: String): FileSystem = {
@@ -138,79 +149,103 @@ trait ExportOpenDataManager { this: SnapshotSupport =>
     FileSystem.get(conf)
   }
 
-  protected def dumpSnapshot(processorId: String, processedSeqNum: Long): Long = {
+  def dumpSnapshot(processorId: String, processedSeqNum: Long): Long = {
     val snapshotMetas = listSnapshots(snapshotHdfsDir, processorId)
     if (snapshotMetas.isEmpty)
       return processedSeqNum
     snapshotMetas.head match {
       case desc @ HdfsSnapshotDescriptor(processorId: String, seqNum: Long, _) if (seqNum - processedSeqNum > messageItemsInterval) =>
         val path = new Path(snapshotHdfsDir, desc.toFilename)
-        System.out.println(s"""${">" * 40} dumpSnapshot : processorId = $processorId, path = ${path.getName}""")
-        try {
-          val snapshot =
-            serialization.deserialize(
-              withStream(new BufferedInputStream(fs.open(path, BUFFER_SIZE), BUFFER_SIZE)) { IOUtils.toByteArray }, classOf[Snapshot]) match {
-                case Success(snapshot) =>
-                  snapshot.data.asInstanceOf[AnyRef]
-                case Failure(ex) =>
-                  log.error(s"""Failed to deserialize snapshot file ${path.getName}, error : ${ex.getMessage}""")
-                  return seqNum
-              }
-          System.out.println(s"""${">" * 40} dumpSnapshot : processorId = $processorId, path = ${path.getName}, snapshot = ${snapshot.toString}""")
+        val snapshot =
+          serialization.deserialize(
+            withStream(new BufferedInputStream(fs.open(path, BUFFER_SIZE), BUFFER_SIZE)) {
+              IOUtils.toByteArray
+            }, classOf[Snapshot]) match {
+              case Success(snapshot) =>
+                snapshot.data.asInstanceOf[AnyRef]
+              case Failure(ex) =>
+                sys.error(s"""Failed to deserialize snapshot file ${path.getName}, error : ${ex.getMessage}""")
+                return seqNum
+            }
+        val exportSnapshotPath = new Path(exportSnapshotDir, desc.toFilename)
+        //          val jsonSnapshot = jsonSerilizer.toBinary(snapshot)
+        //          withStream(new BufferedOutputStream(fs.create(exportSnapshotPath, true), BUFFER_SIZE))(IOUtils.write(jsonSnapshot, _))
+        val jsonSnapshot = PrettyJsonSerializer.toJson(snapshot)
+        withStream(new BufferedWriter(new OutputStreamWriter(fs.create(exportSnapshotPath, true)), BUFFER_SIZE))(IOUtils.write(jsonSnapshot, _))
+        seqNum
 
-          val jsonSnapshot = jsonSerilizer.toBinary(snapshot)
-          val exportSnapshotPath = new Path(exportSnapshotDir, desc.toFilename)
-          withStream(new BufferedOutputStream(fs.create(exportSnapshotPath, true), BUFFER_SIZE))(IOUtils.write(jsonSnapshot, _))
-          return seqNum
-        } catch {
-          case e: Exception =>
-            log.error("dumpSnapshot Error " + e.getMessage)
-            return processedSeqNum
-        }
       case _ => processedSeqNum
     }
   }
 
-  protected def dumpMessages(processorId: String, fromSeqNum: Long, toSeqNum: Long) {
+  // "fromSeqNum" is included, "toSeqNum" is excluded
+  def dumpMessages(processorId: String, fromSeqNum: Long, toSeqNum: Long) {
     if (toSeqNum <= fromSeqNum) return
     val client = asyncHBaseClient.getClient()
     val scanner = client.newScanner(Bytes.toBytes(messagesTable))
     scanner.setFamily(Bytes.toBytes(messagesFamily))
     scanner.setStartKey(RowKey(processorId, fromSeqNum).toBytes)
     scanner.setStopKey(RowKey.toKeyForProcessor(processorId, toSeqNum))
+    scanner.setKeyRegexp(RowKey.patternForProcessor(processorId))
     scanner.setMaxNumRows(SCAN_MAX_NUM_ROWS)
-    val outputStream = new BufferedOutputStream(fs.create(new Path(exportMessagesDir, s"$processorId~$toSeqNum~${System.currentTimeMillis()}")))
-    outputStream.write(Bytes.toBytes("{messages:["))
     type AsyncBaseRows = JArrayList[JArrayList[KeyValue]]
 
-    def handleRows(in: AnyRef): Future[Unit] = {
-      in match {
-        case null => Future(())
-        case rows: AsyncBaseRows =>
-          for (row <- rows.asScala) {
-            outputStream.write(Bytes.toBytes("\"message\":{"))
-            for (column <- row.asScala) {
-              if (java.util.Arrays.equals(column.qualifier, Message) || java.util.Arrays.equals(column.qualifier, SequenceNr)) {
-                outputStream.write(Bytes.toBytes("\""))
-                outputStream.write(column.qualifier)
-                outputStream.write(Bytes.toBytes("\":"))
-                if (java.util.Arrays.equals(column.qualifier, Message))
-                  outputStream.write(jsonSerilizer.toBinary(binarySerilizer.fromBinary(column.value())))
-                else (java.util.Arrays.equals(column.qualifier, SequenceNr))
-                outputStream.write(Bytes.toBytes(Bytes.toLong(column.value()).toString))
-                outputStream.write(Bytes.toBytes(","))
+    def getMessages(rows: AsyncBaseRows): String = {
+      val builder = new StringBuilder()
+      for (row <- rows.asScala) {
+        builder ++= "{"
+        for (column <- row.asScala) {
+          if (java.util.Arrays.equals(column.qualifier, Message) || java.util.Arrays.equals(column.qualifier, SequenceNr)) {
+            builder ++= "\"" ++= Bytes.toString(column.qualifier) ++= "\":"
+            if (java.util.Arrays.equals(column.qualifier, Message)) {
+              serialization.deserialize(column.value(), classOf[PersistentRepr]) match {
+                case Success(msg) =>
+                  if (msg.payload.isInstanceOf[AnyRef])
+                    //                    builder ++= Bytes.toString(jsonSerilizer.toBinary(msg.payload.asInstanceOf[AnyRef]))
+                    builder ++= PrettyJsonSerializer.toJson(msg.payload)
+                  else
+                    builder ++= msg.payload.toString()
+                case Failure(ex) =>
+                  sys.error(s"""Failed to deserialize message for ${processorId}, error : ${ex.getMessage}""")
               }
+            } else {
+              builder ++= Bytes.toLong(column.value()).toString
             }
-            outputStream.write(Bytes.toBytes("},"))
+            builder ++= ","
           }
-          go()
+        }
+        builder.delete(builder.length - 1, builder.length)
+        builder ++= "},"
+      }
+      builder.substring(0, builder.length - 1)
+    }
+
+    def handleRows(): Future[StringBuilder] = {
+      scanner.nextRows() flatMap {
+        case null =>
+          scanner.close()
+          Future(new StringBuilder())
+        case rows: AsyncBaseRows =>
+          val builder = new StringBuilder()
+          builder ++= getMessages(rows)
+          handleRows() map {
+            res =>
+              builder ++= res
+          }
       }
     }
 
-    def go(): Future[Unit] = scanner.nextRows() flatMap handleRows
-    go() onComplete {
-      outputStream.write(Bytes.toBytes("]}"))
-      res => outputStream.close()
+    val writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(exportMessagesDir, s"$processorId~${toSeqNum - 1}~${System.currentTimeMillis()}"))))
+    writer.write("{\"messages\":[")
+    handleRows() map {
+      res =>
+        res match {
+          case data if !data.isEmpty =>
+            writer.write(data.toString())
+            writer.write("]}")
+            writer.flush()
+            writer.close()
+        }
     }
   }
 
@@ -218,7 +253,9 @@ trait ExportOpenDataManager { this: SnapshotSupport =>
     try fun(stream) finally stream.close()
 
   private def listSnapshots(snapshotDir: String, processorId: String): List[HdfsSnapshotDescriptor] = {
-    val descs = fs.listStatus(new Path(snapshotDir)) flatMap { HdfsSnapshotDescriptor.from(_, processorId) }
+    val descs = fs.listStatus(new Path(snapshotDir)) flatMap {
+      HdfsSnapshotDescriptor.from(_, processorId)
+    }
     if (descs.isEmpty)
       Nil
     else

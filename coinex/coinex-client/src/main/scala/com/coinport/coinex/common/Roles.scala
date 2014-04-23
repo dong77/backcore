@@ -34,6 +34,9 @@ object ConstantRole extends Enumeration {
   val bitway_receiver = Value
 
   val bitway_proxy = Value
+
+  val export_open_data = Value
+
 }
 
 object MarketRole extends Enumeration {
