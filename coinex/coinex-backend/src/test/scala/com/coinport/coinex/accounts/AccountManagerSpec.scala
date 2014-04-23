@@ -17,8 +17,6 @@ class AccountManagerSpec extends Specification {
       manager.abCodeMap.get(0).get.wUserId mustEqual 1001
       manager.abCodeMap.get(0).get.codeA mustEqual "32DA834CE87FC390"
       manager.abCodeMap.get(0).get.codeB mustEqual "DA8332DA8348332DACE88332DA7FC390"
-      manager.abCodeMap.get(0).get.rExpTime.get mustEqual
-        (manager.abCodeMap.get(0).get.created.get / 1000 + 365 * 24 * 3600)
       manager.codeAIndexMap("32DA834CE87FC390") mustEqual 0
       manager.codeBIndexMap("DA8332DA8348332DACE88332DA7FC390") mustEqual 0
       (manager.abCodeMap.get(0).get.created.get / 1000 + 365 * 24 * 3600)
@@ -38,30 +36,30 @@ class AccountManagerSpec extends Specification {
     }
   }
 
-  "isCodeALocked & freezeABCode" should {
+  "isCodeAAvailable & freezeABCode" should {
     "a code's status is right" in {
       val manager = new AccountManager()
       manager.createABCodeTransaction(1001, "32DA834CE87FC390", "DA8332DA8348332DACE88332DA7FC390", 1000)
-      manager.isCodeALocked(1002, "32DA834CE87FC390") mustEqual false
+      manager.isCodeAAvailable(1002, "32DA834CE87FC390") mustEqual true
       manager.abCodeMap(0).dUserId.isEmpty mustEqual true
       manager.abCodeMap(0).qExpTime.isEmpty mustEqual true
       manager.freezeABCode(1002, "32DA834CE87FC390")
       manager.abCodeMap(0).dUserId.get mustEqual 1002
       manager.abCodeMap(0).qExpTime.isDefined mustEqual true
-      manager.isCodeALocked(1002, "32DA834CE87FC390") mustEqual false
-      manager.isCodeALocked(1003, "32DA834CE87FC390") mustEqual true
-      manager.isCodeALocked(1002, "32DA834CE87FC3901") mustEqual true
+      manager.isCodeAAvailable(1002, "32DA834CE87FC390") mustEqual true
+      manager.isCodeAAvailable(1003, "32DA834CE87FC390") mustEqual false
+      manager.isCodeAAvailable(1002, "32DA834CE87FC3901") mustEqual false
       manager.abCodeMap += 0L -> manager.abCodeMap(0).copy(qExpTime = Some(System.currentTimeMillis / 1000 - 3601))
-      manager.isCodeALocked(1003, "32DA834CE87FC390") mustEqual false
+      manager.isCodeAAvailable(1003, "32DA834CE87FC390") mustEqual true
       manager.createABCodeTransaction(1004, "22DA834CE87FC390", "DA8332DA8348332DACE88332DA7FC390", 100021)
       manager.abCodeMap += 1L -> manager.abCodeMap(1).copy(status = RechargeCodeStatus.Unused)
-      manager.isCodeALocked(1004, "22DA834CE87FC390") mustEqual false
+      manager.isCodeAAvailable(1004, "22DA834CE87FC390") mustEqual true
       manager.abCodeMap += 1L -> manager.abCodeMap(1).copy(status = RechargeCodeStatus.Frozen)
-      manager.isCodeALocked(1004, "22DA834CE87FC390") mustEqual false
+      manager.isCodeAAvailable(1004, "22DA834CE87FC390") mustEqual false
       manager.abCodeMap += 1L -> manager.abCodeMap(1).copy(status = RechargeCodeStatus.Confirming)
-      manager.isCodeALocked(1004, "22DA834CE87FC390") mustEqual true
+      manager.isCodeAAvailable(1004, "22DA834CE87FC390") mustEqual false
       manager.abCodeMap += 1L -> manager.abCodeMap(1).copy(status = RechargeCodeStatus.RechargeDone)
-      manager.isCodeALocked(1004, "22DA834CE87FC390") mustEqual true
+      manager.isCodeAAvailable(1004, "22DA834CE87FC390") mustEqual false
     }
   }
 
@@ -69,24 +67,23 @@ class AccountManagerSpec extends Specification {
     "every situation must be handled correctly" in {
       val manager = new AccountManager()
       manager.createABCodeTransaction(1001, "32DA834CE87FC390", "DA8332DA8348332DACE88332DA7FC390", 1000)
-      manager.verifyCodeB(1002, "DA8332DA8348332DACE88332DA7FC390")._1 mustEqual true
-      manager.verifyCodeB(1002, "DA8332DA8348332DACE88332DA7FC391")._1 mustEqual false
-      manager.verifyCodeB(1002, "DA8332DA8348332DACE88332DA7FC391")._2 mustEqual InvalidBCode
+      manager.isCodeBAvailable(1002, "DA8332DA8348332DACE88332DA7FC390")._1 mustEqual true
+      manager.isCodeBAvailable(1002, "DA8332DA8348332DACE88332DA7FC391")._1 mustEqual false
+      manager.isCodeBAvailable(1002, "DA8332DA8348332DACE88332DA7FC391")._2 mustEqual InvalidBCode
       manager.abCodeMap += 0L -> manager.abCodeMap(0).copy(dUserId = Some(1002))
-      manager.verifyCodeB(1002, "DA8332DA8348332DACE88332DA7FC390")._1 mustEqual true
-      manager.abCodeMap += 0L -> manager.abCodeMap(0).copy(rExpTime = Some(System.currentTimeMillis / 1000 + 10))
-      manager.verifyCodeB(1002, "DA8332DA8348332DACE88332DA7FC390")._1 mustEqual true
+      manager.isCodeBAvailable(1002, "DA8332DA8348332DACE88332DA7FC390")._1 mustEqual true
+      manager.isCodeBAvailable(1002, "DA8332DA8348332DACE88332DA7FC390")._1 mustEqual true
       manager.abCodeMap += 0L -> manager.abCodeMap(0).copy(status = RechargeCodeStatus.Frozen)
-      manager.verifyCodeB(1002, "DA8332DA8348332DACE88332DA7FC390")._1 mustEqual true
+      manager.isCodeBAvailable(1002, "DA8332DA8348332DACE88332DA7FC390")._1 mustEqual true
       manager.abCodeMap += 0L -> manager.abCodeMap(0).copy(status = RechargeCodeStatus.Confirming)
-      manager.verifyCodeB(1002, "DA8332DA8348332DACE88332DA7FC390")._1 mustEqual false
-      manager.verifyCodeB(1002, "DA8332DA8348332DACE88332DA7FC390")._2 mustEqual UsedBCode
+      manager.isCodeBAvailable(1002, "DA8332DA8348332DACE88332DA7FC390")._1 mustEqual false
+      manager.isCodeBAvailable(1002, "DA8332DA8348332DACE88332DA7FC390")._2 mustEqual UsedBCode
       manager.abCodeMap += 0L -> manager.abCodeMap(0).copy(status = RechargeCodeStatus.RechargeDone)
-      manager.verifyCodeB(1002, "DA8332DA8348332DACE88332DA7FC390")._1 mustEqual false
+      manager.isCodeBAvailable(1002, "DA8332DA8348332DACE88332DA7FC390")._1 mustEqual false
       manager.createABCodeTransaction(1001, "1111111111111111", "22222222222222222222222222222222", 1000)
       manager.freezeABCode(1003, "1111111111111111")
-      manager.verifyCodeB(1002, "22222222222222222222222222222222")._1 mustEqual false
-      manager.verifyCodeB(1003, "22222222222222222222222222222222")._1 mustEqual true
+      manager.isCodeBAvailable(1002, "22222222222222222222222222222222")._1 mustEqual false
+      manager.isCodeBAvailable(1003, "22222222222222222222222222222222")._1 mustEqual true
     }
   }
 

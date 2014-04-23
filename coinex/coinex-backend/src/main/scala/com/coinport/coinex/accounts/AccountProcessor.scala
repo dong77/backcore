@@ -74,21 +74,21 @@ class AccountProcessor(
     case p @ ConfirmablePersistent(m: AdminConfirmTransferSuccess, _, _) =>
       persist(m) { event => p.confirm(); updateState(event) }
 
-    case DoRequestRCWithdrawal(userId, amount, _, _) => {
+    case DoRequestGenerateABCode(userId, amount, _, _) => {
       val adjustment = CashAccount(Currency.Rmb, -amount, amount, 0)
       if (!manager.canUpdateCashAccount(userId, adjustment)) {
-        sender ! RequestRCWithdrawalFailed(InsufficientFund)
+        sender ! RequestGenerateABCodeFailed(InsufficientFund)
       } else {
         val (a, b) = manager.generateABCode()
         persist(DoRequestRCWithdrawal(userId, amount, Some(a), Some(b))) { event =>
           updateState(event)
-          sender ! RequestRCWithdrawalSucceeded(a, b)
+          sender ! RequestGenerateABCodeSucceeded(a, b)
         }
       }
     }
 
     case DoRequestACodeQuery(userId, codeA) => {
-      if (manager.isCodeALocked(userId, codeA)) {
+      if (!manager.isCodeAAvailable(userId, codeA)) {
         sender ! RequestACodeQueryFailed(LockedACode)
       } else {
         persist(DoRequestACodeQuery(userId, codeA)) { event =>
@@ -100,7 +100,7 @@ class AccountProcessor(
     }
 
     case DoRequestBCodeRecharge(userId, codeB) => {
-      val (canRecharge, error) = manager.verifyCodeB(userId, codeB)
+      val (canRecharge, error) = manager.isCodeBAvailable(userId, codeB)
       canRecharge match {
         case false => sender ! RequestBCodeRechargeFailed(error.asInstanceOf[ErrorCode])
         case true => {

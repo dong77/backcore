@@ -21,6 +21,7 @@ import com.coinport.coinex.common._
 import Implicits._
 import ErrorCode._
 import com.sun.beans.decoder.FalseElementHandler
+import com.coinport.coinex.common.Constants._
 
 class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountState] {
   // Internal mutable state ----------------------------------------------
@@ -39,6 +40,9 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
     accountMap ++= snapshot.userAccountsMap
     aggregation = snapshot.aggregation
     lastOrderId = snapshot.lastOrderId
+    abCodeMap.clear
+    codeAIndexMap.clear
+    codeBIndexMap.clear
     abCodeMap ++= snapshot.abCodeMap
     codeAIndexMap ++= snapshot.codeAIndexMap
     codeBIndexMap ++= snapshot.codeBIndexMap
@@ -113,7 +117,6 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
       status = RechargeCodeStatus.Unused,
       amount = amount,
       // default 1 year expiration interval
-      rExpTime = Some(timestamp / 1000 + 365 * 86400),
       created = Some(timestamp),
       updated = Some(timestamp))
     abCodeMap += item.id -> item
@@ -121,33 +124,36 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
     codeBIndexMap += codeB -> item.id
   }
 
-  def isCodeALocked(userId: Long, codeA: String): Boolean = {
-    val now = System.currentTimeMillis / 1000
+  def isCodeAAvailable(userId: Long, codeA: String): Boolean = {
+    val now = getCurrentTime
     abCodeMap.getOrElse(codeAIndexMap.getOrElse(codeA, -1), None) match {
-      case i: RCDItem if i.status.getValue >= 2 => true
-      case i: RCDItem if !i.qExpTime.isDefined || !i.dUserId.isDefined => false
-      case i: RCDItem if now > i.qExpTime.get => false
-      case i: RCDItem if now <= i.qExpTime.get &&
-        i.dUserId.get == userId => false
-      case _ => true
+      case i: RCDItem => {
+        if (i.status == RechargeCodeStatus.Unused) true
+        else if (i.status != RechargeCodeStatus.Frozen) false
+        else if (!i.qExpTime.isDefined || !i.dUserId.isDefined) false
+        else if (now > i.qExpTime.get) true
+        else if (now <= i.qExpTime.get && i.dUserId.get == userId) true
+        else false
+      }
+      case _ => false
     }
   }
 
   def freezeABCode(userId: Long, codeA: String) {
     abCodeMap += abCodeMap(codeAIndexMap(codeA)).id ->
       abCodeMap(codeAIndexMap(codeA)).copy(dUserId = Some(userId),
-        qExpTime = Some(System.currentTimeMillis / 1000 + 3600),
+        qExpTime = Some(getCurrentTime + _1_HOUR),
         status = RechargeCodeStatus.Frozen)
   }
 
-  def verifyCodeB(userId: Long, codeB: String): (Boolean, Any) = {
+  def isCodeBAvailable(userId: Long, codeB: String): (Boolean, Any) = {
     abCodeMap.getOrElse(codeBIndexMap.getOrElse(codeB, -1), None) match {
       case None => (false, InvalidBCode)
-      case i: RCDItem if i.status.getValue >= 2 => (false, UsedBCode)
-      case i: RCDItem if i.dUserId.isDefined &&
-        userId != i.dUserId.get => (false, InvalidBCode)
-      case i: RCDItem if i.rExpTime.isDefined &&
-        i.rExpTime.get < System.currentTimeMillis / 1000 => (false, InvalidBCode)
+      case i: RCDItem => {
+        if (i.status.getValue >= 2) (false, UsedBCode)
+        else if (i.dUserId.isDefined && userId != i.dUserId.get) (false, InvalidBCode)
+        else (true, None)
+      }
       case _ => (true, None)
     }
   }
@@ -156,9 +162,11 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
     println(abCodeMap.getOrElse(codeBIndexMap.getOrElse(codeB, -1), None))
     abCodeMap.getOrElse(codeBIndexMap.getOrElse(codeB, -1), None) match {
       case None => (false, InvalidBCode)
-      case i: RCDItem if i.status.getValue >= 3 => (false, UsedBCode)
-      case i: RCDItem if i.wUserId == userId &&
-        i.rExpTime.get > System.currentTimeMillis / 1000 => (true, None)
+      case i: RCDItem => {
+        if (i.status.getValue >= 3) (false, UsedBCode)
+        else if (i.wUserId == userId) (true, None)
+        else (false, InvalidBCode)
+      }
       case _ => (false, InvalidBCode)
     }
   }
@@ -190,6 +198,10 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
     def randABCode(n: Int) =
       randStr("ABCDEF0123456789")(n)
     (randABCode(16), randABCode(32))
+  }
+
+  def getCurrentTime(): Long = {
+    System.currentTimeMillis / 1000
   }
 
 }

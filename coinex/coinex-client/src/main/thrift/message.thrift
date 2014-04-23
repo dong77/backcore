@@ -107,9 +107,9 @@ typedef data.RCDItem                _RCDItem
 /* C,P  */ struct AdminConfirmTransferFailure         {1: _AccountTransfer transfer, 2:_ErrorCode error}
 /* C,P  */ struct AdminConfirmTransferSuccess         {1: _AccountTransfer transfer}
 
-/* C,P  */ struct DoRequestRCWithdrawal               {1: i64 userId, 2: i64 amount, 3: optional string a, 4: optional string b}
-/* R-   */ struct RequestRCWithdrawalFailed           {1: _ErrorCode error}
-/* R+   */ struct RequestRCWithdrawalSucceeded        {1: string codeA, 2: string codeB}
+/* C,P  */ struct DoRequestGenerateABCode             {1: i64 userId, 2: i64 amount, 3: optional string a, 4: optional string b}
+/* R-   */ struct RequestGenerateABCodeFailed         {1: _ErrorCode error}
+/* R+   */ struct RequestGenerateABCodeSucceeded      {1: string codeA, 2: string codeB}
 
 /* C,P  */ struct DoRequestACodeQuery                 {1: i64 userId, 2: string codeA}
 /* R-   */ struct RequestACodeQueryFailed             {1: _ErrorCode error}

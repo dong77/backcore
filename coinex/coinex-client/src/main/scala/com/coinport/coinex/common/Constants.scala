@@ -23,6 +23,7 @@ object Constants {
   // WARNING: this belongs to somewhere else
   val _24_HOURS: Long = 3600 * 24 * 1000
   val _10_SECONDS: Long = 10 * 1000
+  val _1_HOUR: Long = 3600
 
   // WARNING: this belongs to somewhere else
   def ascending = (lhs: Double, rhs: Double) => lhs <= rhs

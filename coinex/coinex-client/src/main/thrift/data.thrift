@@ -297,9 +297,8 @@ struct RCDItem {
     6: RechargeCodeStatus status
     7: i64 amount
     8: optional i64 qExpTime
-    9: optional i64 rExpTime
-    10: optional i64 created
-    11: optional i64 updated
+    9: optional i64 created
+    10: optional i64 updated
 }
 
 struct Cursor {
