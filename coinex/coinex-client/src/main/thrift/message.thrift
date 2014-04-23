@@ -140,8 +140,8 @@ typedef data.QueryWalletResponse    _QueryWalletResponse
 /* C    */ struct DoSendEmail                         {1: string email, 2: _EmailType emailType, 3: map<string, string> params}
 
 ////////// Bitway
-/* C    */ struct BitwayRequest                       {1: _BitwayType type,  2: _Currency currency, 3: optional _GenerateWalletRequest generateWalletRequest, 4: optional _TransferRequest transferRequest, 5: optional _QueryWalletRequest queryWalletRequest}
-/* R    */ struct BitwayResponse                      {1: _BitwayType type,  2: _Currency currency, 3: optional _GenerateWalletResponse generateWalletResponse, 4: optional _TransferResponse transferResponse, 5: optional _QueryWalletResponse queryWalletResponse}
+/* C    */ struct BitwayRequest                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional _GenerateWalletRequest generateWalletRequest, 5: optional _TransferRequest transferRequest, 6: optional _QueryWalletRequest queryWalletRequest}
+/* R    */ struct BitwayResponse                      {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional _GenerateWalletResponse generateWalletResponse, 5: optional _TransferResponse transferResponse, 6: optional _QueryWalletResponse queryWalletResponse}
 
 ////////////////////////////////////////////////////////////////
 //////////////////////// VIEW MESSAGES /////////////////////////

@@ -31,9 +31,15 @@ object CoinexBuild extends Build {
       import akka.pattern.ask
       import akka.util.Timeout
       import scala.concurrent.duration._
+      import com.redis.serialization.Parse.Implicits.parseByteArray
+      import com.coinport.coinex.bitway_client._
+      import com.coinport.coinex.serializers._
 
       implicit val timeout = Timeout(2 seconds)
       // implicit val ec = AccountService.system.dispatcher
+      val se = new ThriftBinarySerializer()
+      // BitwayClient.client.rpush("creq", se.toBinary(BitwayRequest(BitwayType.Transfer, 123, Currency.Btc, transferRequest = Some(TransferRequest("hoss", "chao", 12)))))
+      // BitwayClient.client.rpush("creq", se.toBinary(BitwayRequest(BitwayType.GenerateWallet, 123, Currency.Btc, generateWalletRequest = Some(GenerateWalletRequest(Some("mima"))))))
     """,
     scalacOptions ++= Seq("-encoding", "utf8"),
     scalacOptions ++= Seq("-optimize"),
