@@ -31,7 +31,7 @@ object CustomTypeSerializer extends Serializer[Any] {
   def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
     case m: Currency => JString(m.toString.toUpperCase)
     case m: MarketSide => JString(m.S)
-    case m: Map[_, _] =>
+    case m: scala.collection.Map[_, _] =>
       JObject(m.map({
         case (k, v) =>
           JField(
