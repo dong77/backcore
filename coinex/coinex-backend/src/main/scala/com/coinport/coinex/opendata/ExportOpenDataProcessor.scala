@@ -9,7 +9,7 @@ import akka.persistence.hbase.journal.PluginPersistenceSettings
 import akka.persistence.hbase.common.Const._
 import akka.persistence.{ SnapshotMetadata, SnapshotOffer }
 import akka.persistence.serialization.Snapshot
-import akka.serialization.{ SerializationExtension, Serialization }
+import akka.serialization.SerializationExtension
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
@@ -24,7 +24,7 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.hbase.async.KeyValue
 import scala.collection.mutable.Map
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.Future
 import scala.collection.JavaConverters._
 
 import Implicits._
@@ -103,9 +103,9 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
     }
   }
 
-  private def loadOpenDataProcessors(mapConfigPath: String): (Map[String, Long], Map[String, String]) = {
+  private def loadOpenDataProcessors(mapConfigPath: String): (Map[String, Long], collection.immutable.Map[String, String]) = {
     val in: InputStream = this.getClass.getClassLoader.getResourceAsStream(mapConfigPath)
-    val pFileMap = (new Eval()(IOUtils.toString(in))).asInstanceOf[Map[String, String]]
+    val pFileMap = (new Eval()(IOUtils.toString(in))).asInstanceOf[collection.immutable.Map[String, String]]
     val pSeqMap = Map.empty[String, Long]
     pFileMap.keySet.foreach(pSeqMap.put(_, 0L))
     (pSeqMap, pFileMap)
