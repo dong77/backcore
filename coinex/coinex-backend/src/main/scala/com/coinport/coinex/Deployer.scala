@@ -58,7 +58,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
   val mongoUriForEventExport = MongoURI(config.getString("akka.exchange.mongo-uri-for-events"))
   val mongoForEventExport = MongoConnection(mongoUriForEventExport)
   val dbForEventExport = mongoForEventExport(mongoUriForEventExport.database.get)
-  val asyncHBaseClient = AsyncHBaseClient()
+  val asyncHBaseClient = new AsyncHBaseClient()
 
   val snapshotIntervalSec = config.getInt("akka.exchange.opendata.export-interval-seconds")
 
@@ -118,7 +118,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     deploySingleton(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer <<)
     deploySingleton(Props(new OrderWriter(dbForViews)), order_mongo_writer <<)
-    deploySingleton(Props(new ExportOpenDataProcessor(asyncHBaseClient)), export_open_data <<)
+    deploySingleton(Props(new ExportOpenDataProcessor(asyncHBaseClient)), opendata_exporter <<)
 
     // Deploy monitor at last
     deployMonitor(routers)

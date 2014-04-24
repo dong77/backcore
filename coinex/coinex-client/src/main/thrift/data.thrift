@@ -415,3 +415,7 @@ struct TransferResponse {
 struct QueryWalletResponse {
     1: ErrorCode error
 }
+
+struct ExportOpenDataMap {
+    1: map<string, i64> processorSeqMap
+}

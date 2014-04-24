@@ -5,14 +5,13 @@ import akka.persistence.hbase.journal.{ PluginPersistenceSettings, HBaseClientFa
 import akka.actor.ExtendedActorSystem
 import akka.persistence.PersistenceSettings
 
-case class AsyncHBaseClient(implicit val system: ExtendedActorSystem) {
+class AsyncHBaseClient(implicit val system: ExtendedActorSystem) {
   private val config = system.settings.config
   // use journal config as hbse client config
   private val hBasePersistenceSettings = PluginPersistenceSettings(config, "hbase-journal")
-  private val client = HBaseClientFactory.getClient(hBasePersistenceSettings, new PersistenceSettings(config.getConfig("akka.persistence")))
 
   def getClient(): HBaseClient = {
-    client
+    HBaseClientFactory.getClient(hBasePersistenceSettings, new PersistenceSettings(config.getConfig("akka.persistence")))
   }
 
   def shutDown() {

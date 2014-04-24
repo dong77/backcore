@@ -19,6 +19,6 @@ case class DoSubmitRobot(robot: Robot)
 
 case class DoCancelRobot(id: Long)
 
-case class ListenAtRedis()
+case object ListenAtRedis
 
-case class DoExportData
+case object DoExportData

@@ -285,8 +285,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: TExportToMongoState => _cTExportToMongoState(m)
     case m: TMarketDepthState => _cTMarketDepthState(m)
     case m: TMarketState => _cTMarketState(m)
-    case m: TMetricsState =>
-      println("using thrift serializer for TMetricsState >>>>>>>>>>>>>>>>>>>>>>"); _cTMetricsState(m)
+    case m: TMetricsState => _cTMetricsState(m)
     case m: TSimpleState => _cTSimpleState(m)
     case m: TUserState => _cTUserState(m)
 
@@ -428,11 +427,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[TExportToMongoState.Immutable] => _cTExportToMongoState.invert(bytes).get
     case Some(c) if c == classOf[TMarketDepthState.Immutable] => _cTMarketDepthState.invert(bytes).get
     case Some(c) if c == classOf[TMarketState.Immutable] => _cTMarketState.invert(bytes).get
-    case Some(c) if c == classOf[TMetricsState.Immutable] =>
-      println("using thrift deserializer for TMetricsState >>>>>>>>>>>>>>>>>>>>>>");
-      val test = _cTMetricsState.invert(bytes).get
-      println(test)
-      test
+    case Some(c) if c == classOf[TMetricsState.Immutable] => _cTMetricsState.invert(bytes).get
     case Some(c) if c == classOf[TSimpleState.Immutable] => _cTSimpleState.invert(bytes).get
     case Some(c) if c == classOf[TUserState.Immutable] => _cTUserState.invert(bytes).get
 
