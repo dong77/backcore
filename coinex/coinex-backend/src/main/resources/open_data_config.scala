@@ -1,6 +1,6 @@
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
-import scala.collection.Set
+import scala.collection.immutable.Map
 import Implicits._
 
-Set(MARKET_UPDATE_PROCESSOR <<, METRICS_VIEW <<, "p_m_btcrmb")
+Map((MARKET_UPDATE_PROCESSOR <<) -> "market", (ACCOUNT_PROCESSOR <<) -> "account", "p_m_btcrmb" -> "btc_cny")

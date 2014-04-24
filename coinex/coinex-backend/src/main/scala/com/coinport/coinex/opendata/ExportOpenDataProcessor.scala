@@ -13,7 +13,6 @@ import akka.serialization.{ SerializationExtension, Serialization }
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
-import com.coinport.coinex.data.ExportOpenDataMap
 import com.coinport.coinex.serializers.PrettyJsonSerializer
 import com.twitter.util.Eval
 import java.io._
@@ -26,7 +25,6 @@ import org.hbase.async.KeyValue
 import scala.collection.mutable.Map
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success }
 import scala.collection.JavaConverters._
 
 import Implicits._
@@ -39,6 +37,7 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
   private var cancellable: Cancellable = null
   private val scheduleInterval = 10 second
   private val pSeqMap = scala.collection.mutable.Map.empty[String, Long]
+  private var pFileMap = scala.collection.mutable.Map.empty[String, String]
   private var manager: ExportOpenDataManager = null
 
   override def preStart(): Unit = {
@@ -46,8 +45,10 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
     val config = context.system.settings.config
     val exportData = config.getBoolean("akka.opendata.enabled-export")
     if (!exportData) return
-    pSeqMap ++= loadOpenDataProcessors(context.system.settings.config.getString("akka.opendata.processors-map-path"))
-    manager = new ExportOpenDataManager(asyncHBaseClient, context)
+    val (pInitSeqMap, pInitFileMap) = loadOpenDataProcessors(context.system.settings.config.getString("akka.opendata.processors-map-path"))
+    pSeqMap ++= pInitSeqMap
+    pFileMap ++= pInitFileMap
+    manager = new ExportOpenDataManager(asyncHBaseClient, context, pFileMap)
     scheduleExport()
   }
 
@@ -102,47 +103,29 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
     }
   }
 
-  private def loadOpenDataProcessors(mapConfigPath: String): Map[String, Long] = {
+  private def loadOpenDataProcessors(mapConfigPath: String): (Map[String, Long], Map[String, String]) = {
     val in: InputStream = this.getClass.getClassLoader.getResourceAsStream(mapConfigPath)
-    val set = (new Eval()(IOUtils.toString(in))).asInstanceOf[Set[String]]
-    val map = Map.empty[String, Long]
-    set.foreach(map.put(_, 0L))
-    map
+    val pFileMap = (new Eval()(IOUtils.toString(in))).asInstanceOf[Map[String, String]]
+    val pSeqMap = Map.empty[String, Long]
+    pFileMap.keySet.foreach(pSeqMap.put(_, 0L))
+    (pSeqMap, pFileMap)
   }
 }
 
-class ExportOpenDataManager {
-  private var asyncHBaseClient: AsyncHBaseClient = null
-  private var fs: FileSystem = null
-  private var actorContext: ActorContext = null
-  var messagesBatchSize: Long = 100L
-  private var snapshotHdfsDir: String = ""
-  private var exportSnapshotHdfsDir: String = ""
-  private var exportMessagesHdfsDir: String = ""
-  private var messagesTable: String = ""
-  private var messagesFamily: String = ""
-  implicit var pluginPersistenceSettings: PluginPersistenceSettings = null
+class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context: ActorContext, val pFileMap: Map[String, String]) {
+  private val config = context.system.settings.config
+  private val fs: FileSystem = openHdfsSystem(config.getString("akka.opendata.hdfs-host"))
+  var messagesBatchSize: Long = config.getLong("akka.opendata.messages-batch-size")
+  private val snapshotHdfsDir: String = config.getString("hadoop-snapshot-store.snapshot-dir")
+  private val exportSnapshotHdfsDir = config.getString("akka.opendata.export-snapshot-hdfs-dir")
+  private val exportMessagesHdfsDir = config.getString("akka.opendata.export-messages-hdfs-dir")
+  private val messagesTable = config.getString("hbase-journal.table")
+  private val messagesFamily = config.getString("hbase-journal.family")
   private val BUFFER_SIZE = 2048
   private val SCAN_MAX_NUM_ROWS = 50
-  implicit var executionContext: ExecutionContext = null
-  implicit var serialization: Serialization = null
-
-  def this(asyncHBaseClient: AsyncHBaseClient, context: ActorContext) {
-    this()
-    actorContext = context
-    val config = context.system.settings.config
-    fs = openHdfsSystem(config.getString("akka.opendata.hdfs-host"))
-    messagesBatchSize = config.getLong("akka.opendata.messages-batch-size")
-    snapshotHdfsDir = config.getString("hadoop-snapshot-store.snapshot-dir")
-    exportSnapshotHdfsDir = config.getString("akka.opendata.export-snapshot-hdfs-dir")
-    exportMessagesHdfsDir = config.getString("akka.opendata.export-messages-hdfs-dir")
-    messagesTable = config.getString("hbase-journal.table")
-    messagesFamily = config.getString("hbase-journal.family")
-    pluginPersistenceSettings = PluginPersistenceSettings(config, JOURNAL_CONFIG)
-    this.asyncHBaseClient = asyncHBaseClient
-    executionContext = context.system.dispatcher
-    serialization = SerializationExtension(context.system)
-  }
+  implicit var pluginPersistenceSettings = PluginPersistenceSettings(config, JOURNAL_CONFIG)
+  implicit var executionContext = context.system.dispatcher
+  implicit var serialization = SerializationExtension(context.system)
 
   protected def openHdfsSystem(defaultName: String): FileSystem = {
     val conf = new Configuration()
@@ -161,18 +144,11 @@ class ExportOpenDataManager {
           serialization.deserialize(
             withStream(new BufferedInputStream(fs.open(path, BUFFER_SIZE), BUFFER_SIZE)) {
               IOUtils.toByteArray
-            }, classOf[Snapshot]) match {
-              case Success(snapshot) =>
-                snapshot.data.asInstanceOf[AnyRef]
-              case Failure(ex) =>
-                sys.error(s"""Failed to deserialize snapshot file ${path.getName}, error : ${ex.getMessage}""")
-                return seqNum
-            }
-        val exportSnapshotPath = new Path(exportSnapshotHdfsDir, desc.toFilename)
+            }, classOf[Snapshot]).get
+        val exportSnapshotPath = new Path(exportSnapshotHdfsDir, s"snapshot_${pFileMap(processorId)}_${seqNum}")
         val jsonSnapshot = PrettyJsonSerializer.toJson(snapshot)
         withStream(new BufferedWriter(new OutputStreamWriter(fs.create(exportSnapshotPath, true)), BUFFER_SIZE))(IOUtils.write(jsonSnapshot, _))
         seqNum
-
       case _ => processedSeqNum
     }
   }
@@ -209,7 +185,7 @@ class ExportOpenDataManager {
         builder.delete(builder.length - 1, builder.length)
         builder ++= "},"
       }
-      builder.substring(0, builder.length - 1)
+      builder.toString()
     }
 
     def handleRows(): Future[StringBuilder] = {
@@ -229,9 +205,10 @@ class ExportOpenDataManager {
 
     handleRows() map {
       case data if !data.isEmpty =>
-        val writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(exportMessagesHdfsDir, s"$processorId~${toSeqNum - 1}~${System.currentTimeMillis()}"))))
+        val writer = new BufferedWriter(new OutputStreamWriter(fs.create(
+          new Path(exportMessagesHdfsDir, s"message_${pFileMap(processorId)}_${toSeqNum - 1}"))))
         writer.write("{\"messages\":[")
-        writer.write(data.toString())
+        writer.write(data.substring(0, data.length - 1).toString())
         writer.write("]}")
         writer.flush()
         writer.close()
