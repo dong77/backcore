@@ -13,18 +13,21 @@ import com.coinport.coinex.data.Implicits._
 object PrettyJsonSerializer {
   implicit val formats = ThriftEnumJson4sSerialization.formats + CustomTypeSerializer
 
+  def toJValue(obj: Any) = {
+    Extraction.decompose(obj)
+      .removeField {
+        case JField(name, value) =>
+          name.startsWith("_") // filter fields starting with underscore
+        case _ => false
+      }
+  }
+
   def toJson(obj: Any): String = {
-    val json = Extraction.decompose(obj)
-    json filterField {
-      case JField(name, value) =>
-        !name.startsWith("_") // filter fields starting with underscore
-      case _ => false
-    }
-    writePretty(json)
+    writePretty(toJValue(obj))
   }
 }
 
-object CustomTypeSerializer extends Serializer[Map[Any, Any]] {
+object CustomTypeSerializer extends Serializer[Any] {
   def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
     case m: Currency => JString(m.toString.toUpperCase)
     case m: MarketSide => JString(m.S)
