@@ -3,7 +3,12 @@
  * Author: c@coinport.com (Chao Ma)
  */
 
-var RedisProxy = require('./redis/redis_proxy').RedisProxy;
+var RedisProxy             = require('./redis/redis_proxy').RedisProxy,
+    BitwayType             = require('../../../gen-nodejs/data_types').BitwayType,
+    GenerateWalletResponse = require('../../../gen-nodejs/data_types').GenerateWalletResponse,
+    Currency               = require('../../../gen-nodejs/data_types').Currency,
+    ErrorCode              = require('../../../gen-nodejs/data_types').ErrorCode,
+    BitwayResponse         = require('../../../gen-nodejs/message_types').BitwayResponse;
 
 var proxy = new RedisProxy("127.0.0.1", "6379");
 
@@ -29,7 +34,9 @@ proxy.on(RedisProxy.EventType.QUERY_WALLET, function(requestId, currency, reques
     console.log(request);
 });
 
-proxy.start();
+// proxy.start();
+proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_WALLET, requestId: 1425, currency: Currency.BTC,
+    generateWalletResponse: new GenerateWalletResponse({error: ErrorCode.ROBOT_DNA_EXIST})}))
 
 var logo = "" +
 " _    _ _                     \n" +

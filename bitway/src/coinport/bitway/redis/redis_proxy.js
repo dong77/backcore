@@ -77,7 +77,6 @@ RedisProxy.prototype.start = function() {
 RedisProxy.prototype.publish = function(data) {
     var self = this;
     this.serializer.toBinary(data, function(bytes) {
-        console.log(bytes);
         self.pushClient.rpush(RedisProxy.RESPONSE_CHANNEL, bytes);
     });
 };
