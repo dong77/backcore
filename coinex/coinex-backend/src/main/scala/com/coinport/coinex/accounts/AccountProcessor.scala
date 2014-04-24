@@ -72,7 +72,7 @@ class AccountProcessor(
     }
 
     case p @ ConfirmablePersistent(m: AdminConfirmTransferSuccess, _, _) =>
-      persist(m) { event => p.confirm(); updateState(event) }
+      persist(m) { event => confirm(p); updateState(event) }
 
     case DoRequestGenerateABCode(userId, amount, _, _) => {
       val adjustment = CashAccount(Currency.Rmb, -amount, amount, 0)
@@ -128,7 +128,7 @@ class AccountProcessor(
     }
 
     case p @ ConfirmablePersistent(m: AdminConfirmTransferFailure, _, _) =>
-      persist(m) { event => p.confirm(); updateState(event) }
+      persist(m) { event => confirm(p); updateState(event) }
 
     case DoSubmitOrder(side, order) =>
       if (order.quantity <= 0) {
@@ -148,7 +148,7 @@ class AccountProcessor(
 
     case p @ ConfirmablePersistent(event: OrderSubmitted, seq, _) =>
       persist(countFee(event)) { event =>
-        p.confirm()
+        confirm(p)
         sender ! event
         updateState(event)
         channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)
@@ -156,7 +156,7 @@ class AccountProcessor(
 
     case p @ ConfirmablePersistent(event: OrderCancelled, seq, _) =>
       persist(countFee(event)) { event =>
-        p.confirm()
+        confirm(p)
         sender ! event
         updateState(event)
         channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)

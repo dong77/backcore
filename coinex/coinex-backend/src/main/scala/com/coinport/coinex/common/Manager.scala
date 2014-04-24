@@ -20,4 +20,9 @@ abstract class Manager[T <: AnyRef] {
     filters.clear
     filters ++= snapshot.filterMap.map { kv => kv._1 -> new RedeliverFilter(kv._2) }
   }
+
+  def rememberProcessedId(channel: String, id: Long) {
+    val filter = filters.getOrElseUpdate(channel, new RedeliverFilter(RedeliverFilterData(Seq.empty[Long], DEFAULT_FILTER_SIZE)))
+    filter.rememberProcessedId(id)
+  }
 }

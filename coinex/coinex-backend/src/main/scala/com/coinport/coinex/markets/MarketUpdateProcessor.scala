@@ -25,7 +25,7 @@ class MarketUpdateProcessor extends ExtendedProcessor with Processor {
   }
 
   def receive = LoggingReceive {
-    case p: ConfirmablePersistent => p.confirm()
+    case p: ConfirmablePersistent => confirm(p)
     case _ =>
   }
 }

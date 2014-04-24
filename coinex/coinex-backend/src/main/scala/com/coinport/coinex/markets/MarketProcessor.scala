@@ -38,7 +38,7 @@ class MarketProcessor(
       }
 
     case p @ ConfirmablePersistent(m @ OrderFundFrozen(side, order: Order), seq, _) =>
-      p.confirm()
+      confirm(p)
       if (!manager.isOrderPriceInGoodRange(side, order.price)) {
         sender ! SubmitOrderFailed(side, order, PriceOutOfRange)
         val unfrozen = OrderCancelled(side, order)

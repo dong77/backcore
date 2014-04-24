@@ -22,4 +22,8 @@ trait ExtendedProcessor extends Actor with ActorLogging with SnapshotSupport wit
     log.info("============ processorId: {}", processorId)
     super.preStart
   }
+
+  override def confirm(p: ConfirmablePersistent) {
+    p.confirm()
+  }
 }

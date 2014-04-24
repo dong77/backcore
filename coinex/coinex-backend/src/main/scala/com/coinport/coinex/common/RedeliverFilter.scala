@@ -11,11 +11,13 @@ class RedeliverFilter(data: RedeliverFilterData) {
   def getThrift = RedeliverFilterData(processedIds.toSeq, data.maxSize)
 
   def hasProcessed(id: Long) = {
-    val processed = (id < processedIds.headOption.getOrElse(0L) || processedIds.contains(id))
-    if (!processed) {
+    id < processedIds.headOption.getOrElse(0L) || processedIds.contains(id)
+  }
+
+  def rememberProcessedId(id: Long) {
+    if (!hasProcessed(id)) {
       processedIds += id
       if (processedIds.size > data.maxSize) processedIds = processedIds.takeRight(data.maxSize)
     }
-    processed
   }
 }

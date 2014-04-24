@@ -29,7 +29,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath)
     case p @ ConfirmablePersistent(DoRequestTransfer(w), _, _) =>
       persist(DoRequestTransfer(w.copy(id = manager.getTransferId))) {
         event =>
-          p.confirm()
+          confirm(p)
           sender ! RequestTransferSucceeded(event.transfer)
           updateState(event)
       }

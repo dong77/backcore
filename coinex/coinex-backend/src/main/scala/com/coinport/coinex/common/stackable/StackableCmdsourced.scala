@@ -11,7 +11,7 @@ trait StackableCmdsourced[T <: AnyRef, M <: Manager[T]]
     extends Processor with ActorLogging with SnapshotSupport with RedeliverFilterSupport[T, M] {
   val manager: M
 
-  abstract override def receive = filterFor(super.receive) orElse super.receive orElse {
+  abstract override def receive = filterFor(super.receive, true) orElse super.receive orElse {
     case cmd: TakeSnapshotNow => takeSnapshot(cmd)(saveSnapshot(manager.getSnapshot))
 
     case SnapshotOffer(meta, snapshot) =>
