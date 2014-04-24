@@ -149,6 +149,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
         val jsonSnapshot = PrettyJsonSerializer.toJson(snapshot)
         withStream(new BufferedWriter(new OutputStreamWriter(fs.create(exportSnapshotPath, true)), BUFFER_SIZE))(IOUtils.write(jsonSnapshot, _))
         seqNum
+
       case _ => processedSeqNum
     }
   }
