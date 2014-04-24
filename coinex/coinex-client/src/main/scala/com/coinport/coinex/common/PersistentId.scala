@@ -10,6 +10,7 @@ object PersistentId extends Enumeration {
   val ROBOT_PROCESSOR = Value("p_r")
   val USER_PROCESSOR = Value("p_u")
   val EXPORT_OPEN_DATA_PROCESSOR = Value("p_od")
+  val BITWAY_PROCESSOR = Value("p_bw")
 
   // View Ids
   val ACCOUNT_VIEW = Value("v_a")

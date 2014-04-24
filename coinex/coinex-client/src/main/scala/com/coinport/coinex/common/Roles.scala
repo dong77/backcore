@@ -33,7 +33,7 @@ object ConstantRole extends Enumeration {
 
   val bitway_receiver = Value
 
-  val bitway_proxy = Value
+  val bitway_processor = Value
 
   val opendata_exporter = Value
 

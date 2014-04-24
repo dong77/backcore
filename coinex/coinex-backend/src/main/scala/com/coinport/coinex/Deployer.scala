@@ -79,8 +79,6 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       deploy(Props(new CandleDataView(m) with StackableView[TCandleDataState, CandleDataManager]), candle_data_view << m)
     }
 
-    deploy(Props(new BitwayProxy()), bitway_proxy <<)
-
     deploy(Props(new UserWriter(dbForViews, userManagerSecret)), user_mongo_writer <<)
     deploy(Props(new AccountView(feeConfig) with StackableView[TAccountState, AccountManager]), account_view <<)
     deploy(Props(new AssetView with StackableView[TAssetState, AssetManager]), asset_view <<)
@@ -120,10 +118,12 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploySingleton(Props(new OrderWriter(dbForViews)), order_mongo_writer <<)
     deploySingleton(Props(new ExportOpenDataProcessor(asyncHBaseClient)), opendata_exporter <<)
 
+    // TODO(c): complete this
+    deploySingleton(Props(new BitwayProcessor()), bitway_processor <<)
+    deploy(Props(new BitwayReceiver(routers.bitwayProcessor)), bitway_receiver <<)
+
     // Deploy monitor at last
     deployMonitor(routers)
-
-    deploy(Props(new BitwayReceiver(routers.bitwayProxy.path)), bitway_receiver <<)
 
     routers
   }

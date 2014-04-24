@@ -59,7 +59,7 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
 
   val bitwayReceiver = routerFor(ConstantRole.bitway_receiver <<)
 
-  val bitwayProxy = routerFor(ConstantRole.bitway_proxy <<)
+  val bitwayProcessor = routerForSingleton(ConstantRole.bitway_processor <<)
 
   val metricsView = routerFor(metrics_view<<)
 
