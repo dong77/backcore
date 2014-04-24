@@ -18,7 +18,12 @@ object BitwayClient {
   final val REQUEST_CHANNEL = "creq"
   final val RESPONSE_CHANNEL = "cres"
 
-  val client = new RedisClient("localhost", 6379)
+  // TODO(c): add embeded redis for unit test instead of disable the redis client
+  val client: Option[RedisClient] = try {
+    Some(new RedisClient("localhost", 6379))
+  } catch {
+    case ex: Throwable => None
+  }
   val serializer = new ThriftBinarySerializer()
 }
 
@@ -38,8 +43,8 @@ class BitwayReceiver(bitwayProxy: ActorPath) extends Actor with ActorLogging {
   }
 
   def receive = LoggingReceive {
-    case ListenAtRedis =>
-      client.blpop[String, Array[Byte]](1, RESPONSE_CHANNEL) match {
+    case ListenAtRedis if client.isDefined =>
+      client.get.blpop[String, Array[Byte]](1, RESPONSE_CHANNEL) match {
         case Some(s) =>
           val response = serializer.fromBinary(s._2, classOf[BitwayResponse.Immutable])
         // TODO(c): process response
