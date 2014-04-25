@@ -35,20 +35,25 @@ object Client {
 
   implicit val ec = AccountService.system.dispatcher
 
-  val wd = -245561917658914311L
-  val c = -6771488127296557565L
-  val lcm = 877800447188483646L
-  val cx = 91990591289398244L
-  val lwc = 5742988204510593740L
+  val userMap = Map(
+    "wd" -> -245561917658914311L,
+    "c" -> -6771488127296557565L,
+    "lcm" -> 877800447188483646L,
+    "cx" -> 91990591289398244L,
+    "lwc" -> 5742988204510593740L,
+    "xl" -> 11190591289398244L,
+    "kl" -> 22290591289398244L
+  )
 
-  val players = List(wd, c, lcm, cx, lwc)
-  val risk = Map(wd -> 10.0, c -> 30.0, lcm -> 50.0, cx -> 70.0, lwc -> 90.0)
+  userMap.map(kv => registerUser(kv._2, kv._1 + "@163.com", kv._1))
+  var basicRisk = 10.0
+  val risk = userMap.map(kv => { basicRisk += 10.0; (kv._2 -> basicRisk) })
 
   var did = -1
   def addGofvRobots() {
-    players foreach { uid =>
-      AccountService.deposit(uid, Btc, 10000 * 1000)
-      AccountService.deposit(uid, Rmb, 1000000 * 100)
+    userMap foreach { kv =>
+      AccountService.deposit(kv._2, Btc, 10000 * 1000)
+      AccountService.deposit(kv._2, Rmb, 1000000 * 100)
 
       val dna = Map(
         "START" -> """
@@ -57,6 +62,14 @@ object Client {
 
         "LOOP" -> """
         import scala.util.Random
+        import com.coinport.coinex.data._
+        import com.coinport.coinex.data.Currency._
+
+        println("*"*40)
+        var counter = robot.getPayload[Int]("COUNTER").get
+        println(counter)
+        println("*"*40)
+        val r = robot.setPayload("COUNTER", Some(counter+1))
         val btcSide = MarketSide(Btc, Rmb)
         val rmbSide = MarketSide(Rmb, Btc)
         val side = List(btcSide, rmbSide)(Random.nextInt(2))
@@ -69,22 +82,33 @@ object Client {
         }
 
         val range = %f - Random.nextInt(100)
-        val orderPrice = price * (1 + range / 100.0)
+        var orderPrice = price * (1 + range / 100.0)
         var quantity = 10 * (1 + range / 100.0)
         if (side == rmbSide) quantity /= orderPrice
+        if (side == btcSide) {
+          quantity = Random.nextDouble() + Random.nextInt(1000)
+          orderPrice = 250 + Random.nextInt(100)
+        } else {
+          quantity = 100000 + Random.nextInt(900000)
+          orderPrice = 1.0/(250 + Random.nextInt(100))
+        }
         val action = Some(DoSubmitOrder(side,
           Order(robot.userId, 0, quantity.toLong, price = Some(orderPrice), robotId = Some(robot.robotId))))
-
-        (robot -> "LOOP", action)
-        """.format(risk(uid))
+        (r -> "LOOP", action)
+        """.format(risk(kv._2))
       )
+
+      val order = Order(1L, 2L, 10L, inAmount = 30L)
+      val payload: Map[String, Option[Any]] =
+        Map("SP" -> Some(120L), "ORDER" -> Some(order), "COUNTER" -> Some(101), "SIDE" -> Some("tttt"))
       Client.backend ? DoAddRobotDNA(dna) map {
         case AddRobotDNAFailed(ErrorCode.RobotDnaExist, existingDNAId) =>
-          val robot = Robot(uid, uid, uid, Map.empty[String, Option[Any]], "START", existingDNAId)
+          val payload = Map("SP" -> Some(120L), "ORDER" -> Some(order), "COUNTER" -> Some(101), "SIDE" -> Some("tttt"))
+          val robot = Robot(kv._2, kv._2, kv._2, dnaId = existingDNAId, payloads = payload)
           println("exist robot dna >>>> id: " + existingDNAId)
           Client.backend ! DoSubmitRobot(robot)
         case mid =>
-          val robot = Robot(uid, uid, uid, Map.empty[String, Option[Any]], "START", mid.asInstanceOf[Long])
+          val robot = Robot(kv._2, kv._2, kv._2, dnaId = mid.asInstanceOf[Long], payloads = payload)
           println("generate robot >>>> id: " + robot.robotId)
           Client.backend ! DoSubmitRobot(robot)
       }
@@ -92,8 +116,8 @@ object Client {
   }
 
   def removeGofvRobots() {
-    players foreach { uid =>
-      Client.backend ! DoCancelRobot(uid)
+    userMap foreach { kv =>
+      Client.backend ! DoCancelRobot(kv._2)
     }
   }
 
@@ -106,6 +130,7 @@ object Client {
         mobileVerified = false,
         status = UserStatus.Normal),
       pwd)
+    println("add user >>>> " + mail)
   }
 
   def deposit(uid: Long, currency: Currency, amount: Double) =
@@ -154,6 +179,14 @@ object Client {
   def queryRCWithdrawalRecord(userId: Long) {
     Client.backend ? QueryRCWithdrawalRecord(userId) map {
       case m => println(m)
+    }
+  }
+
+  def main(args: Array[String]) {
+
+    args(0) match {
+      case "add" => addGofvRobots
+      case "rm" => removeGofvRobots
     }
   }
 }

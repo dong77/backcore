@@ -11,20 +11,22 @@ import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.data._
 import java.nio.ByteBuffer
 import scala.util.Marshal
+import com.coinport.coinex.util.ScalaSerializer
 
 object Robot {
 
   def fromByteBuffer(bf: ByteBuffer): Map[String, Option[Any]] = {
-    Marshal.load[Map[String, Option[Any]]](bf.array())
+    ScalaSerializer.deserialize[Map[String, Option[Any]]](bf.array())
   }
 
   def fromThrift(tRobot: TRobot): Robot = {
+    val payloads = fromByteBuffer(tRobot.payloads)
     Robot(tRobot.robotId,
       tRobot.userId,
       tRobot.timestamp,
-      fromByteBuffer(tRobot.statesPayload),
       tRobot.currentState,
-      tRobot.dnaId)
+      tRobot.dnaId,
+      payloads)
   }
 }
 
@@ -33,22 +35,15 @@ object Robot {
 // if user wrote: robot.setPayload("A", "1") we need change to r = robot.setPayload("A", "1")
 case class Robot(
     robotId: Long, userId: Long = COINPORT_UID, timestamp: Long = 0,
-    statesPayload: Map[String, Option[Any]] = Map.empty[String, Option[Any]],
     currentState: String = "START",
-    dnaId: Long = 0L) extends Object with Logging {
+    dnaId: Long = 0L,
+    payloads: Map[String, Option[Any]] = Map.empty[String, Option[Any]]) extends Object with Logging {
 
   // Option[Any] is the actual action of the robot, such as DoRequestCashDeposit.
   // This could be restrained from outter processor
   // TODO(c): try to make Metrics as T
 
-  private val START = "START"
   private val DONE = "DONE"
-  private val HEADER = """
-    import com.coinport.coinex.data._
-    import com.coinport.coinex.data.Currency._
-    (robot: Robot, metrics: Option[Metrics]) =>
-
-  """
 
   // invoked by outter processor
   def action(metrics: Option[Metrics] = None, actionFunction: Action): (Robot, Option[Any]) = currentState match {
@@ -70,10 +65,10 @@ case class Robot(
   def isDone = currentState == DONE
 
   def getPayload[T](state: String) =
-    Option(statesPayload.getOrElse(state, None).getOrElse(null).asInstanceOf[T])
+    Option(payloads.getOrElse(state, None).getOrElse(null).asInstanceOf[T])
 
   def setPayload(state: String, payload: Option[Any]): Robot = {
-    copy(statesPayload = statesPayload + (state -> payload))
+    copy(payloads = payloads + (state -> payload))
   }
 
   def ->(state: String): Robot = { copy(currentState = state) }
@@ -86,13 +81,12 @@ case class Robot(
     TRobot(robotId = robotId,
       userId = userId,
       timestamp = timestamp,
-      statesPayload = toByteBuffer(statesPayload),
+      payloads = toByteBuffer(payloads),
       currentState = currentState,
       dnaId = dnaId)
   }
 
   def toByteBuffer(sp: Map[String, Option[Any]]): ByteBuffer = {
-    ByteBuffer.wrap(Marshal.dump(sp))
+    ByteBuffer.wrap(ScalaSerializer.serialize[Map[String, Option[Any]]](sp))
   }
-
 }

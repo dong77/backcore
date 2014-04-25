@@ -14,10 +14,8 @@ object StopOrderRobot {
     stopPrice: Double, side: MarketSide, order: Order): (Map[String, Option[Any]], Map[String, String]) = {
     val dna = Map(
       "START" -> """
-        val r = robot.setPayload("SP", Some(%f))
-          .setPayload("SIDE", Some(%s)).setPayload("ORDER", Some(%s))
-        (r -> "LISTENING", None)
-      """.format(stopPrice, side.toString, order.toString),
+        (robot -> "LISTENING", None)
+      """,
 
       "LISTENING" -> """
         val stopPrice = robot.getPayload[Double]("SP").get
@@ -36,11 +34,10 @@ object StopOrderRobot {
       """.format(STOP_ORDER_ROBOT_TYPE)
     )
 
-    val payload = Map("robotId" -> Some(robotId),
-      "userId" -> Some(userId),
-      "timestamp" -> Some(timestamp),
-      "side" -> Some(side.toString),
-      "order" -> Some(order.toString))
+    val payload =
+      Map("SP" -> Some(stopPrice),
+        "SIDE" -> Some(side),
+        "ORDER" -> Some(order))
 
     (payload, dna)
   }

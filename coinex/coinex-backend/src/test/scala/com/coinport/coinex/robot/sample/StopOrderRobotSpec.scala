@@ -23,9 +23,10 @@ class StopOrderRobotSpec extends Specification {
       }
       actionMap += "DONE" -> new RobotState().inflate("""(robot -> "DONE", None)""")
 
-      var robot = Robot(1, 2, 10000)
+      var robot = Robot(1, 2, 10000, dnaId = 1L, payloads = payload)
 
       val (robot1, res1) = robot.action(None, actionMap(robot.currentState))
+
       res1 mustEqual None
       val (robot2, res2) = robot1.action(None, actionMap(robot1.currentState))
       res2 mustEqual None
@@ -40,6 +41,7 @@ class StopOrderRobotSpec extends Specification {
       )
       res4 mustEqual Some(DoSubmitOrder((Btc ~> Rmb),
         Order(2, 1, 2, Some(3429.0), robotId = Some(1), robotType = Some(1))))
+
       robot4.isDone mustEqual true
     }
 
@@ -49,7 +51,7 @@ class StopOrderRobotSpec extends Specification {
         (state._1 -> new RobotState().inflate(state._2))
       }
       actionMap += "DONE" -> new RobotState().inflate("""(robot -> "DONE", None)""")
-      var robot = Robot(1, 2, 10000)
+      var robot = Robot(1, 2, 10000, dnaId = 1L, payloads = payload)
       val (robot1, res1) = robot.action(None, actionMap(robot.currentState))
       res1 mustEqual None
       val (robot2, res2) = robot1.action(None, actionMap(robot1.currentState))

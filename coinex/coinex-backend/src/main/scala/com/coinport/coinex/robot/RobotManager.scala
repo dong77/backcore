@@ -16,12 +16,10 @@ class RobotManager extends Manager[TRobotState] {
   var state = RobotState()
 
   override def getSnapshot = {
-    println(state.toThrift)
     state.toThrift
   }
 
   override def loadSnapshot(s: TRobotState) {
-    println(s)
     state = state.fromThrift(s)
   }
 

@@ -101,6 +101,8 @@ object CoinexBuild extends Build {
       "com.google.guava" % "guava" % "16.0.1",
       "org.mongodb" %% "casbah" % "2.6.5",
       "com.twitter" %% "util-eval" % "6.12.1",
+      "com.twitter" %% "chill" % "0.3.6",
+      "com.twitter" % "chill-akka_2.10" % "0.3.6",
       "org.apache.thrift" % "libthrift" % "0.8.0"))
 
   lazy val backend = Project(

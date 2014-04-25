@@ -29,7 +29,7 @@ class RobotStateSpec extends Specification {
       robotState3.getUsingRobots(dnaId).contains(10) mustEqual false
       robotState3.isExistRobotDNA(dna)._2 mustEqual true
 
-      val robotState4 = robotState3.addRobot(Robot(10, 1, 1, payload, "START", dnaId))
+      val robotState4 = robotState3.addRobot(Robot(10, 1, 1, dnaId = dnaId, payloads = payload))
       robotState4.getUsingRobots(dnaId).contains(10) mustEqual true
 
       val robotState5 = robotState4.removeRobotDNA(dnaId)
@@ -58,11 +58,11 @@ class RobotStateSpec extends Specification {
       robotState3.getUsingRobots(dnaId).contains(10) mustEqual false
       robotState3.isExistRobotDNA(dna)._2 mustEqual true
 
-      val robotState4 = robotState3.addRobot(Robot(10, 1, 1, payload, "START", dnaId))
+      val robotState4 = robotState3.addRobot(Robot(10, 1, 1, dnaId = dnaId, payloads = payload))
       robotState4.getUsingRobots(dnaId).contains(10) mustEqual true
       val tRobotState = robotState4.toThrift
       val robotState5 = robotState4.fromThrift(tRobotState)
-      robotState5.robotDNAMap(-5969103633753446051L).dnaId mustEqual -5969103633753446051L
+      robotState5.robotDNAMap(2208786710083266701L).dnaId mustEqual 2208786710083266701L
 
     }
 

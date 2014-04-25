@@ -23,7 +23,7 @@ class TrailingStopOrderRobotSpec extends Specification {
       }
       actionMap += "DONE" -> new RobotState().inflate("""(robot -> "DONE", None)""")
 
-      var robot = Robot(1, 2, 10000)
+      var robot = Robot(1, 2, 10000, dnaId = 1L, payloads = payload)
 
       val (robot1, res1) = robot.action(None, actionMap(robot.currentState))
       res1 mustEqual None
@@ -52,7 +52,7 @@ class TrailingStopOrderRobotSpec extends Specification {
       }
       actionMap += "DONE" -> new RobotState().inflate("""(robot -> "DONE", None)""")
 
-      var robot = Robot(1, 2, 10000)
+      var robot = Robot(1, 2, 10000, dnaId = 1L, payloads = payload)
 
       val (robot1, res1) = robot.action(None, actionMap(robot.currentState))
       res1 mustEqual None
@@ -91,7 +91,7 @@ class TrailingStopOrderRobotSpec extends Specification {
       }
       actionMap += "DONE" -> new RobotState().inflate("""(robot -> "DONE", None)""")
 
-      var robot = Robot(1, 2, 10000)
+      var robot = Robot(1, 2, 10000, dnaId = 1L, payloads = payload)
 
       val (robot1, res1) = robot.action(None, actionMap(robot.currentState))
       res1 mustEqual None
@@ -120,7 +120,7 @@ class TrailingStopOrderRobotSpec extends Specification {
       }
       actionMap += "DONE" -> new RobotState().inflate("""(robot -> "DONE", None)""")
 
-      var robot = Robot(1, 2, 10000)
+      var robot = Robot(1, 2, 10000, dnaId = 1L, payloads = payload)
 
       val (robot1, res1) = robot.action(None, actionMap(robot.currentState))
       res1 mustEqual None

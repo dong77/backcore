@@ -184,6 +184,7 @@ akka {
       akka-persistence-snapshot = "akka.persistence.serialization.SnapshotSerializer"
       akka-persistence-message = "akka.persistence.serialization.MessageSerializer"
       thrift = "com.coinport.coinex.serializers.%s"
+      chill = "com.twitter.chill.akka.AkkaSerializer"
     }
     serialization-bindings {
       "[B" = bytes
@@ -196,6 +197,7 @@ akka {
       "akka.contrib.pattern.DistributedPubSubMessage" = akka-pubsub
       "akka.persistence.serialization.Snapshot" = akka-persistence-snapshot
       "akka.persistence.serialization.Message" = akka-persistence-message
+      "com.coinport.coinex.data.DoSubmitRobot" = chill
 
 %s
     }

@@ -20,10 +20,8 @@ object TrailingStopOrderRobot {
     stopPercentage: Double, side: MarketSide, order: Order): (Map[String, Option[Any]], Map[String, String]) = {
     val dna = Map(
       "START" -> """
-        val r = robot.setPayload("BP", Some(%f)).setPayload("SP", Some(1 - %f))
-          .setPayload("SIDE", Some(%s)).setPayload("ORDER", Some(%s))
-        (r -> "LISTENING", None)
-      """.format(basePrice, stopPercentage, side.toString, order.toString),
+        (robot -> "LISTENING", None)
+      """,
 
       "LISTENING" -> """
         val stopPercentage = robot.getPayload[Double]("SP").get
@@ -49,11 +47,10 @@ object TrailingStopOrderRobot {
       """.format(TRAILING_STOP_ORDER_ROBOT_TYPE)
     )
 
-    val payload = Map("robotId" -> Some(robotId),
-      "userId" -> Some(userId),
-      "timestamp" -> Some(timestamp),
-      "basePrice" -> Some(basePrice),
-      "order" -> Some(order.toString))
+    val payload = Map("BP" -> Some(basePrice),
+      "SP" -> Some(1 - stopPercentage),
+      "SIDE" -> Some(side),
+      "ORDER" -> Some(order))
 
     (payload, dna)
   }

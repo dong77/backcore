@@ -161,28 +161,22 @@ class RobotSpec extends Specification {
     }
 
     "robot serialize" in {
-      var statesPayload: Map[String, Option[Any]] = Map.empty[String, Option[Any]]
-      statesPayload += "123" -> Some(1)
-      statesPayload += "222" -> Some("xxx")
-      statesPayload += "333" -> None
-      var robot = Robot(1, 2, 3, statesPayload, "SSTART", 4)
+      val payload = Map("123" -> Some(1), "222" -> Some("xxx"), "333" -> None)
+      var robot = Robot(1, 2, 3, dnaId = 4, payloads = payload)
 
       val tRobot = robot.toThrift
       tRobot.robotId mustEqual 1
       tRobot.userId mustEqual 2
       tRobot.timestamp mustEqual 3
-      tRobot.currentState mustEqual "SSTART"
       tRobot.dnaId mustEqual 4
-
       val robot2 = Robot.fromThrift(tRobot)
       robot2.robotId mustEqual 1
       robot2.userId mustEqual 2
       robot2.timestamp mustEqual 3
-      robot2.currentState mustEqual "SSTART"
       robot2.dnaId mustEqual 4
-      robot2.statesPayload("123") mustEqual Some(1)
-      robot2.statesPayload("222") mustEqual Some("xxx")
-      robot2.statesPayload("333") mustEqual None
+      robot2.payloads("123") mustEqual Some(1)
+      robot2.payloads("222") mustEqual Some("xxx")
+      robot2.payloads("333") mustEqual None
     }
   }
 }

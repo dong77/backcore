@@ -22,6 +22,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cCurrentAsset = JsonScalaCodec(CurrentAsset)
   lazy val _cCurrentPrice = JsonScalaCodec(CurrentPrice)
   lazy val _cCursor = JsonScalaCodec(Cursor)
+  lazy val _cExportOpenDataMap = JsonScalaCodec(ExportOpenDataMap)
   lazy val _cFee = JsonScalaCodec(Fee)
   lazy val _cGenerateWalletRequest = JsonScalaCodec(GenerateWalletRequest)
   lazy val _cGenerateWalletResponse = JsonScalaCodec(GenerateWalletResponse)
@@ -37,16 +38,9 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cOrderInfo = JsonScalaCodec(OrderInfo)
   lazy val _cOrderUpdate = JsonScalaCodec(OrderUpdate)
   lazy val _cQueryMarketSide = JsonScalaCodec(QueryMarketSide)
-<<<<<<< HEAD
   lazy val _cQueryWalletRequest = JsonScalaCodec(QueryWalletRequest)
   lazy val _cQueryWalletResponse = JsonScalaCodec(QueryWalletResponse)
-<<<<<<< HEAD
   lazy val _cRCDItem = JsonScalaCodec(RCDItem)
-=======
-=======
-  lazy val _cRCDItem = JsonScalaCodec(RCDItem)
->>>>>>> add A/B code recharge module
->>>>>>> add A/B code recharge module
   lazy val _cRedeliverFilterData = JsonScalaCodec(RedeliverFilterData)
   lazy val _cRedeliverFilters = JsonScalaCodec(RedeliverFilters)
   lazy val _cRefund = JsonScalaCodec(Refund)
@@ -80,12 +74,8 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cDoRequestACodeQuery = JsonScalaCodec(DoRequestACodeQuery)
   lazy val _cDoRequestBCodeRecharge = JsonScalaCodec(DoRequestBCodeRecharge)
   lazy val _cDoRequestConfirmRC = JsonScalaCodec(DoRequestConfirmRC)
-<<<<<<< HEAD
   lazy val _cDoRequestGenerateABCode = JsonScalaCodec(DoRequestGenerateABCode)
-=======
->>>>>>> add A/B code recharge module
   lazy val _cDoRequestPasswordReset = JsonScalaCodec(DoRequestPasswordReset)
-  lazy val _cDoRequestRCWithdrawal = JsonScalaCodec(DoRequestRCWithdrawal)
   lazy val _cDoRequestTransfer = JsonScalaCodec(DoRequestTransfer)
   lazy val _cDoResetPassword = JsonScalaCodec(DoResetPassword)
   lazy val _cDoSendEmail = JsonScalaCodec(DoSendEmail)
@@ -133,15 +123,10 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cRequestBCodeRechargeSucceeded = JsonScalaCodec(RequestBCodeRechargeSucceeded)
   lazy val _cRequestConfirmRCFailed = JsonScalaCodec(RequestConfirmRCFailed)
   lazy val _cRequestConfirmRCSucceeded = JsonScalaCodec(RequestConfirmRCSucceeded)
-<<<<<<< HEAD
   lazy val _cRequestGenerateABCodeFailed = JsonScalaCodec(RequestGenerateABCodeFailed)
   lazy val _cRequestGenerateABCodeSucceeded = JsonScalaCodec(RequestGenerateABCodeSucceeded)
-=======
->>>>>>> add A/B code recharge module
   lazy val _cRequestPasswordResetFailed = JsonScalaCodec(RequestPasswordResetFailed)
   lazy val _cRequestPasswordResetSucceeded = JsonScalaCodec(RequestPasswordResetSucceeded)
-  lazy val _cRequestRCWithdrawalFailed = JsonScalaCodec(RequestRCWithdrawalFailed)
-  lazy val _cRequestRCWithdrawalSucceeded = JsonScalaCodec(RequestRCWithdrawalSucceeded)
   lazy val _cRequestTransferFailed = JsonScalaCodec(RequestTransferFailed)
   lazy val _cRequestTransferSucceeded = JsonScalaCodec(RequestTransferSucceeded)
   lazy val _cResetPasswordFailed = JsonScalaCodec(ResetPasswordFailed)
@@ -178,6 +163,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: CurrentAsset => _cCurrentAsset(m)
     case m: CurrentPrice => _cCurrentPrice(m)
     case m: Cursor => _cCursor(m)
+    case m: ExportOpenDataMap => _cExportOpenDataMap(m)
     case m: Fee => _cFee(m)
     case m: GenerateWalletRequest => _cGenerateWalletRequest(m)
     case m: GenerateWalletResponse => _cGenerateWalletResponse(m)
@@ -193,16 +179,9 @@ class ThriftJsonSerializer extends Serializer {
     case m: OrderInfo => _cOrderInfo(m)
     case m: OrderUpdate => _cOrderUpdate(m)
     case m: QueryMarketSide => _cQueryMarketSide(m)
-<<<<<<< HEAD
     case m: QueryWalletRequest => _cQueryWalletRequest(m)
     case m: QueryWalletResponse => _cQueryWalletResponse(m)
-<<<<<<< HEAD
     case m: RCDItem => _cRCDItem(m)
-=======
-=======
-    case m: RCDItem => _cRCDItem(m)
->>>>>>> add A/B code recharge module
->>>>>>> add A/B code recharge module
     case m: RedeliverFilterData => _cRedeliverFilterData(m)
     case m: RedeliverFilters => _cRedeliverFilters(m)
     case m: Refund => _cRefund(m)
@@ -236,12 +215,8 @@ class ThriftJsonSerializer extends Serializer {
     case m: DoRequestACodeQuery => _cDoRequestACodeQuery(m)
     case m: DoRequestBCodeRecharge => _cDoRequestBCodeRecharge(m)
     case m: DoRequestConfirmRC => _cDoRequestConfirmRC(m)
-<<<<<<< HEAD
     case m: DoRequestGenerateABCode => _cDoRequestGenerateABCode(m)
-=======
->>>>>>> add A/B code recharge module
     case m: DoRequestPasswordReset => _cDoRequestPasswordReset(m)
-    case m: DoRequestRCWithdrawal => _cDoRequestRCWithdrawal(m)
     case m: DoRequestTransfer => _cDoRequestTransfer(m)
     case m: DoResetPassword => _cDoResetPassword(m)
     case m: DoSendEmail => _cDoSendEmail(m)
@@ -289,15 +264,10 @@ class ThriftJsonSerializer extends Serializer {
     case m: RequestBCodeRechargeSucceeded => _cRequestBCodeRechargeSucceeded(m)
     case m: RequestConfirmRCFailed => _cRequestConfirmRCFailed(m)
     case m: RequestConfirmRCSucceeded => _cRequestConfirmRCSucceeded(m)
-<<<<<<< HEAD
     case m: RequestGenerateABCodeFailed => _cRequestGenerateABCodeFailed(m)
     case m: RequestGenerateABCodeSucceeded => _cRequestGenerateABCodeSucceeded(m)
-=======
->>>>>>> add A/B code recharge module
     case m: RequestPasswordResetFailed => _cRequestPasswordResetFailed(m)
     case m: RequestPasswordResetSucceeded => _cRequestPasswordResetSucceeded(m)
-    case m: RequestRCWithdrawalFailed => _cRequestRCWithdrawalFailed(m)
-    case m: RequestRCWithdrawalSucceeded => _cRequestRCWithdrawalSucceeded(m)
     case m: RequestTransferFailed => _cRequestTransferFailed(m)
     case m: RequestTransferSucceeded => _cRequestTransferSucceeded(m)
     case m: ResetPasswordFailed => _cResetPasswordFailed(m)
@@ -338,6 +308,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[CurrentAsset.Immutable] => _cCurrentAsset.invert(bytes).get
     case Some(c) if c == classOf[CurrentPrice.Immutable] => _cCurrentPrice.invert(bytes).get
     case Some(c) if c == classOf[Cursor.Immutable] => _cCursor.invert(bytes).get
+    case Some(c) if c == classOf[ExportOpenDataMap.Immutable] => _cExportOpenDataMap.invert(bytes).get
     case Some(c) if c == classOf[Fee.Immutable] => _cFee.invert(bytes).get
     case Some(c) if c == classOf[GenerateWalletRequest.Immutable] => _cGenerateWalletRequest.invert(bytes).get
     case Some(c) if c == classOf[GenerateWalletResponse.Immutable] => _cGenerateWalletResponse.invert(bytes).get
@@ -353,16 +324,9 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[OrderInfo.Immutable] => _cOrderInfo.invert(bytes).get
     case Some(c) if c == classOf[OrderUpdate.Immutable] => _cOrderUpdate.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketSide.Immutable] => _cQueryMarketSide.invert(bytes).get
-<<<<<<< HEAD
     case Some(c) if c == classOf[QueryWalletRequest.Immutable] => _cQueryWalletRequest.invert(bytes).get
     case Some(c) if c == classOf[QueryWalletResponse.Immutable] => _cQueryWalletResponse.invert(bytes).get
-<<<<<<< HEAD
     case Some(c) if c == classOf[RCDItem.Immutable] => _cRCDItem.invert(bytes).get
-=======
-=======
-    case Some(c) if c == classOf[RCDItem.Immutable] => _cRCDItem.invert(bytes).get
->>>>>>> add A/B code recharge module
->>>>>>> add A/B code recharge module
     case Some(c) if c == classOf[RedeliverFilterData.Immutable] => _cRedeliverFilterData.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilters.Immutable] => _cRedeliverFilters.invert(bytes).get
     case Some(c) if c == classOf[Refund.Immutable] => _cRefund.invert(bytes).get
@@ -396,12 +360,8 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[DoRequestACodeQuery.Immutable] => _cDoRequestACodeQuery.invert(bytes).get
     case Some(c) if c == classOf[DoRequestBCodeRecharge.Immutable] => _cDoRequestBCodeRecharge.invert(bytes).get
     case Some(c) if c == classOf[DoRequestConfirmRC.Immutable] => _cDoRequestConfirmRC.invert(bytes).get
-<<<<<<< HEAD
     case Some(c) if c == classOf[DoRequestGenerateABCode.Immutable] => _cDoRequestGenerateABCode.invert(bytes).get
-=======
->>>>>>> add A/B code recharge module
     case Some(c) if c == classOf[DoRequestPasswordReset.Immutable] => _cDoRequestPasswordReset.invert(bytes).get
-    case Some(c) if c == classOf[DoRequestRCWithdrawal.Immutable] => _cDoRequestRCWithdrawal.invert(bytes).get
     case Some(c) if c == classOf[DoRequestTransfer.Immutable] => _cDoRequestTransfer.invert(bytes).get
     case Some(c) if c == classOf[DoResetPassword.Immutable] => _cDoResetPassword.invert(bytes).get
     case Some(c) if c == classOf[DoSendEmail.Immutable] => _cDoSendEmail.invert(bytes).get
@@ -449,15 +409,10 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[RequestBCodeRechargeSucceeded.Immutable] => _cRequestBCodeRechargeSucceeded.invert(bytes).get
     case Some(c) if c == classOf[RequestConfirmRCFailed.Immutable] => _cRequestConfirmRCFailed.invert(bytes).get
     case Some(c) if c == classOf[RequestConfirmRCSucceeded.Immutable] => _cRequestConfirmRCSucceeded.invert(bytes).get
-<<<<<<< HEAD
     case Some(c) if c == classOf[RequestGenerateABCodeFailed.Immutable] => _cRequestGenerateABCodeFailed.invert(bytes).get
     case Some(c) if c == classOf[RequestGenerateABCodeSucceeded.Immutable] => _cRequestGenerateABCodeSucceeded.invert(bytes).get
-=======
->>>>>>> add A/B code recharge module
     case Some(c) if c == classOf[RequestPasswordResetFailed.Immutable] => _cRequestPasswordResetFailed.invert(bytes).get
     case Some(c) if c == classOf[RequestPasswordResetSucceeded.Immutable] => _cRequestPasswordResetSucceeded.invert(bytes).get
-    case Some(c) if c == classOf[RequestRCWithdrawalFailed.Immutable] => _cRequestRCWithdrawalFailed.invert(bytes).get
-    case Some(c) if c == classOf[RequestRCWithdrawalSucceeded.Immutable] => _cRequestRCWithdrawalSucceeded.invert(bytes).get
     case Some(c) if c == classOf[RequestTransferFailed.Immutable] => _cRequestTransferFailed.invert(bytes).get
     case Some(c) if c == classOf[RequestTransferSucceeded.Immutable] => _cRequestTransferSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ResetPasswordFailed.Immutable] => _cResetPasswordFailed.invert(bytes).get
