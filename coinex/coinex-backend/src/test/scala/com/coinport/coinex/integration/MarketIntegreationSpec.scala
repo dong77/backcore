@@ -8,14 +8,14 @@ import akka.actor.actorRef2Scala
 class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
   import env._
 
-  val market = MarketSide(Btc, Rmb)
-  val reverse = MarketSide(Rmb, Btc)
+  val market = MarketSide(Btc, Cny)
+  val reverse = MarketSide(Cny, Btc)
   "CoinexApp" must {
     "submit orders and adjust account amounts correctly" in {
       val user1 = 1000L
       val user2 = 2000L
-      // deposit 6000 RMB
-      val depositRmb = AccountTransfer(1, user1, TransferType.Deposit, Rmb, 6000 * 1000, TransferStatus.Pending)
+      // deposit 6000 CNY
+      val depositRmb = AccountTransfer(1, user1, TransferType.Deposit, Cny, 6000 * 1000, TransferStatus.Pending)
       client ! DoRequestTransfer(depositRmb)
       val RequestTransferSucceeded(d1) = receiveOne(4 seconds)
 
@@ -34,7 +34,7 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
       Thread.sleep(200)
 
       client ! QueryAccount(user1)
-      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(1000, Map(Rmb -> CashAccount(Rmb, 6000000, 0, 0)))))
+      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(1000, Map(Cny -> CashAccount(Cny, 6000000, 0, 0)))))
 
       client ! QueryAccount(user2)
       receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 10000, 0, 0)))))
@@ -48,7 +48,7 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
       Thread.sleep(500)
 
       client ! QueryAccount(user1)
-      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(1000, Map(Rmb -> CashAccount(Rmb, 6000000, 0, 0)))))
+      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(1000, Map(Cny -> CashAccount(Cny, 6000000, 0, 0)))))
 
       client ! QueryAccount(user2)
       receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 1000, 9000, 0)))))
@@ -62,10 +62,10 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
       Thread.sleep(500)
 
       client ! QueryAccount(user1)
-      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(1000, Map(Rmb -> CashAccount(Rmb, 900000, 600000, 0), Btc -> CashAccount(Btc, 8991, 0, 0)))))
+      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(1000, Map(Cny -> CashAccount(Cny, 900000, 600000, 0), Btc -> CashAccount(Btc, 8991, 0, 0)))))
 
       client ! QueryAccount(user2)
-      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 1000, 0, 0), Rmb -> CashAccount(Rmb, 4495500, 0, 0)))))
+      receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 1000, 0, 0), Cny -> CashAccount(Cny, 4495500, 0, 0)))))
     }
   }
 }

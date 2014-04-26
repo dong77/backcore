@@ -4,13 +4,13 @@
 
 package com.coinport.coinex.ordertx
 
-import com.coinport.coinex.data.Currency.{ Rmb, Btc }
+import com.coinport.coinex.data.Currency.{ Cny, Btc }
 import com.coinport.coinex.data.{ Cursor, QueryTransaction, TransactionItem }
 import com.coinport.coinex.common.EmbeddedMongoForTestWithBF
 import com.coinport.coinex.data.Implicits._
 
 class TransactionMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
-  val market = Btc ~> Rmb
+  val market = Btc ~> Cny
 
   class TransactionClass extends TransactionMongoHandler {
     val coll = database("transaction")

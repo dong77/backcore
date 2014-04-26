@@ -26,7 +26,9 @@ trait AkkaService {
   val config = ConfigFactory.load(akkaConfigResource)
   implicit val system = ActorSystem("coinex", config)
   implicit val cluster = Cluster(system)
-  val markets = Seq(Btc ~> Rmb)
+
+  // TODO: load markets definition from config
+  val markets = Seq(Btc ~> Cny)
 
   val routers = new LocalRouters(markets)
   val backend = system.actorOf(Props(new Coinex(routers)), name = "backend")

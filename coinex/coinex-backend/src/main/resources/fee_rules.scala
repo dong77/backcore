@@ -12,8 +12,8 @@ import Implicits._
 
 FeeConfig(
   marketFeeRules = Map(
-    (Pts ~> Rmb) -> PercentageFee(0.003),
-    (Rmb ~> Pts) -> PercentageFee(0.003)),
+    (Pts ~> Cny) -> PercentageFee(0.003),
+    (Cny ~> Pts) -> PercentageFee(0.003)),
 
   robotFeeRules = Map(
     TRAILING_STOP_ORDER_ROBOT_TYPE -> PercentageFee(0.003),
@@ -21,4 +21,4 @@ FeeConfig(
 
   transferFeeRules = Map(
     Btc -> ConstantFee(1),
-    Rmb -> PercentageFee(0.002)))
+    Cny -> PercentageFee(0.002)))

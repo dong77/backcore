@@ -18,7 +18,7 @@ class RobotStateSpec extends Specification {
         Metrics(),
         Map.empty[Long, RobotDNA])
 
-      val (payload, dna) = StopOrderRobot(10, 2, 10000, 3125.0, (Btc ~> Rmb), Order(1, 1, 2, Some(3429.0)))
+      val (payload, dna) = StopOrderRobot(10, 2, 10000, 3125.0, (Btc ~> Cny), Order(1, 1, 2, Some(3429.0)))
       val (dnaId, robotState2) = robotState.addRobotDNA(dna)
 
       robotState2.robotDNAMap.contains(dnaId) mustEqual true
@@ -47,7 +47,7 @@ class RobotStateSpec extends Specification {
         Metrics(),
         Map.empty[Long, RobotDNA])
 
-      val (payload, dna) = StopOrderRobot(10, 2, 10000, 3125.0, (Btc ~> Rmb), Order(1, 1, 2, Some(3429.0)))
+      val (payload, dna) = StopOrderRobot(10, 2, 10000, 3125.0, (Btc ~> Cny), Order(1, 1, 2, Some(3429.0)))
       val (dnaId, robotState2) = robotState.addRobotDNA(dna)
 
       robotState2.robotDNAMap.contains(dnaId) mustEqual true

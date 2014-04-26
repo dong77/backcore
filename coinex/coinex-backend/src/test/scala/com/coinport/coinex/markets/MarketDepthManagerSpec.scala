@@ -12,7 +12,7 @@ import Currency._
 
 class MarketDepthManagerSpec extends Specification {
 
-  val side = Btc ~> Rmb
+  val side = Btc ~> Cny
   "MarketDepthManager" should {
 
     "NOT update askMap for market price sell orders" in {

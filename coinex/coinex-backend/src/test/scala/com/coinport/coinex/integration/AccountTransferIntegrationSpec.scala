@@ -11,7 +11,7 @@ class AccountTransferIntegrationSpec extends IntegrationSpec(new Environment) {
   import env._
   "CoinexApp" must {
     "save and retrieve deposit requests" in {
-      val deposit = AccountTransfer(1, 10000, TransferType.Deposit, Rmb, 500000000L, TransferStatus.Pending)
+      val deposit = AccountTransfer(1, 10000, TransferType.Deposit, Cny, 500000000L, TransferStatus.Pending)
       client ! DoRequestTransfer(deposit)
       val RequestTransferSucceeded(d) = receiveOne(4 seconds)
       d.status should be(TransferStatus.Pending)

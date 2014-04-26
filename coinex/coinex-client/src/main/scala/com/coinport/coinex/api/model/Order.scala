@@ -83,46 +83,46 @@ object UserOrder {
 
     val unit1 = marketSide._1
     val unit2 = marketSide._2
-    unit2 match {
-      case Rmb => // sell
-        val price: Option[Double] = order.price.map {
-          p => p.externalValue(marketSide)
-        }
-        val amount: Option[Double] = Some(order.quantity.externalValue(unit1))
-        val total: Option[Double] = order.takeLimit.map(t => t.externalValue(unit2))
+    if (marketSide.ordered) {
+      // sell
+      val price: Option[Double] = order.price.map {
+        p => p.externalValue(marketSide)
+      }
+      val amount: Option[Double] = Some(order.quantity.externalValue(unit1))
+      val total: Option[Double] = order.takeLimit.map(t => t.externalValue(unit2))
 
-        // finished quantity = out
-        val finishedQuantity = orderInfo.outAmount.externalValue(unit1)
-        // finished amount = in
-        val finishedAmount = orderInfo.inAmount.externalValue(unit2)
+      // finished quantity = out
+      val finishedQuantity = orderInfo.outAmount.externalValue(unit1)
+      // finished amount = in
+      val finishedAmount = orderInfo.inAmount.externalValue(unit2)
 
-        val status = orderInfo.status
-        val id = order.id
-        val timestamp = order.timestamp.getOrElse(0L)
+      val status = orderInfo.status
+      val id = order.id
+      val timestamp = order.timestamp.getOrElse(0L)
 
-        UserOrder(order.userId.toString, Sell, unit1, unit2, price, amount, total, status.value, id.toString, timestamp)
-          .copy(finishedQuantity = finishedQuantity, finishedAmount = finishedAmount)
+      UserOrder(order.userId.toString, Sell, unit1, unit2, price, amount, total, status.value, id.toString, timestamp)
+        .copy(finishedQuantity = finishedQuantity, finishedAmount = finishedAmount)
+    } else {
+      // buy
+      val price: Option[Double] = order.price.map {
+        p => p.reverse.externalValue(marketSide.reverse)
+      }
 
-      case _ => // buy
-        val price: Option[Double] = order.price.map {
-          p => p.reverse.externalValue(marketSide.reverse)
-        }
+      val amount = order.takeLimit.map(t => t.externalValue(unit2))
+      val total = Some(order.quantity.externalValue(unit1))
 
-        val amount = order.takeLimit.map(t => t.externalValue(unit2))
-        val total = Some(order.quantity.externalValue(unit1))
+      // finished quantity = in
+      val finishedQuantity = orderInfo.inAmount.externalValue(unit2)
 
-        // finished quantity = in
-        val finishedQuantity = orderInfo.inAmount.externalValue(unit2)
+      // finished amount = out
+      val finishedAmount = orderInfo.outAmount.externalValue(unit1)
 
-        // finished amount = out
-        val finishedAmount = orderInfo.outAmount.externalValue(unit1)
+      val status = orderInfo.status
+      val id = order.id
+      val timestamp = order.timestamp.getOrElse(0L)
 
-        val status = orderInfo.status
-        val id = order.id
-        val timestamp = order.timestamp.getOrElse(0L)
-
-        UserOrder(order.userId.toString, Buy, unit2, unit1, price, amount, total, status.value, id.toString, timestamp)
-          .copy(finishedQuantity = finishedQuantity, finishedAmount = finishedAmount)
+      UserOrder(order.userId.toString, Buy, unit2, unit1, price, amount, total, status.value, id.toString, timestamp)
+        .copy(finishedQuantity = finishedQuantity, finishedAmount = finishedAmount)
     }
   }
 }

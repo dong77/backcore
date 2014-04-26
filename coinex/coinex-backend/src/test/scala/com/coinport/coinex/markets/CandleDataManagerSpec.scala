@@ -14,7 +14,7 @@ class CandleDataManagerSpec extends Specification {
   "ChartDataManagerSpec" should {
 
     "save data from order submitted" in {
-      val market = Btc ~> Rmb
+      val market = Btc ~> Cny
       val manager = new CandleDataManager(market)
       val makerPrevious = Order(userId = 555, id = 1, price = Some(1.0 / 3000), quantity = 3000, takeLimit = None, timestamp = Some(0))
       val makerCurrent = Order(userId = 555, id = 2, price = Some(1.0 / 3000), quantity = 0, takeLimit = None, timestamp = Some(0))

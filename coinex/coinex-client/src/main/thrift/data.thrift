@@ -50,7 +50,7 @@ enum ErrorCode {
 ///////////////////////////////////////////////////////////////////////
 enum Currency {
     UNKNOWN = 0
-    RMB = 1
+    CNY = 1
     USD = 2
     BTC = 1001
     LTC = 1002

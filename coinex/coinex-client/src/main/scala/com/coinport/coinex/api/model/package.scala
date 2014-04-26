@@ -24,26 +24,11 @@ package object model {
   implicit def priceWrapper2Double(value: PriceWrapper) = value
 
   implicit def string2Currency(currencyString: String): Currency = {
-    currencyString.toUpperCase match {
-      case "RMB" => Currency.Rmb
-      case "CNY" => Currency.Rmb
-      case "BTC" => Currency.Btc
-      case "LTC" => Currency.Ltc
-      case "PTS" => Currency.Pts
-      case "USD" => Currency.Usd
-      case _ => null
-    }
+    Currency.valueOf(currencyString.toLowerCase.capitalize).getOrElse(Unknown)
   }
 
   implicit def currency2String(currency: Currency): String = {
-    currency match {
-      case Currency.Rmb => "RMB"
-      case Currency.Btc => "BTC"
-      case Currency.Usd => "USD"
-      case Currency.Ltc => "LTC"
-      case Currency.Pts => "PTS"
-      case _ => currency.name.toUpperCase
-    }
+    currency.name.toUpperCase
   }
 
   // user account conversions

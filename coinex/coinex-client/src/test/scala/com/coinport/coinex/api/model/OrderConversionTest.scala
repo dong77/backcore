@@ -19,77 +19,77 @@ class OrderConversionTest extends Specification {
 
       // buy orders
 
-      // buy 2 BTC at 4000 RMB/BTC, spending 8000 RMB
-      order = UserOrder(uid.toString, Buy, Btc, Rmb, Some(4100.0), Some(2), Some(8200)).toDoSubmitOrder
+      // buy 2 BTC at 4000 CNY/BTC, spending 8000 CNY
+      order = UserOrder(uid.toString, Buy, Btc, Cny, Some(4100.0), Some(2), Some(8200)).toDoSubmitOrder
       // sell 800000 CNY2 at price of 1000 / 400000 CNY2 per MBTC for 2000 MBTC
-      command = DoSubmitOrder(Rmb ~> Btc, Order(uid, 0L, 820000, Some(1000.0 / 410000.0), Some(2000)))
+      command = DoSubmitOrder(Cny ~> Btc, Order(uid, 0L, 820000, Some(1000.0 / 410000.0), Some(2000)))
       order mustEqual command
 
-      // buy 2 BTC at 4000 RMB/BTC, same to above
-      order = UserOrder(uid.toString, Buy, Btc, Rmb, Some(4000), Some(2), None).toDoSubmitOrder
+      // buy 2 BTC at 4000 CNY/BTC, same to above
+      order = UserOrder(uid.toString, Buy, Btc, Cny, Some(4000), Some(2), None).toDoSubmitOrder
       // sell 800000 CNY2 at price of 1000 / 400000 CNY2 per MBTC for 2000 MBTC
-      command = DoSubmitOrder(Rmb ~> Btc, Order(uid, 0L, 800000, Some(1000.0 / 400000), Some(2000)))
+      command = DoSubmitOrder(Cny ~> Btc, Order(uid, 0L, 800000, Some(1000.0 / 400000), Some(2000)))
       order mustEqual command
 
-      // market order: buy some BTC at any price, spending 8000 RMB
-      order = UserOrder(uid.toString, Buy, Btc, Rmb, None, None, Some(8000)).toDoSubmitOrder
+      // market order: buy some BTC at any price, spending 8000 CNY
+      order = UserOrder(uid.toString, Buy, Btc, Cny, None, None, Some(8000)).toDoSubmitOrder
       // sell 800000 CNY2 at any price for some MBTC
-      command = DoSubmitOrder(Rmb ~> Btc, Order(uid, 0L, 800000, None, None))
+      command = DoSubmitOrder(Cny ~> Btc, Order(uid, 0L, 800000, None, None))
       order mustEqual command
 
-      // limited market order: buy some BTC at 4000 RMB/BTC, spending 8000 RMB
-      order = UserOrder(uid.toString, Buy, Btc, Rmb, Some(4000), None, Some(8000)).toDoSubmitOrder
+      // limited market order: buy some BTC at 4000 CNY/BTC, spending 8000 CNY
+      order = UserOrder(uid.toString, Buy, Btc, Cny, Some(4000), None, Some(8000)).toDoSubmitOrder
       // sell 800000 CNY2 at 1000 / 400000 CNY2 per MBTC for some MBTC
-      command = DoSubmitOrder(Rmb ~> Btc, Order(uid, 0L, 800000, Some(1000.0 / 400000), None))
+      command = DoSubmitOrder(Cny ~> Btc, Order(uid, 0L, 800000, Some(1000.0 / 400000), None))
       order mustEqual command
-      // limited market order: buy 2 BTC, at any price, spending 8000 RMB
-      order = UserOrder(uid.toString, Buy, Btc, Rmb, None, Some(2), Some(8000)).toDoSubmitOrder
+      // limited market order: buy 2 BTC, at any price, spending 8000 CNY
+      order = UserOrder(uid.toString, Buy, Btc, Cny, None, Some(2), Some(8000)).toDoSubmitOrder
       // sell 800000 CNY2 at any price for 2000 MBTC
-      command = DoSubmitOrder(Rmb ~> Btc, Order(uid, 0L, 800000, None, Some(2000)))
+      command = DoSubmitOrder(Cny ~> Btc, Order(uid, 0L, 800000, None, Some(2000)))
       order mustEqual command
 
       // sell orders
 
-      // sell 2 BTC at 5000 RMB/BTC, for 10000 RMB
-      order = UserOrder(uid.toString, Sell, Btc, Rmb, Some(5000), Some(2), Some(10000)).toDoSubmitOrder
+      // sell 2 BTC at 5000 CNY/BTC, for 10000 CNY
+      order = UserOrder(uid.toString, Sell, Btc, Cny, Some(5000), Some(2), Some(10000)).toDoSubmitOrder
       // sell 2000 MBTC at 5000 * 100 / 1000 CNY2/MBTC, for 10000 * 100 CNY2
-      command = DoSubmitOrder(Btc ~> Rmb, Order(uid, 0L, 2000, Some(5000 * 100 / 1000), Some(10000 * 100)))
+      command = DoSubmitOrder(Btc ~> Cny, Order(uid, 0L, 2000, Some(5000 * 100 / 1000), Some(10000 * 100)))
       order mustEqual command
 
-      // sell 2 BTC at 5000 RMB/BTC
-      order = UserOrder(uid.toString, Sell, Btc, Rmb, Some(5000), Some(2), None).toDoSubmitOrder
+      // sell 2 BTC at 5000 CNY/BTC
+      order = UserOrder(uid.toString, Sell, Btc, Cny, Some(5000), Some(2), None).toDoSubmitOrder
       // sell 2000 MBTC at 500 CNY2/MBTC
-      command = DoSubmitOrder(Btc ~> Rmb, Order(uid, 0L, 2000, Some(5000 * 100 / 1000), None))
+      command = DoSubmitOrder(Btc ~> Cny, Order(uid, 0L, 2000, Some(5000 * 100 / 1000), None))
       order mustEqual command
 
       // market order: sell 2 BTC at any price
-      order = UserOrder(uid.toString, Sell, Btc, Rmb, None, Some(2), None).toDoSubmitOrder
+      order = UserOrder(uid.toString, Sell, Btc, Cny, None, Some(2), None).toDoSubmitOrder
       // sell 2000 MBTC at any price
-      command = DoSubmitOrder(Btc ~> Rmb, Order(uid, 0L, 2000, None, None))
+      command = DoSubmitOrder(Btc ~> Cny, Order(uid, 0L, 2000, None, None))
       order mustEqual command
 
-      // limit market order: sell 2 BTC at any price, for 10000 RMB
-      order = UserOrder(uid.toString, Sell, Btc, Rmb, None, Some(2), Some(10000)).toDoSubmitOrder
+      // limit market order: sell 2 BTC at any price, for 10000 CNY
+      order = UserOrder(uid.toString, Sell, Btc, Cny, None, Some(2), Some(10000)).toDoSubmitOrder
       // sell 2000 BTC at any price, for 1000000 CNY2
-      command = DoSubmitOrder(Btc ~> Rmb, Order(uid, 0L, 2000, None, Some(1000000)))
+      command = DoSubmitOrder(Btc ~> Cny, Order(uid, 0L, 2000, None, Some(1000000)))
       order mustEqual command
 
-      // sell some BTC at 5000 RMB/BTC, for 10000 RMB
-      order = UserOrder(uid.toString, Sell, Btc, Rmb, Some(5000), None, Some(10000)).toDoSubmitOrder
+      // sell some BTC at 5000 CNY/BTC, for 10000 CNY
+      order = UserOrder(uid.toString, Sell, Btc, Cny, Some(5000), None, Some(10000)).toDoSubmitOrder
       // sell some BTC at 500 CNY2/MBTC, for 1000000 CNY2
-      command = DoSubmitOrder(Btc ~> Rmb, Order(uid, 0L, 1000000 / 500, Some(500), Some(1000000)))
+      command = DoSubmitOrder(Btc ~> Cny, Order(uid, 0L, 1000000 / 500, Some(500), Some(1000000)))
       order mustEqual command
 
       // convert back
-      var userOrder = UserOrder(uid.toString, Sell, Btc, Rmb, Some(1234), Some(12), None)
-      userOrder mustEqual UserOrder.fromOrderInfo(OrderInfo(Btc ~> Rmb, userOrder.toDoSubmitOrder.order, 0, 0, OrderStatus.Pending))
+      var userOrder = UserOrder(uid.toString, Sell, Btc, Cny, Some(1234), Some(12), None)
+      userOrder mustEqual UserOrder.fromOrderInfo(OrderInfo(Btc ~> Cny, userOrder.toDoSubmitOrder.order, 0, 0, OrderStatus.Pending))
 
-      userOrder = UserOrder(uid.toString, Buy, Btc, Rmb, Some(1234), Some(12), Some(1234 * 12))
-      userOrder mustEqual UserOrder.fromOrderInfo(OrderInfo(Rmb ~> Btc, userOrder.toDoSubmitOrder.order, 0, 0, OrderStatus.Pending))
+      userOrder = UserOrder(uid.toString, Buy, Btc, Cny, Some(1234), Some(12), Some(1234 * 12))
+      userOrder mustEqual UserOrder.fromOrderInfo(OrderInfo(Cny ~> Btc, userOrder.toDoSubmitOrder.order, 0, 0, OrderStatus.Pending))
 
       // inAmount / outAmount
       var backOrder = OrderInfo(
-        Btc ~> Rmb,
+        Btc ~> Cny,
         Order(uid, 0L, 2000, Some(5000 * 100 / 1000), None),
         2000, // out
         5000 * 2 * 100, // in
@@ -98,7 +98,7 @@ class OrderConversionTest extends Specification {
         uid.toString,
         operation = Sell,
         subject = Btc,
-        currency = Rmb,
+        currency = Cny,
         price = Some(5000),
         amount = Some(2),
         total = None,
@@ -110,7 +110,7 @@ class OrderConversionTest extends Specification {
       UserOrder.fromOrderInfo(backOrder) mustEqual frontOrder
 
       backOrder = OrderInfo(
-        Btc ~> Rmb,
+        Btc ~> Cny,
         Order(uid, 0L, 3000, Some(5000 * 100 / 1000), None),
         1000, // out
         5000 * 1 * 100, // in
@@ -119,7 +119,7 @@ class OrderConversionTest extends Specification {
         uid.toString,
         operation = Sell,
         subject = Btc,
-        currency = Rmb,
+        currency = Cny,
         price = Some(5000),
         amount = Some(3),
         total = None,
@@ -130,9 +130,9 @@ class OrderConversionTest extends Specification {
 
       UserOrder.fromOrderInfo(backOrder) mustEqual frontOrder
 
-      // buy 3 BTC at 4000 RMB/BTC
+      // buy 3 BTC at 4000 CNY/BTC
       backOrder = OrderInfo(
-        Rmb ~> Btc,
+        Cny ~> Btc,
         Order(uid, 0L, 3 * 4000 * 100, Some(1.0 / 4000 * 1000 / 100), Some(3 * 1000)),
         3 * 4000 * 100, // out
         3 * 1000, // in
@@ -141,7 +141,7 @@ class OrderConversionTest extends Specification {
         uid.toString,
         operation = Buy,
         subject = Btc,
-        currency = Rmb,
+        currency = Cny,
         price = Some(4000),
         amount = Some(3),
         total = Some(3 * 4000),
@@ -152,9 +152,9 @@ class OrderConversionTest extends Specification {
 
       UserOrder.fromOrderInfo(backOrder) mustEqual frontOrder
 
-      // buy 3 BTC at 4000 RMB/BTC
+      // buy 3 BTC at 4000 CNY/BTC
       backOrder = OrderInfo(
-        Rmb ~> Btc,
+        Cny ~> Btc,
         Order(uid, 0L, 3 * 4000 * 100, Some(1.0 / 4000 * 1000 / 100), Some(3 * 1000)),
         3000 * 100, // outAmount, spent 3000 CNY
         1 * 1000, // inAmount, bought 1 BTC
@@ -163,7 +163,7 @@ class OrderConversionTest extends Specification {
         uid.toString,
         operation = Buy,
         subject = Btc,
-        currency = Rmb,
+        currency = Cny,
         price = Some(4000),
         amount = Some(3),
         total = Some(4000 * 3), // total amount

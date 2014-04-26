@@ -4,7 +4,7 @@
 
 package com.coinport.coinex.ordertx
 
-import com.coinport.coinex.data.Currency.{ Btc, Rmb }
+import com.coinport.coinex.data.Currency.{ Btc, Cny }
 import com.coinport.coinex.common.EmbeddedMongoForTestWithBF
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Implicits._
@@ -18,7 +18,7 @@ class OrderMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
     //    val coll = database("order")
   }
 
-  val market = Btc ~> Rmb
+  val market = Btc ~> Cny
   //  step(embeddedMongoStartup())
 
   "OrderDataStateSpec" should {

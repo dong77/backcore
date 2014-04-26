@@ -12,12 +12,12 @@ class AccountConversionTest extends Specification {
     "user account conversion" in {
       val accounts: scala.collection.Map[Currency, CashAccount] = scala.collection.Map(
         Btc -> CashAccount(Currency.Btc, 8000, 2000, 0),
-        Rmb -> CashAccount(Currency.Rmb, 100000, 0, 0)
+        Cny -> CashAccount(Currency.Cny, 100000, 0, 0)
       )
       val backendAccount = com.coinport.coinex.data.UserAccount(123L, cashAccounts = accounts)
       val userAccount: com.coinport.coinex.api.model.UserAccount = backendAccount
 
-      userAccount mustEqual com.coinport.coinex.api.model.UserAccount("123", Map("RMB" -> 1000.0, "BTC" -> 8.0))
+      userAccount mustEqual com.coinport.coinex.api.model.UserAccount("123", Map("CNY" -> 1000.0, "BTC" -> 8.0))
     }
   }
 }

@@ -15,7 +15,7 @@ import OrderStatus._
 import RefundReason._
 
 class MarketManagerSpec extends Specification {
-  val takerSide = Btc ~> Rmb
+  val takerSide = Btc ~> Cny
   val makerSide = takerSide.reverse
 
   import MarketManager._
@@ -23,9 +23,9 @@ class MarketManagerSpec extends Specification {
   "MarketManager" should {
 
     "very low sell order should take all much higher buy order" in {
-      val manager = new MarketManager(Btc ~> Rmb)
-      val buySide = Rmb ~> Btc
-      val sellSide = Btc ~> Rmb
+      val manager = new MarketManager(Btc ~> Cny)
+      val buySide = Cny ~> Btc
+      val sellSide = Btc ~> Cny
 
       manager.addOrderToMarket(buySide, Order(91990591289398244L, 10000000124L, 8999, Some(1.3332077064322006E-4), None, Some(1397829420604L), None, Some(91990591289398244L), None, 10, None))
       manager.addOrderToMarket(buySide, Order(877800447188483646L, 10000000129L, 78351, Some(1.4039210295437187E-4), None, Some(1397829425596L), None, Some(877800447188483646L), None, 0, None))
@@ -46,13 +46,13 @@ class MarketManagerSpec extends Specification {
 
       // println(Debugger.prettyOutput(sellSide, manager.getSnapshot))
       // println(Debugger.prettyOutput(manager.headSide, os))
-      manager.getSnapshot mustEqual TMarketState(Map(MarketSide(Rmb, Btc) -> List(), MarketSide(Btc, Rmb) -> List(
+      manager.getSnapshot mustEqual TMarketState(Map(MarketSide(Cny, Btc) -> List(), MarketSide(Btc, Cny) -> List(
         Order(7410102373723916141L, 0, 9865, Some(10.0), None, Some(1397829427785L), None, None, None, 766228, None))),
         Map(0L -> Order(7410102373723916141L, 0, 9865, Some(10.0), None, Some(1397829427785L), None, None, None, 766228, None)), None, RedeliverFilters(Map()))
     }
 
     "take limit can't block the current transaction" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val maker1 = Order(userId = 1, id = 1, price = Some(1.0 / 2000), quantity = 20000)
       val maker2 = Order(userId = 2, id = 2, price = Some(1.0 / 5000), quantity = 50000)
       val taker = Order(userId = 3, id = 3, price = Some(2000), quantity = 1, takeLimit = Some(2000))
@@ -61,9 +61,9 @@ class MarketManagerSpec extends Specification {
       manager.addOrderToMarket(makerSide, maker2)
 
       manager.addOrderToMarket(takerSide, taker) mustEqual OrderSubmitted(
-        OrderInfo(MarketSide(Btc, Rmb),
+        OrderInfo(MarketSide(Btc, Cny),
           Order(3, 3, 1, Some(2000.0), Some(2000), None, None, None, None, 0, None), 1, 5000, FullyExecuted, Some(0)),
-        List(Transaction(3000001, 0, MarketSide(Btc, Rmb),
+        List(Transaction(3000001, 0, MarketSide(Btc, Cny),
           OrderUpdate(
             Order(3, 3, 1, Some(2000.0), Some(2000), None, None, None, None, 0, None),
             Order(3, 3, 0, Some(2000.0), Some(-3000), None, None, None, None, 5000, None)),
@@ -73,24 +73,24 @@ class MarketManagerSpec extends Specification {
     }
 
     "refund first dust taker" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val taker = Order(userId = 1, id = 1, price = Some(1.0 / 2000), quantity = 200)
 
-      manager.addOrderToMarket(makerSide, taker) mustEqual OrderSubmitted(OrderInfo(MarketSide(Rmb, Btc),
+      manager.addOrderToMarket(makerSide, taker) mustEqual OrderSubmitted(OrderInfo(MarketSide(Cny, Btc),
         Order(1, 1, 200, Some(5.0E-4), None, None, None, None, None, 0, Some(Refund(Dust, 200))), 0, 0, FullyExecuted, None), List())
     }
 
     "change the last taker order in tx" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val maker = Order(userId = 0, id = 0, price = Some(2000), quantity = 1)
       val taker = Order(userId = 1, id = 1, price = Some(1.0 / 2000), quantity = 2200)
 
       manager.addOrderToMarket(makerSide, maker)
 
       manager.addOrderToMarket(takerSide, taker) mustEqual OrderSubmitted(
-        OrderInfo(MarketSide(Btc, Rmb),
+        OrderInfo(MarketSide(Btc, Cny),
           Order(1, 1, 2200, Some(5.0E-4), None, None, None, None, None, 0, None), 2000, 1, FullyExecuted, Some(0)),
-        List(Transaction(1000001, 0, MarketSide(Btc, Rmb),
+        List(Transaction(1000001, 0, MarketSide(Btc, Cny),
           OrderUpdate(
             Order(1, 1, 2200, Some(5.0E-4), None, None, None, None, None, 0, None),
             Order(1, 1, 200, Some(5.0E-4), None, None, None, None, None, 1, Some(Refund(Dust, 200)))),
@@ -100,14 +100,14 @@ class MarketManagerSpec extends Specification {
     }
 
     "fix the dust bug from robot test" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
 
       manager.addOrderToMarket(makerSide, Order(12345, 32, 21930, Some(1.1499999999999999E-4), None, Some(1397457555749L), None, Some(12345), None, 0))
       manager.addOrderToMarket(takerSide, Order(456789, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 0)) mustEqual
         OrderSubmitted(
-          OrderInfo(MarketSide(Btc, Rmb), Order(456789, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 0), 2, 17391, PartiallyExecuted, Some(1397457555805L)),
+          OrderInfo(MarketSide(Btc, Cny), Order(456789, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 0), 2, 17391, PartiallyExecuted, Some(1397457555805L)),
           List(
-            Transaction(33000001, 1397457555805L, MarketSide(Btc, Rmb),
+            Transaction(33000001, 1397457555805L, MarketSide(Btc, Cny),
               OrderUpdate(
                 Order(456789, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 0),
                 Order(456789, 33, 6, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 17391)),
@@ -121,7 +121,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "match limit-price order market-price orders can't exists in the market" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val mpo1 = Order(userId = 1, id = 1, price = None, quantity = 30000) // higher priority
       val mpo2 = Order(userId = 2, id = 2, price = None, quantity = 60000)
       val lpo1 = Order(userId = 3, id = 3, price = Some(1.0 / 5000), quantity = 10000) // higher priority
@@ -153,7 +153,7 @@ class MarketManagerSpec extends Specification {
 
   "MarketManager" should {
     "match limit-price order against existing limit-price order with take-limit and update take-limit" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val maker = Order(userId = 666, id = 1, price = Some(1.0 / 4500), quantity = 45099, takeLimit = Some(11))
       val taker = Order(userId = 888, id = 2, price = Some(4000), quantity = 10)
 
@@ -173,7 +173,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "match limit-price order with as many existing limit-price order, market should refund over-charged quantity" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val maker1 = Order(userId = 666, id = 1, price = Some(1.0 / 4500), quantity = 10000, takeLimit = Some(1))
       val maker2 = Order(userId = 777, id = 2, price = Some(1.0 / 5000), quantity = 15000, takeLimit = Some(3))
       val taker = Order(userId = 888, id = 3, price = Some(4000), quantity = 10, timestamp = Some(0))
@@ -205,7 +205,7 @@ class MarketManagerSpec extends Specification {
 
   "MarketManager" should {
     "market-price orders can't exist in an empty market" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
 
       val maker1 = Order(userId = 888L, id = 1, price = None, quantity = 100)
       val maker2 = Order(userId = 888L, id = 2, price = None, quantity = 500)
@@ -227,7 +227,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "NOT match new market-price taker order" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val maker = Order(userId = 888L, id = 1, price = None, quantity = 100)
       val taker = Order(userId = 888L, id = 2, price = None, quantity = 100)
 
@@ -243,7 +243,7 @@ class MarketManagerSpec extends Specification {
 
     "match new market-price taker order against existing limit-price maker orders and fully execute both orders " +
       "if quantity equals" in {
-        val manager = new MarketManager(Btc ~> Rmb)
+        val manager = new MarketManager(Btc ~> Cny)
 
         val maker = Order(userId = 777L, id = 1, price = Some(1), quantity = 100)
         val taker = Order(userId = 888L, id = 2, price = None, quantity = 100)
@@ -268,7 +268,7 @@ class MarketManagerSpec extends Specification {
 
     "match new market-price taker order against existing limit-price maker orders and fully execute taker orders " +
       "if its quantity is smaller" in {
-        val manager = new MarketManager(Btc ~> Rmb)
+        val manager = new MarketManager(Btc ~> Cny)
 
         val maker = Order(userId = 777L, id = 1, price = Some(1), quantity = 100)
         val taker = Order(userId = 888L, id = 2, price = None, quantity = 10)
@@ -293,7 +293,7 @@ class MarketManagerSpec extends Specification {
 
     "match new market-price taker order against existing limit-price maker orders and fully execute maker orders " +
       "if its quantity is smaller" in {
-        val manager = new MarketManager(Btc ~> Rmb)
+        val manager = new MarketManager(Btc ~> Cny)
         val maker = Order(userId = 777L, id = 1, price = Some(1), quantity = 10)
         val taker = Order(userId = 888L, id = 2, price = None, quantity = 100)
 
@@ -315,7 +315,7 @@ class MarketManagerSpec extends Specification {
 
     "match new market-price taker order against multiple existing limit-price maker orders and fully execute " +
       "taker order if its quantity is smaller" in {
-        val manager = new MarketManager(Btc ~> Rmb)
+        val manager = new MarketManager(Btc ~> Cny)
 
         val maker1 = Order(userId = 666L, id = 1, price = Some(1), quantity = 100) // lower price
         val maker2 = Order(userId = 777L, id = 2, price = Some(0.5), quantity = 100) // higher price
@@ -344,7 +344,7 @@ class MarketManagerSpec extends Specification {
 
     "match new market-price taker order against multiple existing limit-price maker orders and fully execute " +
       "all maker orders if their combined quantity is smaller" in {
-        val manager = new MarketManager(Btc ~> Rmb)
+        val manager = new MarketManager(Btc ~> Cny)
         val maker1 = Order(userId = 666L, id = 1, price = Some(1), quantity = 20) // lower price
         val maker2 = Order(userId = 777L, id = 2, price = Some(0.5), quantity = 100) // higher price
         val taker = Order(userId = 888L, id = 3, price = None, quantity = 120)
@@ -374,7 +374,7 @@ class MarketManagerSpec extends Specification {
 
   "MarketManager" should {
     "match new limit-price taker order against the highest limit-price maker order" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val maker1 = Order(userId = 666, id = 1, price = Some(1), quantity = 20) // lower price
       val maker2 = Order(userId = 777, id = 2, price = Some(0.5), quantity = 100) // higher price
       val taker = Order(userId = 888L, id = 3, price = Some(1), quantity = 10)
@@ -396,7 +396,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "match new limit-price taker order fully against multiple limit-price maker orders" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val maker1 = Order(userId = 666, id = 1, price = Some(1), quantity = 20, timestamp = Some(11111)) // lower price
       val maker2 = Order(userId = 777, id = 2, price = Some(0.5), quantity = 100, timestamp = Some(22222)) // higher price
       val taker = Order(userId = 888L, id = 3, price = Some(1), quantity = 60, timestamp = Some(33333))
@@ -423,7 +423,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "match new limit-price taker order partially against multiple limit-price maker orders" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val maker1 = Order(userId = 666, id = 1, price = Some(0.5), quantity = 20) // lower price
       val maker2 = Order(userId = 777, id = 2, price = Some(0.4), quantity = 100) // higher price
       val taker = Order(userId = 888L, id = 3, price = Some(2), quantity = 90)
@@ -450,7 +450,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "match new limit-price taker order fully against existing market-price maker order 1" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val maker1 = Order(userId = 666, id = 1, price = None, quantity = 20) // high priority
       val maker2 = Order(userId = 777, id = 2, price = None, quantity = 100) // low priority
       val taker = Order(userId = 888L, id = 3, price = Some(2), quantity = 5)
@@ -474,7 +474,7 @@ class MarketManagerSpec extends Specification {
 
   "MarketManager" should {
     "be able to handle dust" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val maker = Order(userId = 1, id = 1, price = Some(500.1), quantity = 1)
       val taker = Order(userId = 5, id = 2, price = None, quantity = 900)
 
@@ -491,7 +491,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "be able to handle dust" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val maker = Order(userId = 1, id = 1, price = Some(500.9), quantity = 1)
       val taker = Order(userId = 5, id = 2, price = None, quantity = 900)
 
@@ -508,7 +508,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "be able to handle dust when price is really small" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val maker = Order(userId = 1, id = 1, price = Some(0.15), quantity = 1000)
       val taker = Order(userId = 5, id = 2, price = None, quantity = 180)
 
@@ -527,7 +527,7 @@ class MarketManagerSpec extends Specification {
 
   "MarketManager" should {
     "drop order which has onlyTaker flag" in {
-      val manager = new MarketManager(Btc ~> Rmb)
+      val manager = new MarketManager(Btc ~> Cny)
       val taker = Order(userId = 888L, id = 1, price = Some(3000), quantity = 100, onlyTaker = Some(true))
 
       val result = manager.addOrderToMarket(takerSide, taker)
@@ -539,7 +539,7 @@ class MarketManagerSpec extends Specification {
     }
 
     "drop order which has onlyTaker flag after match" in {
-      val side = (Btc ~> Rmb)
+      val side = (Btc ~> Cny)
       val manager = new MarketManager(side)
       val maker = Order(userId = 888L, id = 1, price = Some(1.0 / 5000), quantity = 100 * 5000)
       val taker = Order(userId = 888L, id = 2, price = Some(3000), quantity = 1000, onlyTaker = Some(true))

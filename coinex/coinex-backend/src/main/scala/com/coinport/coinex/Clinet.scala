@@ -25,7 +25,7 @@ object Client {
   private val config = ConfigFactory.load("client.conf")
   private implicit val system = ActorSystem("coinex", config)
   private implicit val cluster = Cluster(system)
-  private val markets = Seq(Btc ~> Rmb)
+  private val markets = Seq(Btc ~> Cny)
   private val routers = new LocalRouters(markets)
 
   val backend = system.actorOf(Props(new Coinex(routers)), name = "backend")
@@ -53,7 +53,7 @@ object Client {
   def addGofvRobots() {
     userMap foreach { kv =>
       AccountService.deposit(kv._2, Btc, 10000 * 1000)
-      AccountService.deposit(kv._2, Rmb, 1000000 * 100)
+      AccountService.deposit(kv._2, Cny, 1000000 * 100)
 
       val dna = Map(
         "START" -> """
@@ -70,8 +70,8 @@ object Client {
         println(counter)
         println("*"*40)
         val r = robot.setPayload("COUNTER", Some(counter+1))
-        val btcSide = MarketSide(Btc, Rmb)
-        val rmbSide = MarketSide(Rmb, Btc)
+        val btcSide = MarketSide(Btc, Cny)
+        val rmbSide = MarketSide(Cny, Btc)
         val side = List(btcSide, rmbSide)(Random.nextInt(2))
         val price = metrics match {
           case None => if (side == btcSide) 3000.0 else 1 / 3000.0
@@ -134,7 +134,7 @@ object Client {
   }
 
   def deposit(uid: Long, currency: Currency, amount: Double) =
-    AccountService.deposit(1001, Currency.Rmb, 10000.0)
+    AccountService.deposit(1001, Currency.Cny, 10000.0)
 
   def createABCode(wUserId: Long, amount: Long, dUserId: Long) {
     Client.backend ? DoRequestGenerateABCode(wUserId, amount, None, None) map {

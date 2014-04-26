@@ -13,7 +13,7 @@ class SimpleMongoCollectionSpec extends EmbeddedMongoForTestWithBF {
 
   "SimpleJsonMongoCollection" must {
     "save and retrieve account transfers" in {
-      val deposit = AccountTransfer(1, 2, TransferType.Deposit, Rmb, 123, TransferStatus.Pending)
+      val deposit = AccountTransfer(1, 2, TransferType.Deposit, Cny, 123, TransferStatus.Pending)
       jsonTransfers.put(deposit)
       jsonTransfers.get(1) should be(Some(deposit))
       jsonTransfers.get(2) should be(None)
@@ -27,7 +27,7 @@ class SimpleMongoCollectionSpec extends EmbeddedMongoForTestWithBF {
 
   "SimpleBinaryMongoCollection" must {
     "save and retrieve deposits" in {
-      val deposit = AccountTransfer(1, 2, TransferType.Deposit, Rmb, 123, TransferStatus.Pending)
+      val deposit = AccountTransfer(1, 2, TransferType.Deposit, Cny, 123, TransferStatus.Pending)
       binaryTransfers.put(deposit)
       binaryTransfers.get(1) should be(Some(deposit))
       binaryTransfers.get(2) should be(None)

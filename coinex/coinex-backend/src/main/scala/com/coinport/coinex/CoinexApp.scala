@@ -21,7 +21,7 @@ import com.typesafe.config.Config
 import com.coinport.coinex.common.Constants
 
 object CoinexApp extends App {
-  val markets = Seq(Btc ~> Rmb, Ltc ~> Rmb)
+  val markets = Seq(Btc ~> Cny, Ltc ~> Cny)
   val allRoles = (ConstantRole.values.map(_.<<) ++ MarketRole.values.map { v => markets.map { m => v << m } }.flatten)
 
   if (args.length < 2 || args.length > 4) {
