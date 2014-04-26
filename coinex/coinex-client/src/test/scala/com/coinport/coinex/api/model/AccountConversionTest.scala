@@ -17,7 +17,13 @@ class AccountConversionTest extends Specification {
       val backendAccount = com.coinport.coinex.data.UserAccount(123L, cashAccounts = accounts)
       val userAccount: com.coinport.coinex.api.model.UserAccount = backendAccount
 
-      userAccount mustEqual com.coinport.coinex.api.model.UserAccount("123", Map("CNY" -> 1000.0, "BTC" -> 8.0))
+      userAccount mustEqual com.coinport.coinex.api.model.UserAccount(
+        "123",
+        Map(
+          "BTC" -> AccountItem(CurrencyObject(Btc, 8000), CurrencyObject(Btc, 2000), CurrencyObject(Btc, 0)),
+          "CNY" -> AccountItem(CurrencyObject(Cny, 100000), CurrencyObject(Cny, 0), CurrencyObject(Cny, 0))
+        )
+      )
     }
   }
 }

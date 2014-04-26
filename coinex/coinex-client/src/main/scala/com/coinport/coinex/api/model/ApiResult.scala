@@ -45,7 +45,9 @@ object PriceObject {
 
 case class SubmitOrderResult(order: UserOrder)
 
-case class UserAccount(uid: String, accounts: Map[String, Double] = Map())
+case class AccountItem(available: CurrencyObject, locked: CurrencyObject, pendingWithdrawal: CurrencyObject)
+
+case class UserAccount(uid: String, accounts: Map[String, AccountItem] = Map())
 
 case class MarketDepthItem(price: Double, amount: Double)
 

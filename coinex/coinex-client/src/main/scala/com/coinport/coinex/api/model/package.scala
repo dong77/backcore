@@ -34,10 +34,14 @@ package object model {
   // user account conversions
   implicit def fromUserAccount(backendObj: com.coinport.coinex.data.UserAccount): com.coinport.coinex.api.model.UserAccount = {
     val uid = backendObj.userId
-    val map: Map[String, Double] = backendObj.cashAccounts.map {
+    val map: Map[String, AccountItem] = backendObj.cashAccounts.map {
       case (k: Currency, v: CashAccount) =>
         val currency: String = k
-        currency -> v.available.externalValue(k)
+        currency -> AccountItem(
+          CurrencyObject(k, v.available),
+          CurrencyObject(k, v.locked),
+          CurrencyObject(k, v.pendingWithdrawal)
+        )
     }.toMap
 
     com.coinport.coinex.api.model.UserAccount(uid.toString, accounts = map)
