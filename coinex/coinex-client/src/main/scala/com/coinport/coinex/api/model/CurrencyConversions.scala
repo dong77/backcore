@@ -23,6 +23,10 @@ object CurrencyConversion {
     case (k, v) =>
       k -> math.pow(10, v)
   }
+
+  def getExponent(currency: Currency) = exponents.get(currency).getOrElse(1.0).toInt
+
+  def getMultiplier(currency: Currency) = multipliers.get(currency).getOrElse(1.0)
 }
 
 class CurrencyWrapper(val value: Double) {

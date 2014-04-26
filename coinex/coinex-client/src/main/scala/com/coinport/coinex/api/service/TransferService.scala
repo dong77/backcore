@@ -16,12 +16,7 @@ object TransferService extends AkkaService {
       case result: QueryTransferResult =>
         val items = result.transfers.map { d =>
           ApiTransferItem(d.id.toString, d.userId.toString,
-            CurrencyObject(
-              d.currency,
-              d.amount.externalValue(d.currency).toString,
-              d.amount.externalValue(d.currency).toString,
-              d.amount.externalValue(d.currency),
-              d.amount),
+            CurrencyObject(d.currency, d.amount),
             d.status.value, d.created.getOrElse(0), d.updated.getOrElse(0), d.`type`.getValue)
         }
         ApiResult(data = Some(items))

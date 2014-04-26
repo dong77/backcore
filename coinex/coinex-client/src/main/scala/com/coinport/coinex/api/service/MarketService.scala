@@ -153,24 +153,19 @@ object MarketService extends AkkaService {
           .map {
             case (side, metrics) =>
               val side = metrics.side
-              val currency: String = side._2
               val subject = side._1
-              val internalPrice = metrics.price
-              val externalPrice = internalPrice.externalValue(side)
-              val internalHigh = metrics.high.getOrElse(0.0)
-              val externalHigh = internalHigh.externalValue(side)
-              val internalLow = metrics.low.getOrElse(0.0)
-              val externalLow = internalLow.externalValue(side)
+              val price = metrics.price
+              val high = metrics.high.getOrElse(0.0)
+              val low = metrics.low.getOrElse(0.0)
               val internalVolume = metrics.volume
-              val externalVolume = internalVolume.externalValue(subject)
               val gain = metrics.gain
               val trend = Some(metrics.direction.toString.toLowerCase)
 
               com.coinport.coinex.api.model.Ticker(
-                price = CurrencyObject(currency, externalPrice.toString, externalPrice.toString, externalPrice, internalPrice),
-                volume = CurrencyObject(subject, externalVolume.toString, externalVolume.toString, externalVolume, internalVolume),
-                high = CurrencyObject(currency, externalHigh.toString, externalHigh.toString, externalHigh, internalHigh),
-                low = CurrencyObject(currency, externalLow.toString, externalLow.toString, externalLow, internalLow),
+                price = PriceObject(side, price),
+                volume = CurrencyObject(subject, internalVolume),
+                high = PriceObject(side, high),
+                low = PriceObject(side, low),
                 gain = gain,
                 trend = trend
               )
