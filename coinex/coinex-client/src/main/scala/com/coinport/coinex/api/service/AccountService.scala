@@ -69,9 +69,8 @@ object AccountService extends AkkaService {
     }
   }
 
-  def cancelOrder(id: Long, uid: Long): Future[ApiResult] = {
-    // TODO: multi-market support
-    backend ? DoCancelOrder(Btc ~> Cny, id, uid) map {
+  def cancelOrder(id: Long, uid: Long, side: MarketSide): Future[ApiResult] = {
+    backend ? DoCancelOrder(side, id, uid) map {
       case result: OrderCancelled => ApiResult(true, 0, "订单已撤销", Some(result.order))
       case x => ApiResult(false, -1, x.toString)
     }
