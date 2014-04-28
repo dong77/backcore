@@ -7,10 +7,9 @@ import akka.persistence.hbase.common.{ HdfsSnapshotDescriptor, RowKey, DeferredC
 import akka.persistence.hbase.common.Columns._
 import akka.persistence.hbase.journal.PluginPersistenceSettings
 import akka.persistence.hbase.common.Const._
-import akka.persistence.{ SnapshotMetadata, SnapshotOffer }
 import akka.persistence.serialization.Snapshot
 import akka.serialization.SerializationExtension
-import com.coinport.coinex.common.ExtendedProcessor
+import com.coinport.coinex.common.{ Manager, ExtendedProcessor }
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import com.coinport.coinex.serializers.PrettyJsonSerializer
@@ -22,7 +21,6 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{ Path, FileSystem }
 import org.apache.hadoop.hbase.util.Bytes
 import org.hbase.async.KeyValue
-import scala.collection.mutable.Map
 import scala.concurrent.duration._
 import scala.concurrent.Future
 import scala.collection.JavaConverters._
@@ -36,8 +34,6 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
 
   private var cancellable: Cancellable = null
   private val scheduleInterval = 10 second
-  private val pSeqMap = scala.collection.mutable.Map.empty[String, Long]
-  private var pFileMap = scala.collection.mutable.Map.empty[String, String]
   private var manager: ExportOpenDataManager = null
 
   override def preStart(): Unit = {
@@ -45,32 +41,18 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
     val config = context.system.settings.config
     val exportData = config.getBoolean("akka.opendata.enabled-export")
     if (!exportData) return
-    val (pInitSeqMap, pInitFileMap) = loadOpenDataProcessors(context.system.settings.config.getString("akka.opendata.processors-map-path"))
-    pSeqMap ++= pInitSeqMap
-    pFileMap ++= pInitFileMap
-    manager = new ExportOpenDataManager(asyncHBaseClient, context, pFileMap)
+    manager = new ExportOpenDataManager(asyncHBaseClient, context)
     scheduleExport()
   }
 
   override def receiveCommand = LoggingReceive {
     case DoExportData =>
-      exportData()
+      doExportData()
   }
 
   override def receiveRecover: Receive = {
-    case SnapshotOffer(metadata: SnapshotMetadata, snapshot: Any) =>
-      val snapMap = snapshot.asInstanceOf[Map[String, Long]]
-      snapMap.keySet foreach {
-        key => withCheck(key, pSeqMap)(pSeqMap.put(key, snapMap(key)))
-      }
-    case ExportOpenDataMap(map) =>
-      map.keySet foreach {
-        key => withCheck(key, pSeqMap)(pSeqMap.put(key, map(key)))
-      }
-  }
-
-  private def withCheck(key: String, map: Map[String, Long])(f: => Unit) {
-    if (map.contains(key)) f
+    case map: ExportOpenDataMap =>
+      manager.updatePSeqMap(scala.collection.mutable.Map.empty[String, Long] ++ map.processorSeqMap)
   }
 
   private def scheduleExport() = {
@@ -82,37 +64,16 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
     //    fs.close()
   }
 
-  private def exportData() {
-    val dumpedMap = scala.collection.mutable.Map.empty[String, Long]
-    pSeqMap.keySet foreach {
-      processorId =>
-        if (processorId != null && !processorId.isEmpty) {
-          // "processedSeqNum" included in current process
-          val processedSeqNum = pSeqMap(processorId)
-          // "lastSeqNum" included in current process, excluded in next process
-          val lastSeqNum = manager.dumpSnapshot(processorId, processedSeqNum)
-          if (lastSeqNum - processedSeqNum >= manager.messagesBatchSize) {
-            manager.dumpMessages(processorId, processedSeqNum, lastSeqNum + 1)
-            dumpedMap += processorId -> (lastSeqNum + 1)
-          }
-        }
-    }
+  private def doExportData() {
+    val dumpedMap = manager.doExportData()
     if (!dumpedMap.isEmpty) {
       persist(ExportOpenDataMap(dumpedMap))(_ => ())
-      pSeqMap ++= dumpedMap
     }
   }
 
-  private def loadOpenDataProcessors(mapConfigPath: String): (Map[String, Long], collection.immutable.Map[String, String]) = {
-    val in: InputStream = this.getClass.getClassLoader.getResourceAsStream(mapConfigPath)
-    val pFileMap = (new Eval()(IOUtils.toString(in))).asInstanceOf[collection.immutable.Map[String, String]]
-    val pSeqMap = Map.empty[String, Long]
-    pFileMap.keySet.foreach(pSeqMap.put(_, 0L))
-    (pSeqMap, pFileMap)
-  }
 }
 
-class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context: ActorContext, val pFileMap: Map[String, String]) {
+class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context: ActorContext) extends Manager[ExportOpenDataMap] {
   private val config = context.system.settings.config
   private val fs: FileSystem = openHdfsSystem(config.getString("akka.opendata.hdfs-host"))
   var messagesBatchSize: Long = config.getLong("akka.opendata.messages-batch-size")
@@ -126,11 +87,48 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
   implicit var pluginPersistenceSettings = PluginPersistenceSettings(config, JOURNAL_CONFIG)
   implicit var executionContext = context.system.dispatcher
   implicit var serialization = SerializationExtension(context.system)
+  private val pSeqMap = scala.collection.mutable.Map.empty[String, Long]
+  private var pFileMap = scala.collection.mutable.Map.empty[String, String]
+  val (pInitSeqMap, pInitFileMap) = loadOpenDataProcessors(context.system.settings.config.getString("akka.opendata.processors-map-path"))
+  pSeqMap ++= pInitSeqMap
+  pFileMap ++= pInitFileMap
 
-  protected def openHdfsSystem(defaultName: String): FileSystem = {
-    val conf = new Configuration()
-    conf.set("fs.default.name", defaultName)
-    FileSystem.get(conf)
+  def getSnapshot(): ExportOpenDataMap = {
+    ExportOpenDataMap(pSeqMap)
+  }
+
+  override def loadSnapshot(map: ExportOpenDataMap) {
+    updatePSeqMap(scala.collection.mutable.Map.empty[String, Long] ++ map.processorSeqMap)
+  }
+
+  def updatePSeqMap(addedMap: scala.collection.mutable.Map[String, Long]) {
+    addedMap.keySet foreach {
+      key =>
+        if (pSeqMap.contains(key)) {
+          pSeqMap.put(key, addedMap(key))
+        }
+    }
+  }
+
+  def doExportData(): (scala.collection.mutable.Map[String, Long]) = {
+    val dumpedMap = scala.collection.mutable.Map.empty[String, Long]
+    pSeqMap.keySet foreach {
+      processorId =>
+        if (processorId != null && !processorId.isEmpty) {
+          // "processedSeqNum" included in current process
+          val processedSeqNum = pSeqMap(processorId)
+          // "lastSeqNum" included in current process, excluded in next process
+          val lastSeqNum = dumpSnapshot(processorId, processedSeqNum)
+          if (lastSeqNum - processedSeqNum >= messagesBatchSize) {
+            dumpMessages(processorId, processedSeqNum, lastSeqNum + 1)
+            dumpedMap += processorId -> (lastSeqNum + 1)
+          }
+        }
+    }
+    if (!dumpedMap.isEmpty) {
+      pSeqMap ++= dumpedMap
+    }
+    dumpedMap
   }
 
   def dumpSnapshot(processorId: String, processedSeqNum: Long): Long = {
@@ -214,6 +212,20 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
         writer.flush()
         writer.close()
     }
+  }
+
+  private def openHdfsSystem(defaultName: String): FileSystem = {
+    val conf = new Configuration()
+    conf.set("fs.default.name", defaultName)
+    FileSystem.get(conf)
+  }
+
+  private def loadOpenDataProcessors(mapConfigPath: String): (scala.collection.mutable.Map[String, Long], collection.immutable.Map[String, String]) = {
+    val in: InputStream = this.getClass.getClassLoader.getResourceAsStream(mapConfigPath)
+    val pFileMap = (new Eval()(IOUtils.toString(in))).asInstanceOf[collection.immutable.Map[String, String]]
+    val pSeqMap = scala.collection.mutable.Map.empty[String, Long]
+    pFileMap.keySet.foreach(pSeqMap.put(_, 0L))
+    (pSeqMap, pFileMap)
   }
 
   private def withStream[S <: Closeable, A](stream: S)(fun: S => A): A =
