@@ -31,17 +31,15 @@ import DeferredConversions._
 class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends ExtendedProcessor
     with EventsourcedProcessor {
   override def processorId = EXPORT_OPEN_DATA_PROCESSOR <<
-
+  val config = context.system.settings.config
   private var cancellable: Cancellable = null
   private val scheduleInterval = 10 second
-  private var manager: ExportOpenDataManager = null
+  lazy val manager = new ExportOpenDataManager(asyncHBaseClient, context)
 
   override def preStart(): Unit = {
     super.preStart()
-    val config = context.system.settings.config
     val exportData = config.getBoolean("akka.opendata.enabled-export")
     if (!exportData) return
-    manager = new ExportOpenDataManager(asyncHBaseClient, context)
     scheduleExport()
   }
 
@@ -50,7 +48,9 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
       doExportData()
   }
 
-  override def receiveRecover: Receive = {
+  def receiveRecover = updateState
+
+  def updateState: Receive = {
     case map: ExportOpenDataMap =>
       manager.updatePSeqMap(scala.collection.mutable.Map.empty[String, Long] ++ map.processorSeqMap)
   }

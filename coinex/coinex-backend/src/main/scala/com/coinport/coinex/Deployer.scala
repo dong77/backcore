@@ -116,7 +116,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     deploySingleton(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer <<)
     deploySingleton(Props(new OrderWriter(dbForViews)), order_mongo_writer <<)
-    deploySingleton(Props(new ExportOpenDataProcessor(asyncHBaseClient)), opendata_exporter <<)
+    deploySingleton(Props(new ExportOpenDataProcessor(asyncHBaseClient) with StackableEventsourced[ExportOpenDataMap, ExportOpenDataManager]), opendata_exporter <<)
 
     // TODO(c): complete this
     deploySingleton(Props(new BitwayProcessor()), bitway_processor <<)
