@@ -134,10 +134,10 @@ object MarketService extends AkkaService {
                     case Some(curHisMap) => curHisMap.get(timeSpot).get * volume
                     case None => 0.0
                   }
-                cur.toString -> amount.externalValue(cur)
+                cur.toString.toUpperCase -> amount.externalValue(cur)
             }.toMap
             AssetItem(uid = userId.toString,
-              assetMap = assetMap.map(a => a._1.toString -> a._2.externalValue(a._1)).toMap,
+              assetMap = assetMap.map(a => a._1.toString.toUpperCase -> a._2.externalValue(a._1)).toMap,
               amountMap = amountMap,
               timestamp = timeSpot * timeSkip)
         }

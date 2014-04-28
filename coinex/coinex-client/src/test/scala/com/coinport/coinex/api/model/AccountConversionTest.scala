@@ -20,8 +20,8 @@ class AccountConversionTest extends Specification {
       userAccount mustEqual com.coinport.coinex.api.model.UserAccount(
         "123",
         Map(
-          "BTC" -> AccountItem(CurrencyObject(Btc, 8000), CurrencyObject(Btc, 2000), CurrencyObject(Btc, 0)),
-          "CNY" -> AccountItem(CurrencyObject(Cny, 100000), CurrencyObject(Cny, 0), CurrencyObject(Cny, 0))
+          "BTC" -> AccountItem("BTC", CurrencyObject(Btc, 8000), CurrencyObject(Btc, 2000), CurrencyObject(Btc, 0)),
+          "CNY" -> AccountItem("CNY", CurrencyObject(Cny, 100000), CurrencyObject(Cny, 0), CurrencyObject(Cny, 0))
         )
       )
     }

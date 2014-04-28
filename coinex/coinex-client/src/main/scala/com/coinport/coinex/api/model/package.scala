@@ -38,6 +38,7 @@ package object model {
       case (k: Currency, v: CashAccount) =>
         val currency: String = k
         currency -> AccountItem(
+          currency,
           CurrencyObject(k, v.available),
           CurrencyObject(k, v.locked),
           CurrencyObject(k, v.pendingWithdrawal)
