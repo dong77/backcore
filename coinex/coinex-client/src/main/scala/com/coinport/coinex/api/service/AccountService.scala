@@ -56,7 +56,6 @@ object AccountService extends AkkaService {
     val command = userOrder.toDoSubmitOrder
     backend ? command map {
       case result: OrderSubmitted =>
-        println("order submit -> ", result)
         ApiResult(true, 0, "订单提交成功", Some(UserOrder.fromOrderInfo(result.originOrderInfo)))
       case failed: SubmitOrderFailed =>
         val message = failed.error match {
