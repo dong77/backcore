@@ -289,7 +289,7 @@ struct AccountTransfer {
     10: optional Fee fee
 }
 
-struct RCDItem {
+struct ABCodeItem {
     1: i64 id
     2: optional i64 dUserId
     3: i64 wUserId
@@ -297,7 +297,7 @@ struct RCDItem {
     5: string codeB
     6: RechargeCodeStatus status
     7: i64 amount
-    8: optional i64 qExpTime
+    8: optional i64 queryExpireTime
     9: optional i64 created
     10: optional i64 updated
 }

@@ -46,7 +46,7 @@ typedef data.GenerateWalletResponse _GenerateWalletResponse
 typedef data.TransferResponse       _TransferResponse
 typedef data.QueryWalletResponse    _QueryWalletResponse
 typedef data.RechargeCodeStatus     _RechargeCodeStatus
-typedef data.RCDItem                _RCDItem
+typedef data.ABCodeItem             _ABCodeItem
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -169,9 +169,9 @@ typedef data.RCDItem                _RCDItem
 /* Q    */ struct QueryAccount                        {1: i64 userId}
 /* R    */ struct QueryAccountResult                  {1: _UserAccount userAccount}
 /* Q    */ struct QueryRCDepositRecord                {1: i64 userId}
-/* R    */ struct QueryRCDepositRecordResult          {1: list<_RCDItem> items}
+/* R    */ struct QueryRCDepositRecordResult          {1: list<_ABCodeItem> items}
 /* Q    */ struct QueryRCWithdrawalRecord             {1: i64 userId}
-/* R    */ struct QueryRCWithdrawalRecordResult       {1: list<_RCDItem> items}
+/* R    */ struct QueryRCWithdrawalRecordResult       {1: list<_ABCodeItem> items}
 
 ////////// MarketDepthView
 /* Q    */ struct QueryMarketDepth                    {1: _MarketSide side, 2: i32 maxDepth}

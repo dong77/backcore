@@ -29,7 +29,7 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
   private val accountMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]
   var aggregation = UserAccount(-1L, Map.empty[Currency, CashAccount])
   var lastOrderId = initialLastOrderId
-  val abCodeMap: Map[Long, RCDItem] = Map.empty[Long, RCDItem]
+  val abCodeMap: Map[Long, ABCodeItem] = Map.empty[Long, ABCodeItem]
   val codeAIndexMap: Map[String, Long] = Map.empty[String, Long]
   val codeBIndexMap: Map[String, Long] = Map.empty[String, Long]
 
@@ -110,7 +110,7 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
 
   def createABCodeTransaction(userId: Long, codeA: String, codeB: String, amount: Long) {
     val timestamp = System.currentTimeMillis
-    val item = RCDItem(
+    val item = ABCodeItem(
       id = abCodeMap.size,
       wUserId = userId,
       codeA = codeA,
@@ -128,12 +128,12 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
   def isCodeAAvailable(userId: Long, codeA: String): Boolean = {
     val now = getCurrentTime
     abCodeMap.getOrElse(codeAIndexMap.getOrElse(codeA, -1), None) match {
-      case i: RCDItem => {
+      case i: ABCodeItem => {
         if (i.status == RechargeCodeStatus.Unused) true
         else if (i.status != RechargeCodeStatus.Frozen) false
-        else if (!i.qExpTime.isDefined || !i.dUserId.isDefined) false
-        else if (now > i.qExpTime.get) true
-        else if (now <= i.qExpTime.get && i.dUserId.get == userId) true
+        else if (!i.queryExpireTime.isDefined || !i.dUserId.isDefined) false
+        else if (now > i.queryExpireTime.get) true
+        else if (now <= i.queryExpireTime.get && i.dUserId.get == userId) true
         else false
       }
       case _ => false
@@ -143,14 +143,14 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
   def freezeABCode(userId: Long, codeA: String) {
     abCodeMap += abCodeMap(codeAIndexMap(codeA)).id ->
       abCodeMap(codeAIndexMap(codeA)).copy(dUserId = Some(userId),
-        qExpTime = Some(getCurrentTime + _1_HOUR),
+        queryExpireTime = Some(getCurrentTime + _1_HOUR),
         status = RechargeCodeStatus.Frozen)
   }
 
   def isCodeBAvailable(userId: Long, codeB: String): (Boolean, Any) = {
     abCodeMap.getOrElse(codeBIndexMap.getOrElse(codeB, -1), None) match {
       case None => (false, InvalidBCode)
-      case i: RCDItem => {
+      case i: ABCodeItem => {
         if (i.status.getValue >= 2) (false, UsedBCode)
         else if (i.dUserId.isDefined && userId != i.dUserId.get) (false, InvalidBCode)
         else (true, None)
@@ -163,7 +163,7 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
     println(abCodeMap.getOrElse(codeBIndexMap.getOrElse(codeB, -1), None))
     abCodeMap.getOrElse(codeBIndexMap.getOrElse(codeB, -1), None) match {
       case None => (false, InvalidBCode)
-      case i: RCDItem => {
+      case i: ABCodeItem => {
         if (i.status.getValue >= 3) (false, UsedBCode)
         else if (i.wUserId == userId) (true, None)
         else (false, InvalidBCode)
@@ -184,11 +184,11 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
       .copy(status = rcStatus, updated = Some(System.currentTimeMillis))
   }
 
-  def getRCDepositRecords(userId: Long): Seq[RCDItem] = {
+  def getRCDepositRecords(userId: Long): Seq[ABCodeItem] = {
     abCodeMap.values.filter(_.dUserId.getOrElse(-1) == userId).toSeq.sortWith((a, b) => a.id > b.id)
   }
 
-  def getRCWithdrawalRecords(userId: Long): Seq[RCDItem] = {
+  def getRCWithdrawalRecords(userId: Long): Seq[ABCodeItem] = {
     abCodeMap.values.filter(_.wUserId == userId).toSeq.sortWith((a, b) => a.id > b.id)
   }
 
