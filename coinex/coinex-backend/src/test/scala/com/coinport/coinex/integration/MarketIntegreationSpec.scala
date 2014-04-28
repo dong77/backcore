@@ -19,24 +19,24 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
 
   val market = MarketSide(Btc, Cny)
   val reverse = MarketSide(Cny, Btc)
+  val user1 = 1000L
+  val user2 = 2000L
+  val user3 = 3000L
+  val user4 = 4000L
+  val user5 = 5000L
+  // deposit 6000 CNY
+  deposit(user1, Cny, 6000 * 1000)
+  deposit(user3, Cny, 6000 * 1000)
+  deposit(user4, Cny, 6000 * 1000)
+
+  // deposit 10 BTC
+  deposit(user2, Btc, 10 * 1000)
+  deposit(user3, Btc, 10 * 1000)
+  deposit(user5, Btc, 10 * 1000)
 
   "CoinexApp" must {
-    "submit orders and adjust account amounts correctly" in {
-      val user1 = 1000L
-      val user2 = 2000L
-      val user3 = 3000L
-      val user4 = 4000L
-      val user5 = 5000L
-      // deposit 6000 CNY
-      deposit(user1, Cny, 6000 * 1000)
-      deposit(user3, Cny, 6000 * 1000)
-      deposit(user4, Cny, 6000 * 1000)
 
-      // deposit 10 BTC
-      deposit(user2, Btc, 10 * 1000)
-      deposit(user3, Btc, 10 * 1000)
-      deposit(user5, Btc, 10 * 1000)
-
+    "deposit should be correct" in {
       client ! QueryAccount(user1)
       receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(user1, Map(Cny -> CashAccount(Cny, 6000000, 0, 0)))))
 
@@ -46,15 +46,15 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
       client ! QueryAccount(user3)
       receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(user3, Map(Cny -> CashAccount(Cny, 6000000, 0, 0), Btc -> CashAccount(Btc, 10000, 0, 0)))))
 
-      // =============================================================================
-      // CASE_1: confirm correct exchange when takeLimit < quantity * price(include refund condition of hit limit)
-      // =============================================================================
+    }
+
+    "confirm correct exchange when takeLimit < quantity * price(include refund condition of hit limit)" in {
+
       // submit a sell order(takeLimit < quantity * price)
       val sellBtc = Order(userId = user2, id = 0L, quantity = 10000, price = Some(500), takeLimit = Some(4500000))
       client ! DoSubmitOrder(market, sellBtc)
 
       val resultSellBtc = receiveOne(4 seconds)
-      println(resultSellBtc)
       Thread.sleep(500)
 
       client ! QueryAccount(user1)
@@ -68,7 +68,6 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
       client ! DoSubmitOrder(reverse, buyBtc)
 
       val resultBuyBtc = receiveOne(4 seconds)
-      println(resultBuyBtc)
       Thread.sleep(500)
 
       client ! QueryAccount(user1)
@@ -76,16 +75,14 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
 
       client ! QueryAccount(user2)
       receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 1000, 0, 0), Cny -> CashAccount(Cny, 4495500, 0, 0)))))
+    }
 
-      // =============================================================================
-      // CASE_2: confirm correct exchange when takeLimit > quantity * price
-      // =============================================================================
+    "confirm correct exchange when takeLimit > quantity * price" in {
       // submit a sell order(takeLimit > quantity * price)
       val sellBtc2 = Order(userId = user1, id = 0L, quantity = 2000, price = Some(700), takeLimit = Some(1500000))
       client ! DoSubmitOrder(market, sellBtc2)
 
       val resultSellBtc2 = receiveOne(4 seconds)
-      println(resultSellBtc2)
       Thread.sleep(500)
 
       // submit a buy order(takeLimit < quantity * price)
@@ -93,7 +90,6 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
       client ! DoSubmitOrder(reverse, buyBtc2)
 
       val resultBuyBtc2 = receiveOne(4 seconds)
-      println(resultBuyBtc2)
       Thread.sleep(500)
 
       client ! QueryAccount(user1)
@@ -101,29 +97,24 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
 
       client ! QueryAccount(user2)
       receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 2998, 0, 0), Cny -> CashAccount(Cny, 2495500, 600000, 0)))))
+    }
 
-      // =============================================================================
-      // CASE_3: confirm correct exchange when taker takes multiple pending orders
-      // =============================================================================
+    "confirm correct exchange when taker takes multiple pending orders" in {
       val buyBtc3_1 = Order(userId = user3, id = 0L, quantity = 2000000, price = Some(1.0 / 700), takeLimit = Some(2000))
       client ! DoSubmitOrder(reverse, buyBtc3_1)
       val resultBuyBtc3_1 = receiveOne(4 seconds)
-      println(resultBuyBtc3_1)
       Thread.sleep(500)
       val buyBtc3_2 = Order(userId = user3, id = 0L, quantity = 2000000, price = Some(1.0 / 800), takeLimit = Some(2500))
       client ! DoSubmitOrder(reverse, buyBtc3_2)
       val resultBuyBtc3_2 = receiveOne(4 seconds)
-      println(resultBuyBtc3_2)
       Thread.sleep(500)
       val buyBtc3_3 = Order(userId = user3, id = 0L, quantity = 2000000, price = Some(1.0 / 1000), takeLimit = Some(3000))
       client ! DoSubmitOrder(reverse, buyBtc3_3)
       val resultBuyBtc3_3 = receiveOne(4 seconds)
-      println(resultBuyBtc3_3)
       Thread.sleep(500)
       val sellBtc3_1 = Order(userId = user1, id = 0L, quantity = 6000, price = Some(800), takeLimit = Some(4800000))
       client ! DoSubmitOrder(market, sellBtc3_1)
       val resultSellBtc3_1 = receiveOne(4 seconds)
-      println(resultSellBtc3_1)
       Thread.sleep(500)
 
       client ! QueryAccount(user1)
@@ -134,20 +125,17 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
 
       client ! QueryAccount(user3)
       receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(3000, Map(Cny -> CashAccount(Cny, 600000, 1400000, 0), Btc -> CashAccount(Btc, 14495, 0, 0)))))
+    }
 
-      // =============================================================================
-      // CASE_4: confirm exchange and refund is right when onlyTaker is true(include refund condition of auto cancelled)
-      // =============================================================================
+    "confirm exchange and refund is right when onlyTaker is true(include refund condition of auto cancelled)" in {
       val buyBtc4_1 = Order(userId = user4, id = 0L, quantity = 4000000, price = Some(1.0 / 1000), takeLimit = Some(2000))
       client ! DoSubmitOrder(reverse, buyBtc4_1)
       val resultBuyBtc4_1 = receiveOne(4 seconds)
-      println(resultBuyBtc4_1)
       Thread.sleep(500)
 
       val sellBtc4_1 = Order(userId = user5, id = 0L, quantity = 6000, price = Some(1000), takeLimit = Some(6000000), onlyTaker = Some(true))
       client ! DoSubmitOrder(market, sellBtc4_1)
       val resultSellBtc4_1 = receiveOne(4 seconds)
-      println(resultSellBtc4_1)
       Thread.sleep(500)
 
       client ! QueryAccount(user1)
@@ -160,20 +148,17 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
       receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(4000, Map(Cny -> CashAccount(Cny, 4200000, 0, 0), Btc -> CashAccount(Btc, 1998, 0, 0)))))
       client ! QueryAccount(user5)
       receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(5000, Map(Btc -> CashAccount(Btc, 9000, 0, 0), Cny -> CashAccount(Cny, 999000, 0, 0)))))
+    }
 
-      // =============================================================================
-      // CASE_5: confirm the dust is refunded to user(include refund condition of dust)
-      // =============================================================================
+    "confirm the dust is refunded to user(include refund condition of dust)" in {
       val buyBtc5_1 = Order(userId = user4, id = 0L, quantity = 2000000, price = Some(1.0 / 700), takeLimit = Some(10000))
       client ! DoSubmitOrder(reverse, buyBtc5_1)
       val resultBuyBtc5_1 = receiveOne(4 seconds)
-      println(resultBuyBtc5_1)
       Thread.sleep(500)
 
       val sellBtc5_1 = Order(userId = user5, id = 0L, quantity = 6000, price = Some(700), takeLimit = Some(4200000))
       client ! DoSubmitOrder(market, sellBtc5_1)
       val resultSellBtc5_1 = receiveOne(4 seconds)
-      println(resultSellBtc5_1)
       Thread.sleep(500)
 
       client ! QueryAccount(user1)
@@ -186,20 +171,17 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
       receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(4000, Map(Btc -> CashAccount(Btc, 4852, 0, 0), Cny -> CashAccount(Cny, 2200100, 0, 0)))))
       client ! QueryAccount(user5)
       receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(5000, Map(Btc -> CashAccount(Btc, 3000, 286, 0), Cny -> CashAccount(Cny, 4994800, 0, 0)))))
+    }
 
-      // =============================================================================
-      // CASE_6: confirm the over charged amount is refunded to user(include refund condition of over charge)
-      // =============================================================================
+    "confirm the over charged amount is refunded to user(include refund condition of over charge)" in {
       val buyBtc6_1 = Order(userId = user1, id = 0L, quantity = 4000000, price = Some(1.0 / 2000), takeLimit = Some(2000))
       client ! DoSubmitOrder(reverse, buyBtc6_1)
       val resultBuyBtc6_1 = receiveOne(4 seconds)
-      println(resultBuyBtc6_1)
       Thread.sleep(500)
 
       val sellBtc6_1 = Order(userId = user3, id = 0L, quantity = 2000, price = Some(1900), takeLimit = Some(3800000))
       client ! DoSubmitOrder(market, sellBtc6_1)
       val resultSellBtc6_1 = receiveOne(4 seconds)
-      println(resultSellBtc6_1)
       Thread.sleep(500)
 
       client ! QueryAccount(user1)
@@ -213,16 +195,17 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
       client ! QueryAccount(user5)
       receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(5000, Map(Btc -> CashAccount(Btc, 3000, 0, 0), Cny -> CashAccount(Cny, 5194800, 0, 0)))))
     }
+
   }
 
-  def deposit(userId: Long, currency: Currency, amount: Long) {
+  private def deposit(userId: Long, currency: Currency, amount: Long) {
     val deposit = AccountTransfer(MarketIntegrationSpec.getAccountTransferId, userId, TransferType.Deposit, currency, amount, TransferStatus.Pending)
     client ! DoRequestTransfer(deposit)
-    val RequestTransferSucceeded(d2) = receiveOne(4 seconds)
+    val RequestTransferSucceeded(d) = receiveOne(4 seconds)
 
-    client ! AdminConfirmTransferSuccess(d2)
-    val ok2 = receiveOne(4 seconds)
-    ok2 should be(AdminCommandResult(ErrorCode.Ok))
+    client ! AdminConfirmTransferSuccess(d)
+    val ok = receiveOne(4 seconds)
+    ok should be(AdminCommandResult(ErrorCode.Ok))
     Thread.sleep(200)
   }
 
