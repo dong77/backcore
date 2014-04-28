@@ -15,6 +15,7 @@ object CurrencyConversion {
     Btc -> 3,
     Ltc -> 3,
     Pts -> 3,
+    Dog -> 3,
     Cny -> 2,
     Usd -> 2
   )
