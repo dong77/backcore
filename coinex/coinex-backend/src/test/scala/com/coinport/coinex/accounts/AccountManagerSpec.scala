@@ -42,14 +42,14 @@ class AccountManagerSpec extends Specification {
       manager.createABCodeTransaction(1001, "32DA834CE87FC390", "DA8332DA8348332DACE88332DA7FC390", 1000)
       manager.isCodeAAvailable(1002, "32DA834CE87FC390") mustEqual true
       manager.abCodeMap(0).dUserId.isEmpty mustEqual true
-      manager.abCodeMap(0).qExpTime.isEmpty mustEqual true
+      manager.abCodeMap(0).queryExpireTime.isEmpty mustEqual true
       manager.freezeABCode(1002, "32DA834CE87FC390")
       manager.abCodeMap(0).dUserId.get mustEqual 1002
-      manager.abCodeMap(0).qExpTime.isDefined mustEqual true
+      manager.abCodeMap(0).queryExpireTime.isDefined mustEqual true
       manager.isCodeAAvailable(1002, "32DA834CE87FC390") mustEqual true
       manager.isCodeAAvailable(1003, "32DA834CE87FC390") mustEqual false
       manager.isCodeAAvailable(1002, "32DA834CE87FC3901") mustEqual false
-      manager.abCodeMap += 0L -> manager.abCodeMap(0).copy(qExpTime = Some(System.currentTimeMillis / 1000 - 3601))
+      manager.abCodeMap += 0L -> manager.abCodeMap(0).copy(queryExpireTime = Some(System.currentTimeMillis / 1000 - 3601))
       manager.isCodeAAvailable(1003, "32DA834CE87FC390") mustEqual true
       manager.createABCodeTransaction(1004, "22DA834CE87FC390", "DA8332DA8348332DACE88332DA7FC390", 100021)
       manager.abCodeMap += 1L -> manager.abCodeMap(1).copy(status = RechargeCodeStatus.Unused)

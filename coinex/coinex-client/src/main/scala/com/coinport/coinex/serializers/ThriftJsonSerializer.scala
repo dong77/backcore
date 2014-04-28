@@ -14,6 +14,7 @@ import com.coinport.coinex.data._
 class ThriftJsonSerializer extends Serializer {
   val includeManifest: Boolean = true
   val identifier = 607100416
+  lazy val _cABCodeItem = JsonScalaCodec(ABCodeItem)
   lazy val _cAccountTransfer = JsonScalaCodec(AccountTransfer)
   lazy val _cApiSecret = JsonScalaCodec(ApiSecret)
   lazy val _cCandleData = JsonScalaCodec(CandleData)
@@ -40,7 +41,6 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cQueryMarketSide = JsonScalaCodec(QueryMarketSide)
   lazy val _cQueryWalletRequest = JsonScalaCodec(QueryWalletRequest)
   lazy val _cQueryWalletResponse = JsonScalaCodec(QueryWalletResponse)
-  lazy val _cRCDItem = JsonScalaCodec(RCDItem)
   lazy val _cRedeliverFilterData = JsonScalaCodec(RedeliverFilterData)
   lazy val _cRedeliverFilters = JsonScalaCodec(RedeliverFilters)
   lazy val _cRefund = JsonScalaCodec(Refund)
@@ -155,6 +155,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cTUserState = JsonScalaCodec(TUserState)
 
   def toBinary(obj: AnyRef): Array[Byte] = obj match {
+    case m: ABCodeItem => _cABCodeItem(m)
     case m: AccountTransfer => _cAccountTransfer(m)
     case m: ApiSecret => _cApiSecret(m)
     case m: CandleData => _cCandleData(m)
@@ -181,7 +182,6 @@ class ThriftJsonSerializer extends Serializer {
     case m: QueryMarketSide => _cQueryMarketSide(m)
     case m: QueryWalletRequest => _cQueryWalletRequest(m)
     case m: QueryWalletResponse => _cQueryWalletResponse(m)
-    case m: RCDItem => _cRCDItem(m)
     case m: RedeliverFilterData => _cRedeliverFilterData(m)
     case m: RedeliverFilters => _cRedeliverFilters(m)
     case m: Refund => _cRefund(m)
@@ -300,6 +300,7 @@ class ThriftJsonSerializer extends Serializer {
 
   def fromBinary(bytes: Array[Byte],
     clazz: Option[Class[_]]): AnyRef = clazz match {
+    case Some(c) if c == classOf[ABCodeItem.Immutable] => _cABCodeItem.invert(bytes).get
     case Some(c) if c == classOf[AccountTransfer.Immutable] => _cAccountTransfer.invert(bytes).get
     case Some(c) if c == classOf[ApiSecret.Immutable] => _cApiSecret.invert(bytes).get
     case Some(c) if c == classOf[CandleData.Immutable] => _cCandleData.invert(bytes).get
@@ -326,7 +327,6 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[QueryMarketSide.Immutable] => _cQueryMarketSide.invert(bytes).get
     case Some(c) if c == classOf[QueryWalletRequest.Immutable] => _cQueryWalletRequest.invert(bytes).get
     case Some(c) if c == classOf[QueryWalletResponse.Immutable] => _cQueryWalletResponse.invert(bytes).get
-    case Some(c) if c == classOf[RCDItem.Immutable] => _cRCDItem.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilterData.Immutable] => _cRedeliverFilterData.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilters.Immutable] => _cRedeliverFilters.invert(bytes).get
     case Some(c) if c == classOf[Refund.Immutable] => _cRefund.invert(bytes).get
