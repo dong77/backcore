@@ -18,6 +18,7 @@ import akka.cluster.Cluster
 import akka.pattern.ask
 import akka.util.Timeout
 import com.coinport.coinex.robot.sample.StopOrderRobot
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object Client {
   implicit val timeout = Timeout(10 seconds)
@@ -32,8 +33,6 @@ object Client {
   println("Example: Client.backend ! SomeMessage()")
 
   System.setProperty("akka.config", "client.conf")
-
-  implicit val ec = AccountService.system.dispatcher
 
   val userMap = Map(
     "wd" -> -245561917658914311L,
