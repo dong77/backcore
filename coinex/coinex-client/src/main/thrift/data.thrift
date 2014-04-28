@@ -52,9 +52,10 @@ enum Currency {
     UNKNOWN = 0
     CNY = 1
     USD = 2
-    BTC = 1001
-    LTC = 1002
-    PTS = 1003
+    BTC = 1000
+    LTC = 1010
+    PTS = 1200
+    DOG = 1100
 }
 
 enum OrderStatus {
