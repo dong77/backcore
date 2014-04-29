@@ -25,8 +25,8 @@ import com.coinport.coinex.api.model.Operations._
 case class UserOrder(
     uid: String,
     operation: Operation,
-    subject: Currency,
-    currency: Currency,
+    subject: String,
+    currency: String,
     price: Option[Double],
     amount: Option[Double],
     total: Option[Double],
@@ -37,9 +37,11 @@ case class UserOrder(
     finishedAmount: Double = 0.0) {
   //  buy: money   out, subject in
   // sell: subject out, money   in
+  private val currency1: Currency = subject
+  private val currency2: Currency = currency
   val marketSide = operation match {
-    case Buy => currency ~> subject
-    case Sell => subject ~> currency
+    case Buy => currency2 ~> currency1
+    case Sell => currency1 ~> currency2
   }
 
   def toDoSubmitOrder(): DoSubmitOrder = {
@@ -51,24 +53,24 @@ case class UserOrder(
         }
         // regard total as quantity
         val quantity: Long = total match {
-          case Some(t) => t.internalValue(currency)
-          case None => (amount.get * price.get).internalValue(currency)
+          case Some(t) => t.internalValue(currency2)
+          case None => (amount.get * price.get).internalValue(currency2)
         }
-        val limit = amount.map(_.internalValue(subject))
+        val limit = amount.map(_.internalValue(currency1))
         DoSubmitOrder(marketSide, Order(uid.toLong, id.toLong, quantity, newPrice, limit))
       case Sell =>
         // TODO: handle None total or price
         val newPrice = price.map(p => p.internalValue(marketSide))
         val quantity: Long = amount match {
-          case Some(a) => a.internalValue(subject)
+          case Some(a) => a.internalValue(currency1)
           case None =>
             if (total.isDefined && price.isDefined) {
               val totalValue = price.get.reverse * total.get
-              totalValue.internalValue(subject)
+              totalValue.internalValue(currency1)
             } else 0
         }
         val limit = total map {
-          total => total.internalValue(currency)
+          total => total.internalValue(currency2)
         }
         DoSubmitOrder(marketSide, Order(uid.toLong, id.toLong, quantity, newPrice, limit))
     }
