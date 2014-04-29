@@ -75,7 +75,7 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
 
 class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context: ActorContext) extends Manager[ExportOpenDataMap] {
   private val config = context.system.settings.config
-  private val fs: FileSystem = openHdfsSystem(config.getString("akka.opendata.hdfs-host"))
+  private lazy val fs: FileSystem = openHdfsSystem(config.getString("akka.opendata.hdfs-host"))
   var messagesBatchSize: Long = config.getLong("akka.opendata.messages-batch-size")
   private val snapshotHdfsDir: String = config.getString("hadoop-snapshot-store.snapshot-dir")
   private val exportSnapshotHdfsDir = config.getString("akka.opendata.export-snapshot-hdfs-dir")
