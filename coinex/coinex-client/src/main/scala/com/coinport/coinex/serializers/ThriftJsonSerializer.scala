@@ -16,6 +16,7 @@ class ThriftJsonSerializer extends Serializer {
   val identifier = 607100416
   lazy val _cABCodeItem = JsonScalaCodec(ABCodeItem)
   lazy val _cAccountTransfer = JsonScalaCodec(AccountTransfer)
+  lazy val _cAddress = JsonScalaCodec(Address)
   lazy val _cApiSecret = JsonScalaCodec(ApiSecret)
   lazy val _cCandleData = JsonScalaCodec(CandleData)
   lazy val _cCandleDataItem = JsonScalaCodec(CandleDataItem)
@@ -144,6 +145,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cTAccountTransferState = JsonScalaCodec(TAccountTransferState)
   lazy val _cTApiSecretState = JsonScalaCodec(TApiSecretState)
   lazy val _cTAssetState = JsonScalaCodec(TAssetState)
+  lazy val _cTBitwayState = JsonScalaCodec(TBitwayState)
   lazy val _cTCandleDataState = JsonScalaCodec(TCandleDataState)
   lazy val _cTExportToMongoState = JsonScalaCodec(TExportToMongoState)
   lazy val _cTMarketDepthState = JsonScalaCodec(TMarketDepthState)
@@ -157,6 +159,7 @@ class ThriftJsonSerializer extends Serializer {
   def toBinary(obj: AnyRef): Array[Byte] = obj match {
     case m: ABCodeItem => _cABCodeItem(m)
     case m: AccountTransfer => _cAccountTransfer(m)
+    case m: Address => _cAddress(m)
     case m: ApiSecret => _cApiSecret(m)
     case m: CandleData => _cCandleData(m)
     case m: CandleDataItem => _cCandleDataItem(m)
@@ -285,6 +288,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: TAccountTransferState => _cTAccountTransferState(m)
     case m: TApiSecretState => _cTApiSecretState(m)
     case m: TAssetState => _cTAssetState(m)
+    case m: TBitwayState => _cTBitwayState(m)
     case m: TCandleDataState => _cTCandleDataState(m)
     case m: TExportToMongoState => _cTExportToMongoState(m)
     case m: TMarketDepthState => _cTMarketDepthState(m)
@@ -302,6 +306,7 @@ class ThriftJsonSerializer extends Serializer {
     clazz: Option[Class[_]]): AnyRef = clazz match {
     case Some(c) if c == classOf[ABCodeItem.Immutable] => _cABCodeItem.invert(bytes).get
     case Some(c) if c == classOf[AccountTransfer.Immutable] => _cAccountTransfer.invert(bytes).get
+    case Some(c) if c == classOf[Address.Immutable] => _cAddress.invert(bytes).get
     case Some(c) if c == classOf[ApiSecret.Immutable] => _cApiSecret.invert(bytes).get
     case Some(c) if c == classOf[CandleData.Immutable] => _cCandleData.invert(bytes).get
     case Some(c) if c == classOf[CandleDataItem.Immutable] => _cCandleDataItem.invert(bytes).get
@@ -430,6 +435,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[TAccountTransferState.Immutable] => _cTAccountTransferState.invert(bytes).get
     case Some(c) if c == classOf[TApiSecretState.Immutable] => _cTApiSecretState.invert(bytes).get
     case Some(c) if c == classOf[TAssetState.Immutable] => _cTAssetState.invert(bytes).get
+    case Some(c) if c == classOf[TBitwayState.Immutable] => _cTBitwayState.invert(bytes).get
     case Some(c) if c == classOf[TCandleDataState.Immutable] => _cTCandleDataState.invert(bytes).get
     case Some(c) if c == classOf[TExportToMongoState.Immutable] => _cTExportToMongoState.invert(bytes).get
     case Some(c) if c == classOf[TMarketDepthState.Immutable] => _cTMarketDepthState.invert(bytes).get

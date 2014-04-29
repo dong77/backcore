@@ -422,6 +422,7 @@ struct ExportOpenDataMap {
 }
 
 struct Address {
-    1: string privateKey
-    2: string publicKey
+    1: Currency currency
+    2: string privateKey
+    3: string publicKey
 }
