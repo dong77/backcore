@@ -118,17 +118,16 @@ object CoinexBuild extends Build {
     //.settings(packageArchetype.java_application:_*)
     //.settings(packageDescription in Debian := "coinex")
     .settings(
-      libraryDependencies += ("com.coinport" %% "akka-persistence-hbase" % "1.0.1-SNAPSHOT"),
-//      libraryDependencies += ("com.coinport" %% "akka-persistence-hbase" % "1.0.1-SNAPSHOT")
-//        .exclude("org.jboss.netty", "netty")
-//        .exclude("org.jruby", "jruby-complete")
-//        .exclude("javax.xml.stream", "stax-api")
-//        .exclude("javax.xml.stream", "stax-api")
-//        .exclude("commons-beanutils", "commons-beanutils")
-//        .exclude("commons-beanutils", "commons-beanutils-core")
-//        .exclude("tomcat", "jasper-runtime")
-//        .exclude("tomcat", "jasper-compiler")
-//        .exclude("org.slf4j", "slf4j-log4j12"),
+      libraryDependencies += ("com.coinport" %% "akka-persistence-hbase" % "1.0.1-SNAPSHOT")
+        .exclude("org.jboss.netty", "netty")
+        .exclude("org.jruby", "jruby-complete")
+        .exclude("javax.xml.stream", "stax-api")
+        .exclude("javax.xml.stream", "stax-api")
+        .exclude("commons-beanutils", "commons-beanutils")
+        .exclude("commons-beanutils", "commons-beanutils-core")
+        .exclude("tomcat", "jasper-runtime")
+        .exclude("tomcat", "jasper-compiler")
+        .exclude("org.slf4j", "slf4j-log4j12"),
       libraryDependencies ++= Seq(
         "com.typesafe.akka" %% "akka-remote" % akkaVersion,
         "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
