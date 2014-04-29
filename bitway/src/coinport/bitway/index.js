@@ -77,7 +77,7 @@ peerman.on('connection', function(conn) {
     conn.on('tx', handleTx);
 });
 
-// peerman.start();
+peerman.start();
 
 var logo = "" +
 " _    _ _                     \n" +
