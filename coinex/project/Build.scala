@@ -8,8 +8,8 @@ import org.sbtidea.SbtIdeaPlugin._
 import com.typesafe.sbt.SbtAtmos.{ Atmos, atmosSettings }
 import sbtassembly.Plugin._
 import AssemblyKeys._
-//import com.typesafe.sbt.SbtNativePackager._
-//import NativePackagerKeys._
+import com.typesafe.sbt.SbtNativePackager._
+import NativePackagerKeys._
 
 object CoinexBuild extends Build {
   val coinexVersion = "1.1.8-SNAPSHOT"
@@ -115,8 +115,8 @@ object CoinexBuild extends Build {
       scalariformSettings
     )
     .settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
-    //.settings(packageArchetype.java_application:_*)
-    //.settings(packageDescription in Debian := "coinex")
+    .settings(packageArchetype.java_server:_*)
+    .settings(packageDescription in Debian := "coinex")
     .settings(
       libraryDependencies += ("com.coinport" %% "akka-persistence-hbase" % "1.0.1-SNAPSHOT")
         .exclude("org.jboss.netty", "netty")
