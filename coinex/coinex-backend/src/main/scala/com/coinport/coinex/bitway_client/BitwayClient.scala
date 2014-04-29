@@ -8,6 +8,8 @@ package com.coinport.coinex.bitway_client
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.persistence.Persistent
+import akka.persistence.EventsourcedProcessor
+
 import com.redis._
 import com.redis.serialization.Parse.Implicits.parseByteArray
 import scala.concurrent.duration._
@@ -31,17 +33,25 @@ object BitwayClient {
   val serializer = new ThriftBinarySerializer()
 }
 
-class BitwayProcessor() extends ExtendedProcessor with ActorLogging {
+class BitwayProcessor() extends ExtendedProcessor with EventsourcedProcessor with ActorLogging {
 
   override val processorId = BITWAY_PROCESSOR <<
 
-  def receive = LoggingReceive {
-    case Persistent(BitwayResponse(t, id, currency, Some(res), None, None), _) =>
+  val manager = new BitwayManager()
+
+  def receiveRecover = PartialFunction.empty[Any, Unit]
+
+  def receiveCommand = LoggingReceive {
+    case m @ BitwayResponse(t, id, currency, Some(res), None, None) =>
       println("~" * 40 + res)
-    case Persistent(BitwayResponse(t, id, currency, None, Some(res), None), _) =>
+    case m @ BitwayResponse(t, id, currency, None, Some(res), None) =>
       println("~" * 40 + res)
-    case Persistent(BitwayResponse(t, id, currency, None, None, Some(res)), _) =>
+    case m @ BitwayResponse(t, id, currency, None, None, Some(res)) =>
       println("~" * 40 + res)
+  }
+
+  def updateState: Receive = {
+    case _ => None
   }
 }
 
@@ -59,7 +69,7 @@ class BitwayReceiver(bitwayProcessor: ActorRef) extends Actor with ActorLogging 
       client.get.blpop[String, Array[Byte]](1, RESPONSE_CHANNEL) match {
         case Some(s) =>
           val response = serializer.fromBinary(s._2, classOf[BitwayResponse.Immutable])
-          bitwayProcessor ! Persistent(response)
+          bitwayProcessor ! response
         case None => None
       }
       listenAtRedis()

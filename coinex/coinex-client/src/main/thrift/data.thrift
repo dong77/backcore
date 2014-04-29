@@ -420,3 +420,8 @@ struct QueryWalletResponse {
 struct ExportOpenDataMap {
     1: map<string, i64> processorSeqMap
 }
+
+struct Address {
+    1: string privateKey
+    2: string publicKey
+}

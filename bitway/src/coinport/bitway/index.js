@@ -57,6 +57,8 @@ var handleTx = function(info) {
 
     console.log('** TX Received **');
     console.log(tx);
+    proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_WALLET, requestId: 1425, currency: Currency.BTC,
+        generateWalletResponse: new GenerateWalletResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
 };
 
 var handleInv = function(info) {
@@ -65,6 +67,8 @@ var handleInv = function(info) {
 
     var invs = info.message.invs;
     info.conn.sendGetData(invs);
+    proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_WALLET, requestId: 1425, currency: Currency.BTC,
+        generateWalletResponse: new GenerateWalletResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
 };
 
 var peerman = new PeerManager();

@@ -17,9 +17,9 @@ package com.coinport.coinex.markets
 
 import scala.collection.mutable.Map
 import scala.collection.mutable.SortedSet
-import com.coinport.coinex.data._
 import com.coinport.coinex.common.Manager
 import com.coinport.coinex.common.RedeliverFilter
+import com.coinport.coinex.data._
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import Implicits._

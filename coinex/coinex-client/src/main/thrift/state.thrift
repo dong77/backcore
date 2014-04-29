@@ -26,6 +26,7 @@ typedef data.CashAccount           CashAccount
 typedef data.Currency              Currency
 typedef data.ABCodeItem            ABCodeItem
 typedef data.Metrics               Metrics
+typedef data.Address               Address
 
 struct TUserState {
     1: map<i64, i64> idMap
@@ -110,4 +111,9 @@ struct TRobotState {
     2: map<i64, TRobot> robotMap
     3: Metrics metrics
     4: map<i64, map<string, string>> robotDNAMap
+}
+
+struct TBitwayState {
+    1: map<Currency, set<Address>> unusedAddresses
+    2: map<Currency, set<Address>> usedAddresses
 }
