@@ -35,13 +35,28 @@ object BitwayClient {
 
 class BitwayProcessor() extends ExtendedProcessor with EventsourcedProcessor with ActorLogging {
 
+  val delayinSeconds = 4
   override val processorId = BITWAY_PROCESSOR <<
 
   val manager = new BitwayManager()
 
+  override def preStart() = {
+    super.preStart
+    scheduleTryPour()
+  }
+
   def receiveRecover = PartialFunction.empty[Any, Unit]
 
   def receiveCommand = LoggingReceive {
+    case TryFetchAddresses =>
+      if (recoveryFinished) {
+        manager.getSupportedCurrency.filter(manager.isDryUp).foreach {
+          self ! FetchAddresses(_)
+        }
+      } else {
+        scheduleTryPour()
+      }
+    case FetchAddresses(currency) => None // TODO(c) TBD
     case m @ BitwayResponse(t, id, currency, Some(res), None, None) =>
       println("~" * 40 + res)
     case m @ BitwayResponse(t, id, currency, None, Some(res), None) =>
@@ -52,6 +67,10 @@ class BitwayProcessor() extends ExtendedProcessor with EventsourcedProcessor wit
 
   def updateState: Receive = {
     case _ => None
+  }
+
+  private def scheduleTryPour() = {
+    context.system.scheduler.scheduleOnce(delayinSeconds seconds, self, TryFetchAddresses)
   }
 }
 

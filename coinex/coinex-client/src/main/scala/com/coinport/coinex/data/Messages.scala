@@ -22,3 +22,7 @@ case class DoCancelRobot(id: Long)
 case object ListenAtRedis
 
 case object DoExportData
+
+case object TryFetchAddresses
+
+case class FetchAddresses(currency: Currency)

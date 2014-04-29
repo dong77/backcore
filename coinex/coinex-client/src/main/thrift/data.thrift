@@ -391,8 +391,13 @@ struct HistoryPrice {
     1: map<MarketSide, map<i64, double>> priceMap
 }
 
-struct GenerateWalletRequest {
-    1: optional string passwd
+struct Address {
+    1: string privateKey
+    2: string publicKey
+}
+
+struct GenerateAddressRequest {
+    1: i32 num
 }
 
 struct TransferRequest {
@@ -405,8 +410,9 @@ struct QueryWalletRequest {
     1: string address
 }
 
-struct GenerateWalletResponse {
+struct GenerateAddressResponse {
     1: ErrorCode error
+    2: set<Address> addresses
 }
 
 struct TransferResponse {
@@ -421,8 +427,9 @@ struct ExportOpenDataMap {
     1: map<string, i64> processorSeqMap
 }
 
-struct Address {
+struct CurrencyNetwork {
     1: Currency currency
-    2: string privateKey
-    3: string publicKey
+    2: string cursor
+    3: set<Address> unusedAddresses
+    4: set<Address> usedAddresses
 }

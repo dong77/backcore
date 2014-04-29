@@ -21,13 +21,14 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cCandleData = BinaryScalaCodec(CandleData)
   lazy val _cCandleDataItem = BinaryScalaCodec(CandleDataItem)
   lazy val _cCashAccount = BinaryScalaCodec(CashAccount)
+  lazy val _cCurrencyNetwork = BinaryScalaCodec(CurrencyNetwork)
   lazy val _cCurrentAsset = BinaryScalaCodec(CurrentAsset)
   lazy val _cCurrentPrice = BinaryScalaCodec(CurrentPrice)
   lazy val _cCursor = BinaryScalaCodec(Cursor)
   lazy val _cExportOpenDataMap = BinaryScalaCodec(ExportOpenDataMap)
   lazy val _cFee = BinaryScalaCodec(Fee)
-  lazy val _cGenerateWalletRequest = BinaryScalaCodec(GenerateWalletRequest)
-  lazy val _cGenerateWalletResponse = BinaryScalaCodec(GenerateWalletResponse)
+  lazy val _cGenerateAddressRequest = BinaryScalaCodec(GenerateAddressRequest)
+  lazy val _cGenerateAddressResponse = BinaryScalaCodec(GenerateAddressResponse)
   lazy val _cHistoryAsset = BinaryScalaCodec(HistoryAsset)
   lazy val _cHistoryPrice = BinaryScalaCodec(HistoryPrice)
   lazy val _cMarketDepth = BinaryScalaCodec(MarketDepth)
@@ -164,13 +165,14 @@ class ThriftBinarySerializer extends Serializer {
     case m: CandleData => _cCandleData(m)
     case m: CandleDataItem => _cCandleDataItem(m)
     case m: CashAccount => _cCashAccount(m)
+    case m: CurrencyNetwork => _cCurrencyNetwork(m)
     case m: CurrentAsset => _cCurrentAsset(m)
     case m: CurrentPrice => _cCurrentPrice(m)
     case m: Cursor => _cCursor(m)
     case m: ExportOpenDataMap => _cExportOpenDataMap(m)
     case m: Fee => _cFee(m)
-    case m: GenerateWalletRequest => _cGenerateWalletRequest(m)
-    case m: GenerateWalletResponse => _cGenerateWalletResponse(m)
+    case m: GenerateAddressRequest => _cGenerateAddressRequest(m)
+    case m: GenerateAddressResponse => _cGenerateAddressResponse(m)
     case m: HistoryAsset => _cHistoryAsset(m)
     case m: HistoryPrice => _cHistoryPrice(m)
     case m: MarketDepth => _cMarketDepth(m)
@@ -311,13 +313,14 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[CandleData.Immutable] => _cCandleData.invert(bytes).get
     case Some(c) if c == classOf[CandleDataItem.Immutable] => _cCandleDataItem.invert(bytes).get
     case Some(c) if c == classOf[CashAccount.Immutable] => _cCashAccount.invert(bytes).get
+    case Some(c) if c == classOf[CurrencyNetwork.Immutable] => _cCurrencyNetwork.invert(bytes).get
     case Some(c) if c == classOf[CurrentAsset.Immutable] => _cCurrentAsset.invert(bytes).get
     case Some(c) if c == classOf[CurrentPrice.Immutable] => _cCurrentPrice.invert(bytes).get
     case Some(c) if c == classOf[Cursor.Immutable] => _cCursor.invert(bytes).get
     case Some(c) if c == classOf[ExportOpenDataMap.Immutable] => _cExportOpenDataMap.invert(bytes).get
     case Some(c) if c == classOf[Fee.Immutable] => _cFee.invert(bytes).get
-    case Some(c) if c == classOf[GenerateWalletRequest.Immutable] => _cGenerateWalletRequest.invert(bytes).get
-    case Some(c) if c == classOf[GenerateWalletResponse.Immutable] => _cGenerateWalletResponse.invert(bytes).get
+    case Some(c) if c == classOf[GenerateAddressRequest.Immutable] => _cGenerateAddressRequest.invert(bytes).get
+    case Some(c) if c == classOf[GenerateAddressResponse.Immutable] => _cGenerateAddressResponse.invert(bytes).get
     case Some(c) if c == classOf[HistoryAsset.Immutable] => _cHistoryAsset.invert(bytes).get
     case Some(c) if c == classOf[HistoryPrice.Immutable] => _cHistoryPrice.invert(bytes).get
     case Some(c) if c == classOf[MarketDepth.Immutable] => _cMarketDepth.invert(bytes).get

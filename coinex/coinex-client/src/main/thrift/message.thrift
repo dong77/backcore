@@ -12,41 +12,41 @@ include "data.thrift"
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////// PROCESSOR MESSAGES //////////////////////////
 
-typedef data.ErrorCode              _ErrorCode
-typedef data.Currency               _Currency
-typedef data.Order                  _Order
-typedef data.MarketDepth            _MarketDepth
-typedef data.UserAccount            _UserAccount
-typedef data.UserProfile            _UserProfile
-typedef data.AccountTransfer        _AccountTransfer
-typedef data.MarketSide             _MarketSide
-typedef data.ApiSecret              _ApiSecret
-typedef data.OrderInfo              _OrderInfo
-typedef data.Metrics                _Metrics
-typedef data.TransferStatus         _TransferStatus
-typedef data.Cursor                 _Cursor
-typedef data.SpanCursor             _SpanCursor
-typedef data.EmailType              _EmailType
-typedef data.Transaction            _Transaction
-typedef data.TransactionItem        _TransactionItem
-typedef data.CandleData             _CandleData
-typedef data.ChartTimeDimension     _ChartTimeDimension
-typedef data.QueryMarketSide        _QueryMarketSide
-typedef data.ExportedEventType      _ExportedEventType
-typedef data.HistoryAsset           _HistoryAsset
-typedef data.CurrentAsset           _CurrentAsset
-typedef data.HistoryPrice           _HistoryPrice
-typedef data.CurrentPrice           _CurrentPrice
-typedef data.TransferType           _TransferType
-typedef data.BitwayType             _BitwayType
-typedef data.GenerateWalletRequest  _GenerateWalletRequest
-typedef data.TransferRequest        _TransferRequest
-typedef data.QueryWalletRequest     _QueryWalletRequest
-typedef data.GenerateWalletResponse _GenerateWalletResponse
-typedef data.TransferResponse       _TransferResponse
-typedef data.QueryWalletResponse    _QueryWalletResponse
-typedef data.RechargeCodeStatus     _RechargeCodeStatus
-typedef data.ABCodeItem             _ABCodeItem
+typedef data.ErrorCode                  _ErrorCode
+typedef data.Currency                   _Currency
+typedef data.Order                      _Order
+typedef data.MarketDepth                _MarketDepth
+typedef data.UserAccount                _UserAccount
+typedef data.UserProfile                _UserProfile
+typedef data.AccountTransfer            _AccountTransfer
+typedef data.MarketSide                 _MarketSide
+typedef data.ApiSecret                  _ApiSecret
+typedef data.OrderInfo                  _OrderInfo
+typedef data.Metrics                    _Metrics
+typedef data.TransferStatus             _TransferStatus
+typedef data.Cursor                     _Cursor
+typedef data.SpanCursor                 _SpanCursor
+typedef data.EmailType                  _EmailType
+typedef data.Transaction                _Transaction
+typedef data.TransactionItem            _TransactionItem
+typedef data.CandleData                 _CandleData
+typedef data.ChartTimeDimension         _ChartTimeDimension
+typedef data.QueryMarketSide            _QueryMarketSide
+typedef data.ExportedEventType          _ExportedEventType
+typedef data.HistoryAsset               _HistoryAsset
+typedef data.CurrentAsset               _CurrentAsset
+typedef data.HistoryPrice               _HistoryPrice
+typedef data.CurrentPrice               _CurrentPrice
+typedef data.TransferType               _TransferType
+typedef data.BitwayType                 _BitwayType
+typedef data.GenerateAddressRequest     _GenerateAddressRequest
+typedef data.TransferRequest            _TransferRequest
+typedef data.QueryWalletRequest         _QueryWalletRequest
+typedef data.GenerateAddressResponse    _GenerateAddressResponse
+typedef data.TransferResponse           _TransferResponse
+typedef data.QueryWalletResponse        _QueryWalletResponse
+typedef data.RechargeCodeStatus         _RechargeCodeStatus
+typedef data.ABCodeItem                 _ABCodeItem
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -158,8 +158,8 @@ typedef data.ABCodeItem             _ABCodeItem
 /* C    */ struct DoSendEmail                         {1: string email, 2: _EmailType emailType, 3: map<string, string> params}
 
 ////////// Bitway
-/* C    */ struct BitwayRequest                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional _GenerateWalletRequest generateWalletRequest, 5: optional _TransferRequest transferRequest, 6: optional _QueryWalletRequest queryWalletRequest}
-/* R    */ struct BitwayResponse                      {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional _GenerateWalletResponse generateWalletResponse, 5: optional _TransferResponse transferResponse, 6: optional _QueryWalletResponse queryWalletResponse}
+/* C    */ struct BitwayRequest                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional _GenerateAddressRequest generateWalletRequest, 5: optional _TransferRequest transferRequest, 6: optional _QueryWalletRequest queryWalletRequest}
+/* R    */ struct BitwayResponse                      {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional _GenerateAddressResponse generateWalletResponse, 5: optional _TransferResponse transferResponse, 6: optional _QueryWalletResponse queryWalletResponse}
 
 ////////////////////////////////////////////////////////////////
 //////////////////////// VIEW MESSAGES /////////////////////////
