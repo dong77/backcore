@@ -8,7 +8,13 @@ var RedisProxy             = require('./redis/redis_proxy').RedisProxy,
     GenerateWalletResponse = require('../../../gen-nodejs/data_types').GenerateWalletResponse,
     Currency               = require('../../../gen-nodejs/data_types').Currency,
     ErrorCode              = require('../../../gen-nodejs/data_types').ErrorCode,
-    BitwayResponse         = require('../../../gen-nodejs/message_types').BitwayResponse;
+    BitwayResponse         = require('../../../gen-nodejs/message_types').BitwayResponse,
+    Bitcore                = require('bitcore'),
+    Peer                   = Bitcore.Peer,
+    Networks               = Bitcore.networks,
+    PeerManager            = require('soop').load('bitcore/PeerManager', {
+                                 network: Networks.testnet
+                             });
 
 var proxy = new RedisProxy("127.0.0.1", "6379");
 
@@ -34,9 +40,44 @@ proxy.on(RedisProxy.EventType.QUERY_WALLET, function(requestId, currency, reques
     console.log(request);
 });
 
-// proxy.start();
-proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_WALLET, requestId: 1425, currency: Currency.BTC,
-    generateWalletResponse: new GenerateWalletResponse({error: ErrorCode.ROBOT_DNA_EXIST})}))
+proxy.start();
+
+// proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_WALLET, requestId: 1425, currency: Currency.BTC,
+    // generateWalletResponse: new GenerateWalletResponse({error: ErrorCode.ROBOT_DNA_EXIST})}))
+
+var handleBlock = function(info) {
+    console.log('** Block Received **');
+    console.log(info.message);
+    proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_WALLET, requestId: 1425, currency: Currency.BTC,
+        generateWalletResponse: new GenerateWalletResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
+};
+
+var handleTx = function(info) {
+    var tx = info.message.tx.getStandardizedObject();
+
+    console.log('** TX Received **');
+    console.log(tx);
+};
+
+var handleInv = function(info) {
+    console.log('** Inv **');
+    console.log(info.message);
+
+    var invs = info.message.invs;
+    info.conn.sendGetData(invs);
+};
+
+var peerman = new PeerManager();
+
+peerman.addPeer(new Peer('127.0.0.1', 18333));
+
+peerman.on('connection', function(conn) {
+    conn.on('inv', handleInv);
+    conn.on('block', handleBlock);
+    conn.on('tx', handleTx);
+});
+
+// peerman.start();
 
 var logo = "" +
 " _    _ _                     \n" +

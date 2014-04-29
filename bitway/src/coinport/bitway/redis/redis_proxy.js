@@ -62,10 +62,10 @@ RedisProxy.prototype.start = function() {
                             bwr.queryWalletRequest);
                         break;
                 }
-            } else if (!result) {
-                console.log("timeout")
+            } else if (!error && !result) {
+                console.log("timeout");
             } else {
-                console.log(error)
+                console.log(error);
             }
             listen(proxy);
         });
