@@ -55,6 +55,36 @@ object UserService extends AkkaService {
     }
   }
 
+  def updateProfile(user: User) = {
+    val id = user.id
+    val email = user.email
+    val realName = user.realName
+    val nationalId = user.nationalId
+    val mobile = user.mobile
+
+    val profile = UserProfile(
+      id = id.get,
+      email = email,
+      realName = realName,
+      nationalId = nationalId,
+      emailVerified = false,
+      mobile = mobile,
+      mobileVerified = false,
+      status = UserStatus.Normal)
+
+    val command = DoUpdateUserProfile(profile)
+
+    backend ? command map {
+      case succeeded: UpdateUserProfileSucceeded =>
+        val returnProfile = succeeded.userProfile
+        ApiResult(true, 0, returnProfile.id.toString, Some(returnProfile))
+      case failed: UpdateUserProfileFailed =>
+        ApiResult(false, -1, failed.toString)
+      case x =>
+        ApiResult(false, -1, x.toString)
+    }
+  }
+
   def login(user: User) = {
     val email = user.email
     val password = user.password
