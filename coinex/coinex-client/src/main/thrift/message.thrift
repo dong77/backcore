@@ -41,10 +41,10 @@ typedef data.TransferType               _TransferType
 typedef data.BitwayType                 _BitwayType
 typedef data.GenerateAddressRequest     _GenerateAddressRequest
 typedef data.TransferRequest            _TransferRequest
-typedef data.QueryWalletRequest         _QueryWalletRequest
+typedef data.QueryAddressRequest        _QueryAddressRequest
 typedef data.GenerateAddressResponse    _GenerateAddressResponse
 typedef data.TransferResponse           _TransferResponse
-typedef data.QueryWalletResponse        _QueryWalletResponse
+typedef data.QueryAddressResponse       _QueryAddressResponse
 typedef data.RechargeCodeStatus         _RechargeCodeStatus
 typedef data.ABCodeItem                 _ABCodeItem
 typedef data.Address                    _Address
@@ -160,8 +160,8 @@ typedef data.Address                    _Address
 
 ////////// Bitway
 // with nodejs bitway
-/* C    */ struct BitwayRequest                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional _GenerateAddressRequest generateAddressRequest, 5: optional _TransferRequest transferRequest, 6: optional _QueryWalletRequest queryWalletRequest}
-/* R    */ struct BitwayResponse                      {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional _GenerateAddressResponse generateAddressResponse, 5: optional _TransferResponse transferResponse, 6: optional _QueryWalletResponse queryWalletResponse}
+/* C    */ struct BitwayRequest                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional _GenerateAddressRequest generateAddressRequest, 5: optional _TransferRequest transferRequest, 6: optional _QueryAddressRequest queryAssressRequest}
+/* R    */ struct BitwayResponse                      {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional _GenerateAddressResponse generateAddressResponse, 5: optional _TransferResponse transferResponse, 6: optional _QueryAddressResponse queryAddressResponse}
 
 // with other processor in akka
 /* C    */ struct GetNewAddress                       {1: _Currency currency, 2: optional _Address assignedAddress}

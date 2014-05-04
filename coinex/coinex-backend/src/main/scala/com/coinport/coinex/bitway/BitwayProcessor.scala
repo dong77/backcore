@@ -5,13 +5,16 @@
 
 package com.coinport.coinex.bitway
 
-import akka.actor._
+import akka.actor.Actor
+import akka.actor.ActorLogging
+import akka.actor.ActorRef
 import akka.event.LoggingReceive
 import akka.persistence.Persistent
 import akka.persistence.EventsourcedProcessor
 
 import com.redis._
 import com.redis.serialization.Parse.Implicits.parseByteArray
+import scala.collection.mutable.Set
 import scala.concurrent.duration._
 import scala.util.Random
 
@@ -82,7 +85,13 @@ class BitwayProcessor extends ExtendedProcessor with EventsourcedProcessor with 
       }
 
     case m @ BitwayResponse(t, id, currency, Some(res), None, None) =>
-      println("~" * 40 + res)
+      if (res.error == ErrorCode.Ok) {
+        persist(res) { event =>
+          updateState(m)
+        }
+      } else {
+        log.error("error occur when fetch addresses: " + res)
+      }
     case m @ BitwayResponse(t, id, currency, None, Some(res), None) =>
       println("~" * 40 + res)
     case m @ BitwayResponse(t, id, currency, None, None, Some(res)) =>
@@ -91,6 +100,8 @@ class BitwayProcessor extends ExtendedProcessor with EventsourcedProcessor with 
 
   def updateState: Receive = {
     case GetNewAddress(currency, Some(address)) => manager.addressAllocated(currency, address)
+    case BitwayResponse(_, _, currency, Some(res), None, None) => manager.faucetAddress(currency,
+      Set.empty[Address] ++ res.addresses)
   }
 
   private def scheduleTryPour() = {

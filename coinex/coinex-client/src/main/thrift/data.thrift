@@ -409,7 +409,7 @@ struct TransferRequest {
     3: i32 amount
 }
 
-struct QueryWalletRequest {
+struct QueryAddressRequest {
     1: string address
 }
 
@@ -422,7 +422,7 @@ struct TransferResponse {
     1: ErrorCode error
 }
 
-struct QueryWalletResponse {
+struct QueryAddressResponse {
     1: ErrorCode error
 }
 
