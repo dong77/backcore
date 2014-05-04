@@ -132,40 +132,26 @@ class AccountProcessor(
 
     case DoSubmitOrder(side, order) =>
       if (order.quantity <= 0) {
-        log.info("1=" * 25)
         sender ! SubmitOrderFailed(side, order, ErrorCode.InvalidAmount)
       } else {
-        log.info("2=" * 25)
         val adjustment = CashAccount(side.outCurrency, -order.quantity, order.quantity, 0)
         if (!manager.canUpdateCashAccount(order.userId, adjustment)) {
-          log.info("3=" * 25)
           sender ! SubmitOrderFailed(side, order, ErrorCode.InsufficientFund)
         } else {
-          log.info("4=" * 25)
           val updated = order.copy(id = manager.getOrderId, timestamp = Some(System.currentTimeMillis))
           persist(DoSubmitOrder(side, updated)) { event =>
-            log.info("5=" * 25)
             channelToMarketProcessors forward Deliver(Persistent(OrderFundFrozen(side, updated)), getProcessorPath(side))
-            log.info("6=" * 25)
             updateState(event)
-            log.info("7=" * 25)
           }
         }
       }
 
     case p @ ConfirmablePersistent(event: OrderSubmitted, seq, _) =>
-      log.info("1*" * 25)
       persist(countFee(event)) { event =>
-        log.info("2*" * 25)
         confirm(p)
-        log.info("3*" * 25)
-        log.info(event.toString)
         sender ! event
-        log.info("4*" * 25)
         updateState(event)
-        log.info("5*" * 25)
         channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)
-        log.info("6*" * 25)
       }
 
     case p @ ConfirmablePersistent(event: OrderCancelled, seq, _) =>
