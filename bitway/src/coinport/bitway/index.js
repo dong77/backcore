@@ -3,18 +3,18 @@
  * Author: c@coinport.com (Chao Ma)
  */
 
-var RedisProxy             = require('./redis/redis_proxy').RedisProxy,
-    BitwayType             = require('../../../gen-nodejs/data_types').BitwayType,
-    GenerateWalletResponse = require('../../../gen-nodejs/data_types').GenerateWalletResponse,
-    Currency               = require('../../../gen-nodejs/data_types').Currency,
-    ErrorCode              = require('../../../gen-nodejs/data_types').ErrorCode,
-    BitwayResponse         = require('../../../gen-nodejs/message_types').BitwayResponse,
-    Bitcore                = require('bitcore'),
-    Peer                   = Bitcore.Peer,
-    Networks               = Bitcore.networks,
-    PeerManager            = require('soop').load('bitcore/PeerManager', {
-                                 network: Networks.testnet
-                             });
+var RedisProxy              = require('./redis/redis_proxy').RedisProxy,
+    BitwayType              = require('../../../gen-nodejs/data_types').BitwayType,
+    GenerateAddressResponse = require('../../../gen-nodejs/data_types').GenerateAddressResponse,
+    Currency                = require('../../../gen-nodejs/data_types').Currency,
+    ErrorCode               = require('../../../gen-nodejs/data_types').ErrorCode,
+    BitwayResponse          = require('../../../gen-nodejs/message_types').BitwayResponse,
+    Bitcore                 = require('bitcore'),
+    Peer                    = Bitcore.Peer,
+    Networks                = Bitcore.networks,
+    PeerManager             = require('soop').load('bitcore/PeerManager', {
+                                  network: Networks.testnet
+                              });
 
 var proxy = new RedisProxy("127.0.0.1", "6379");
 
@@ -43,13 +43,13 @@ proxy.on(RedisProxy.EventType.QUERY_WALLET, function(requestId, currency, reques
 proxy.start();
 
 // proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_WALLET, requestId: 1425, currency: Currency.BTC,
-    // generateWalletResponse: new GenerateWalletResponse({error: ErrorCode.ROBOT_DNA_EXIST})}))
+    // generateAddressResponse: new GenerateAddressResponse({error: ErrorCode.ROBOT_DNA_EXIST})}))
 
 var handleBlock = function(info) {
     console.log('** Block Received **');
     console.log(info.message);
     proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_WALLET, requestId: 1425, currency: Currency.BTC,
-        generateWalletResponse: new GenerateWalletResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
+        generateAddressResponse: new GenerateAddressResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
 };
 
 var handleTx = function(info) {
@@ -58,7 +58,7 @@ var handleTx = function(info) {
     console.log('** TX Received **');
     console.log(tx);
     proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_WALLET, requestId: 1425, currency: Currency.BTC,
-        generateWalletResponse: new GenerateWalletResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
+        generateAddressResponse: new GenerateAddressResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
 };
 
 var handleInv = function(info) {
@@ -68,7 +68,7 @@ var handleInv = function(info) {
     var invs = info.message.invs;
     info.conn.sendGetData(invs);
     proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_WALLET, requestId: 1425, currency: Currency.BTC,
-        generateWalletResponse: new GenerateWalletResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
+        generateAddressResponse: new GenerateAddressResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
 };
 
 var peerman = new PeerManager();
