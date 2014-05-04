@@ -13,6 +13,7 @@ import akka.persistence.EventsourcedProcessor
 import com.redis._
 import com.redis.serialization.Parse.Implicits.parseByteArray
 import scala.concurrent.duration._
+import scala.util.Random
 
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.PersistentId._
@@ -20,9 +21,10 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.serializers._
 import Implicits._
 
-object BitwayClient {
+object BitwayProcessor {
   final val REQUEST_CHANNEL = "creq"
   final val RESPONSE_CHANNEL = "cres"
+  final val INIT_FETCH_ADDRESS_NUM = 100
 
   // TODO(c): add embeded redis for unit test instead of disable the redis client
   val client: Option[RedisClient] = try {
@@ -33,7 +35,9 @@ object BitwayClient {
   val serializer = new ThriftBinarySerializer()
 }
 
-class BitwayProcessor() extends ExtendedProcessor with EventsourcedProcessor with ActorLogging {
+class BitwayProcessor extends ExtendedProcessor with EventsourcedProcessor with ActorLogging {
+
+  import BitwayProcessor._
 
   val delayinSeconds = 4
   override val processorId = BITWAY_PROCESSOR <<
@@ -50,13 +54,15 @@ class BitwayProcessor() extends ExtendedProcessor with EventsourcedProcessor wit
   def receiveCommand = LoggingReceive {
     case TryFetchAddresses =>
       if (recoveryFinished) {
-        manager.getSupportedCurrency.filter(manager.isDryUp).foreach {
-          self ! FetchAddresses(_)
+        manager.getSupportedCurrency.filter(manager.isDryUp).foreach { x =>
+          self ! FetchAddresses(x)
         }
       } else {
         scheduleTryPour()
       }
-    case FetchAddresses(currency) => None // TODO(c) TBD
+    case FetchAddresses(currency) if client.isDefined =>
+      client.get.rpush(REQUEST_CHANNEL, serializer.toBinary(BitwayRequest(BitwayType.GenerateAddress, Random.nextLong,
+        currency, generateAddressRequest = Some(GenerateAddressRequest(INIT_FETCH_ADDRESS_NUM)))))
     case m @ BitwayResponse(t, id, currency, Some(res), None, None) =>
       println("~" * 40 + res)
     case m @ BitwayResponse(t, id, currency, None, Some(res), None) =>
@@ -75,7 +81,7 @@ class BitwayProcessor() extends ExtendedProcessor with EventsourcedProcessor wit
 }
 
 class BitwayReceiver(bitwayProcessor: ActorRef) extends Actor with ActorLogging {
-  import BitwayClient._
+  import BitwayProcessor._
   implicit val executeContext = context.system.dispatcher
 
   override def preStart = {

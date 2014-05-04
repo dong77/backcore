@@ -33,9 +33,9 @@ var RedisProxy = module.exports.RedisProxy = function(ip, port) {
 Util.inherits(RedisProxy, Events.EventEmitter);
 
 RedisProxy.EventType = {
-    GENERATE_WALLET : 'generate_wallet',
+    GENERATE_ADDRESS: 'generate_address',
     TRANSFER : 'transfer',
-    QUERY_WALLET : 'query_wallet'
+    QUERY_ADDRESS: 'query_address'
 };
 
 RedisProxy.REQUEST_CHANNEL = 'creq';
@@ -50,16 +50,16 @@ RedisProxy.prototype.start = function() {
                 var bwr = new BitwayRequest();
                 proxy.serializer.fromBinary(bwr, buf);
                 switch (bwr.type) {
-                    case BitwayType.GENERATE_WALLET:
-                        proxy.emit(RedisProxy.EventType.GENERATE_WALLET, bwr.requestId, bwr.currency,
-                            bwr.generateWalletRequest);
+                    case BitwayType.GENERATE_ADDRESS:
+                        proxy.emit(RedisProxy.EventType.GENERATE_ADDRESS, bwr.requestId, bwr.currency,
+                            bwr.generateAddressRequest);
                         break;
                     case BitwayType.TRANSFER:
                         proxy.emit(RedisProxy.EventType.TRANSFER, bwr.requestId, bwr.currency, bwr.transferRequest);
                         break;
-                    case BitwayType.QUERY_WALLET:
-                        proxy.emit(RedisProxy.EventType.QUERY_WALLET, bwr.requestId, bwr.currency,
-                            bwr.queryWalletRequest);
+                    case BitwayType.QUERY_ADDRESS:
+                        proxy.emit(RedisProxy.EventType.QUERY_ADDRESS, bwr.requestId, bwr.currency,
+                            bwr.queryAddressRequest);
                         break;
                 }
             } else if (!error && !result) {

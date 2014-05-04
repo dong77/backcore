@@ -36,8 +36,6 @@ class BitwayManager extends Manager[TBitwayState] {
     usedAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[Address] ++ kv._2.usedAddresses)))
     cursors.clear
     cursors ++= s.stats.map(kv => (kv._1 -> kv._2.cursor))
-    supportedCurrency.clear
-    supportedCurrency ++= s.stats.map(kv => kv._1)
   }
 
   def isDryUp(currency: Currency) = (unusedAddresses.getOrElseUpdate(currency, Set.empty[Address]).size == 0 ||

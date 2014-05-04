@@ -18,8 +18,8 @@ var RedisProxy              = require('./redis/redis_proxy').RedisProxy,
 
 var proxy = new RedisProxy("127.0.0.1", "6379");
 
-proxy.on(RedisProxy.EventType.GENERATE_WALLET, function(requestId, currency, request) {
-    console.log(RedisProxy.EventType.GENERATE_WALLET);
+proxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(requestId, currency, request) {
+    console.log(RedisProxy.EventType.GENERATE_ADDRESS);
     console.log(requestId);
     console.log(currency);
     console.log(request);
@@ -33,8 +33,8 @@ proxy.on(RedisProxy.EventType.TRANSFER, function(requestId, currency, request) {
     console.log(request);
 });
 
-proxy.on(RedisProxy.EventType.QUERY_WALLET, function(requestId, currency, request) {
-    console.log(RedisProxy.EventType.QUERY_WALLET);
+proxy.on(RedisProxy.EventType.QUERY_ADDRESS, function(requestId, currency, request) {
+    console.log(RedisProxy.EventType.QUERY_ADDRESS);
     console.log(requestId);
     console.log(currency);
     console.log(request);
@@ -42,13 +42,13 @@ proxy.on(RedisProxy.EventType.QUERY_WALLET, function(requestId, currency, reques
 
 proxy.start();
 
-// proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_WALLET, requestId: 1425, currency: Currency.BTC,
+// proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_ADDRESS, requestId: 1425, currency: Currency.BTC,
     // generateAddressResponse: new GenerateAddressResponse({error: ErrorCode.ROBOT_DNA_EXIST})}))
 
 var handleBlock = function(info) {
     console.log('** Block Received **');
     console.log(info.message);
-    proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_WALLET, requestId: 1425, currency: Currency.BTC,
+    proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_ADDRESS, requestId: 1425, currency: Currency.BTC,
         generateAddressResponse: new GenerateAddressResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
 };
 
@@ -57,7 +57,7 @@ var handleTx = function(info) {
 
     console.log('** TX Received **');
     console.log(tx);
-    proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_WALLET, requestId: 1425, currency: Currency.BTC,
+    proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_ADDRESS, requestId: 1425, currency: Currency.BTC,
         generateAddressResponse: new GenerateAddressResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
 };
 
@@ -67,7 +67,7 @@ var handleInv = function(info) {
 
     var invs = info.message.invs;
     info.conn.sendGetData(invs);
-    proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_WALLET, requestId: 1425, currency: Currency.BTC,
+    proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_ADDRESS, requestId: 1425, currency: Currency.BTC,
         generateAddressResponse: new GenerateAddressResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
 };
 
@@ -81,7 +81,7 @@ peerman.on('connection', function(conn) {
     conn.on('tx', handleTx);
 });
 
-peerman.start();
+// peerman.start();
 
 var logo = "" +
 " _    _ _                     \n" +

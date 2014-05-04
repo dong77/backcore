@@ -131,9 +131,9 @@ enum RefundReason {
 }
 
 enum BitwayType {
-    GENERATE_WALLET     = 0
-    TRANSFER            = 1
-    QUERY_WALLET        = 2
+    GENERATE_ADDRESS     = 0
+    TRANSFER             = 1
+    QUERY_ADDRESS        = 2
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -401,8 +401,8 @@ struct GenerateAddressRequest {
 }
 
 struct TransferRequest {
-    1: string from
-    2: string to
+    1: Address from
+    2: Address to
     3: i32 amount
 }
 
