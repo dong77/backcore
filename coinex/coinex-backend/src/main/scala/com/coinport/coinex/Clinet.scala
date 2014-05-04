@@ -266,6 +266,10 @@ object Client {
     }
   }
 
+  def registerTestUsers {
+    userMap.map(kv => registerUser(kv._2, kv._1 + "@coinport.com", kv._1))
+  }
+
   def main(args: Array[String]) {
 
     args(0) match {

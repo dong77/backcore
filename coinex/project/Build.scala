@@ -34,6 +34,7 @@ object CoinexBuild extends Build {
       import com.redis.serialization.Parse.Implicits.parseByteArray
       import com.coinport.coinex.bitway_client._
       import com.coinport.coinex.serializers._
+      import com.coinport.coinex.performance._
 
       implicit val timeout = Timeout(2 seconds)
       // implicit val ec = AccountService.system.dispatcher
