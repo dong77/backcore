@@ -42,6 +42,9 @@ enum ErrorCode {
     // Robot
     ROBOT_DNA_EXIST                  = 7001
     ROBOT_DNA_IN_USE                 = 7002
+
+    // Bitway
+    NOT_ENOUGH_ADDRESS_IN_POOL       = 8001
 }
 
 

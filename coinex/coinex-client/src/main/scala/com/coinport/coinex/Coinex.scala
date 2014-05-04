@@ -84,6 +84,9 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m @ QueryExportToMongoState(ExportedEventType.AccountEvent) => routers.accountTransferProcessorEventExporter forward m
       case m @ QueryExportToMongoState(ExportedEventType.MarketEvent) => routers.marketUpdateProcessorEventExporter forward m
 
+      // Bitway
+      case m: GetNewAddress => routers.bitwayProcessor forward m
+
       //-------------------------------------------------------------------------
       case m =>
         log.error("Coinex received unsupported event: " + m.toString)

@@ -47,6 +47,7 @@ typedef data.TransferResponse           _TransferResponse
 typedef data.QueryWalletResponse        _QueryWalletResponse
 typedef data.RechargeCodeStatus         _RechargeCodeStatus
 typedef data.ABCodeItem                 _ABCodeItem
+typedef data.Address                    _Address
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -158,8 +159,13 @@ typedef data.ABCodeItem                 _ABCodeItem
 /* C    */ struct DoSendEmail                         {1: string email, 2: _EmailType emailType, 3: map<string, string> params}
 
 ////////// Bitway
+// with nodejs bitway
 /* C    */ struct BitwayRequest                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional _GenerateAddressRequest generateAddressRequest, 5: optional _TransferRequest transferRequest, 6: optional _QueryWalletRequest queryWalletRequest}
 /* R    */ struct BitwayResponse                      {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional _GenerateAddressResponse generateAddressResponse, 5: optional _TransferResponse transferResponse, 6: optional _QueryWalletResponse queryWalletResponse}
+
+// with other processor in akka
+/* C    */ struct GetNewAddress                       {1: _Currency currency, 2: optional _Address assignedAddress}
+/* R    */ struct GetNewAddressResult                 {1: _ErrorCode error = data.ErrorCode.OK, 2: optional _Address address}
 
 ////////////////////////////////////////////////////////////////
 //////////////////////// VIEW MESSAGES /////////////////////////

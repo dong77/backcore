@@ -27,7 +27,12 @@ object BitwayProcessor {
   final val INIT_FETCH_ADDRESS_NUM = 100
 
   // TODO(c): add embeded redis for unit test instead of disable the redis client
-  val client: Option[RedisClient] = try {
+  val pullClient: Option[RedisClient] = try {
+    Some(new RedisClient("localhost", 6379))
+  } catch {
+    case ex: Throwable => None
+  }
+  val pushClient: Option[RedisClient] = try {
     Some(new RedisClient("localhost", 6379))
   } catch {
     case ex: Throwable => None
@@ -60,9 +65,22 @@ class BitwayProcessor extends ExtendedProcessor with EventsourcedProcessor with 
       } else {
         scheduleTryPour()
       }
-    case FetchAddresses(currency) if client.isDefined =>
-      client.get.rpush(REQUEST_CHANNEL, serializer.toBinary(BitwayRequest(BitwayType.GenerateAddress, Random.nextLong,
-        currency, generateAddressRequest = Some(GenerateAddressRequest(INIT_FETCH_ADDRESS_NUM)))))
+    case FetchAddresses(currency) if pushClient.isDefined =>
+      pushClient.get.rpush(REQUEST_CHANNEL, serializer.toBinary(BitwayRequest(BitwayType.GenerateAddress,
+        Random.nextLong, currency, generateAddressRequest = Some(GenerateAddressRequest(INIT_FETCH_ADDRESS_NUM)))))
+
+    case m @ GetNewAddress(currency, _) =>
+      val (address, needFetch) = manager.allocateAddress(currency)
+      if (needFetch) self ! FetchAddresses(currency)
+      if (address.isDefined) {
+        persist(m) { event =>
+          updateState(event.copy(assignedAddress = address))
+        }
+        sender ! GetNewAddressResult(ErrorCode.Ok, address)
+      } else {
+        sender ! GetNewAddressResult(ErrorCode.NotEnoughAddressInPool, None)
+      }
+
     case m @ BitwayResponse(t, id, currency, Some(res), None, None) =>
       println("~" * 40 + res)
     case m @ BitwayResponse(t, id, currency, None, Some(res), None) =>
@@ -72,7 +90,7 @@ class BitwayProcessor extends ExtendedProcessor with EventsourcedProcessor with 
   }
 
   def updateState: Receive = {
-    case _ => None
+    case GetNewAddress(currency, Some(address)) => manager.addressAllocated(currency, address)
   }
 
   private def scheduleTryPour() = {
@@ -90,8 +108,8 @@ class BitwayReceiver(bitwayProcessor: ActorRef) extends Actor with ActorLogging 
   }
 
   def receive = LoggingReceive {
-    case ListenAtRedis if client.isDefined =>
-      client.get.blpop[String, Array[Byte]](1, RESPONSE_CHANNEL) match {
+    case ListenAtRedis if pullClient.isDefined =>
+      pullClient.get.blpop[String, Array[Byte]](1, RESPONSE_CHANNEL) match {
         case Some(s) =>
           val response = serializer.fromBinary(s._2, classOf[BitwayResponse.Immutable])
           bitwayProcessor ! response

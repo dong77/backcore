@@ -42,19 +42,29 @@ class BitwayManager extends Manager[TBitwayState] {
     usedAddresses.getOrElseUpdate(currency, Set.empty[Address]).size > unusedAddresses.getOrElseUpdate(
       currency, Set.empty[Address]).size * FAUCET_THRESHOLD)
 
-  def allocateAddress(currency: Currency): (Option[Address], Boolean) = {
-    val addresses = unusedAddresses.getOrElseUpdate(currency, Set.empty[Address])
-    if (addresses.isEmpty) {
+  def allocateAddress(currency: Currency): (Option[Address], Boolean /* need fetch from bitway */ ) = {
+    if (!unusedAddresses.contains(currency)) {
       (None, true)
     } else {
-      val validAddress = addresses.head
-      addresses.remove(validAddress)
-      usedAddresses.getOrElseUpdate(currency, Set.empty[Address]).add(validAddress)
-      if (isDryUp(currency))
-        (Some(validAddress), true)
-      else
-        (Some(validAddress), false)
+      val addresses = unusedAddresses(currency)
+      if (addresses.isEmpty) {
+        (None, true)
+      } else {
+        val validAddress = addresses.headOption
+        if (isDryUp(currency))
+          (validAddress, true)
+        else
+          (validAddress, false)
+      }
     }
+  }
+
+  def addressAllocated(currency: Currency, address: Address) {
+    assert(unusedAddresses.contains(currency))
+    val addresses = unusedAddresses(currency)
+    assert(addresses.contains(address))
+    addresses.remove(address)
+    usedAddresses.getOrElseUpdate(currency, Set.empty[Address]).add(address)
   }
 
   def faucetAddress(currency: Currency, addresses: Set[Address]) {
