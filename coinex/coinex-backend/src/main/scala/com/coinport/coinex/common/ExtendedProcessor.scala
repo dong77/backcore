@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 import com.coinport.coinex.data.TakeSnapshotNow
 import com.coinport.coinex.common.support._
 
-trait ExtendedProcessor extends Actor with ActorLogging with SnapshotSupport with ChannelSupport {
+trait ExtendedProcessor extends Actor with ActorLogging with SnapshotSupport with ChannelSupport with RecoverySupport {
 
   def identifyChannel: PartialFunction[Any, String] = PartialFunction.empty
 
@@ -25,5 +25,9 @@ trait ExtendedProcessor extends Actor with ActorLogging with SnapshotSupport wit
 
   override def confirm(p: ConfirmablePersistent) {
     p.confirm()
+  }
+
+  override def onRecoveryFinish() = {
+    log.info("============ recovery finished: {}", processorId)
   }
 }

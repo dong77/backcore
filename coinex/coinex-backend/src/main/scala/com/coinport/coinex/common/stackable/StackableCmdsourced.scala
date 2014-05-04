@@ -8,7 +8,7 @@ import com.coinport.coinex.common.Manager
 import com.coinport.coinex.common.support._
 
 trait StackableCmdsourced[T <: AnyRef, M <: Manager[T]]
-    extends Processor with ActorLogging with SnapshotSupport with RedeliverFilterSupport[T, M] {
+    extends Processor with ActorLogging with SnapshotSupport with RecoverySupport with RedeliverFilterSupport[T, M] {
   val manager: M
 
   abstract override def receive = filterFor(super.receive, true) orElse super.receive orElse {
@@ -17,6 +17,8 @@ trait StackableCmdsourced[T <: AnyRef, M <: Manager[T]]
     case SnapshotOffer(meta, snapshot) =>
       log.info("Loading snapshot: " + meta)
       manager.loadSnapshot(snapshot.asInstanceOf[T])
+
+    case QueryRecoverStats => execAfterRecover(recoveryFinished)
 
     case DumpStateToFile(_) => sender ! dumpToFile(manager.getSnapshot, self.path)
   }

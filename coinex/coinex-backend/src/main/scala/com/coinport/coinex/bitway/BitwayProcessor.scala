@@ -3,7 +3,7 @@
  * Author: c@coinport.com (Chao Ma)
  */
 
-package com.coinport.coinex.bitway_client
+package com.coinport.coinex.bitway
 
 import akka.actor._
 import akka.event.LoggingReceive
@@ -76,7 +76,7 @@ class BitwayProcessor extends ExtendedProcessor with EventsourcedProcessor with 
   }
 
   private def scheduleTryPour() = {
-    context.system.scheduler.scheduleOnce(delayinSeconds seconds, self, TryFetchAddresses)
+    context.system.scheduler.scheduleOnce(delayinSeconds seconds, self, TryFetchAddresses)(context.system.dispatcher)
   }
 }
 
@@ -101,6 +101,6 @@ class BitwayReceiver(bitwayProcessor: ActorRef) extends Actor with ActorLogging 
   }
 
   private def listenAtRedis() {
-    context.system.scheduler.scheduleOnce(0 seconds, self, ListenAtRedis)
+    context.system.scheduler.scheduleOnce(0 seconds, self, ListenAtRedis)(context.system.dispatcher)
   }
 }

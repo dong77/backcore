@@ -56,7 +56,8 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
   }
 
   private def scheduleExport() = {
-    cancellable = context.system.scheduler.schedule(10 second, scheduleInterval, self, DoExportData)
+    cancellable = context.system.scheduler.schedule(10 second, scheduleInterval, self, DoExportData)(
+      context.system.dispatcher)
   }
 
   override def postStop() {

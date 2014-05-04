@@ -10,7 +10,7 @@ import com.coinport.coinex.common.support._
 import com.coinport.coinex.data._
 
 trait StackableEventsourced[T <: AnyRef, M <: Manager[T]]
-    extends EventsourcedProcessor with ActorLogging with SnapshotSupport with RedeliverFilterSupport[T, M] {
+    extends EventsourcedProcessor with ActorLogging with SnapshotSupport with RecoverySupport with RedeliverFilterSupport[T, M] {
   val manager: M
   def updateState: Receive
 
@@ -24,6 +24,7 @@ trait StackableEventsourced[T <: AnyRef, M <: Manager[T]]
 
   abstract override def receiveCommand = filterFor(super.receiveCommand, false) orElse super.receiveCommand orElse {
     case cmd: TakeSnapshotNow => takeSnapshot(cmd)(saveSnapshot(manager.getSnapshot))
+    case QueryRecoverStats => execAfterRecover(recoveryFinished)
     case DumpStateToFile(_) => sender ! dumpToFile(manager.getSnapshot, self.path)
   }
 }

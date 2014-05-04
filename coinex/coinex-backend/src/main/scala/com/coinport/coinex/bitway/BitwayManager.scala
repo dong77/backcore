@@ -3,7 +3,7 @@
  * Author: c@coinport.com (Chao Ma)
  */
 
-package com.coinport.coinex.bitway_client
+package com.coinport.coinex.bitway
 
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set

@@ -17,7 +17,6 @@ import org.json4s._
 import org.json4s.native.JsonMethods._
 
 trait SnapshotSupport extends Actor with ActorLogging {
-  implicit val executeContext = context.system.dispatcher
   implicit val formats = ThriftEnumJson4sSerialization.formats + MapSerializer
   private var cancellable: Cancellable = null
   val snapshotIntervalSec: Int
@@ -46,7 +45,7 @@ trait SnapshotSupport extends Actor with ActorLogging {
     if (cancellable != null && !cancellable.isCancelled) cancellable.cancel()
 
   protected def scheduleSnapshot(delayinSeconds: Int, cmd: TakeSnapshotNow) =
-    cancellable = context.system.scheduler.scheduleOnce(delayinSeconds seconds, self, cmd)
+    cancellable = context.system.scheduler.scheduleOnce(delayinSeconds seconds, self, cmd)(context.system.dispatcher)
 
   private def timeInSecondsToNextHour() = {
     val time = System.currentTimeMillis()

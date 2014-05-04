@@ -32,7 +32,7 @@ import com.coinport.coinex.users._
 import com.coinport.coinex.fee._
 import com.coinport.coinex.transfer._
 import com.coinport.coinex.util._
-import com.coinport.coinex.bitway_client._
+import com.coinport.coinex.bitway._
 import Implicits._
 import scala.collection.mutable.ListBuffer
 import com.coinport.coinex.common._
