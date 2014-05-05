@@ -137,7 +137,7 @@ object CoinexBuild extends Build {
         "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
         "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion,
         "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.7",
-        "com.github.scullxbones" % "akka-persistence-mongo-casbah_2.10" % "0.0.4-SNAPSHOT",
+        "com.github.scullxbones" % "akka-persistence-mongo-casbah_2.10" % "0.0.9",
         "org.specs2" %% "specs2" % "2.3.8" % "test",
         "org.scalatest" %% "scalatest" % "2.0" % "test",
         "org.apache.commons" % "commons-io" % "1.3.2",
