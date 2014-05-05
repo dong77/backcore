@@ -16,7 +16,7 @@ object AccountService extends AkkaService {
   def getAccount(uid: Long): Future[ApiResult] = {
     backend ? QueryAccount(uid) map {
       case result: QueryAccountResult =>
-        val userAccount: com.coinport.coinex.api.model.UserAccount = result.userAccount
+        val userAccount: com.coinport.coinex.api.model.ApiUserAccount = result.userAccount
         ApiResult(true, 0, "", Some(userAccount))
     }
   }

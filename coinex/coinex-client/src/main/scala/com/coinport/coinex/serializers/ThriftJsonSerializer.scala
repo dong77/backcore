@@ -53,7 +53,6 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cTWindowQueue = JsonScalaCodec(TWindowQueue)
   lazy val _cTWindowVector = JsonScalaCodec(TWindowVector)
   lazy val _cTransaction = JsonScalaCodec(Transaction)
-  lazy val _cTransactionItem = JsonScalaCodec(TransactionItem)
   lazy val _cTransferRequest = JsonScalaCodec(TransferRequest)
   lazy val _cTransferResponse = JsonScalaCodec(TransferResponse)
   lazy val _cUserAccount = JsonScalaCodec(UserAccount)
@@ -198,7 +197,6 @@ class ThriftJsonSerializer extends Serializer {
     case m: TWindowQueue => _cTWindowQueue(m)
     case m: TWindowVector => _cTWindowVector(m)
     case m: Transaction => _cTransaction(m)
-    case m: TransactionItem => _cTransactionItem(m)
     case m: TransferRequest => _cTransferRequest(m)
     case m: TransferResponse => _cTransferResponse(m)
     case m: UserAccount => _cUserAccount(m)
@@ -347,7 +345,6 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[TWindowQueue.Immutable] => _cTWindowQueue.invert(bytes).get
     case Some(c) if c == classOf[TWindowVector.Immutable] => _cTWindowVector.invert(bytes).get
     case Some(c) if c == classOf[Transaction.Immutable] => _cTransaction.invert(bytes).get
-    case Some(c) if c == classOf[TransactionItem.Immutable] => _cTransactionItem.invert(bytes).get
     case Some(c) if c == classOf[TransferRequest.Immutable] => _cTransferRequest.invert(bytes).get
     case Some(c) if c == classOf[TransferResponse.Immutable] => _cTransferResponse.invert(bytes).get
     case Some(c) if c == classOf[UserAccount.Immutable] => _cUserAccount.invert(bytes).get

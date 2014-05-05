@@ -22,10 +22,10 @@ class MarketConversionTest extends Specification {
         com.coinport.coinex.data.MarketDepthItem(700, 6000)
       )
       val backendObj = com.coinport.coinex.data.MarketDepth(Btc ~> Cny, asks = asks, bids = bids)
-      val marketDepth: com.coinport.coinex.api.model.MarketDepth = backendObj
-      val expect = com.coinport.coinex.api.model.MarketDepth(
-        bids = List(MarketDepthItem(4500.0, 1.5), MarketDepthItem(3000.0, 2.0), MarketDepthItem(2000.0, 3.0)),
-        asks = List(MarketDepthItem(5500.0, 4.5), MarketDepthItem(6000.0, 5.0), MarketDepthItem(7000.0, 6.0))
+      val marketDepth: com.coinport.coinex.api.model.ApiMarketDepth = backendObj
+      val expect = com.coinport.coinex.api.model.ApiMarketDepth(
+        bids = List(ApiMarketDepthItem(4500.0, 1.5), ApiMarketDepthItem(3000.0, 2.0), ApiMarketDepthItem(2000.0, 3.0)),
+        asks = List(ApiMarketDepthItem(5500.0, 4.5), ApiMarketDepthItem(6000.0, 5.0), ApiMarketDepthItem(7000.0, 6.0))
       )
 
       marketDepth mustEqual expect

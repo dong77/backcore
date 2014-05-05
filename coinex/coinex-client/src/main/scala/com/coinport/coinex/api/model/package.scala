@@ -32,12 +32,12 @@ package object model {
   }
 
   // user account conversions
-  implicit def fromUserAccount(backendObj: com.coinport.coinex.data.UserAccount): com.coinport.coinex.api.model.UserAccount = {
+  implicit def fromUserAccount(backendObj: com.coinport.coinex.data.UserAccount): com.coinport.coinex.api.model.ApiUserAccount = {
     val uid = backendObj.userId
-    val map: Map[String, AccountItem] = backendObj.cashAccounts.map {
+    val map: Map[String, ApiAccountItem] = backendObj.cashAccounts.map {
       case (k: Currency, v: CashAccount) =>
         val currency: String = k
-        currency -> AccountItem(
+        currency -> ApiAccountItem(
           currency,
           CurrencyObject(k, v.available),
           CurrencyObject(k, v.locked),
@@ -45,20 +45,20 @@ package object model {
         )
     }.toMap
 
-    com.coinport.coinex.api.model.UserAccount(uid.toString, accounts = map)
+    com.coinport.coinex.api.model.ApiUserAccount(uid.toString, accounts = map)
   }
 
   // market depth conversions
-  implicit def fromMarketDepth(backendObj: com.coinport.coinex.data.MarketDepth): com.coinport.coinex.api.model.MarketDepth = {
+  implicit def fromMarketDepth(backendObj: com.coinport.coinex.data.MarketDepth): com.coinport.coinex.api.model.ApiMarketDepth = {
     val side = backendObj.side
     val subject = side._1
     val mapper = {
       item: com.coinport.coinex.data.MarketDepthItem =>
-        com.coinport.coinex.api.model.MarketDepthItem(item.price.externalValue(side), item.quantity.externalValue(subject))
+        com.coinport.coinex.api.model.ApiMarketDepthItem(item.price.externalValue(side), item.quantity.externalValue(subject))
     }
     val bids = backendObj.bids.map(mapper).toSeq
     val asks = backendObj.asks.map(mapper).toSeq
-    com.coinport.coinex.api.model.MarketDepth(bids = bids, asks = asks)
+    com.coinport.coinex.api.model.ApiMarketDepth(bids = bids, asks = asks)
   }
 
   // candle data conversions
@@ -114,9 +114,9 @@ package object model {
 
   implicit def toJsonSupportWrapper(obj: Any): JsonSupportWrapper = new JsonSupportWrapper(obj)
 
-  implicit def fromOrderSubmitted(obj: OrderSubmitted): SubmitOrderResult = {
+  implicit def fromOrderSubmitted(obj: OrderSubmitted): ApiSubmitOrderResult = {
     val orderInfo = obj.originOrderInfo
     val order = UserOrder.fromOrderInfo(orderInfo)
-    SubmitOrderResult(order)
+    ApiSubmitOrderResult(order)
   }
 }

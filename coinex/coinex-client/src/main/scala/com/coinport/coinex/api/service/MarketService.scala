@@ -15,7 +15,7 @@ object MarketService extends AkkaService {
   def getDepth(marketSide: MarketSide, depth: Int): Future[ApiResult] = {
     backend ? QueryMarketDepth(marketSide, depth) map {
       case result: QueryMarketDepthResult =>
-        val depth: com.coinport.coinex.api.model.MarketDepth = result.marketDepth
+        val depth: com.coinport.coinex.api.model.ApiMarketDepth = result.marketDepth
         ApiResult(data = Some(depth))
       case x => ApiResult(false)
     }
@@ -46,33 +46,33 @@ object MarketService extends AkkaService {
 
   def getTransactions(marketSide: MarketSide, tid: Option[Long], uid: Option[Long], orderId: Option[Long], skip: Int, limit: Int): Future[ApiResult] = {
     val cursor = Cursor(skip, limit)
-    // struct QueryTransaction {1: optional i64 tid, 2: optional i64 uid, 3: optional i64 oid, 4:optional MarketSide side, 5: Cursor cursor, 6: bool getCount}
     backend ? QueryTransaction(tid, uid, orderId, Some(QueryMarketSide(marketSide, true)), cursor, false) map {
       case result: QueryTransactionResult =>
         val subject = marketSide._1
         val currency = marketSide._2
-        val items = result.transactionItems map {
-          item: TransactionItem =>
-            val takerSide = item.side
-            val id = item.tid
-            val timestamp = item.timestamp
-            val isSell = marketSide == takerSide
-            val price = (if (isSell) item.price.reverse else item.price).externalValue(marketSide)
-            val volume = (if (isSell) item.amount else item.volume).externalValue(subject)
-            val total = (if (isSell) item.volume else item.amount).externalValue(currency)
-            val taker = item.taker
-            val maker = item.maker
+        val items = result.transactions map { t =>
+          val takerSide = t.side
+          val isSell = marketSide == takerSide
 
-            com.coinport.coinex.api.model.Transaction(
-              id = id.toString,
-              timestamp = timestamp,
-              price = price,
-              amount = volume,
-              total = total,
-              taker = taker.toString,
-              maker = maker.toString,
-              sell = isSell
-            )
+          val takerAmount = t.takerUpdate.previous.quantity - t.takerUpdate.current.quantity
+          val makerAmount = t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity
+          val (sAmount, cAmount) = if (isSell) (makerAmount, takerAmount) else (takerAmount, makerAmount)
+
+          val takerOrder = ApiOrderState(t.takerUpdate.current.id.toString, t.takerUpdate.current.userId.toString, t.takerUpdate.previous.quantity, t.takerUpdate.current.quantity)
+          val makerOrder = ApiOrderState(t.makerUpdate.current.id.toString, t.makerUpdate.current.userId.toString, t.makerUpdate.previous.quantity, t.makerUpdate.current.quantity)
+
+          ApiTransaction(
+            id = t.id.toString,
+            timestamp = t.timestamp,
+            price = (cAmount.toDouble / sAmount.toDouble).externalValue(marketSide),
+            subjectAmount = sAmount.externalValue(subject),
+            currencyAmount = cAmount.externalValue(currency),
+            taker = takerOrder.uid,
+            maker = makerOrder.uid,
+            sell = isSell,
+            tOrder = takerOrder,
+            mOrder = makerOrder
+          )
         }
         ApiResult(data = Some(items))
     }
@@ -101,29 +101,27 @@ object MarketService extends AkkaService {
             if (side._2 == baseCurrency) {
               var curPrice = currentPrice.get(side).get
 
-              val priceMap = (start to stop).reverse.map {
-                timeSpot =>
-                  curPrice = map.get(timeSpot).getOrElse(curPrice)
-                  timeSpot -> curPrice.externalValue(side)
+              val priceMap = (start to stop).reverse.map { timeSpot =>
+                curPrice = map.get(timeSpot).getOrElse(curPrice)
+                timeSpot -> curPrice.externalValue(side)
               }.toMap
               currencyPriceMap.put(side._1, priceMap)
             }
         }
 
         val currentAsset = scala.collection.mutable.Map.empty[Currency, Long] ++ result.currentAsset.currentAsset
-        val assetList = (start to stop).reverse.map {
-          timeSpot =>
-            val rv = (timeSpot, currentAsset.clone())
+        val assetList = (start to stop).reverse.map { timeSpot =>
+          val rv = (timeSpot, currentAsset.clone())
 
-            historyAsset.currencyMap.get(timeSpot) match {
-              case Some(curMap) =>
-                curMap.foreach {
-                  case (cur, volume) =>
-                    currentAsset.put(cur, currentAsset.get(cur).get - volume)
-                }
-              case None =>
-            }
-            rv
+          historyAsset.currencyMap.get(timeSpot) match {
+            case Some(curMap) =>
+              curMap.foreach {
+                case (cur, volume) =>
+                  currentAsset.put(cur, currentAsset.get(cur).get - volume)
+              }
+            case None =>
+          }
+          rv
         }
 
         val items = assetList.map {
@@ -138,7 +136,7 @@ object MarketService extends AkkaService {
                   }
                 cur.toString.toUpperCase -> amount.externalValue(cur)
             }.toMap
-            AssetItem(uid = userId.toString,
+            ApiAssetItem(uid = userId.toString,
               assetMap = assetMap.map(a => a._1.toString.toUpperCase -> a._2.externalValue(a._1)).toMap,
               amountMap = amountMap,
               timestamp = timeSpot * timeSkip)
@@ -164,7 +162,7 @@ object MarketService extends AkkaService {
               val gain = metrics.gain
               val trend = Some(metrics.direction.toString.toLowerCase)
 
-              com.coinport.coinex.api.model.Ticker(
+              ApiTicker(
                 market = side.S,
                 price = PriceObject(side, price),
                 volume = CurrencyObject(subject, internalVolume),

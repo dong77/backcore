@@ -315,19 +315,6 @@ struct SpanCursor {
     2: i64 to
 }
 
-struct TransactionItem  {
-    1: i64 tid
-    2: double price
-    3: i64 volume
-    4: i64 amount
-    5: i64 taker
-    6: i64 maker
-    7: i64 tOrder
-    8: i64 mOrder
-    9: MarketSide side
-    10: i64 timestamp
-}
-
 struct RedeliverFilterData {
     1: list<i64> processedIds
     2: i32 maxSize

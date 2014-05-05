@@ -5,14 +5,14 @@
 package com.coinport.coinex.ordertx
 
 import com.coinport.coinex.data.Currency.{ Cny, Btc }
-import com.coinport.coinex.data.{ Cursor, QueryTransaction, TransactionItem }
+import com.coinport.coinex.data._
 import com.coinport.coinex.common.EmbeddedMongoForTestWithBF
 import com.coinport.coinex.data.Implicits._
 
 class TransactionMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
   val market = Btc ~> Cny
 
-  class TransactionClass extends TransactionMongoHandler {
+  class TransactionClass extends TransactionBehavior {
     val coll = database("transaction")
   }
 
@@ -21,17 +21,17 @@ class TransactionMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
 
     "add item into state and get them all" in {
       transactionClass.coll.drop()
-      val txs = (0 until 10) map (i => TransactionItem(i, i, i, i, i, i, i, i, market, i))
+      val txs = (0 until 10) map (i => Transaction(i, i, market, OrderUpdate(Order(i, i, i), Order(i, i, i)), OrderUpdate(Order(i, i, i), Order(i, i, i))))
       txs.foreach(t => transactionClass.addItem(t))
 
       var q = QueryTransaction(cursor = Cursor(0, 2), getCount = false)
-      transactionClass.getItems(q).map(_.tid) should equal(Seq(9, 8))
+      transactionClass.getItems(q).map(_.id) should equal(Seq(9, 8))
 
       q = QueryTransaction(cursor = Cursor(0, 1), getCount = true)
       transactionClass.countItems(q) should be(10)
 
       q = QueryTransaction(cursor = Cursor(0, 100), getCount = false)
-      transactionClass.getItems(q).map(_.tid) should equal(Seq(9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
+      transactionClass.getItems(q).map(_.id) should equal(Seq(9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
     }
   }
 

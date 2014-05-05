@@ -43,20 +43,22 @@ object PriceObject {
   def formatShort(value: Double): String = "%.2f".format(value)
 }
 
-case class SubmitOrderResult(order: UserOrder)
+case class ApiSubmitOrderResult(order: UserOrder)
 
-case class AccountItem(currency: String, available: CurrencyObject, locked: CurrencyObject, pendingWithdrawal: CurrencyObject)
+case class ApiAccountItem(currency: String, available: CurrencyObject, locked: CurrencyObject, pendingWithdrawal: CurrencyObject)
 
-case class UserAccount(uid: String, accounts: Map[String, AccountItem] = Map())
+case class ApiUserAccount(uid: String, accounts: Map[String, ApiAccountItem] = Map())
 
-case class MarketDepthItem(price: Double, amount: Double)
+case class ApiMarketDepthItem(price: Double, amount: Double)
 
-case class MarketDepth(bids: Seq[MarketDepthItem], asks: Seq[MarketDepthItem])
+case class ApiMarketDepth(bids: Seq[ApiMarketDepthItem], asks: Seq[ApiMarketDepthItem])
 
-case class Ticker(market: String, price: PriceObject, high: PriceObject, low: PriceObject, volume: CurrencyObject, gain: Option[Double] = None, trend: Option[String] = None)
+case class ApiTicker(market: String, price: PriceObject, high: PriceObject, low: PriceObject, volume: CurrencyObject, gain: Option[Double] = None, trend: Option[String] = None)
 
-case class Transaction(id: String, timestamp: Long, price: Double, amount: Double, total: Double, maker: String, taker: String, sell: Boolean)
+case class ApiTransaction(id: String, timestamp: Long, price: Double, subjectAmount: Double, currencyAmount: Double, maker: String, taker: String, sell: Boolean, tOrder: ApiOrderState, mOrder: ApiOrderState)
+
+case class ApiOrderState(oid: String, uid: String, preAmount: Double, curAmount: Double)
+
+case class ApiAssetItem(uid: String, assetMap: Map[String, Double], amountMap: Map[String, Double], timestamp: Long)
 
 case class ApiTransferItem(id: String, uid: String, amount: CurrencyObject, status: Int, created: Long, updated: Long, operation: Int)
-
-case class AssetItem(uid: String, assetMap: Map[String, Double], amountMap: Map[String, Double], timestamp: Long)
