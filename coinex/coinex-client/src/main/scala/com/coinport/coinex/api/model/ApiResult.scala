@@ -53,7 +53,7 @@ case class MarketDepthItem(price: Double, amount: Double)
 
 case class MarketDepth(bids: Seq[MarketDepthItem], asks: Seq[MarketDepthItem])
 
-case class Ticker(price: PriceObject, high: PriceObject, low: PriceObject, volume: CurrencyObject, gain: Option[Double] = None, trend: Option[String] = None)
+case class Ticker(market: String, price: PriceObject, high: PriceObject, low: PriceObject, volume: CurrencyObject, gain: Option[Double] = None, trend: Option[String] = None)
 
 case class Transaction(id: String, timestamp: Long, price: Double, amount: Double, total: Double, maker: String, taker: String, sell: Boolean)
 

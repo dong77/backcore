@@ -101,27 +101,29 @@ object MarketService extends AkkaService {
             if (side._2 == baseCurrency) {
               var curPrice = currentPrice.get(side).get
 
-              val priceMap = (start to stop).reverse.map { timeSpot =>
-                curPrice = map.get(timeSpot).getOrElse(curPrice)
-                timeSpot -> curPrice.externalValue(side)
+              val priceMap = (start to stop).reverse.map {
+                timeSpot =>
+                  curPrice = map.get(timeSpot).getOrElse(curPrice)
+                  timeSpot -> curPrice.externalValue(side)
               }.toMap
               currencyPriceMap.put(side._1, priceMap)
             }
         }
 
         val currentAsset = scala.collection.mutable.Map.empty[Currency, Long] ++ result.currentAsset.currentAsset
-        val assetList = (start to stop).reverse.map { timeSpot =>
-          val rv = (timeSpot, currentAsset.clone())
+        val assetList = (start to stop).reverse.map {
+          timeSpot =>
+            val rv = (timeSpot, currentAsset.clone())
 
-          historyAsset.currencyMap.get(timeSpot) match {
-            case Some(curMap) =>
-              curMap.foreach {
-                case (cur, volume) =>
-                  currentAsset.put(cur, currentAsset.get(cur).get - volume)
-              }
-            case None =>
-          }
-          rv
+            historyAsset.currencyMap.get(timeSpot) match {
+              case Some(curMap) =>
+                curMap.foreach {
+                  case (cur, volume) =>
+                    currentAsset.put(cur, currentAsset.get(cur).get - volume)
+                }
+              case None =>
+            }
+            rv
         }
 
         val items = assetList.map {
@@ -145,15 +147,16 @@ object MarketService extends AkkaService {
     }
   }
 
-  def getTickers(marketSides: Set[MarketSide]) = {
+  def getTickers(marketSides: Seq[MarketSide]) = {
     backend ? QueryMetrics map {
       case result: Metrics =>
-        val data = result.metricsByMarket
-          .filter(kv => marketSides.exists(_ == kv._1))
+        val map = result.metricsByMarket
+        val data = marketSides
+          .filter(s => map.contains(s))
           .map {
-            case (side, metrics) =>
-              val side = metrics.side
+            side: MarketSide =>
               val subject = side._1
+              val metrics = map.get(side).get
               val price = metrics.price
               val high = metrics.high.getOrElse(0.0)
               val low = metrics.low.getOrElse(0.0)
@@ -162,6 +165,7 @@ object MarketService extends AkkaService {
               val trend = Some(metrics.direction.toString.toLowerCase)
 
               com.coinport.coinex.api.model.Ticker(
+                market = side.S,
                 price = PriceObject(side, price),
                 volume = CurrencyObject(subject, internalVolume),
                 high = PriceObject(side, high),
@@ -169,7 +173,7 @@ object MarketService extends AkkaService {
                 gain = gain,
                 trend = trend
               )
-          }.toSeq
+          }
         ApiResult(data = Some(data))
     }
   }
