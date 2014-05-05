@@ -27,6 +27,7 @@ typedef data.Currency              Currency
 typedef data.ABCodeItem            ABCodeItem
 typedef data.Metrics               Metrics
 typedef data.CurrencyNetwork       CurrencyNetwork
+typedef data.TRobot                TRobot
 
 struct TUserState {
     1: map<i64, i64> idMap
@@ -95,15 +96,6 @@ struct TSimpleState {
 struct TMetricsState {
     1: map<MarketSide, TMetricsObserver> observers
     2: RedeliverFilters filters
-}
-
-struct TRobot {
-    1: i64 robotId
-    2: i64 userId
-    3: i64 timestamp
-    4: binary payloads
-    5: string currentState
-    6: i64 dnaId
 }
 
 struct TRobotState {

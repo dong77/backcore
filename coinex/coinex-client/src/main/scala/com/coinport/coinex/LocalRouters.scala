@@ -44,9 +44,6 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
     m -> routerFor(market_depth_view << m)
   }: _*))
 
-  val accountTransferProcessorEventExporter = routerForSingleton(account_transfer_processor_event_export <<)
-  val marketUpdateProcessorEventExporter = routerForSingleton(market_update_processor_event_export <<)
-
   val transactionReader = routerFor(transaction_mongo_reader <<)
   val transactionWriter = routerFor(transaction_mongo_writer <<)
 

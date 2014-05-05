@@ -436,3 +436,13 @@ struct CurrencyNetwork {
     3: set<Address> unusedAddresses
     4: set<Address> usedAddresses
 }
+
+// We have a case-class named Robot
+struct TRobot {
+    1: i64 robotId
+    2: i64 userId
+    3: i64 timestamp
+    4: binary payloads
+    5: string currentState
+    6: i64 dnaId
+}

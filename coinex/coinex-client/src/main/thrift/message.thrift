@@ -202,8 +202,3 @@ typedef data.Address                    _Address
 ////////// which view?
 /* Q    */ struct QueryAsset                          {1: i64 uid, 2: i64 from, 3: i64 to}
 /* R    */ struct QueryAssetResult                    {1: _CurrentAsset currentAsset, 2: _HistoryAsset historyAsset, 3: _CurrentPrice currentPrice, 4: _HistoryPrice historyPrice}
-
-
-////////// EventExportToMongoView
-/* Q    */ struct QueryExportToMongoState             {1: _ExportedEventType eventType}
-/* R              TExportToMongoState */

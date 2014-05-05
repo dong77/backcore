@@ -111,9 +111,6 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploySingleton(Props(new RobotProcessor(routers) with StackableCmdsourced[TRobotState, RobotManager]), robot_processor <<)
     deploySingleton(Props(new AccountTransferProcessor(dbForViews, routers.accountProcessor.path) with StackableEventsourced[TAccountTransferState, AccountTransferManager]), account_transfer_processor <<)
 
-    deploySingleton(Props(new AccountTransferEventExportView(dbForEventExport, snapshotIntervalSec) with StackableView[TExportToMongoState, EventExportToMongoManager]), account_transfer_processor_event_export <<)
-    deploySingleton(Props(new MarketUpdateEventExportView(dbForEventExport, snapshotIntervalSec) with StackableView[TExportToMongoState, EventExportToMongoManager]), market_update_processor_event_export <<)
-
     deploySingleton(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer <<)
     deploySingleton(Props(new OrderWriter(dbForViews)), order_mongo_writer <<)
     deploySingleton(Props(new ExportOpenDataProcessor(asyncHBaseClient) with StackableEventsourced[ExportOpenDataMap, ExportOpenDataManager]), opendata_exporter <<)

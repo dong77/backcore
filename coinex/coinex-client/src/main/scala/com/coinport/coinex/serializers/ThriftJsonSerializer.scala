@@ -48,6 +48,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cRefund = JsonScalaCodec(Refund)
   lazy val _cSpanCursor = JsonScalaCodec(SpanCursor)
   lazy val _cTMetricsObserver = JsonScalaCodec(TMetricsObserver)
+  lazy val _cTRobot = JsonScalaCodec(TRobot)
   lazy val _cTStackQueue = JsonScalaCodec(TStackQueue)
   lazy val _cTWindowQueue = JsonScalaCodec(TWindowQueue)
   lazy val _cTWindowVector = JsonScalaCodec(TWindowVector)
@@ -104,7 +105,6 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cQueryAssetResult = JsonScalaCodec(QueryAssetResult)
   lazy val _cQueryCandleData = JsonScalaCodec(QueryCandleData)
   lazy val _cQueryCandleDataResult = JsonScalaCodec(QueryCandleDataResult)
-  lazy val _cQueryExportToMongoState = JsonScalaCodec(QueryExportToMongoState)
   lazy val _cQueryMarketDepth = JsonScalaCodec(QueryMarketDepth)
   lazy val _cQueryMarketDepthResult = JsonScalaCodec(QueryMarketDepthResult)
   lazy val _cQueryOrder = JsonScalaCodec(QueryOrder)
@@ -154,7 +154,6 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cTMarketDepthState = JsonScalaCodec(TMarketDepthState)
   lazy val _cTMarketState = JsonScalaCodec(TMarketState)
   lazy val _cTMetricsState = JsonScalaCodec(TMetricsState)
-  lazy val _cTRobot = JsonScalaCodec(TRobot)
   lazy val _cTRobotState = JsonScalaCodec(TRobotState)
   lazy val _cTSimpleState = JsonScalaCodec(TSimpleState)
   lazy val _cTUserState = JsonScalaCodec(TUserState)
@@ -194,6 +193,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: Refund => _cRefund(m)
     case m: SpanCursor => _cSpanCursor(m)
     case m: TMetricsObserver => _cTMetricsObserver(m)
+    case m: TRobot => _cTRobot(m)
     case m: TStackQueue => _cTStackQueue(m)
     case m: TWindowQueue => _cTWindowQueue(m)
     case m: TWindowVector => _cTWindowVector(m)
@@ -250,7 +250,6 @@ class ThriftJsonSerializer extends Serializer {
     case m: QueryAssetResult => _cQueryAssetResult(m)
     case m: QueryCandleData => _cQueryCandleData(m)
     case m: QueryCandleDataResult => _cQueryCandleDataResult(m)
-    case m: QueryExportToMongoState => _cQueryExportToMongoState(m)
     case m: QueryMarketDepth => _cQueryMarketDepth(m)
     case m: QueryMarketDepthResult => _cQueryMarketDepthResult(m)
     case m: QueryOrder => _cQueryOrder(m)
@@ -300,7 +299,6 @@ class ThriftJsonSerializer extends Serializer {
     case m: TMarketDepthState => _cTMarketDepthState(m)
     case m: TMarketState => _cTMarketState(m)
     case m: TMetricsState => _cTMetricsState(m)
-    case m: TRobot => _cTRobot(m)
     case m: TRobotState => _cTRobotState(m)
     case m: TSimpleState => _cTSimpleState(m)
     case m: TUserState => _cTUserState(m)
@@ -344,6 +342,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[Refund.Immutable] => _cRefund.invert(bytes).get
     case Some(c) if c == classOf[SpanCursor.Immutable] => _cSpanCursor.invert(bytes).get
     case Some(c) if c == classOf[TMetricsObserver.Immutable] => _cTMetricsObserver.invert(bytes).get
+    case Some(c) if c == classOf[TRobot.Immutable] => _cTRobot.invert(bytes).get
     case Some(c) if c == classOf[TStackQueue.Immutable] => _cTStackQueue.invert(bytes).get
     case Some(c) if c == classOf[TWindowQueue.Immutable] => _cTWindowQueue.invert(bytes).get
     case Some(c) if c == classOf[TWindowVector.Immutable] => _cTWindowVector.invert(bytes).get
@@ -400,7 +399,6 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[QueryAssetResult.Immutable] => _cQueryAssetResult.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleData.Immutable] => _cQueryCandleData.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleDataResult.Immutable] => _cQueryCandleDataResult.invert(bytes).get
-    case Some(c) if c == classOf[QueryExportToMongoState.Immutable] => _cQueryExportToMongoState.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepth.Immutable] => _cQueryMarketDepth.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepthResult.Immutable] => _cQueryMarketDepthResult.invert(bytes).get
     case Some(c) if c == classOf[QueryOrder.Immutable] => _cQueryOrder.invert(bytes).get
@@ -450,7 +448,6 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[TMarketDepthState.Immutable] => _cTMarketDepthState.invert(bytes).get
     case Some(c) if c == classOf[TMarketState.Immutable] => _cTMarketState.invert(bytes).get
     case Some(c) if c == classOf[TMetricsState.Immutable] => _cTMetricsState.invert(bytes).get
-    case Some(c) if c == classOf[TRobot.Immutable] => _cTRobot.invert(bytes).get
     case Some(c) if c == classOf[TRobotState.Immutable] => _cTRobotState.invert(bytes).get
     case Some(c) if c == classOf[TSimpleState.Immutable] => _cTSimpleState.invert(bytes).get
     case Some(c) if c == classOf[TUserState.Immutable] => _cTUserState.invert(bytes).get

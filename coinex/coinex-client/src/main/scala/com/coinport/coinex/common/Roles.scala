@@ -19,10 +19,6 @@ object ConstantRole extends Enumeration {
   val metrics_view = Value
   val mailer = Value
 
-  val user_processor_event_export = Value
-  val account_transfer_processor_event_export = Value
-  val market_update_processor_event_export = Value
-
   val transaction_mongo_writer = Value
   val transaction_mongo_reader = Value
 

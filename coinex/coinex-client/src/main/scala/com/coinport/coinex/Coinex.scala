@@ -81,9 +81,6 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       // User Asset
       case m: QueryAsset => routers.assetView forward m
 
-      case m @ QueryExportToMongoState(ExportedEventType.AccountEvent) => routers.accountTransferProcessorEventExporter forward m
-      case m @ QueryExportToMongoState(ExportedEventType.MarketEvent) => routers.marketUpdateProcessorEventExporter forward m
-
       // Bitway
       case m: GetNewAddress => routers.bitwayProcessor forward m
 
