@@ -20,6 +20,7 @@ object MapSerializer extends Serializer[Map[Any, Any]] {
         k match {
           case ks: String => ks
           case ks: BitwayType => ks.name
+          case ks: CCTXStatus => ks.name
           case ks: ChartTimeDimension => ks.name
           case ks: Currency => ks.name
           case ks: Direction => ks.name
@@ -49,6 +50,11 @@ object ThriftEnumJson4sSerialization {
   class BitwayTypeSerializer extends CustomSerializer[BitwayType](format => (
     { case JString(s) => BitwayType.valueOf(s).get }, {
       case x: BitwayType => JString(x.name)
+    }))
+
+  class CCTXStatusSerializer extends CustomSerializer[CCTXStatus](format => (
+    { case JString(s) => CCTXStatus.valueOf(s).get }, {
+      case x: CCTXStatus => JString(x.name)
     }))
 
   class ChartTimeDimensionSerializer extends CustomSerializer[ChartTimeDimension](format => (
@@ -113,6 +119,7 @@ object ThriftEnumJson4sSerialization {
 
   implicit val formats = Serialization.formats(NoTypeHints) +
     new BitwayTypeSerializer +
+    new CCTXStatusSerializer +
     new ChartTimeDimensionSerializer +
     new CurrencySerializer +
     new DirectionSerializer +

@@ -133,10 +133,19 @@ enum RefundReason {
     OVER_CHARGED   = 3
 }
 
+// CryptoCurrencyTransactionStatus
+enum CCTXStatus {
+    CONFIRMED = 0
+    PENDING   = 1
+    FAILED    = 2 // this will happen when confirmation satisfied but can't spend it
+}
+
 enum BitwayType {
-    GENERATE_ADDRESS     = 0
-    TRANSFER             = 1
-    QUERY_ADDRESS        = 2
+    GENERATE_ADDRESS      = 0
+    TRANSFER              = 1
+    QUERY_ADDRESS         = 2
+    CRYPTO_CURRENCY_TX    = 3
+    CRYPTO_CURRENCY_BLOCK = 4
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -405,4 +414,10 @@ struct TRobot {
     4: binary payloads
     5: string currentState
     6: i64 dnaId
+}
+
+struct CCTXOutput {
+    1: string address
+    2: i64 amount
+    /* NOTE, need CCTXStatus field in transfer stats (NOT HERE) */
 }

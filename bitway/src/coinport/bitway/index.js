@@ -8,7 +8,7 @@ var RedisProxy              = require('./redis/redis_proxy').RedisProxy,
     GenerateAddressResponse = require('../../../gen-nodejs/data_types').GenerateAddressResponse,
     Currency                = require('../../../gen-nodejs/data_types').Currency,
     ErrorCode               = require('../../../gen-nodejs/data_types').ErrorCode,
-    BitwayResponse          = require('../../../gen-nodejs/message_types').BitwayResponse,
+    BitwayMessage           = require('../../../gen-nodejs/message_types').BitwayMessage,
     Bitcore                 = require('bitcore'),
     Peer                    = Bitcore.Peer,
     Networks                = Bitcore.networks,
@@ -42,13 +42,13 @@ proxy.on(RedisProxy.EventType.QUERY_ADDRESS, function(requestId, currency, reque
 
 proxy.start();
 
-// proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_ADDRESS, requestId: 1425, currency: Currency.BTC,
+// proxy.publish(new BitwayMessage({type: BitwayType.GENERATE_ADDRESS, requestId: 1425, currency: Currency.BTC,
     // generateAddressResponse: new GenerateAddressResponse({error: ErrorCode.ROBOT_DNA_EXIST})}))
 
 var handleBlock = function(info) {
     console.log('** Block Received **');
     console.log(info.message);
-    proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_ADDRESS, requestId: 1425, currency: Currency.BTC,
+    proxy.publish(new BitwayMessage({type: BitwayType.GENERATE_ADDRESS, requestId: 1425, currency: Currency.BTC,
         generateAddressResponse: new GenerateAddressResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
 };
 
@@ -57,7 +57,7 @@ var handleTx = function(info) {
 
     console.log('** TX Received **');
     console.log(tx);
-    proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_ADDRESS, requestId: 1425, currency: Currency.BTC,
+    proxy.publish(new BitwayMessage({type: BitwayType.GENERATE_ADDRESS, requestId: 1425, currency: Currency.BTC,
         generateAddressResponse: new GenerateAddressResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
 };
 
@@ -67,7 +67,7 @@ var handleInv = function(info) {
 
     var invs = info.message.invs;
     info.conn.sendGetData(invs);
-    proxy.publish(new BitwayResponse({type: BitwayType.GENERATE_ADDRESS, requestId: 1425, currency: Currency.BTC,
+    proxy.publish(new BitwayMessage({type: BitwayType.GENERATE_ADDRESS, requestId: 1425, currency: Currency.BTC,
         generateAddressResponse: new GenerateAddressResponse({error: ErrorCode.ROBOT_DNA_EXIST})}));
 };
 

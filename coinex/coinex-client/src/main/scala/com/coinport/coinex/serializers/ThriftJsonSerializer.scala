@@ -18,6 +18,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cAccountTransfer = JsonScalaCodec(AccountTransfer)
   lazy val _cAddress = JsonScalaCodec(Address)
   lazy val _cApiSecret = JsonScalaCodec(ApiSecret)
+  lazy val _cCCTXOutput = JsonScalaCodec(CCTXOutput)
   lazy val _cCandleData = JsonScalaCodec(CandleData)
   lazy val _cCandleDataItem = JsonScalaCodec(CandleDataItem)
   lazy val _cCashAccount = JsonScalaCodec(CashAccount)
@@ -58,9 +59,12 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cAdminConfirmTransferFailure = JsonScalaCodec(AdminConfirmTransferFailure)
   lazy val _cAdminConfirmTransferSuccess = JsonScalaCodec(AdminConfirmTransferSuccess)
   lazy val _cApiSecretOperationResult = JsonScalaCodec(ApiSecretOperationResult)
+  lazy val _cBitwayMessage = JsonScalaCodec(BitwayMessage)
   lazy val _cBitwayRequest = JsonScalaCodec(BitwayRequest)
-  lazy val _cBitwayResponse = JsonScalaCodec(BitwayResponse)
   lazy val _cCancelOrderFailed = JsonScalaCodec(CancelOrderFailed)
+  lazy val _cCryptoCurrencyBlock = JsonScalaCodec(CryptoCurrencyBlock)
+  lazy val _cCryptoCurrencyTx = JsonScalaCodec(CryptoCurrencyTx)
+  lazy val _cCryptoCurrencyTxMsg = JsonScalaCodec(CryptoCurrencyTxMsg)
   lazy val _cDoAddNewApiSecret = JsonScalaCodec(DoAddNewApiSecret)
   lazy val _cDoAddRobotDNA = JsonScalaCodec(DoAddRobotDNA)
   lazy val _cDoCancelOrder = JsonScalaCodec(DoCancelOrder)
@@ -162,6 +166,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: AccountTransfer => _cAccountTransfer(m)
     case m: Address => _cAddress(m)
     case m: ApiSecret => _cApiSecret(m)
+    case m: CCTXOutput => _cCCTXOutput(m)
     case m: CandleData => _cCandleData(m)
     case m: CandleDataItem => _cCandleDataItem(m)
     case m: CashAccount => _cCashAccount(m)
@@ -202,9 +207,12 @@ class ThriftJsonSerializer extends Serializer {
     case m: AdminConfirmTransferFailure => _cAdminConfirmTransferFailure(m)
     case m: AdminConfirmTransferSuccess => _cAdminConfirmTransferSuccess(m)
     case m: ApiSecretOperationResult => _cApiSecretOperationResult(m)
+    case m: BitwayMessage => _cBitwayMessage(m)
     case m: BitwayRequest => _cBitwayRequest(m)
-    case m: BitwayResponse => _cBitwayResponse(m)
     case m: CancelOrderFailed => _cCancelOrderFailed(m)
+    case m: CryptoCurrencyBlock => _cCryptoCurrencyBlock(m)
+    case m: CryptoCurrencyTx => _cCryptoCurrencyTx(m)
+    case m: CryptoCurrencyTxMsg => _cCryptoCurrencyTxMsg(m)
     case m: DoAddNewApiSecret => _cDoAddNewApiSecret(m)
     case m: DoAddRobotDNA => _cDoAddRobotDNA(m)
     case m: DoCancelOrder => _cDoCancelOrder(m)
@@ -310,6 +318,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[AccountTransfer.Immutable] => _cAccountTransfer.invert(bytes).get
     case Some(c) if c == classOf[Address.Immutable] => _cAddress.invert(bytes).get
     case Some(c) if c == classOf[ApiSecret.Immutable] => _cApiSecret.invert(bytes).get
+    case Some(c) if c == classOf[CCTXOutput.Immutable] => _cCCTXOutput.invert(bytes).get
     case Some(c) if c == classOf[CandleData.Immutable] => _cCandleData.invert(bytes).get
     case Some(c) if c == classOf[CandleDataItem.Immutable] => _cCandleDataItem.invert(bytes).get
     case Some(c) if c == classOf[CashAccount.Immutable] => _cCashAccount.invert(bytes).get
@@ -350,9 +359,12 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[AdminConfirmTransferFailure.Immutable] => _cAdminConfirmTransferFailure.invert(bytes).get
     case Some(c) if c == classOf[AdminConfirmTransferSuccess.Immutable] => _cAdminConfirmTransferSuccess.invert(bytes).get
     case Some(c) if c == classOf[ApiSecretOperationResult.Immutable] => _cApiSecretOperationResult.invert(bytes).get
+    case Some(c) if c == classOf[BitwayMessage.Immutable] => _cBitwayMessage.invert(bytes).get
     case Some(c) if c == classOf[BitwayRequest.Immutable] => _cBitwayRequest.invert(bytes).get
-    case Some(c) if c == classOf[BitwayResponse.Immutable] => _cBitwayResponse.invert(bytes).get
     case Some(c) if c == classOf[CancelOrderFailed.Immutable] => _cCancelOrderFailed.invert(bytes).get
+    case Some(c) if c == classOf[CryptoCurrencyBlock.Immutable] => _cCryptoCurrencyBlock.invert(bytes).get
+    case Some(c) if c == classOf[CryptoCurrencyTx.Immutable] => _cCryptoCurrencyTx.invert(bytes).get
+    case Some(c) if c == classOf[CryptoCurrencyTxMsg.Immutable] => _cCryptoCurrencyTxMsg.invert(bytes).get
     case Some(c) if c == classOf[DoAddNewApiSecret.Immutable] => _cDoAddNewApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoAddRobotDNA.Immutable] => _cDoAddRobotDNA.invert(bytes).get
     case Some(c) if c == classOf[DoCancelOrder.Immutable] => _cDoCancelOrder.invert(bytes).get

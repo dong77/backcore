@@ -84,7 +84,7 @@ class BitwayProcessor extends ExtendedProcessor with EventsourcedProcessor with 
         sender ! GetNewAddressResult(ErrorCode.NotEnoughAddressInPool, None)
       }
 
-    case m @ BitwayResponse(t, id, currency, Some(res), None, None) =>
+    case m @ BitwayMessage(t, id, currency, Some(res), None, None) =>
       if (res.error == ErrorCode.Ok) {
         persist(res) { event =>
           updateState(m)
@@ -92,15 +92,15 @@ class BitwayProcessor extends ExtendedProcessor with EventsourcedProcessor with 
       } else {
         log.error("error occur when fetch addresses: " + res)
       }
-    case m @ BitwayResponse(t, id, currency, None, Some(res), None) =>
+    case m @ BitwayMessage(t, id, currency, None, Some(res), None) =>
       println("~" * 40 + res)
-    case m @ BitwayResponse(t, id, currency, None, None, Some(res)) =>
+    case m @ BitwayMessage(t, id, currency, None, None, Some(res)) =>
       println("~" * 40 + res)
   }
 
   def updateState: Receive = {
     case GetNewAddress(currency, Some(address)) => manager.addressAllocated(currency, address)
-    case BitwayResponse(_, _, currency, Some(res), None, None) => manager.faucetAddress(currency,
+    case BitwayMessage(_, _, currency, Some(res), None, None) => manager.faucetAddress(currency,
       Set.empty[Address] ++ res.addresses)
   }
 
@@ -122,7 +122,7 @@ class BitwayReceiver(bitwayProcessor: ActorRef) extends Actor with ActorLogging 
     case ListenAtRedis if pullClient.isDefined =>
       pullClient.get.blpop[String, Array[Byte]](1, RESPONSE_CHANNEL) match {
         case Some(s) =>
-          val response = serializer.fromBinary(s._2, classOf[BitwayResponse.Immutable])
+          val response = serializer.fromBinary(s._2, classOf[BitwayMessage.Immutable])
           bitwayProcessor ! response
         case None => None
       }
