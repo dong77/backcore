@@ -386,33 +386,6 @@ struct Address {
     2: string publicKey
 }
 
-struct GenerateAddressRequest {
-    1: i32 num
-}
-
-struct TransferRequest {
-    1: Address from
-    2: Address to
-    3: i32 amount
-}
-
-struct QueryAddressRequest {
-    1: string address
-}
-
-struct GenerateAddressResponse {
-    1: ErrorCode error
-    2: set<Address> addresses
-}
-
-struct TransferResponse {
-    1: ErrorCode error
-}
-
-struct QueryAddressResponse {
-    1: ErrorCode error
-}
-
 struct ExportOpenDataMap {
     1: map<string, i64> processorSeqMap
 }

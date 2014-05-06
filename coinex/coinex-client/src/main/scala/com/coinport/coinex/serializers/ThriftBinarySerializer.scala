@@ -27,8 +27,6 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cCursor = BinaryScalaCodec(Cursor)
   lazy val _cExportOpenDataMap = BinaryScalaCodec(ExportOpenDataMap)
   lazy val _cFee = BinaryScalaCodec(Fee)
-  lazy val _cGenerateAddressRequest = BinaryScalaCodec(GenerateAddressRequest)
-  lazy val _cGenerateAddressResponse = BinaryScalaCodec(GenerateAddressResponse)
   lazy val _cHistoryAsset = BinaryScalaCodec(HistoryAsset)
   lazy val _cHistoryPrice = BinaryScalaCodec(HistoryPrice)
   lazy val _cMarketDepth = BinaryScalaCodec(MarketDepth)
@@ -40,8 +38,6 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cOrder = BinaryScalaCodec(Order)
   lazy val _cOrderInfo = BinaryScalaCodec(OrderInfo)
   lazy val _cOrderUpdate = BinaryScalaCodec(OrderUpdate)
-  lazy val _cQueryAddressRequest = BinaryScalaCodec(QueryAddressRequest)
-  lazy val _cQueryAddressResponse = BinaryScalaCodec(QueryAddressResponse)
   lazy val _cQueryMarketSide = BinaryScalaCodec(QueryMarketSide)
   lazy val _cRedeliverFilterData = BinaryScalaCodec(RedeliverFilterData)
   lazy val _cRedeliverFilters = BinaryScalaCodec(RedeliverFilters)
@@ -53,8 +49,6 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cTWindowQueue = BinaryScalaCodec(TWindowQueue)
   lazy val _cTWindowVector = BinaryScalaCodec(TWindowVector)
   lazy val _cTransaction = BinaryScalaCodec(Transaction)
-  lazy val _cTransferRequest = BinaryScalaCodec(TransferRequest)
-  lazy val _cTransferResponse = BinaryScalaCodec(TransferResponse)
   lazy val _cUserAccount = BinaryScalaCodec(UserAccount)
   lazy val _cUserLogsState = BinaryScalaCodec(UserLogsState)
   lazy val _cUserProfile = BinaryScalaCodec(UserProfile)
@@ -85,6 +79,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cDoUpdateMetrics = BinaryScalaCodec(DoUpdateMetrics)
   lazy val _cDoUpdateUserProfile = BinaryScalaCodec(DoUpdateUserProfile)
   lazy val _cDumpStateToFile = BinaryScalaCodec(DumpStateToFile)
+  lazy val _cGenerateAddressRequest = BinaryScalaCodec(GenerateAddressRequest)
+  lazy val _cGenerateAddressResponse = BinaryScalaCodec(GenerateAddressResponse)
   lazy val _cGetNewAddress = BinaryScalaCodec(GetNewAddress)
   lazy val _cGetNewAddressResult = BinaryScalaCodec(GetNewAddressResult)
   lazy val _cGoogleAuthCodeVerificationResult = BinaryScalaCodec(GoogleAuthCodeVerificationResult)
@@ -98,6 +94,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cPasswordResetTokenValidationResult = BinaryScalaCodec(PasswordResetTokenValidationResult)
   lazy val _cQueryAccount = BinaryScalaCodec(QueryAccount)
   lazy val _cQueryAccountResult = BinaryScalaCodec(QueryAccountResult)
+  lazy val _cQueryAddressRequest = BinaryScalaCodec(QueryAddressRequest)
+  lazy val _cQueryAddressResponse = BinaryScalaCodec(QueryAddressResponse)
   lazy val _cQueryApiSecrets = BinaryScalaCodec(QueryApiSecrets)
   lazy val _cQueryApiSecretsResult = BinaryScalaCodec(QueryApiSecretsResult)
   lazy val _cQueryAsset = BinaryScalaCodec(QueryAsset)
@@ -136,6 +134,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cResetPasswordSucceeded = BinaryScalaCodec(ResetPasswordSucceeded)
   lazy val _cSubmitOrderFailed = BinaryScalaCodec(SubmitOrderFailed)
   lazy val _cTakeSnapshotNow = BinaryScalaCodec(TakeSnapshotNow)
+  lazy val _cTransferRequest = BinaryScalaCodec(TransferRequest)
+  lazy val _cTransferResponse = BinaryScalaCodec(TransferResponse)
   lazy val _cUpdateUserProfileFailed = BinaryScalaCodec(UpdateUserProfileFailed)
   lazy val _cUpdateUserProfileSucceeded = BinaryScalaCodec(UpdateUserProfileSucceeded)
   lazy val _cValidatePasswordResetToken = BinaryScalaCodec(ValidatePasswordResetToken)
@@ -171,8 +171,6 @@ class ThriftBinarySerializer extends Serializer {
     case m: Cursor => _cCursor(m)
     case m: ExportOpenDataMap => _cExportOpenDataMap(m)
     case m: Fee => _cFee(m)
-    case m: GenerateAddressRequest => _cGenerateAddressRequest(m)
-    case m: GenerateAddressResponse => _cGenerateAddressResponse(m)
     case m: HistoryAsset => _cHistoryAsset(m)
     case m: HistoryPrice => _cHistoryPrice(m)
     case m: MarketDepth => _cMarketDepth(m)
@@ -184,8 +182,6 @@ class ThriftBinarySerializer extends Serializer {
     case m: Order => _cOrder(m)
     case m: OrderInfo => _cOrderInfo(m)
     case m: OrderUpdate => _cOrderUpdate(m)
-    case m: QueryAddressRequest => _cQueryAddressRequest(m)
-    case m: QueryAddressResponse => _cQueryAddressResponse(m)
     case m: QueryMarketSide => _cQueryMarketSide(m)
     case m: RedeliverFilterData => _cRedeliverFilterData(m)
     case m: RedeliverFilters => _cRedeliverFilters(m)
@@ -197,8 +193,6 @@ class ThriftBinarySerializer extends Serializer {
     case m: TWindowQueue => _cTWindowQueue(m)
     case m: TWindowVector => _cTWindowVector(m)
     case m: Transaction => _cTransaction(m)
-    case m: TransferRequest => _cTransferRequest(m)
-    case m: TransferResponse => _cTransferResponse(m)
     case m: UserAccount => _cUserAccount(m)
     case m: UserLogsState => _cUserLogsState(m)
     case m: UserProfile => _cUserProfile(m)
@@ -229,6 +223,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: DoUpdateMetrics => _cDoUpdateMetrics(m)
     case m: DoUpdateUserProfile => _cDoUpdateUserProfile(m)
     case m: DumpStateToFile => _cDumpStateToFile(m)
+    case m: GenerateAddressRequest => _cGenerateAddressRequest(m)
+    case m: GenerateAddressResponse => _cGenerateAddressResponse(m)
     case m: GetNewAddress => _cGetNewAddress(m)
     case m: GetNewAddressResult => _cGetNewAddressResult(m)
     case m: GoogleAuthCodeVerificationResult => _cGoogleAuthCodeVerificationResult(m)
@@ -242,6 +238,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: PasswordResetTokenValidationResult => _cPasswordResetTokenValidationResult(m)
     case m: QueryAccount => _cQueryAccount(m)
     case m: QueryAccountResult => _cQueryAccountResult(m)
+    case m: QueryAddressRequest => _cQueryAddressRequest(m)
+    case m: QueryAddressResponse => _cQueryAddressResponse(m)
     case m: QueryApiSecrets => _cQueryApiSecrets(m)
     case m: QueryApiSecretsResult => _cQueryApiSecretsResult(m)
     case m: QueryAsset => _cQueryAsset(m)
@@ -280,6 +278,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: ResetPasswordSucceeded => _cResetPasswordSucceeded(m)
     case m: SubmitOrderFailed => _cSubmitOrderFailed(m)
     case m: TakeSnapshotNow => _cTakeSnapshotNow(m)
+    case m: TransferRequest => _cTransferRequest(m)
+    case m: TransferResponse => _cTransferResponse(m)
     case m: UpdateUserProfileFailed => _cUpdateUserProfileFailed(m)
     case m: UpdateUserProfileSucceeded => _cUpdateUserProfileSucceeded(m)
     case m: ValidatePasswordResetToken => _cValidatePasswordResetToken(m)
@@ -319,8 +319,6 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[Cursor.Immutable] => _cCursor.invert(bytes).get
     case Some(c) if c == classOf[ExportOpenDataMap.Immutable] => _cExportOpenDataMap.invert(bytes).get
     case Some(c) if c == classOf[Fee.Immutable] => _cFee.invert(bytes).get
-    case Some(c) if c == classOf[GenerateAddressRequest.Immutable] => _cGenerateAddressRequest.invert(bytes).get
-    case Some(c) if c == classOf[GenerateAddressResponse.Immutable] => _cGenerateAddressResponse.invert(bytes).get
     case Some(c) if c == classOf[HistoryAsset.Immutable] => _cHistoryAsset.invert(bytes).get
     case Some(c) if c == classOf[HistoryPrice.Immutable] => _cHistoryPrice.invert(bytes).get
     case Some(c) if c == classOf[MarketDepth.Immutable] => _cMarketDepth.invert(bytes).get
@@ -332,8 +330,6 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[Order.Immutable] => _cOrder.invert(bytes).get
     case Some(c) if c == classOf[OrderInfo.Immutable] => _cOrderInfo.invert(bytes).get
     case Some(c) if c == classOf[OrderUpdate.Immutable] => _cOrderUpdate.invert(bytes).get
-    case Some(c) if c == classOf[QueryAddressRequest.Immutable] => _cQueryAddressRequest.invert(bytes).get
-    case Some(c) if c == classOf[QueryAddressResponse.Immutable] => _cQueryAddressResponse.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketSide.Immutable] => _cQueryMarketSide.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilterData.Immutable] => _cRedeliverFilterData.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilters.Immutable] => _cRedeliverFilters.invert(bytes).get
@@ -345,8 +341,6 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[TWindowQueue.Immutable] => _cTWindowQueue.invert(bytes).get
     case Some(c) if c == classOf[TWindowVector.Immutable] => _cTWindowVector.invert(bytes).get
     case Some(c) if c == classOf[Transaction.Immutable] => _cTransaction.invert(bytes).get
-    case Some(c) if c == classOf[TransferRequest.Immutable] => _cTransferRequest.invert(bytes).get
-    case Some(c) if c == classOf[TransferResponse.Immutable] => _cTransferResponse.invert(bytes).get
     case Some(c) if c == classOf[UserAccount.Immutable] => _cUserAccount.invert(bytes).get
     case Some(c) if c == classOf[UserLogsState.Immutable] => _cUserLogsState.invert(bytes).get
     case Some(c) if c == classOf[UserProfile.Immutable] => _cUserProfile.invert(bytes).get
@@ -377,6 +371,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[DoUpdateMetrics.Immutable] => _cDoUpdateMetrics.invert(bytes).get
     case Some(c) if c == classOf[DoUpdateUserProfile.Immutable] => _cDoUpdateUserProfile.invert(bytes).get
     case Some(c) if c == classOf[DumpStateToFile.Immutable] => _cDumpStateToFile.invert(bytes).get
+    case Some(c) if c == classOf[GenerateAddressRequest.Immutable] => _cGenerateAddressRequest.invert(bytes).get
+    case Some(c) if c == classOf[GenerateAddressResponse.Immutable] => _cGenerateAddressResponse.invert(bytes).get
     case Some(c) if c == classOf[GetNewAddress.Immutable] => _cGetNewAddress.invert(bytes).get
     case Some(c) if c == classOf[GetNewAddressResult.Immutable] => _cGetNewAddressResult.invert(bytes).get
     case Some(c) if c == classOf[GoogleAuthCodeVerificationResult.Immutable] => _cGoogleAuthCodeVerificationResult.invert(bytes).get
@@ -390,6 +386,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[PasswordResetTokenValidationResult.Immutable] => _cPasswordResetTokenValidationResult.invert(bytes).get
     case Some(c) if c == classOf[QueryAccount.Immutable] => _cQueryAccount.invert(bytes).get
     case Some(c) if c == classOf[QueryAccountResult.Immutable] => _cQueryAccountResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryAddressRequest.Immutable] => _cQueryAddressRequest.invert(bytes).get
+    case Some(c) if c == classOf[QueryAddressResponse.Immutable] => _cQueryAddressResponse.invert(bytes).get
     case Some(c) if c == classOf[QueryApiSecrets.Immutable] => _cQueryApiSecrets.invert(bytes).get
     case Some(c) if c == classOf[QueryApiSecretsResult.Immutable] => _cQueryApiSecretsResult.invert(bytes).get
     case Some(c) if c == classOf[QueryAsset.Immutable] => _cQueryAsset.invert(bytes).get
@@ -428,6 +426,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[ResetPasswordSucceeded.Immutable] => _cResetPasswordSucceeded.invert(bytes).get
     case Some(c) if c == classOf[SubmitOrderFailed.Immutable] => _cSubmitOrderFailed.invert(bytes).get
     case Some(c) if c == classOf[TakeSnapshotNow.Immutable] => _cTakeSnapshotNow.invert(bytes).get
+    case Some(c) if c == classOf[TransferRequest.Immutable] => _cTransferRequest.invert(bytes).get
+    case Some(c) if c == classOf[TransferResponse.Immutable] => _cTransferResponse.invert(bytes).get
     case Some(c) if c == classOf[UpdateUserProfileFailed.Immutable] => _cUpdateUserProfileFailed.invert(bytes).get
     case Some(c) if c == classOf[UpdateUserProfileSucceeded.Immutable] => _cUpdateUserProfileSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ValidatePasswordResetToken.Immutable] => _cValidatePasswordResetToken.invert(bytes).get

@@ -38,12 +38,6 @@ typedef data.HistoryPrice               _HistoryPrice
 typedef data.CurrentPrice               _CurrentPrice
 typedef data.TransferType               _TransferType
 typedef data.BitwayType                 _BitwayType
-typedef data.GenerateAddressRequest     _GenerateAddressRequest
-typedef data.TransferRequest            _TransferRequest
-typedef data.QueryAddressRequest        _QueryAddressRequest
-typedef data.GenerateAddressResponse    _GenerateAddressResponse
-typedef data.TransferResponse           _TransferResponse
-typedef data.QueryAddressResponse       _QueryAddressResponse
 typedef data.RechargeCodeStatus         _RechargeCodeStatus
 typedef data.ABCodeItem                 _ABCodeItem
 typedef data.Address                    _Address
@@ -159,8 +153,14 @@ typedef data.Address                    _Address
 
 ////////// Bitway
 // with nodejs bitway
-/* C    */ struct BitwayRequest                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional _GenerateAddressRequest generateAddressRequest, 5: optional _TransferRequest transferRequest, 6: optional _QueryAddressRequest queryAssressRequest}
-/* R    */ struct BitwayResponse                      {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional _GenerateAddressResponse generateAddressResponse, 5: optional _TransferResponse transferResponse, 6: optional _QueryAddressResponse queryAddressResponse}
+/* C    */ struct GenerateAddressRequest              {1: i32 num}
+/* C    */ struct TransferRequest                     {1: _Address from, 2: _Address to, 3: i32 amount}
+/* C    */ struct QueryAddressRequest                 {1: string address}
+/* C    */ struct BitwayRequest                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional GenerateAddressRequest generateAddressRequest, 5: optional TransferRequest transferRequest, 6: optional QueryAddressRequest queryAssressRequest}
+/* R    */ struct GenerateAddressResponse             {1: _ErrorCode error, 2: set<_Address> addresses}
+/* R    */ struct TransferResponse                    {1: _ErrorCode error}
+/* R    */ struct QueryAddressResponse                {1: _ErrorCode error}
+/* R    */ struct BitwayResponse                      {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional GenerateAddressResponse generateAddressResponse, 5: optional TransferResponse transferResponse, 6: optional QueryAddressResponse queryAddressResponse}
 
 // with other processor in akka
 /* C    */ struct GetNewAddress                       {1: _Currency currency, 2: optional _Address assignedAddress}

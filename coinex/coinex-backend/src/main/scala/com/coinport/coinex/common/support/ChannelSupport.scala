@@ -1,7 +1,7 @@
 package com.coinport.coinex.common.support
 
 import akka.actor.Actor
-import akka.persistence.{ Channel, ChannelSettings}
+import akka.persistence.{ Channel, ChannelSettings }
 import akka.persistence.ConfirmablePersistent
 import scala.concurrent.duration._
 
