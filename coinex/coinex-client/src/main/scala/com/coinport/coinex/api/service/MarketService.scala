@@ -56,7 +56,7 @@ object MarketService extends AkkaService {
 
           val takerAmount = t.takerUpdate.previous.quantity - t.takerUpdate.current.quantity
           val makerAmount = t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity
-          val (sAmount, cAmount) = if (isSell) (makerAmount, takerAmount) else (takerAmount, makerAmount)
+          val (sAmount, cAmount) = if (isSell) (takerAmount, makerAmount) else (makerAmount, takerAmount)
 
           val takerOrder = ApiOrderState(t.takerUpdate.current.id.toString, t.takerUpdate.current.userId.toString, t.takerUpdate.previous.quantity, t.takerUpdate.current.quantity)
           val makerOrder = ApiOrderState(t.makerUpdate.current.id.toString, t.makerUpdate.current.userId.toString, t.makerUpdate.previous.quantity, t.makerUpdate.current.quantity)
