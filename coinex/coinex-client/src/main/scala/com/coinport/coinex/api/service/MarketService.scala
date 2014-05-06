@@ -57,16 +57,27 @@ object MarketService extends AkkaService {
           val takerAmount = t.takerUpdate.previous.quantity - t.takerUpdate.current.quantity
           val makerAmount = t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity
           val (sAmount, cAmount) = if (isSell) (takerAmount, makerAmount) else (makerAmount, takerAmount)
+          val (takerPreAmount, takeCurAmount, makerPreAmount, makerCurAmount) =
+            if (isSell)
+              (CurrencyObject(subject, t.takerUpdate.previous.quantity),
+                CurrencyObject(subject, t.takerUpdate.current.quantity),
+                CurrencyObject(currency, t.makerUpdate.previous.quantity),
+                CurrencyObject(currency, t.makerUpdate.current.quantity))
+            else
+              (CurrencyObject(currency, t.takerUpdate.previous.quantity),
+                CurrencyObject(currency, t.takerUpdate.current.quantity),
+                CurrencyObject(subject, t.makerUpdate.previous.quantity),
+                CurrencyObject(subject, t.makerUpdate.current.quantity))
 
-          val takerOrder = ApiOrderState(t.takerUpdate.current.id.toString, t.takerUpdate.current.userId.toString, t.takerUpdate.previous.quantity, t.takerUpdate.current.quantity)
-          val makerOrder = ApiOrderState(t.makerUpdate.current.id.toString, t.makerUpdate.current.userId.toString, t.makerUpdate.previous.quantity, t.makerUpdate.current.quantity)
+          val takerOrder = ApiOrderState(t.takerUpdate.current.id.toString, t.takerUpdate.current.userId.toString, takerPreAmount, takeCurAmount)
+          val makerOrder = ApiOrderState(t.makerUpdate.current.id.toString, t.makerUpdate.current.userId.toString, makerPreAmount, makerCurAmount)
 
           ApiTransaction(
             id = t.id.toString,
             timestamp = t.timestamp,
-            price = (cAmount.toDouble / sAmount.toDouble).externalValue(marketSide),
-            subjectAmount = sAmount.externalValue(subject),
-            currencyAmount = cAmount.externalValue(currency),
+            price = PriceObject(marketSide, cAmount.toDouble / sAmount.toDouble),
+            subjectAmount = CurrencyObject(subject, sAmount),
+            currencyAmount = CurrencyObject(currency, cAmount),
             taker = takerOrder.uid,
             maker = makerOrder.uid,
             sell = isSell,
