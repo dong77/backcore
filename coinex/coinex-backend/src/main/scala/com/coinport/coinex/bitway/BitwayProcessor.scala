@@ -84,7 +84,7 @@ class BitwayProcessor extends ExtendedProcessor with EventsourcedProcessor with 
         sender ! GetNewAddressResult(ErrorCode.NotEnoughAddressInPool, None)
       }
 
-    case m @ BitwayMessage(t, id, currency, Some(res), None, None) =>
+    case m @ BitwayMessage(t, id, currency, Some(res), None, None, None, None) =>
       if (res.error == ErrorCode.Ok) {
         persist(res) { event =>
           updateState(m)
@@ -92,15 +92,15 @@ class BitwayProcessor extends ExtendedProcessor with EventsourcedProcessor with 
       } else {
         log.error("error occur when fetch addresses: " + res)
       }
-    case m @ BitwayMessage(t, id, currency, None, Some(res), None) =>
+    case m @ BitwayMessage(t, id, currency, None, Some(res), None, None, None) =>
       println("~" * 40 + res)
-    case m @ BitwayMessage(t, id, currency, None, None, Some(res)) =>
+    case m @ BitwayMessage(t, id, currency, None, None, Some(res), None, None) =>
       println("~" * 40 + res)
   }
 
   def updateState: Receive = {
     case GetNewAddress(currency, Some(address)) => manager.addressAllocated(currency, address)
-    case BitwayMessage(_, _, currency, Some(res), None, None) => manager.faucetAddress(currency,
+    case BitwayMessage(_, _, currency, Some(res), None, None, None, None) => manager.faucetAddress(currency,
       Set.empty[Address] ++ res.addresses)
   }
 

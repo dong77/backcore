@@ -18,7 +18,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cAccountTransfer = BinaryScalaCodec(AccountTransfer)
   lazy val _cAddress = BinaryScalaCodec(Address)
   lazy val _cApiSecret = BinaryScalaCodec(ApiSecret)
-  lazy val _cCCTXOutput = BinaryScalaCodec(CCTXOutput)
+  lazy val _cCCTxOutput = BinaryScalaCodec(CCTxOutput)
   lazy val _cCandleData = BinaryScalaCodec(CandleData)
   lazy val _cCandleDataItem = BinaryScalaCodec(CandleDataItem)
   lazy val _cCashAccount = BinaryScalaCodec(CashAccount)
@@ -61,10 +61,11 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cApiSecretOperationResult = BinaryScalaCodec(ApiSecretOperationResult)
   lazy val _cBitwayMessage = BinaryScalaCodec(BitwayMessage)
   lazy val _cBitwayRequest = BinaryScalaCodec(BitwayRequest)
+  lazy val _cCCBlock = BinaryScalaCodec(CCBlock)
+  lazy val _cCCBlocks = BinaryScalaCodec(CCBlocks)
+  lazy val _cCCTx = BinaryScalaCodec(CCTx)
+  lazy val _cCCTxsMsg = BinaryScalaCodec(CCTxsMsg)
   lazy val _cCancelOrderFailed = BinaryScalaCodec(CancelOrderFailed)
-  lazy val _cCryptoCurrencyBlock = BinaryScalaCodec(CryptoCurrencyBlock)
-  lazy val _cCryptoCurrencyTx = BinaryScalaCodec(CryptoCurrencyTx)
-  lazy val _cCryptoCurrencyTxMsg = BinaryScalaCodec(CryptoCurrencyTxMsg)
   lazy val _cDoAddNewApiSecret = BinaryScalaCodec(DoAddNewApiSecret)
   lazy val _cDoAddRobotDNA = BinaryScalaCodec(DoAddRobotDNA)
   lazy val _cDoCancelOrder = BinaryScalaCodec(DoCancelOrder)
@@ -85,6 +86,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cDumpStateToFile = BinaryScalaCodec(DumpStateToFile)
   lazy val _cGenerateAddressRequest = BinaryScalaCodec(GenerateAddressRequest)
   lazy val _cGenerateAddressResponse = BinaryScalaCodec(GenerateAddressResponse)
+  lazy val _cGetMissedCCBlocks = BinaryScalaCodec(GetMissedCCBlocks)
   lazy val _cGetNewAddress = BinaryScalaCodec(GetNewAddress)
   lazy val _cGetNewAddressResult = BinaryScalaCodec(GetNewAddressResult)
   lazy val _cGoogleAuthCodeVerificationResult = BinaryScalaCodec(GoogleAuthCodeVerificationResult)
@@ -166,7 +168,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: AccountTransfer => _cAccountTransfer(m)
     case m: Address => _cAddress(m)
     case m: ApiSecret => _cApiSecret(m)
-    case m: CCTXOutput => _cCCTXOutput(m)
+    case m: CCTxOutput => _cCCTxOutput(m)
     case m: CandleData => _cCandleData(m)
     case m: CandleDataItem => _cCandleDataItem(m)
     case m: CashAccount => _cCashAccount(m)
@@ -209,10 +211,11 @@ class ThriftBinarySerializer extends Serializer {
     case m: ApiSecretOperationResult => _cApiSecretOperationResult(m)
     case m: BitwayMessage => _cBitwayMessage(m)
     case m: BitwayRequest => _cBitwayRequest(m)
+    case m: CCBlock => _cCCBlock(m)
+    case m: CCBlocks => _cCCBlocks(m)
+    case m: CCTx => _cCCTx(m)
+    case m: CCTxsMsg => _cCCTxsMsg(m)
     case m: CancelOrderFailed => _cCancelOrderFailed(m)
-    case m: CryptoCurrencyBlock => _cCryptoCurrencyBlock(m)
-    case m: CryptoCurrencyTx => _cCryptoCurrencyTx(m)
-    case m: CryptoCurrencyTxMsg => _cCryptoCurrencyTxMsg(m)
     case m: DoAddNewApiSecret => _cDoAddNewApiSecret(m)
     case m: DoAddRobotDNA => _cDoAddRobotDNA(m)
     case m: DoCancelOrder => _cDoCancelOrder(m)
@@ -233,6 +236,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: DumpStateToFile => _cDumpStateToFile(m)
     case m: GenerateAddressRequest => _cGenerateAddressRequest(m)
     case m: GenerateAddressResponse => _cGenerateAddressResponse(m)
+    case m: GetMissedCCBlocks => _cGetMissedCCBlocks(m)
     case m: GetNewAddress => _cGetNewAddress(m)
     case m: GetNewAddressResult => _cGetNewAddressResult(m)
     case m: GoogleAuthCodeVerificationResult => _cGoogleAuthCodeVerificationResult(m)
@@ -318,7 +322,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[AccountTransfer.Immutable] => _cAccountTransfer.invert(bytes).get
     case Some(c) if c == classOf[Address.Immutable] => _cAddress.invert(bytes).get
     case Some(c) if c == classOf[ApiSecret.Immutable] => _cApiSecret.invert(bytes).get
-    case Some(c) if c == classOf[CCTXOutput.Immutable] => _cCCTXOutput.invert(bytes).get
+    case Some(c) if c == classOf[CCTxOutput.Immutable] => _cCCTxOutput.invert(bytes).get
     case Some(c) if c == classOf[CandleData.Immutable] => _cCandleData.invert(bytes).get
     case Some(c) if c == classOf[CandleDataItem.Immutable] => _cCandleDataItem.invert(bytes).get
     case Some(c) if c == classOf[CashAccount.Immutable] => _cCashAccount.invert(bytes).get
@@ -361,10 +365,11 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[ApiSecretOperationResult.Immutable] => _cApiSecretOperationResult.invert(bytes).get
     case Some(c) if c == classOf[BitwayMessage.Immutable] => _cBitwayMessage.invert(bytes).get
     case Some(c) if c == classOf[BitwayRequest.Immutable] => _cBitwayRequest.invert(bytes).get
+    case Some(c) if c == classOf[CCBlock.Immutable] => _cCCBlock.invert(bytes).get
+    case Some(c) if c == classOf[CCBlocks.Immutable] => _cCCBlocks.invert(bytes).get
+    case Some(c) if c == classOf[CCTx.Immutable] => _cCCTx.invert(bytes).get
+    case Some(c) if c == classOf[CCTxsMsg.Immutable] => _cCCTxsMsg.invert(bytes).get
     case Some(c) if c == classOf[CancelOrderFailed.Immutable] => _cCancelOrderFailed.invert(bytes).get
-    case Some(c) if c == classOf[CryptoCurrencyBlock.Immutable] => _cCryptoCurrencyBlock.invert(bytes).get
-    case Some(c) if c == classOf[CryptoCurrencyTx.Immutable] => _cCryptoCurrencyTx.invert(bytes).get
-    case Some(c) if c == classOf[CryptoCurrencyTxMsg.Immutable] => _cCryptoCurrencyTxMsg.invert(bytes).get
     case Some(c) if c == classOf[DoAddNewApiSecret.Immutable] => _cDoAddNewApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoAddRobotDNA.Immutable] => _cDoAddRobotDNA.invert(bytes).get
     case Some(c) if c == classOf[DoCancelOrder.Immutable] => _cDoCancelOrder.invert(bytes).get
@@ -385,6 +390,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[DumpStateToFile.Immutable] => _cDumpStateToFile.invert(bytes).get
     case Some(c) if c == classOf[GenerateAddressRequest.Immutable] => _cGenerateAddressRequest.invert(bytes).get
     case Some(c) if c == classOf[GenerateAddressResponse.Immutable] => _cGenerateAddressResponse.invert(bytes).get
+    case Some(c) if c == classOf[GetMissedCCBlocks.Immutable] => _cGetMissedCCBlocks.invert(bytes).get
     case Some(c) if c == classOf[GetNewAddress.Immutable] => _cGetNewAddress.invert(bytes).get
     case Some(c) if c == classOf[GetNewAddressResult.Immutable] => _cGetNewAddressResult.invert(bytes).get
     case Some(c) if c == classOf[GoogleAuthCodeVerificationResult.Immutable] => _cGoogleAuthCodeVerificationResult.invert(bytes).get

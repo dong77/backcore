@@ -41,8 +41,8 @@ typedef data.BitwayType                 _BitwayType
 typedef data.RechargeCodeStatus         _RechargeCodeStatus
 typedef data.ABCodeItem                 _ABCodeItem
 typedef data.Address                    _Address
-typedef data.CCTXStatus                 _CCTXStatus
-typedef data.CCTXOutput                 _CCTXOutput
+typedef data.CCTxStatus                 _CCTxStatus
+typedef data.CCTxOutput                 _CCTxOutput
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -161,15 +161,17 @@ typedef data.CCTXOutput                 _CCTXOutput
 /* R    */ struct TransferResponse                    {1: _ErrorCode error} // TODO(c): remove this struct
 /* C    */ struct QueryAddressRequest                 {1: string address}
 /* R    */ struct QueryAddressResponse                {1: _ErrorCode error}
-/* C    */ struct BitwayRequest                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional GenerateAddressRequest generateAddressRequest, 5: optional TransferRequest transferRequest, 6: optional QueryAddressRequest queryAssressRequest}
-/* I    */ struct CryptoCurrencyTx                    {1: string id, 2: string txid, 3: list<string> inputs, 4: list<_CCTXOutput> outputs, 5: optional string prevBlock, 6: optional string includedBlock, 7: bool isDeposit}
-/* I    */ struct CryptoCurrencyBlock                 {1: string id, 2: string prevId, 3: list<CryptoCurrencyTx> txs}
-/* R    */ struct BitwayMessage                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional GenerateAddressResponse generateAddressResponse, 5: optional TransferResponse transferResponse, 6: optional QueryAddressResponse queryAddressResponse}
+/* C    */ struct GetMissedCCBlocks                   {1: string startId, 2: string endId} // returned (startId, endId]
+/* C    */ struct BitwayRequest                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional GenerateAddressRequest generateAddressRequest, 5: optional TransferRequest transferRequest, 6: optional QueryAddressRequest queryAddressRequest, 7: optional GetMissedCCBlocks getMissedCCBlocksRequest}
+/* R    */ struct CCTx                                {1: string id, 2: string txid, 3: list<string> inputs, 4: list<_CCTxOutput> outputs, 5: optional string prevBlock, 6: optional string includedBlock, 7: bool isDeposit}
+/* R    */ struct CCBlock                             {1: string id, 2: string prevId, 3: list<CCTx> txs}
+/* R    */ struct CCBlocks                            {1: list<CCBlock> blocks}
+/* R    */ struct BitwayMessage                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional GenerateAddressResponse generateAddressResponse, 5: optional TransferResponse transferResponse, 6: optional QueryAddressResponse queryAddressResponse, 7: optional CCTx tx, 8: optional CCBlocks blocks}
 
 // with other processor in akka
 /* C    */ struct GetNewAddress                       {1: _Currency currency, 2: optional _Address assignedAddress}
 /* R    */ struct GetNewAddressResult                 {1: _ErrorCode error = data.ErrorCode.OK, 2: optional _Address address}
-/* I    */ struct CryptoCurrencyTxMsg                 {1: _Currency currency, 2: list<CryptoCurrencyTx> txs}
+/* I    */ struct CCTxsMsg                            {1: _Currency currency, 2: list<CCTx> txs}
 
 ////////////////////////////////////////////////////////////////
 //////////////////////// VIEW MESSAGES /////////////////////////
