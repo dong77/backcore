@@ -69,11 +69,10 @@ object UserService extends AkkaService {
       nationalId = nationalId,
       emailVerified = false,
       mobile = mobile,
-      mobileVerified = false,
+      mobileVerified = true,
       status = UserStatus.Normal)
 
     val command = DoUpdateUserProfile(profile)
-
     backend ? command map {
       case succeeded: UpdateUserProfileSucceeded =>
         val returnProfile = succeeded.userProfile
@@ -105,6 +104,51 @@ object UserService extends AkkaService {
         }
       case x =>
         ApiResult(false, -1, x.toString)
+    }
+  }
+
+  def verifyEmail(token: String) = {
+    val command = VerifyEmail(token)
+    backend ? command map {
+      case succeeded: VerifyEmailSucceeded =>
+        ApiResult(true, 0, "注册邮箱验证成功", Some(succeeded))
+      case failed: VerifyEmailFailed =>
+        ApiResult(false, -1, failed.toString)
+      case e =>
+        ApiResult(false, -1, e.toString)
+    }
+  }
+
+  def requestPasswordReset(email: String) = {
+    val command = DoRequestPasswordReset(email)
+    backend ? command map {
+      case succeeded: RequestPasswordResetSucceeded =>
+        ApiResult(true, 0, "重置密码链接已发送，请查看注册邮箱", Some(succeeded))
+      case failed: RequestPasswordResetFailed =>
+        ApiResult(false, -1, failed.toString)
+      case e =>
+        ApiResult(false, -1, e.toString)
+    }
+  }
+
+  def validatePasswordResetToken(token: String) = {
+    val command = ValidatePasswordResetToken(token)
+    backend ? command map {
+      case result: PasswordResetTokenValidationResult =>
+        val profile = result.userProfile
+        ApiResult(true, 0, "", Some(profile))
+    }
+  }
+
+  def resetPassword(newPassword: String, token: String) = {
+    val command = DoResetPassword(newPassword, token)
+    backend ? command map {
+      case succeeded: ResetPasswordSucceeded =>
+        ApiResult(true, 0, "", Some(succeeded))
+      case failed: ResetPasswordFailed =>
+        ApiResult(false, -1, failed.toString)
+      case e =>
+        ApiResult(false, -1, e.toString)
     }
   }
 }

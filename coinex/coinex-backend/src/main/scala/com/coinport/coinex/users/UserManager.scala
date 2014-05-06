@@ -66,8 +66,11 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
 
   def updateUser(profile: UserProfile): UserProfile = {
     assert(profileMap.contains(profile.id))
-    addUserProfile(profile)
-    profile
+    val oldProfile = profileMap(profile.id)
+    // Only update realName, nationalId, mobile, mobileVerified in UserProfile.
+    val updatedProfile = oldProfile.copy(realName = profile.realName, nationalId = profile.nationalId, mobile = profile.mobile, mobileVerified = profile.mobileVerified)
+    addUserProfile(updatedProfile)
+    updatedProfile
   }
 
   def requestPasswordReset(email: String, passwordResetToken: String): UserProfile = {
