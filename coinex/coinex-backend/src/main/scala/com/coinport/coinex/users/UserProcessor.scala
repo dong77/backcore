@@ -108,9 +108,9 @@ class UserProcessor(mailer: ActorRef, secret: String)
     case DoRegisterUser(profile, _) => manager.registerUser(profile)
     case DoUpdateUserProfile(profile) => manager.updateUser(profile)
 
-    case DoRequestPasswordReset(email, token) => 
+    case DoRequestPasswordReset(email, token) =>
       manager.requestPasswordReset(email, token.get)
-      if (recoveryFinished) sendRequestPasswordResetEmail(profile)
+      if (recoveryFinished) sendRequestPasswordResetEmail(manager.getUser(email).get)
 
     case DoResetPassword(password, token) => manager.resetPassword(password, token)
     case VerifyEmail(token) => manager.verifyEmail(token)
