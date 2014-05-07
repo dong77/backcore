@@ -16,13 +16,15 @@ class BitwayManager extends Manager[TBitwayState] {
 
   val unusedAddresses = Map.empty[Currency, Set[String]]
   val usedAddresses = Map.empty[Currency, Set[String]]
-  val cursors = Map.empty[Currency, String]
+  val hotAddresses = Map.empty[Currency, Set[String]]
+  val coldAddresses = Map.empty[Currency, Set[String]]
+  val blockIds = Map.empty[Currency, String]
   val supportedCurrency = Set[Currency](Btc) // TODO(c): put this to config file
 
   val FAUCET_THRESHOLD: Double = 0.5
   val INIT_ADDRESS_NUM: Int = 100
 
-  def getSnapshot = TBitwayState(cursors.map(kv =>
+  def getSnapshot = TBitwayState(blockIds.map(kv =>
     (kv._1 -> CurrencyNetwork(
       kv._1, kv._2,
       unusedAddresses(kv._1).clone,
@@ -34,8 +36,8 @@ class BitwayManager extends Manager[TBitwayState] {
     unusedAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2.unusedAddresses)))
     usedAddresses.clear
     usedAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2.usedAddresses)))
-    cursors.clear
-    cursors ++= s.stats.map(kv => (kv._1 -> kv._2.cursor))
+    blockIds.clear
+    blockIds ++= s.stats.map(kv => (kv._1 -> kv._2.blockId))
   }
 
   def isDryUp(currency: Currency) = (unusedAddresses.getOrElseUpdate(currency, Set.empty[String]).size == 0 ||

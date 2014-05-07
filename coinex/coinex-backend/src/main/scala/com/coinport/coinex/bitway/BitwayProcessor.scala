@@ -9,6 +9,7 @@ import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.event.LoggingReceive
+import akka.persistence.Deliver
 import akka.persistence.Persistent
 import akka.persistence.EventsourcedProcessor
 
@@ -50,6 +51,7 @@ class BitwayProcessor(transferProcessor: ActorRef) extends ExtendedProcessor wit
 
   val delayinSeconds = 4
   override val processorId = BITWAY_PROCESSOR <<
+  val channelToTransferProcessor = createChannelTo(ACCOUNT_TRANSFER_PROCESSOR <<) // DO NOT CHANGE
 
   val manager = new BitwayManager()
 
@@ -98,6 +100,7 @@ class BitwayProcessor(transferProcessor: ActorRef) extends ExtendedProcessor wit
     case m @ BitwayMessage(t, id, currency, None, None, Some(res), None, None) =>
       println("~" * 40 + res)
     case m @ BitwayMessage(t, id, currency, None, None, None, Some(tx), None) =>
+    // channelToTransferProcessor forward Deliver(Persistent(CCTxsMsg(currency, List(tx))), transferProcessor.path)
     case m @ BitwayMessage(t, id, currency, None, None, None, None, Some(blocks)) =>
   }
 

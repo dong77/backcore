@@ -41,7 +41,7 @@ typedef data.BitwayType                 _BitwayType
 typedef data.RechargeCodeStatus         _RechargeCodeStatus
 typedef data.ABCodeItem                 _ABCodeItem
 typedef data.CCTxStatus                 _CCTxStatus
-typedef data.CCTxOutput                 _CCTxOutput
+typedef data.CCTxIO                     _CCTxIO
 typedef data.CCTxType                   _CCTxType
 
 ///////////////////////////////////////////////////////////////////////
@@ -157,13 +157,13 @@ typedef data.CCTxType                   _CCTxType
 // with nodejs bitway
 /* C    */ struct GenerateAddressRequest              {1: i32 num}
 /* R    */ struct GenerateAddressResponse             {1: _ErrorCode error, 2: set<string> addresses}
-/* C    */ struct TransferRequest                     {1: string to, 3: i32 amount}
+/* C    */ struct TransferRequest                     {1: string to, 2: i32 amount, 3: optional string from, 4: _CCTxType type}
 /* R    */ struct TransferResponse                    {1: _ErrorCode error} // TODO(c): remove this struct
 /* C    */ struct QueryAddressRequest                 {1: string address}
 /* R    */ struct QueryAddressResponse                {1: _ErrorCode error}
 /* C    */ struct GetMissedCCBlocks                   {1: string startId, 2: string endId} // returned (startId, endId]
 /* C    */ struct BitwayRequest                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional GenerateAddressRequest generateAddressRequest, 5: optional TransferRequest transferRequest, 6: optional QueryAddressRequest queryAddressRequest, 7: optional GetMissedCCBlocks getMissedCCBlocksRequest}
-/* R    */ struct CCTx                                {1: i64 id, 2: string sigId, 3: string txid, 4: list<string> inputs, 5: list<_CCTxOutput> outputs, 6: optional string prevBlock, 7: optional string includedBlock, 8: _CCTxType type, 9: _CCTxStatus status}
+/* R    */ struct CCTx                                {1: optional i64 id, 2: optional string sigId, 3: optional string txid, 4: optional string prevTxid, 5: optional list<_CCTxIO> inputs, 6: optional list<_CCTxIO> outputs, 7: optional string prevBlock, 8: optional string includedBlock, 9: optional _CCTxType type, 10: _CCTxStatus status}
 /* R    */ struct CCBlock                             {1: string id, 2: string prevId, 3: list<CCTx> txs}
 /* R    */ struct CCBlocks                            {1: list<CCBlock> blocks}
 /* R    */ struct BitwayMessage                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional GenerateAddressResponse generateAddressResponse, 5: optional TransferResponse transferResponse, 6: optional QueryAddressResponse queryAddressResponse, 7: optional CCTx tx, 8: optional CCBlocks blocks}

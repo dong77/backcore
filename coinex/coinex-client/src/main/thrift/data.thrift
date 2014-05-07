@@ -405,9 +405,11 @@ struct ExportOpenDataMap {
 
 struct CurrencyNetwork {
     1: Currency currency
-    2: string cursor
+    2: string blockId
     3: set<string> unusedAddresses
     4: set<string> usedAddresses
+    5: set<string> hotAddresses
+    6: set<string> coldAddresses
 }
 
 // We have a case-class named Robot
@@ -420,7 +422,7 @@ struct TRobot {
     6: i64 dnaId
 }
 
-struct CCTxOutput {
+struct CCTxIO {
     1: string address
     2: i64 amount
     /* NOTE, need CCTxStatus field in transfer stats (NOT HERE) */
