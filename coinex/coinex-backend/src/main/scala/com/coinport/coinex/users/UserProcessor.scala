@@ -74,7 +74,7 @@ class UserProcessor(mailer: ActorRef, secret: String)
       }
 
     case m @ VerifyEmail(token) =>
-      manager.getUserWithPasswordResetToken(token) match {
+      manager.getUserWithVerificationToken(token) match {
         case Some(profile) if profile.verificationToken == Some(token) =>
           persist(m)(updateState)
           sender ! VerifyEmailSucceeded(profile.id, profile.email)
