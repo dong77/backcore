@@ -3,12 +3,11 @@ package com.coinport.coinex.opendata
 import akka.actor.{ Cancellable, ActorContext }
 import akka.event.LoggingReceive
 import akka.persistence.{ PersistentRepr, EventsourcedProcessor }
-import akka.persistence.hbase.common.{ HdfsSnapshotDescriptor, RowKey, DeferredConversions }
+import akka.persistence.hbase.common.{ DeferredConversions, EncryptingSerializationExtension, HdfsSnapshotDescriptor, RowKey }
 import akka.persistence.hbase.common.Columns._
 import akka.persistence.hbase.journal.PluginPersistenceSettings
 import akka.persistence.hbase.common.Const._
 import akka.persistence.serialization.Snapshot
-import akka.serialization.SerializationExtension
 import com.coinport.coinex.common.{ Manager, ExtendedProcessor }
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
@@ -86,11 +85,12 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
   private val snapshotHdfsDir: String = config.getString("hadoop-snapshot-store.snapshot-dir")
   private val messagesTable = config.getString("hbase-journal.table")
   private val messagesFamily = config.getString("hbase-journal.family")
+  private val cryptKey = config.getString("akka.persistence.encryption-settings")
   private val BUFFER_SIZE = 2048
   private val SCAN_MAX_NUM_ROWS = 50
   implicit var pluginPersistenceSettings = PluginPersistenceSettings(config, JOURNAL_CONFIG)
   implicit var executionContext = context.system.dispatcher
-  implicit var serialization = SerializationExtension(context.system)
+  implicit var serialization = EncryptingSerializationExtension(context.system, cryptKey)
   // [pid, dumpFileName]
   private val pFileMap = openDataConfig.pFileMap
   // [pId, (seqNum, timestamp)]
@@ -148,7 +148,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
           serialization.deserialize(
             withStream(new BufferedInputStream(fs.open(path, BUFFER_SIZE), BUFFER_SIZE)) {
               IOUtils.toByteArray
-            }, classOf[Snapshot]).get
+            }, classOf[Snapshot])
         val exportSnapshotPath = new Path(exportSnapshotHdfsDir,
           s"coinport_${pFileMap(processorId)}_snapshot_${String.valueOf(seqNum).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase)
         val jsonSnapshot = s"""{"timestamp" : ${System.currentTimeMillis()}, "snapshot" : ${PrettyJsonSerializer.toJson(snapshot)}}"""
@@ -180,7 +180,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
             builder ++= "\"" ++= Bytes.toString(column.qualifier) ++= "\":"
             if (java.util.Arrays.equals(column.qualifier, Message)) {
               // will throw an exception if failed
-              val msg = serialization.deserialize(column.value(), classOf[PersistentRepr]).get
+              val msg = serialization.deserialize(column.value(), classOf[PersistentRepr])
               builder ++= PrettyJsonSerializer.toJson(msg.payload)
             } else {
               builder ++= Bytes.toLong(column.value()).toString
