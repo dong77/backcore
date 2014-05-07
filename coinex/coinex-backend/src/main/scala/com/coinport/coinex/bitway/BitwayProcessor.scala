@@ -30,6 +30,7 @@ object BitwayProcessor {
   final val INIT_FETCH_ADDRESS_NUM = 100
 
   // TODO(c): add embeded redis for unit test instead of disable the redis client
+  //          inject the RedisClient instead of hardcode here
   val pullClient: Option[RedisClient] = try {
     Some(new RedisClient("localhost", 6379))
   } catch {
@@ -43,7 +44,7 @@ object BitwayProcessor {
   val serializer = new ThriftBinarySerializer()
 }
 
-class BitwayProcessor extends ExtendedProcessor with EventsourcedProcessor with ActorLogging {
+class BitwayProcessor(transferProcessor: ActorRef) extends ExtendedProcessor with EventsourcedProcessor with ActorLogging {
 
   import BitwayProcessor._
 
@@ -96,12 +97,14 @@ class BitwayProcessor extends ExtendedProcessor with EventsourcedProcessor with 
       println("~" * 40 + res)
     case m @ BitwayMessage(t, id, currency, None, None, Some(res), None, None) =>
       println("~" * 40 + res)
+    case m @ BitwayMessage(t, id, currency, None, None, None, Some(tx), None) =>
+    case m @ BitwayMessage(t, id, currency, None, None, None, None, Some(blocks)) =>
   }
 
   def updateState: Receive = {
     case GetNewAddress(currency, Some(address)) => manager.addressAllocated(currency, address)
     case BitwayMessage(_, _, currency, Some(res), None, None, None, None) => manager.faucetAddress(currency,
-      Set.empty[Address] ++ res.addresses)
+      Set.empty[String] ++ res.addresses)
   }
 
   private def scheduleTryPour() = {

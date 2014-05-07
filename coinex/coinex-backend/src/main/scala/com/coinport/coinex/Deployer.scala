@@ -116,7 +116,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploySingleton(Props(new ExportOpenDataProcessor(asyncHBaseClient) with StackableEventsourced[ExportOpenDataMap, ExportOpenDataManager]), opendata_exporter <<)
 
     // TODO(c): complete this
-    deploySingleton(Props(new BitwayProcessor() with StackableEventsourced[TBitwayState, BitwayManager]), bitway_processor <<)
+    deploySingleton(Props(new BitwayProcessor(routers.depositWithdrawProcessor) with StackableEventsourced[TBitwayState, BitwayManager]), bitway_processor <<)
     deploy(Props(new BitwayReceiver(routers.bitwayProcessor)), bitway_receiver <<)
 
     // Deploy monitor at last

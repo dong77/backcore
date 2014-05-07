@@ -40,7 +40,6 @@ typedef data.TransferType               _TransferType
 typedef data.BitwayType                 _BitwayType
 typedef data.RechargeCodeStatus         _RechargeCodeStatus
 typedef data.ABCodeItem                 _ABCodeItem
-typedef data.Address                    _Address
 typedef data.CCTxStatus                 _CCTxStatus
 typedef data.CCTxOutput                 _CCTxOutput
 typedef data.CCTxType                   _CCTxType
@@ -157,8 +156,8 @@ typedef data.CCTxType                   _CCTxType
 ////////// Bitway
 // with nodejs bitway
 /* C    */ struct GenerateAddressRequest              {1: i32 num}
-/* R    */ struct GenerateAddressResponse             {1: _ErrorCode error, 2: set<_Address> addresses}
-/* C    */ struct TransferRequest                     {1: _Address to, 3: i32 amount}
+/* R    */ struct GenerateAddressResponse             {1: _ErrorCode error, 2: set<string> addresses}
+/* C    */ struct TransferRequest                     {1: string to, 3: i32 amount}
 /* R    */ struct TransferResponse                    {1: _ErrorCode error} // TODO(c): remove this struct
 /* C    */ struct QueryAddressRequest                 {1: string address}
 /* R    */ struct QueryAddressResponse                {1: _ErrorCode error}
@@ -170,8 +169,8 @@ typedef data.CCTxType                   _CCTxType
 /* R    */ struct BitwayMessage                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional GenerateAddressResponse generateAddressResponse, 5: optional TransferResponse transferResponse, 6: optional QueryAddressResponse queryAddressResponse, 7: optional CCTx tx, 8: optional CCBlocks blocks}
 
 // with other processor in akka
-/* C    */ struct GetNewAddress                       {1: _Currency currency, 2: optional _Address assignedAddress}
-/* R    */ struct GetNewAddressResult                 {1: _ErrorCode error = data.ErrorCode.OK, 2: optional _Address address}
+/* C    */ struct GetNewAddress                       {1: _Currency currency, 2: optional string assignedAddress}
+/* R    */ struct GetNewAddressResult                 {1: _ErrorCode error = data.ErrorCode.OK, 2: optional string address}
 /* I    */ struct CCTxsMsg                            {1: _Currency currency, 2: list<CCTx> txs}
 
 ////////////////////////////////////////////////////////////////

@@ -14,8 +14,8 @@ import Currency._
 
 class BitwayManager extends Manager[TBitwayState] {
 
-  val unusedAddresses = Map.empty[Currency, Set[Address]]
-  val usedAddresses = Map.empty[Currency, Set[Address]]
+  val unusedAddresses = Map.empty[Currency, Set[String]]
+  val usedAddresses = Map.empty[Currency, Set[String]]
   val cursors = Map.empty[Currency, String]
   val supportedCurrency = Set[Currency](Btc) // TODO(c): put this to config file
 
@@ -31,18 +31,18 @@ class BitwayManager extends Manager[TBitwayState] {
 
   def loadSnapshot(s: TBitwayState) {
     unusedAddresses.clear
-    unusedAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[Address] ++ kv._2.unusedAddresses)))
+    unusedAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2.unusedAddresses)))
     usedAddresses.clear
-    usedAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[Address] ++ kv._2.usedAddresses)))
+    usedAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2.usedAddresses)))
     cursors.clear
     cursors ++= s.stats.map(kv => (kv._1 -> kv._2.cursor))
   }
 
-  def isDryUp(currency: Currency) = (unusedAddresses.getOrElseUpdate(currency, Set.empty[Address]).size == 0 ||
-    usedAddresses.getOrElseUpdate(currency, Set.empty[Address]).size > unusedAddresses.getOrElseUpdate(
-      currency, Set.empty[Address]).size * FAUCET_THRESHOLD)
+  def isDryUp(currency: Currency) = (unusedAddresses.getOrElseUpdate(currency, Set.empty[String]).size == 0 ||
+    usedAddresses.getOrElseUpdate(currency, Set.empty[String]).size > unusedAddresses.getOrElseUpdate(
+      currency, Set.empty[String]).size * FAUCET_THRESHOLD)
 
-  def allocateAddress(currency: Currency): (Option[Address], Boolean /* need fetch from bitway */ ) = {
+  def allocateAddress(currency: Currency): (Option[String], Boolean /* need fetch from bitway */ ) = {
     if (!unusedAddresses.contains(currency)) {
       (None, true)
     } else {
@@ -59,16 +59,16 @@ class BitwayManager extends Manager[TBitwayState] {
     }
   }
 
-  def addressAllocated(currency: Currency, address: Address) {
+  def addressAllocated(currency: Currency, address: String) {
     assert(unusedAddresses.contains(currency))
     val addresses = unusedAddresses(currency)
     assert(addresses.contains(address))
     addresses.remove(address)
-    usedAddresses.getOrElseUpdate(currency, Set.empty[Address]).add(address)
+    usedAddresses.getOrElseUpdate(currency, Set.empty[String]).add(address)
   }
 
-  def faucetAddress(currency: Currency, addresses: Set[Address]) {
-    unusedAddresses.getOrElseUpdate(currency, Set.empty[Address]) ++= addresses
+  def faucetAddress(currency: Currency, addresses: Set[String]) {
+    unusedAddresses.getOrElseUpdate(currency, Set.empty[String]) ++= addresses
   }
 
   def getSupportedCurrency = supportedCurrency

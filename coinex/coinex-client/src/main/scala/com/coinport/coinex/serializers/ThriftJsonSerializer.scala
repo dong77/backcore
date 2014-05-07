@@ -16,7 +16,6 @@ class ThriftJsonSerializer extends Serializer {
   val identifier = 607100416
   lazy val _cABCodeItem = JsonScalaCodec(ABCodeItem)
   lazy val _cAccountTransfer = JsonScalaCodec(AccountTransfer)
-  lazy val _cAddress = JsonScalaCodec(Address)
   lazy val _cApiSecret = JsonScalaCodec(ApiSecret)
   lazy val _cCCTxOutput = JsonScalaCodec(CCTxOutput)
   lazy val _cCandleData = JsonScalaCodec(CandleData)
@@ -166,7 +165,6 @@ class ThriftJsonSerializer extends Serializer {
   def toBinary(obj: AnyRef): Array[Byte] = obj match {
     case m: ABCodeItem => _cABCodeItem(m)
     case m: AccountTransfer => _cAccountTransfer(m)
-    case m: Address => _cAddress(m)
     case m: ApiSecret => _cApiSecret(m)
     case m: CCTxOutput => _cCCTxOutput(m)
     case m: CandleData => _cCandleData(m)
@@ -320,7 +318,6 @@ class ThriftJsonSerializer extends Serializer {
     clazz: Option[Class[_]]): AnyRef = clazz match {
     case Some(c) if c == classOf[ABCodeItem.Immutable] => _cABCodeItem.invert(bytes).get
     case Some(c) if c == classOf[AccountTransfer.Immutable] => _cAccountTransfer.invert(bytes).get
-    case Some(c) if c == classOf[Address.Immutable] => _cAddress.invert(bytes).get
     case Some(c) if c == classOf[ApiSecret.Immutable] => _cApiSecret.invert(bytes).get
     case Some(c) if c == classOf[CCTxOutput.Immutable] => _cCCTxOutput.invert(bytes).get
     case Some(c) if c == classOf[CandleData.Immutable] => _cCandleData.invert(bytes).get
