@@ -21,11 +21,10 @@ trait TransactionBehavior {
 
   def addItem(item: Transaction) = coll.insert(toBson(item))
 
-  def countItems(q: QueryTransaction) = if (q.getCount) coll.count(mkQuery(q)) else 0L
+  def countItems(q: QueryTransaction) = coll.count(mkQuery(q))
 
   def getItems(q: QueryTransaction): Seq[Transaction] =
-    if (q.getCount) Nil
-    else coll.find(mkQuery(q)).sort(DBObject(TID -> -1)).skip(q.cursor.skip).limit(q.cursor.limit).map(toClass(_)).toSeq
+    coll.find(mkQuery(q)).sort(DBObject(TID -> -1)).skip(q.cursor.skip).limit(q.cursor.limit).map(toClass(_)).toSeq
 
   private def toBson(t: Transaction) = {
     MongoDBObject(

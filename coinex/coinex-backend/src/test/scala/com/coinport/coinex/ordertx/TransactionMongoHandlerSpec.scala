@@ -24,13 +24,13 @@ class TransactionMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
       val txs = (0 until 10) map (i => Transaction(i, i, market, OrderUpdate(Order(i, i, i), Order(i, i, i)), OrderUpdate(Order(i, i, i), Order(i, i, i))))
       txs.foreach(t => transactionClass.addItem(t))
 
-      var q = QueryTransaction(cursor = Cursor(0, 2), getCount = false)
+      var q = QueryTransaction(cursor = Cursor(0, 2))
       transactionClass.getItems(q).map(_.id) should equal(Seq(9, 8))
 
-      q = QueryTransaction(cursor = Cursor(0, 1), getCount = true)
+      q = QueryTransaction(cursor = Cursor(0, 1))
       transactionClass.countItems(q) should be(10)
 
-      q = QueryTransaction(cursor = Cursor(0, 100), getCount = false)
+      q = QueryTransaction(cursor = Cursor(0, 100))
       transactionClass.getItems(q).map(_.id) should equal(Seq(9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
     }
   }

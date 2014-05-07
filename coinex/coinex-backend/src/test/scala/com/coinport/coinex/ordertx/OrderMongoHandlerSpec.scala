@@ -38,7 +38,7 @@ class OrderMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
       val refund = Refund(reason = RefundReason.HitTakeLimit, amount = 10L)
       orderClass.updateItem(1, 10, 0, 1, market.reverse, 20, Some(refund))
 
-      var q = QueryOrder(oid = Some(1L), cursor = Cursor(0, 2), getCount = false)
+      var q = QueryOrder(oid = Some(1L), cursor = Cursor(0, 2))
 
       val order_info = orderClass.getItems(q)(0)
       order_info.side should equal(market.reverse)
@@ -53,23 +53,22 @@ class OrderMongoHandlerSpec extends EmbeddedMongoForTestWithBF {
       orderInfos = (0 to 10).map(i => OrderInfo(market, Order(i % 3, i, i), 10, 10, OrderStatus.Pending, None))
       orderInfos.foreach(oi => orderClass.addItem(oi, 0))
 
-      q = QueryOrder(uid = Some(1L), cursor = Cursor(0, 10), getCount = true)
-      orderClass.getItems(q) should be(Nil)
+      q = QueryOrder(uid = Some(1L), cursor = Cursor(0, 10))
       orderClass.countItems(q) should be(4)
 
-      q = QueryOrder(uid = Some(1L), cursor = Cursor(0, 10), getCount = false)
-      orderClass.countItems(q) should be(0)
+      q = QueryOrder(uid = Some(1L), cursor = Cursor(0, 10))
+      orderClass.countItems(q) should be(4)
       orderClass.getItems(q).map(_.order.id) should equal(Seq(10, 7, 4, 1))
 
       orderClass.coll.drop()
       orderInfos = (0 to 3).map(i => OrderInfo(if (i % 2 == 0) market else market.reverse, Order(i, i, i), 10, 10, OrderStatus.Pending, None))
       orderInfos.foreach(oi => orderClass.addItem(oi, 0))
 
-      q = QueryOrder(side = Some(QueryMarketSide(market, true)), cursor = Cursor(0, 10), getCount = false)
+      q = QueryOrder(side = Some(QueryMarketSide(market, true)), cursor = Cursor(0, 10))
       orderClass.getItems(q).map(_.order.id) should equal(Seq(3, 2, 1, 0))
-      q = QueryOrder(side = Some(QueryMarketSide(market, false)), cursor = Cursor(0, 10), getCount = false)
+      q = QueryOrder(side = Some(QueryMarketSide(market, false)), cursor = Cursor(0, 10))
       orderClass.getItems(q).map(_.order.id) should equal(Seq(2, 0))
-      q = QueryOrder(side = Some(QueryMarketSide(market.reverse, false)), cursor = Cursor(0, 10), getCount = false)
+      q = QueryOrder(side = Some(QueryMarketSide(market.reverse, false)), cursor = Cursor(0, 10))
       orderClass.getItems(q).map(_.order.id) should equal(Seq(3, 1))
     }
   }

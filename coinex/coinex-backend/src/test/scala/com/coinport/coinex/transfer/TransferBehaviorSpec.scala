@@ -24,25 +24,25 @@ class TransferBehaviorSpec extends EmbeddedMongoForTestWithBF {
       val seq = Seq(d1, d2, d3, d4)
       seq.foreach(d => dw.transferHandler.put(d))
 
-      var q = QueryTransfer(cur = Cursor(0, 10), getCount = true)
+      var q = QueryTransfer(cur = Cursor(0, 10))
       dw.transferHandler.count(dw.transferHandler.getQueryDBObject(q)) should be(4)
 
-      q = QueryTransfer(uid = Some(1), cur = Cursor(0, 10), getCount = true)
+      q = QueryTransfer(uid = Some(1), cur = Cursor(0, 10))
       dw.transferHandler.count(dw.transferHandler.getQueryDBObject(q)) should be(2)
 
-      q = QueryTransfer(uid = Some(1), cur = Cursor(0, 10), getCount = false)
+      q = QueryTransfer(uid = Some(1), cur = Cursor(0, 10))
       dw.transferHandler.find(dw.transferHandler.getQueryDBObject(q), 0, 10).map(_.id) should equal(Seq(2, 1))
 
-      q = QueryTransfer(uid = Some(1), currency = Some(Currency.Cny), cur = Cursor(0, 10), getCount = true)
+      q = QueryTransfer(uid = Some(1), currency = Some(Currency.Cny), cur = Cursor(0, 10))
       dw.transferHandler.count(dw.transferHandler.getQueryDBObject(q)) should be(1)
 
-      q = QueryTransfer(uid = Some(1), currency = Some(Currency.Cny), cur = Cursor(0, 10), getCount = false)
+      q = QueryTransfer(uid = Some(1), currency = Some(Currency.Cny), cur = Cursor(0, 10))
       dw.transferHandler.find(dw.transferHandler.getQueryDBObject(q), 0, 10).map(_.id) should equal(Seq(1))
 
-      q = QueryTransfer(spanCur = Some(SpanCursor(300, 200)), cur = Cursor(0, 10), getCount = true)
+      q = QueryTransfer(spanCur = Some(SpanCursor(300, 200)), cur = Cursor(0, 10))
       dw.transferHandler.count(dw.transferHandler.getQueryDBObject(q)) should be(2)
 
-      q = QueryTransfer(spanCur = Some(SpanCursor(300, 200)), cur = Cursor(0, 10), getCount = true)
+      q = QueryTransfer(spanCur = Some(SpanCursor(300, 200)), cur = Cursor(0, 10))
       dw.transferHandler.find(dw.transferHandler.getQueryDBObject(q), 0, 10).map(_.id) should equal(Seq(3, 2))
     }
   }

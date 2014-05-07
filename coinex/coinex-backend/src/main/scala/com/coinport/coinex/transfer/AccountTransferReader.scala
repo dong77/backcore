@@ -11,8 +11,8 @@ class AccountTransferReader(val db: MongoDB) extends Actor with TransferBehavior
   def receive = LoggingReceive {
     case q: QueryTransfer =>
       val query = transferHandler.getQueryDBObject(q)
-      val count = if (q.getCount) transferHandler.count(query) else 0
-      val items = if (!q.getCount) transferHandler.find(query, q.cur.skip, q.cur.limit) else Nil
+      val count = transferHandler.count(query)
+      val items = transferHandler.find(query, q.cur.skip, q.cur.limit)
       sender ! QueryTransferResult(items, count)
   }
 }
