@@ -59,7 +59,6 @@ class UserProcessor(mailer: ActorRef, secret: String)
         case Some(profile) if profile.passwordResetToken.isEmpty =>
           persist(m.copy(passwordResetToken = Some(generateRandomHexToken(email))))(updateState)
           sender ! RequestPasswordResetSucceeded(profile.id, profile.email)
-          sendRequestPasswordResetEmail(profile)
 
         case None => sender ! RequestPasswordResetFailed(UserNotExist)
       }
@@ -108,7 +107,11 @@ class UserProcessor(mailer: ActorRef, secret: String)
   def updateState: Receive = {
     case DoRegisterUser(profile, _) => manager.registerUser(profile)
     case DoUpdateUserProfile(profile) => manager.updateUser(profile)
-    case DoRequestPasswordReset(email, token) => manager.requestPasswordReset(email, token.get)
+
+    case DoRequestPasswordReset(email, token) => 
+      manager.requestPasswordReset(email, token.get)
+      if (recoveryFinished) sendRequestPasswordResetEmail(profile)
+
     case DoResetPassword(password, token) => manager.resetPassword(password, token)
     case VerifyEmail(token) => manager.verifyEmail(token)
   }
