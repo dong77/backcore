@@ -150,7 +150,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
               IOUtils.toByteArray
             }, classOf[Snapshot]).get
         val exportSnapshotPath = new Path(exportSnapshotHdfsDir,
-          s"coinport_${pFileMap(processorId)}_snapshot_${String.valueOf(seqNum).reverse.padTo(16, "0").reverse.mkString}_v1.json")
+          s"coinport_${pFileMap(processorId)}_snapshot_${String.valueOf(seqNum).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase)
         val jsonSnapshot = s"""{"timestamp" : ${System.currentTimeMillis()}, "snapshot" : ${PrettyJsonSerializer.toJson(snapshot)}}"""
         withStream(new BufferedWriter(new OutputStreamWriter(fs.create(exportSnapshotPath, true)), BUFFER_SIZE))(IOUtils.write(jsonSnapshot, _))
         seqNum
@@ -212,7 +212,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
     handleRows() map {
       case data if !data.isEmpty =>
         val writer = new BufferedWriter(new OutputStreamWriter(fs.create(
-          new Path(exportMessagesHdfsDir, s"coinport_${pFileMap(processorId)}_events_${String.valueOf(toSeqNum - 1).reverse.padTo(16, "0").reverse.mkString}_v1.json"))))
+          new Path(exportMessagesHdfsDir, s"coinport_${pFileMap(processorId)}_events_${String.valueOf(toSeqNum - 1).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase))))
         writer.write(s"""{"timestamp" : ${System.currentTimeMillis()}, "messages":[""")
         writer.write(data.substring(0, data.length - 1).toString())
         writer.write("]}")
