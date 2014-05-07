@@ -140,6 +140,14 @@ enum CCTxStatus {
     FAILED    = 2 // this will happen when confirmation satisfied but can't spend it
 }
 
+enum CCTxType {
+    DEPOSIT     = 0
+    WITHDRAWAL  = 1
+    USER_TO_HOT = 2
+    HOT_TO_COLD = 3
+    COLD_TO_HOT = 4
+}
+
 enum BitwayType {
     GENERATE_ADDRESS      = 0
     TRANSFER              = 1
