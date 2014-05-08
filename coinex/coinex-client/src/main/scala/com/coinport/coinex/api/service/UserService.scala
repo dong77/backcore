@@ -135,8 +135,10 @@ object UserService extends AkkaService {
     val command = ValidatePasswordResetToken(token)
     backend ? command map {
       case result: PasswordResetTokenValidationResult =>
-        val profile = result.userProfile
-        ApiResult(true, 0, "", Some(profile))
+        result.userProfile match {
+          case Some(profile) => ApiResult(true, 0, "", Some(profile))
+          case None => ApiResult(false, -1, "")
+        }
     }
   }
 

@@ -45,6 +45,10 @@ enum ErrorCode {
 
     // Bitway
     NOT_ENOUGH_ADDRESS_IN_POOL       = 8001
+
+    // Controller
+    PARAM_EMPTY                      = 9001
+    CAPTCHA_NOT_MATCH                = 9002
 }
 
 
