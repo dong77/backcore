@@ -34,8 +34,8 @@ class UserProcessor(mailer: ActorRef, secret: String)
           sender ! RegisterUserFailed(EmailAlreadyRegistered)
         case None =>
           val verificationToken = generateRandomHexToken(userProfile.email)
-          val profile = manager.regulateProfile(userProfile, password, verificationToken)
-          persist(DoRegisterUser(profile, "" /* ignored */ ))(updateState)
+          val profile = manager.regulateProfile(userProfile, verificationToken)
+          persist(DoRegisterUser(profile, password))(updateState)
           sender ! RegisterUserSucceeded(profile)
           sendEmailVerificationEmail(profile)
       }
@@ -105,7 +105,7 @@ class UserProcessor(mailer: ActorRef, secret: String)
   }
 
   def updateState: Receive = {
-    case DoRegisterUser(profile, _) => manager.registerUser(profile)
+    case DoRegisterUser(profile, password) => manager.registerUser(profile, password)
     case DoUpdateUserProfile(profile) => manager.updateUser(profile)
 
     case DoRequestPasswordReset(email, token) =>
