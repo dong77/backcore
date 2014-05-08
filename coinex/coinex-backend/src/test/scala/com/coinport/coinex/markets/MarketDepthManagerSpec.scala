@@ -72,28 +72,28 @@ class MarketDepthManagerSpec extends Specification {
       val manager = new MarketDepthManager(side)
       val order = Order(userId = 1L, id = 2L, quantity = 1000, price = Some(1 / 100.0))
       manager.adjustAmount(side.reverse, order, true)
-      manager.bidMap mustEqual SortedMap(1 / 100.0 -> 10)
+      manager.bidMap mustEqual SortedMap(100.0 -> 10)
     }
 
     "calculate the right amount for new sell orders with takeLimit greater than quantity*price" in {
       val manager = new MarketDepthManager(side)
       val order = Order(userId = 1L, id = 2L, quantity = 1000, price = Some(1 / 100.0), takeLimit = Some(15))
       manager.adjustAmount(side.reverse, order, true)
-      manager.bidMap mustEqual SortedMap(1 / 100.0 -> 10)
+      manager.bidMap mustEqual SortedMap(100.0 -> 10)
     }
 
     "calculate the right amount for new sell orders with takeLimit less than quantity*price" in {
       val manager = new MarketDepthManager(side)
       val order = Order(userId = 1L, id = 2L, quantity = 1000, price = Some(1 / 100.0), takeLimit = Some(5))
       manager.adjustAmount(side.reverse, order, true)
-      manager.bidMap mustEqual SortedMap(1 / 100.0 -> 5)
+      manager.bidMap mustEqual SortedMap(100.0 -> 5)
     }
 
     "calculate the right amount for new sell orders with takeLimit equals quantity*price" in {
       val manager = new MarketDepthManager(side)
       val order = Order(userId = 1L, id = 2L, quantity = 1000, price = Some(1 / 100.0), takeLimit = Some(10))
       manager.adjustAmount(side.reverse, order, true)
-      manager.bidMap mustEqual SortedMap(1 / 100.0 -> 10)
+      manager.bidMap mustEqual SortedMap(100.0 -> 10)
     }
 
     "calculate the right amount for new sell orders with refund" in {
@@ -101,7 +101,7 @@ class MarketDepthManagerSpec extends Specification {
       val reason = RefundReason.OverCharged // This doesn't matter
       val order = Order(userId = 1L, id = 2L, quantity = 1000, price = Some(1 / 100.0), refund = Some(Refund(reason, 400)))
       manager.adjustAmount(side.reverse, order, true)
-      manager.bidMap mustEqual SortedMap(1 / 100.0 -> 6)
+      manager.bidMap mustEqual SortedMap(100.0 -> 6)
     }
   }
 }
