@@ -61,6 +61,7 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
     assert(!profileMap.contains(profile.id))
     addUserProfile(profile)
     verificationTokenMap += profile.verificationToken.get -> profile.id
+    lastUserId = profile.id + 1
     profile
   }
 
@@ -125,7 +126,7 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
     profileMap += profile.id -> profile
   }
 
-  private def getUserId = { lastUserId += 1; lastUserId }
+  private def getUserId = lastUserId
 
   private def computePassword(id: Long, email: String, password: String) =
     MHash.sha256Base64(email + passwordSecret + MHash.sha256Base64(id + password.trim + passwordSecret))
