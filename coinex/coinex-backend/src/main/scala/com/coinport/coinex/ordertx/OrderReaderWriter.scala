@@ -31,7 +31,7 @@ class OrderWriter(db: MongoDB) extends ExtendedView with OrderMongoHandler with 
           val quantity = tx.makerUpdate.current.quantity
           val inAmount = tx.makerUpdate.current.inAmount
           val status =
-            if (tx.makerUpdate.current.isFullyExecuted) OrderStatus.FullyExecuted
+            if (!tx.makerUpdate.current.canBecomeMaker) OrderStatus.FullyExecuted
             else OrderStatus.PartiallyExecuted
 
           updateItem(tx.makerUpdate.current.id, inAmount, quantity, status.getValue(), orderInfo.side.reverse,

@@ -66,7 +66,7 @@ class MarketManagerSpec extends Specification {
         List(Transaction(3000001, 0, MarketSide(Btc, Cny),
           OrderUpdate(
             Order(3, 3, 1, Some(2000.0), Some(2000), None, None, None, None, 0, None),
-            Order(3, 3, 0, Some(2000.0), Some(-3000), None, None, None, None, 5000, None)),
+            Order(3, 3, 0, Some(2000.0), Some(0), None, None, None, None, 5000, None)),
           OrderUpdate(
             Order(2, 2, 50000, Some(2.0E-4), None, None, None, None, None, 0, None),
             Order(2, 2, 45000, Some(2.0E-4), None, None, None, None, None, 1, None)), None)))

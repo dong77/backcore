@@ -40,6 +40,7 @@ class RichOrder(raw: Order) {
       // taker sell 1 BTC in price 2000 with takeLimit 2000, maker buy 10 BTC in price 10000
       // we need sell taker's 1 BTC in price 10000 even the limit quantity is 2000 / 10000 = 0.2
       // so need using "ceil"
+      case Some(limit) if limit <= 0 => 0
       case Some(limit) if limit / price < quantity => Math.ceil(limit / price).toLong
       case _ => quantity
     }
@@ -51,7 +52,8 @@ class RichOrder(raw: Order) {
       case None => raw.quantity
     }
     raw.takeLimit match {
-      case Some(limit) if limit < quantity * price => limit
+      case Some(limit) if limit <= 0 => 0
+      case Some(limit) if limit > 0 && limit < quantity * price => limit
       case _ =>
         // this check ensure that the amount couldn't buyed definately be a dust in future check
         val rounded = Math.round(quantity * price)
@@ -63,9 +65,9 @@ class RichOrder(raw: Order) {
 
   def soldOut = if (raw.price.isDefined) raw.quantity * vprice < 1 else raw.quantity == 0
 
-  def isDust = raw.price != None && raw.quantity != 0 && raw.quantity * vprice < 1
+  def isDust = raw.price.isDefined && raw.quantity != 0 && raw.quantity * vprice < 1
 
-  def isFullyExecuted: Boolean = soldOut || hitTakeLimit
+  def canBecomeMaker = !soldOut && !hitTakeLimit && raw.price.isDefined && !raw.onlyTaker.getOrElse(false)
 
   def -->(another: Order) = OrderUpdate(raw, another)
 }
