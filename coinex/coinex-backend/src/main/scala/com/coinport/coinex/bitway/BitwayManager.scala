@@ -19,6 +19,8 @@ class BitwayManager extends Manager[TBitwayState] {
   val hotAddresses = Map.empty[Currency, Set[String]]
   val coldAddresses = Map.empty[Currency, Set[String]]
   val blockIds = Map.empty[Currency, String]
+  val hotAmounts = Map.empty[Currency, Long]
+  val coldAmounts = Map.empty[Currency, Long]
   val supportedCurrency = Set[Currency](Btc) // TODO(c): put this to config file
 
   val FAUCET_THRESHOLD: Double = 0.5
@@ -28,7 +30,10 @@ class BitwayManager extends Manager[TBitwayState] {
     (kv._1 -> CurrencyNetwork(
       kv._1, kv._2,
       unusedAddresses(kv._1).clone,
-      usedAddresses(kv._1).clone)
+      usedAddresses(kv._1).clone,
+      hotAddresses(kv._1).clone,
+      coldAddresses(kv._1).clone,
+      hotAmounts(kv._1), coldAmounts(kv._1))
     )));
 
   def loadSnapshot(s: TBitwayState) {
@@ -36,8 +41,16 @@ class BitwayManager extends Manager[TBitwayState] {
     unusedAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2.unusedAddresses)))
     usedAddresses.clear
     usedAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2.usedAddresses)))
+    hotAddresses.clear
+    hotAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2.hotAddresses)))
+    coldAddresses.clear
+    coldAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2.coldAddresses)))
     blockIds.clear
     blockIds ++= s.stats.map(kv => (kv._1 -> kv._2.blockId))
+    hotAmounts.clear
+    hotAmounts ++= s.stats.map(kv => (kv._1 -> kv._2.hotAmount))
+    coldAmounts.clear
+    coldAmounts ++= s.stats.map(kv => (kv._1 -> kv._2.coldAmount))
   }
 
   def isDryUp(currency: Currency) = (unusedAddresses.getOrElseUpdate(currency, Set.empty[String]).size == 0 ||

@@ -410,6 +410,8 @@ struct CurrencyNetwork {
     4: set<string> usedAddresses
     5: set<string> hotAddresses
     6: set<string> coldAddresses
+    7: i64 hotAmount
+    8: i64 coldAmount
 }
 
 // We have a case-class named Robot
