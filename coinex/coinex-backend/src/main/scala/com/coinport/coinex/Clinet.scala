@@ -42,19 +42,42 @@ object Client {
     "cx" -> 91990591289398244L,
     "lwc" -> 5742988204510593740L,
     "xl" -> 11190591289398244L,
-    "kl" -> 22290591289398244L
-  )
+    "kl" -> 22290591289398244L)
 
-  userMap.map(kv => registerUser(kv._2, kv._1 + "@163.com", kv._1))
+  var robotMap: Map[String, Long] = Map.empty[String, Long]
+
+    // register default user and deposit
+    userMap.map(kv => registerUser(kv._2, kv._1 + "@coinport.com", kv._1))
+    userMap foreach { kv =>
+      AccountService.deposit(kv._2, Btc, 10000 * 1000)
+      AccountService.deposit(kv._2, Cny, 1000000 * 100)
+    }
+
   var basicRisk = 10.0
   val risk = userMap.map(kv => { basicRisk += 10.0; (kv._2 -> basicRisk) })
 
   var did = -1
-  def addGofvRobots() {
-    userMap foreach { kv =>
-      AccountService.deposit(kv._2, Btc, 10000 * 1000)
-      AccountService.deposit(kv._2, Cny, 1000000 * 100)
+  def addGofvRobots(num: Int) {
 
+    1 to num foreach { i =>
+      robotMap += i.toString -> i.toLong
+    }
+
+    robotMap foreach { kv =>
+      val uid = (10000 + kv._2).toLong
+      registerUser(uid, uid + "@coinport.com", uid.toString)
+    }
+    Thread.sleep(2000)
+    robotMap foreach { kv =>
+      val uid = (10000 + kv._2).toLong
+      AccountService.deposit(uid, Btc, 10000 * 1000)
+      AccountService.deposit(uid, Cny, 1000000 * 100)
+    }
+    Thread.sleep(4000)
+
+    robotMap foreach { kv =>
+
+      val uid = kv._2
       val dna = Map(
         "START" -> """
         (robot -> "LOOP", None)
@@ -95,8 +118,7 @@ object Client {
         val action = Some(DoSubmitOrder(side,
           Order(robot.userId, 0, quantity.toLong, price = Some(orderPrice), robotId = Some(robot.robotId))))
         (r -> "LOOP", action)
-        """.format(risk(kv._2))
-      )
+        """.format(50.0))
 
       val order = Order(1L, 2L, 10L, inAmount = 30L)
       val payload: Map[String, Option[Any]] =
@@ -104,21 +126,26 @@ object Client {
       Client.backend ? DoAddRobotDNA(dna) map {
         case AddRobotDNAFailed(ErrorCode.RobotDnaExist, existingDNAId) =>
           val payload = Map("SP" -> Some(120L), "ORDER" -> Some(order), "COUNTER" -> Some(101), "SIDE" -> Some("tttt"))
-          val robot = Robot(kv._2, kv._2, kv._2, dnaId = existingDNAId, payloads = payload)
+          val robot = Robot(uid, uid, uid, dnaId = existingDNAId, payloads = payload)
           println("exist robot dna >>>> id: " + existingDNAId)
           Client.backend ! DoSubmitRobot(robot)
         case mid =>
-          val robot = Robot(kv._2, kv._2, kv._2, dnaId = mid.asInstanceOf[Long], payloads = payload)
+          val robot = Robot(uid, uid, uid, dnaId = mid.asInstanceOf[Long], payloads = payload)
           println("generate robot >>>> id: " + robot.robotId)
           Client.backend ! DoSubmitRobot(robot)
       }
     }
   }
 
-  def removeGofvRobots() {
+  def removeGofvRobots {
     userMap foreach { kv =>
       Client.backend ! DoCancelRobot(kv._2)
     }
+    robotMap foreach { kv =>
+      val uid = (10000 + kv._2).toLong
+      Client.backend ! DoCancelRobot(uid)
+    }
+
   }
 
   def registerUser(uid: Long, mail: String, pwd: String) {
@@ -189,8 +216,9 @@ object Client {
   def main(args: Array[String]) {
 
     args(0) match {
-      case "add" => addGofvRobots
+      case "add" => addGofvRobots(args(1).toInt)
       case "rm" => removeGofvRobots
+      case _ => println("usage: \nClient add 100    -- add 100 robots\nrm    -- remove all robots")
     }
   }
 }
