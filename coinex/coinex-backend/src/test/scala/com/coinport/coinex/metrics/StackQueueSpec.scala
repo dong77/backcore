@@ -9,8 +9,8 @@ import org.specs2.mutable._
 
 class StackQueueSpec extends Specification {
   "StackQueue" should {
-    "normal test" in {
-      val sq = new StackQueue[Int]((lhs: Int, rhs: Int) => lhs <= rhs, 1)
+    "test random push and dequeue" in {
+      val sq = new StackQueue[Int]((lhs: Int, rhs: Int) => lhs <= rhs)
       sq.push(2)
       sq.toList mustEqual List(2)
       sq.front.get mustEqual 2
@@ -72,6 +72,31 @@ class StackQueueSpec extends Specification {
       sq.push(1)
       sq.toList mustEqual List(1)
       sq.front mustEqual Some(1)
+    }
+    "test ascent push order" in {
+      val sq = new StackQueue[Int]((lhs: Int, rhs: Int) => lhs <= rhs)
+      sq.push(1)
+      sq.push(2)
+      sq.push(3)
+      sq.push(4)
+      sq.push(5)
+      sq.push(6)
+      sq.push(7)
+      sq.push(8)
+      sq.push(9)
+      sq.toList mustEqual List(1, 2, 3, 4, 5, 6, 7, 8, 9)
+      sq.dequeue(1)
+      sq.dequeue(2)
+      sq.dequeue(3)
+      sq.dequeue(4)
+      sq.dequeue(5)
+      sq.dequeue(6)
+      sq.dequeue(7)
+      sq.dequeue(8)
+      sq.dequeue(9)
+      sq.dequeue(10)
+      sq.front mustEqual None
+      sq.toList mustEqual List()
     }
   }
 }

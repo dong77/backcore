@@ -368,8 +368,6 @@ struct TWindowVector {
 
 struct TStackQueue {
     1: list<double> elems
-    2: i32 head
-    3: i32 cleanThreshold
 }
 
 struct TMetricsObserver {

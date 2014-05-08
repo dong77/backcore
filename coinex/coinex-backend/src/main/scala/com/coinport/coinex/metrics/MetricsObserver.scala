@@ -20,9 +20,9 @@ object MetricsObserver {
     new MetricsObserver(
       tmo.side,
       new WindowVector[MarketEvent](ttq.range, ttq.elems.map(e => (e, e.timestamp.get)).to[ArrayBuffer]),
-      new StackQueue[Double](tMin.elems.to[ArrayBuffer], tMin.head, ascending, tMin.cleanThreshold),
-      new StackQueue[Double](tMax.elems.to[ArrayBuffer], tMax.head, ascending, tMax.cleanThreshold),
-      new StackQueue[Double](tPre.elems.to[ArrayBuffer], tPre.head, ascending, tPre.cleanThreshold),
+      new StackQueue[Double](tMin.elems.to[ArrayBuffer], ascending),
+      new StackQueue[Double](tMax.elems.to[ArrayBuffer], ascending),
+      new StackQueue[Double](tPre.elems.to[ArrayBuffer], ascending),
       tmo.price, tmo.lastPrice, tmo.volumeMaintainer
     )
   }
@@ -31,9 +31,9 @@ object MetricsObserver {
 class MetricsObserver(
     side: MarketSide,
     transactionQueue: WindowVector[MarketEvent] = new WindowVector[MarketEvent](_24_HOURS),
-    minMaintainer: StackQueue[Double] = new StackQueue[Double](ascending, (_24_HOURS / _10_SECONDS).toInt),
-    maxMaintainer: StackQueue[Double] = new StackQueue[Double](descending, (_24_HOURS / _10_SECONDS).toInt),
-    preMaintainer: StackQueue[Double] = new StackQueue[Double]((l, r) => true, (_24_HOURS / _10_SECONDS).toInt),
+    minMaintainer: StackQueue[Double] = new StackQueue[Double](ascending),
+    maxMaintainer: StackQueue[Double] = new StackQueue[Double](descending),
+    preMaintainer: StackQueue[Double] = new StackQueue[Double]((l, r) => true),
     var price: Option[Double] = None,
     var lastPrice: Option[Double] = None,
     var volumeMaintainer: Long = 0L) {
@@ -81,9 +81,9 @@ class MetricsObserver(
 
   def toThrift: TMetricsObserver = {
     val tTransactionQueue = TWindowVector(transactionQueue.range, transactionQueue.toList.map(_._1))
-    val tMinMaintainer = TStackQueue(minMaintainer.toList, 0, minMaintainer.cleanThreshold)
-    val tMaxMaintainer = TStackQueue(maxMaintainer.toList, 0, maxMaintainer.cleanThreshold)
-    val tPreMaintainer = TStackQueue(preMaintainer.toList, 0, preMaintainer.cleanThreshold)
+    val tMinMaintainer = TStackQueue(minMaintainer.toList)
+    val tMaxMaintainer = TStackQueue(maxMaintainer.toList)
+    val tPreMaintainer = TStackQueue(preMaintainer.toList)
     TMetricsObserver(side = side, tTransactionQueue, tMinMaintainer, tMaxMaintainer, tPreMaintainer, price = price,
       lastPrice = lastPrice, volumeMaintainer = volumeMaintainer)
   }
