@@ -416,7 +416,7 @@ struct BlockIndex {
 
 struct CurrencyNetwork {
     1: Currency currency
-    2: BlockIndex blockIndex
+    2: list<BlockIndex> blockIndexes
     3: set<string> unusedAddresses
     4: set<string> usedAddresses
     5: set<string> hotAddresses

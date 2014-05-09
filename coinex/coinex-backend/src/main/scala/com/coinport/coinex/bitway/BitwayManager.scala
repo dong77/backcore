@@ -25,13 +25,13 @@ class BitwayManager extends Manager[TBitwayState] {
   val usedAddresses = Map.empty[Currency, Set[String]]
   val hotAddresses = Map.empty[Currency, Set[String]]
   val coldAddresses = Map.empty[Currency, Set[String]]
-  val blockIndexs = Map.empty[Currency, BlockIndex]
+  val blockIndexes = Map.empty[Currency, List[BlockIndex]]
   val supportedCurrency = Set[Currency](Btc) // TODO(c): put this to config file
 
   val FAUCET_THRESHOLD: Double = 0.5
   val INIT_ADDRESS_NUM: Int = 100
 
-  def getSnapshot = TBitwayState(blockIndexs.map(kv =>
+  def getSnapshot = TBitwayState(blockIndexes.map(kv =>
     (kv._1 -> CurrencyNetwork(
       kv._1, kv._2,
       unusedAddresses(kv._1).clone,
@@ -49,8 +49,8 @@ class BitwayManager extends Manager[TBitwayState] {
     hotAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2.hotAddresses)))
     coldAddresses.clear
     coldAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2.coldAddresses)))
-    blockIndexs.clear
-    blockIndexs ++= s.stats.map(kv => (kv._1 -> kv._2.blockIndex))
+    blockIndexes.clear
+    blockIndexes ++= s.stats.map(kv => (kv._1 -> (List.empty[BlockIndex] ++ kv._2.blockIndexes)))
   }
 
   def isDryUp(currency: Currency) = (unusedAddresses.getOrElseUpdate(currency, Set.empty[String]).size == 0 ||
@@ -101,7 +101,15 @@ class BitwayManager extends Manager[TBitwayState] {
     return enumSet
   }
 
-  def getCurrentBlockIndex(currency: Currency): Option[BlockIndex] = blockIndexs.get(currency)
+  def getBlockIndexes(currency: Currency): Option[List[BlockIndex]] = blockIndexes.get(currency)
+
+  def getCurrentBlockIndex(currency: Currency): Option[BlockIndex] = {
+    blockIndexes.get(currency) match {
+      case None => None
+      case Some(indexes) if indexes.size > 0 => Some(indexes(0))
+      case _ => None
+    }
+  }
 
   def getCCTxType(currency: Currency, inputs: Set[String], outputs: Set[String]): Option[CCTxType] = {
     // Transfer will disable someone withdrawal to his deposit address.
