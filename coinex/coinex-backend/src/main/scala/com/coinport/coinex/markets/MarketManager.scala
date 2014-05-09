@@ -164,10 +164,17 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
               assert(updatedMakerWithRefund.canBecomeMaker == true)
               assert(makerOrder.canBecomeMaker == true)
 
+              // Maker sure they are also equivalent in terms of maxInAmount/maxOutAmount
+              assert(updatedMakerWithRefund.maxOutAmount(updatedMakerWithRefund.price.get) == makerOrder.maxOutAmount(makerOrder.price.get))
+              assert(updatedMakerWithRefund.maxInAmount(updatedMakerWithRefund.price.get) == makerOrder.maxInAmount(makerOrder.price.get))
+
               TakerState(updatedTaker, totalOutAmount + txOutAmount, totalInAmount + txInAmount)
 
             case None =>
               assert(updatedMakerWithRefund.canBecomeMaker == false)
+
+              assert(updatedMakerWithRefund.maxOutAmount(updatedMakerWithRefund.price.get) == 0)
+              assert(updatedMakerWithRefund.maxInAmount(updatedMakerWithRefund.price.get) == 0)
 
               recursivelyMatchOrder(TakerState(updatedTaker, totalOutAmount + txOutAmount, totalInAmount + txInAmount))
           }
