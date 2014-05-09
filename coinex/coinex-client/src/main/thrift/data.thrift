@@ -142,6 +142,8 @@ enum CCTxStatus {
     CONFIRMED = 0
     PENDING   = 1
     FAILED    = 2 // this will happen when confirmation satisfied but can't spend it
+    REORGING  = 3
+    SUCCESS   = 4
 }
 
 enum CCTxType {
@@ -150,6 +152,7 @@ enum CCTxType {
     USER_TO_HOT = 2
     HOT_TO_COLD = 3
     COLD_TO_HOT = 4
+    UNKNOWN     = 5
 }
 
 enum BitwayType {
@@ -405,15 +408,18 @@ struct ExportOpenDataMap {
     1: map<string, i64> processorSeqMap
 }
 
+struct BlockIndex {
+    1: string id
+    2: i64 height
+}
+
 struct CurrencyNetwork {
     1: Currency currency
-    2: string blockId
+    2: BlockIndex blockIndex
     3: set<string> unusedAddresses
     4: set<string> usedAddresses
     5: set<string> hotAddresses
     6: set<string> coldAddresses
-    7: i64 hotAmount
-    8: i64 coldAmount
 }
 
 // We have a case-class named Robot
@@ -428,6 +434,7 @@ struct TRobot {
 
 struct CCTxIO {
     1: string address
-    2: i64 amount
+    2: optional double amount
+    3: optional i64 innerAmount
     /* NOTE, need CCTxStatus field in transfer stats (NOT HERE) */
 }

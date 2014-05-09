@@ -19,6 +19,7 @@ import scala.collection.mutable.Set
 import scala.concurrent.duration._
 import scala.util.Random
 
+import com.coinport.coinex.api.model._
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
@@ -100,7 +101,21 @@ class BitwayProcessor(transferProcessor: ActorRef) extends ExtendedProcessor wit
     case m @ BitwayMessage(t, id, currency, None, None, Some(res), None, None) =>
       println("~" * 40 + res)
     case m @ BitwayMessage(t, id, currency, None, None, None, Some(tx), None) =>
-    // channelToTransferProcessor forward Deliver(Persistent(CCTxsMsg(currency, List(tx))), transferProcessor.path)
+      if (tx.status == CCTxStatus.Failed) {
+        channelToTransferProcessor forward Deliver(Persistent(CCTxsMsg(currency, List(tx))), transferProcessor.path)
+      } else {
+        val CCTx(_, _, _, inputs, outputs, _, _, _, status) = tx
+        val txType = manager.getCCTxType(currency, Set.empty[String] ++ inputs.get.map(_.address),
+          Set.empty[String] ++ outputs.get.map(_.address))
+        if (txType.isDefined) {
+          val currentBlock = manager.getCurrentBlockIndex(currency)
+          val regularizeInputs = inputs.map(_.map(i => i.copy(innerAmount = i.amount.map(_.internalValue(currency)))))
+          val regularizeOutputs = outputs.map(_.map(i => i.copy(innerAmount = i.amount.map(_.internalValue(currency)))))
+          channelToTransferProcessor forward Deliver(Persistent(CCTxsMsg(currency, List(tx.copy(
+            inputs = regularizeInputs, outputs = regularizeOutputs, prevBlock = currentBlock, txType = txType)))),
+            transferProcessor.path)
+        }
+      }
     case m @ BitwayMessage(t, id, currency, None, None, None, None, Some(blocks)) =>
   }
 
