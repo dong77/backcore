@@ -52,7 +52,7 @@ class CandleDataManager(marketSide: MarketSide) extends Manager[TCandleDataState
     val tin = t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity
     val mprice = t.makerUpdate.current.price.get
     val timestamp = t.timestamp
-    val (price, out, in) = if (t.side == marketSide) (1 / mprice, tout, tin) else (mprice, tin, tout)
+    val (price, out, in) = if (t.side == marketSide) ((1 / mprice).!!!, tout, tin) else (mprice, tin, tout)
 
     ChartTimeDimension.list.foreach {
       d =>

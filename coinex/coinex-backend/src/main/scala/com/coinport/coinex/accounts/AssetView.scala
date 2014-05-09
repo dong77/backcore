@@ -12,6 +12,7 @@ import TransferType._
 import com.coinport.coinex.data.Implicits._
 import com.coinport.coinex.common.PersistentId._
 import akka.persistence.Persistent
+import Implicits._
 
 class AssetView extends ExtendedView {
   override val processorId = ACCOUNT_PROCESSOR <<
@@ -51,7 +52,7 @@ class AssetView extends ExtendedView {
             manager.updateAsset(maker, timestamp2, tinCurrency, -mout)
         }
 
-        manager.updatePrice(side, timestamp, 1 / txs.last.makerUpdate.current.price.get)
+        manager.updatePrice(side, timestamp, (1 / txs.last.makerUpdate.current.price.get).!!!)
         manager.updatePrice(side.reverse, timestamp, txs.last.makerUpdate.current.price.get)
       }
 
