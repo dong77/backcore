@@ -138,8 +138,7 @@ enum RefundReason {
     OVER_CHARGED   = 3
 }
 
-// CryptoCurrencyTransactionStatus
-enum CCTxStatus {
+enum CryptoCurrencyTransactionStatus {
     CONFIRMED = 0
     PENDING   = 1
     FAILED    = 2 // this will happen when confirmation satisfied but can't spend it
@@ -147,7 +146,7 @@ enum CCTxStatus {
     SUCCESS   = 4
 }
 
-enum CCTxType {
+enum CryptoCurrencyTransactionType {
     DEPOSIT     = 0
     WITHDRAWAL  = 1
     USER_TO_HOT = 2
@@ -156,13 +155,13 @@ enum CCTxType {
     UNKNOWN     = 5
 }
 
-enum BitwayType {
-    GENERATE_ADDRESS      = 0
-    TRANSFER              = 1
-    QUERY_ADDRESS         = 2
-    CCTX                  = 3
-    CCBLOCKS              = 4
-    GET_MISSED_CCBLOCKS   = 5
+enum BitwayRequestType {
+    GENERATE_ADDRESS        = 0
+    TRANSFER                = 1
+    QUERY_ADDRESS           = 2
+    CRYPTO_CURRENCY_TX      = 3
+    CRYPTO_CURRENCY_BLOCKS  = 4
+    GET_MISSED_BLOCKS       = 5
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -410,8 +409,8 @@ struct ExportOpenDataMap {
 }
 
 struct BlockIndex {
-    1: string id
-    2: i64 height
+    1: optional string id
+    2: optional i64 height
 }
 
 struct CurrencyNetwork {
@@ -433,16 +432,33 @@ struct TRobot {
     6: i64 dnaId
 }
 
-struct CCTxIO {
+struct CryptoCurrencyTransactionPort {
     1: string address
     2: optional double amount
     3: optional i64 innerAmount
-    /* NOTE, need CCTxStatus field in transfer stats (NOT HERE) */
 }
 
-struct CCTransfer {
+struct CryptoCurrencyTransferInfo {
     1: i64 id
     2: string to
     3: i64 amount
     4: optional string from
+}
+
+struct CryptoCurrencyTransaction {
+    1: optional string sigId
+    2: optional string txid
+    3: optional list<i64> ids
+    4: optional set<CryptoCurrencyTransactionPort> inputs
+    5: optional set<CryptoCurrencyTransactionPort> outputs
+    6: optional BlockIndex prevBlock
+    7: optional BlockIndex includedBlock
+    8: optional CryptoCurrencyTransactionType txType
+    9: CryptoCurrencyTransactionStatus status
+}
+
+struct CryptoCurrencyBlock {
+    1: BlockIndex index
+    2: BlockIndex prevIndex
+    3: list<CryptoCurrencyTransaction> txs
 }

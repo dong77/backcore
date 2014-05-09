@@ -12,14 +12,12 @@ import com.coinport.coinex.common.Manager
 import com.coinport.coinex.data._
 import Currency._
 
-object AddressSetEnum extends Enumeration {
-  type AddressSet = Value
-  val UNUSED, USED, HOT, COLD = Value
+object BlockContinuityEnum extends Enumeration {
+  type BlockContinuity = Value
+  val SUCCESSOR, GAP, REORG, OTHER_BRANCH = Value
 }
 
 class BitwayManager extends Manager[TBitwayState] {
-
-  import AddressSetEnum._
 
   val unusedAddresses = Map.empty[Currency, Set[String]]
   val usedAddresses = Map.empty[Currency, Set[String]]
@@ -88,19 +86,6 @@ class BitwayManager extends Manager[TBitwayState] {
 
   def getSupportedCurrency = supportedCurrency
 
-  def getIntersectSet(currency: Currency, set: Set[String]): ValueSet = {
-    var enumSet = ValueSet.empty
-    if ((set & unusedAddresses.getOrElse(currency, Set.empty[String])).nonEmpty)
-      enumSet += UNUSED
-    if ((set & usedAddresses.getOrElse(currency, Set.empty[String])).nonEmpty)
-      enumSet += USED
-    if ((set & hotAddresses.getOrElse(currency, Set.empty[String])).nonEmpty)
-      enumSet += HOT
-    if ((set & coldAddresses.getOrElse(currency, Set.empty[String])).nonEmpty)
-      enumSet += COLD
-    return enumSet
-  }
-
   def getBlockIndexes(currency: Currency): Option[List[BlockIndex]] = blockIndexes.get(currency)
 
   def getCurrentBlockIndex(currency: Currency): Option[BlockIndex] = {
@@ -111,28 +96,71 @@ class BitwayManager extends Manager[TBitwayState] {
     }
   }
 
-  def getCCTxType(currency: Currency, inputs: Set[String], outputs: Set[String]): Option[CCTxType] = {
+  def getCryptoCurrencyTxType(currency: Currency, inputs: Set[String],
+    outputs: Set[String]): Option[CryptoCurrencyTransactionType] = {
+    object AddressSetEnum extends Enumeration {
+      type AddressSet = Value
+      val UNUSED, USED, HOT, COLD = Value
+    }
+
+    import AddressSetEnum._
+
+    def getIntersectSet(currency: Currency, set: Set[String]): ValueSet = {
+      var enumSet = ValueSet.empty
+      if ((set & unusedAddresses.getOrElse(currency, Set.empty[String])).nonEmpty)
+        enumSet += UNUSED
+      if ((set & usedAddresses.getOrElse(currency, Set.empty[String])).nonEmpty)
+        enumSet += USED
+      if ((set & hotAddresses.getOrElse(currency, Set.empty[String])).nonEmpty)
+        enumSet += HOT
+      if ((set & coldAddresses.getOrElse(currency, Set.empty[String])).nonEmpty)
+        enumSet += COLD
+      return enumSet
+    }
+
     // Transfer will disable someone withdrawal to his deposit address.
     // Which means one CCTx has two types: Deposit as well as Withdrawal
     val inputsMatched = getIntersectSet(currency, inputs)
     val outputsMatched = getIntersectSet(currency, outputs)
     if (inputsMatched.contains(USED) && outputsMatched.contains(HOT)) {
-      Some(CCTxType.UserToHot)
+      Some(CryptoCurrencyTransactionType.UserToHot)
     } else if (inputsMatched.contains(HOT)) {
       assert(outputsMatched.contains(USED))
       if (outputsMatched.contains(COLD)) {
-        Some(CCTxType.HotToCold)
+        Some(CryptoCurrencyTransactionType.HotToCold)
       } else {
-        Some(CCTxType.Withdrawal)
+        Some(CryptoCurrencyTransactionType.Withdrawal)
       }
     } else if (inputsMatched.contains(COLD) && outputsMatched.contains(HOT)) {
-      Some(CCTxType.ColdToHot)
+      Some(CryptoCurrencyTransactionType.ColdToHot)
     } else if (outputsMatched.contains(USED)) {
-      Some(CCTxType.Deposit)
+      Some(CryptoCurrencyTransactionType.Deposit)
     } else if (inputsMatched.nonEmpty || outputsMatched.nonEmpty) {
-      Some(CCTxType.Unknown)
+      Some(CryptoCurrencyTransactionType.Unknown)
     } else {
       None
+    }
+  }
+
+  import BlockContinuityEnum._
+
+  def getBlockContinuity(currency: Currency,
+    blocksMsg: CryptoCurrencyBlocksMessage): BlockContinuity = {
+    getBlockIndexes(currency) match {
+      case None => SUCCESSOR
+      case Some(indexList) if indexList.size > 0 =>
+        assert(blocksMsg.blocks.size > 0)
+        blocksMsg.startIndex match {
+          case None =>
+            if (blocksMsg.blocks.head.prevIndex.id == indexList.head.id)
+              SUCCESSOR
+            else
+              GAP
+          case Some(BlockIndex(Some(id), _)) =>
+            REORG
+          case Some(BlockIndex(None, _)) => OTHER_BRANCH
+        }
+      case _ => SUCCESSOR
     }
   }
 }

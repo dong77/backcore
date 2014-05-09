@@ -19,10 +19,10 @@ object MapSerializer extends Serializer[Map[Any, Any]] {
       case (k, v) => JField(
         k match {
           case ks: String => ks
-          case ks: BitwayType => ks.name
-          case ks: CCTxStatus => ks.name
-          case ks: CCTxType => ks.name
+          case ks: BitwayRequestType => ks.name
           case ks: ChartTimeDimension => ks.name
+          case ks: CryptoCurrencyTransactionStatus => ks.name
+          case ks: CryptoCurrencyTransactionType => ks.name
           case ks: Currency => ks.name
           case ks: Direction => ks.name
           case ks: EmailType => ks.name
@@ -48,24 +48,24 @@ object MapSerializer extends Serializer[Map[Any, Any]] {
 
 object ThriftEnumJson4sSerialization {
 
-  class BitwayTypeSerializer extends CustomSerializer[BitwayType](format => (
-    { case JString(s) => BitwayType.valueOf(s).get }, {
-      case x: BitwayType => JString(x.name)
-    }))
-
-  class CCTxStatusSerializer extends CustomSerializer[CCTxStatus](format => (
-    { case JString(s) => CCTxStatus.valueOf(s).get }, {
-      case x: CCTxStatus => JString(x.name)
-    }))
-
-  class CCTxTypeSerializer extends CustomSerializer[CCTxType](format => (
-    { case JString(s) => CCTxType.valueOf(s).get }, {
-      case x: CCTxType => JString(x.name)
+  class BitwayRequestTypeSerializer extends CustomSerializer[BitwayRequestType](format => (
+    { case JString(s) => BitwayRequestType.valueOf(s).get }, {
+      case x: BitwayRequestType => JString(x.name)
     }))
 
   class ChartTimeDimensionSerializer extends CustomSerializer[ChartTimeDimension](format => (
     { case JString(s) => ChartTimeDimension.valueOf(s).get }, {
       case x: ChartTimeDimension => JString(x.name)
+    }))
+
+  class CryptoCurrencyTransactionStatusSerializer extends CustomSerializer[CryptoCurrencyTransactionStatus](format => (
+    { case JString(s) => CryptoCurrencyTransactionStatus.valueOf(s).get }, {
+      case x: CryptoCurrencyTransactionStatus => JString(x.name)
+    }))
+
+  class CryptoCurrencyTransactionTypeSerializer extends CustomSerializer[CryptoCurrencyTransactionType](format => (
+    { case JString(s) => CryptoCurrencyTransactionType.valueOf(s).get }, {
+      case x: CryptoCurrencyTransactionType => JString(x.name)
     }))
 
   class CurrencySerializer extends CustomSerializer[Currency](format => (
@@ -124,10 +124,10 @@ object ThriftEnumJson4sSerialization {
     }))
 
   implicit val formats = Serialization.formats(NoTypeHints) +
-    new BitwayTypeSerializer +
-    new CCTxStatusSerializer +
-    new CCTxTypeSerializer +
+    new BitwayRequestTypeSerializer +
     new ChartTimeDimensionSerializer +
+    new CryptoCurrencyTransactionStatusSerializer +
+    new CryptoCurrencyTransactionTypeSerializer +
     new CurrencySerializer +
     new DirectionSerializer +
     new EmailTypeSerializer +
