@@ -72,6 +72,7 @@ enum OrderStatus {
     CANCELLED = 3
     CANCELLED_BY_MARKET = 4
     PARTIALLY_EXECUTED_THEN_CANCELLED_BY_MARKET = 5
+    UNKNOWN = 10
 }
 
 enum UserStatus {

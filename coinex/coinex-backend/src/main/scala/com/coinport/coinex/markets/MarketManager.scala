@@ -141,6 +141,9 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
             inAmount = makerOrder.inAmount + txOutAmount)
 
           // We now calculate how much money should unfreeze for the maker after this new transaction.
+          // Note: updatedMakerWithRefund is the updated maker order after the transaction, it is the one
+          // that will be put into OrderSubmitted event; while updatedMakerToAddBack is the transction
+          // that will be put back to the market.
           val (updatedMakerToAddBack, refund) = calculateRefund(updatedMaker)
           val updatedMakerWithRefund = updatedMaker.copy(refund = refund)
 
@@ -154,8 +157,18 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
           updatedMakerToAddBack match {
             case Some(makerOrder) =>
               addOrder(makerSide, makerOrder)
+
+              // Make sure both updatedMakerWithRefund (in transaction) and makerOrder (in memory) are the 
+              // same in terms of being able to become a maker order. We need to have this guarantee so in
+              // Market depth view, we can do the right math.
+              assert(updatedMakerWithRefund.canBecomeMaker == true)
+              assert(makerOrder.canBecomeMaker == true)
+
               TakerState(updatedTaker, totalOutAmount + txOutAmount, totalInAmount + txInAmount)
+
             case None =>
+              assert(updatedMakerWithRefund.canBecomeMaker == false)
+
               recursivelyMatchOrder(TakerState(updatedTaker, totalOutAmount + txOutAmount, totalInAmount + txInAmount))
           }
         }
@@ -163,31 +176,39 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
     }
     // END of internal matching logic.
 
-    val TakerState(takerOrder, totalOutAmount, totalInAmount) = recursivelyMatchOrder(TakerState(order, 0L, 0L))
-
-    val status =
-      if (takerOrder.soldOut || takerOrder.hitTakeLimit) OrderStatus.FullyExecuted
-      else if (totalOutAmount > 0) {
-        if (takerOrder.price.isEmpty || takerOrder.onlyTaker.getOrElse(false)) OrderStatus.PartiallyExecutedThenCancelledByMarket
-        else OrderStatus.PartiallyExecuted
-      } else if (takerOrder.price.isEmpty || takerOrder.onlyTaker.getOrElse(false)) OrderStatus.CancelledByMarket
-      else OrderStatus.Pending
+    val TakerState(takerOrder, totalOutAmount, totalInAmount) = recursivelyMatchOrder(TakerState(order, 0, 0))
 
     val (updatedTakerToAdd, refund) = calculateRefund(takerOrder)
-
     updatedTakerToAdd foreach { addOrder(takerSide, _) }
 
-    if (txsBuffer.nonEmpty && refund.isDefined) {
-      val lastTx = txsBuffer.last
-      txsBuffer.trimEnd(1)
-      // If there is a over-charge refund, the current order in takerUpdate will still
-      // show the quantity before the refund.
-      txsBuffer += lastTx.copy(takerUpdate = lastTx.takerUpdate.copy(current = lastTx.takerUpdate.current.copy(refund = refund)))
+    val status = updatedTakerToAdd match {
+      case Some(_) if totalOutAmount > 0 => OrderStatus.PartiallyExecuted // cancellable
+      case Some(_) => OrderStatus.Pending // cancellable
+      case None if takerOrder.soldOut || takerOrder.hitTakeLimit => OrderStatus.FullyExecuted
+      case None if takerOrder.price.isEmpty || takerOrder.onlyTaker.getOrElse(false) =>
+        if (totalOutAmount > 0) OrderStatus.PartiallyExecutedThenCancelledByMarket
+        else OrderStatus.CancelledByMarket
+      case _ =>
+        assert(false)
+        OrderStatus.Unknown
     }
+
+    val updatedOriginalOrder =
+
+      if (txsBuffer.nonEmpty && refund.isDefined) {
+        val lastTx = txsBuffer.last
+        val updatedTaker = lastTx.takerUpdate.current.copy(refund = refund)
+
+        txsBuffer.trimEnd(1)
+        // If there is a over-charge refund, the current order in takerUpdate will still
+        // show the quantity before the refund.
+        txsBuffer += lastTx.copy(takerUpdate = lastTx.takerUpdate.copy(current = updatedTaker))
+      }
 
     val txs = txsBuffer.toSeq
     // If there is a over-charge refund, the order inside originOrderInfo will still
     // show the quantity before the refund.
+
     val orderInfo = OrderInfo(
       takerSide,
       if (txs.isEmpty) order.copy(refund = refund) else order,
@@ -195,6 +216,17 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
       totalInAmount,
       status,
       txs.lastOption.map(_.timestamp))
+
+    // We perform consistent check here.
+    // Only partially executed and pending orders are actually still in the market.
+    if (status == OrderStatus.PartiallyExecuted || status == OrderStatus.Pending) {
+      assert(updatedTakerToAdd.isDefined)
+      assert(updatedTakerToAdd.get.canBecomeMaker == true)
+      assert(txs.lastOption.map(_.takerUpdate.current).getOrElse(orderInfo.order).canBecomeMaker == true)
+    } else {
+      assert(updatedTakerToAdd.isEmpty)
+      assert(txs.lastOption.map(_.takerUpdate.current).getOrElse(orderInfo.order).canBecomeMaker == false)
+    }
 
     OrderSubmitted(orderInfo, txs)
   }

@@ -54,7 +54,7 @@ class MarketDepthManager(market: MarketSide) extends Manager[TMarketDepthState] 
   }
 
   def adjustAmount(side: MarketSide, order: Order, addOrRemove: Boolean /*true for increase, false for reduce*/ ) =
-    if (order.price.isDefined) {
+    if (order.canBecomeMaker) {
       def adjust(amount: Long) = if (addOrRemove) amount else -amount
       val price = order.price.get
       if (side == market) adjustAsk(price, adjust(order.maxOutAmount(price)))
@@ -64,8 +64,13 @@ class MarketDepthManager(market: MarketSide) extends Manager[TMarketDepthState] 
   def reduceAmount(side: MarketSide, tx: Transaction) = {
     val OrderUpdate(previous, current) = tx.makerUpdate
     val price = current.price.get
-    if (side == market) adjustAsk(price, current.maxOutAmount(price) - previous.maxOutAmount(price))
-    else adjustBid(1 / price, current.maxInAmount(price) - previous.maxInAmount(price))
+    if (side == market) {
+      adjustAsk(price, -previous.maxOutAmount(price))
+      if (current.canBecomeMaker) adjustAsk(price, current.maxOutAmount(price))
+    } else {
+      adjustBid(1 / price, -previous.maxInAmount(price))
+      if (current.canBecomeMaker) adjustBid(1 / price, current.maxInAmount(price))
+    }
   }
 
   private def adjustAsk(price: Double, amount: Long) = {
