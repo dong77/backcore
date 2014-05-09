@@ -10,6 +10,16 @@ package com.coinport.coinex.data
 
 import com.coinport.coinex.common._
 
+class RichDouble(raw: Double) {
+  def !!! = {
+    if (raw < 1.0) scaled(26)
+    else if (raw > 1.0) scaled(8)
+    else raw
+  }
+
+  def scaled(s: Int) = BigDecimal(raw).setScale(s, BigDecimal.RoundingMode.HALF_UP).toDouble
+}
+
 class RichCurrency(raw: Currency) {
   def ~>(another: Currency) = MarketSide(raw, another)
   def <~(another: Currency) = MarketSide(another, raw)
@@ -141,6 +151,7 @@ class RichPersistentId(v: PersistentId.Value) {
 }
 
 object Implicits {
+  implicit def double2Rich(raw: Double) = new RichDouble(raw)
   implicit def currency2Rich(raw: Currency) = new RichCurrency(raw)
   implicit def marketSide2Rich(raw: MarketSide) = new RichMarketSide(raw)
   implicit def order2Rich(raw: Order) = new RichOrder(raw)

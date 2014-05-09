@@ -73,7 +73,7 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
         else if (order.price.isEmpty || order.onlyTaker.getOrElse(false)) (None, Some(Refund(AutoCancelled, order.quantity)))
         else order.takeLimit match {
           case Some(limit) if limit > 0 =>
-            val overCharged = order.quantity - Math.ceil(limit / order.price.get).toLong
+            val overCharged = order.quantity - Math.ceil((limit / order.price.get).!!!).toLong
             if (overCharged > 0) (Some(order.copy(quantity = order.quantity - overCharged)), Some(Refund(OverCharged, overCharged)))
             else (Some(order), None)
           case _ => (Some(order), None)
@@ -108,18 +108,18 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
         // Maker orders defines market price, whenever a match is found, we always use maker's price,
         // note that taker's price will only be used to decide whether a match is found or not, it will
         // never be used in real transactions.
-        val price = 1 / makerOrder.vprice
+        val price = (1 / makerOrder.vprice).!!!
 
         // If we see the taker order as a order of selling BTC for CNY, then txOutAmount is 'the amount
         // of BTC in the new transaction'.
-        val txOutAmount = Math.min(takerOrder.maxOutAmount(price), makerOrder.maxInAmount(1 / price))
+        val txOutAmount = Math.min(takerOrder.maxOutAmount(price), makerOrder.maxInAmount(makerOrder.vprice))
 
         // txInAmount is 'the amount of CNY in the same transaction'.
         var txInAmount = Math.round(txOutAmount * price)
 
         // Because of precision problems introduced by Double math operations, we have to adjust txInAmount
         // by -1 to make sure the maker order can afford that much of CNY.
-        if (makerOrder.maxOutAmount(1 / price) < txInAmount) txInAmount -= 1
+        if (makerOrder.maxOutAmount(makerOrder.vprice) < txInAmount) txInAmount -= 1
 
         if (txOutAmount == 0 || txInAmount == 0) {
           state
