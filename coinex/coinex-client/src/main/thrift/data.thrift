@@ -439,3 +439,10 @@ struct CCTxIO {
     3: optional i64 innerAmount
     /* NOTE, need CCTxStatus field in transfer stats (NOT HERE) */
 }
+
+struct CCTransfer {
+    1: i64 id
+    2: string to
+    3: i64 amount
+    4: optional string from
+}

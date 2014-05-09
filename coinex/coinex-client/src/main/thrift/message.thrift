@@ -44,6 +44,7 @@ typedef data.CCTxStatus                 _CCTxStatus
 typedef data.CCTxIO                     _CCTxIO
 typedef data.CCTxType                   _CCTxType
 typedef data.BlockIndex                 _BlockIndex
+typedef data.CCTransfer                 _CCTransfer
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -158,7 +159,7 @@ typedef data.BlockIndex                 _BlockIndex
 // with nodejs bitway
 /* C    */ struct GenerateAddressRequest              {1: i32 num}
 /* R    */ struct GenerateAddressResponse             {1: _ErrorCode error, 2: set<string> addresses}
-/* C    */ struct TransferRequest                     {1: string to, 2: i32 amount, 3: optional string from, 4: _CCTxType type}
+/* C    */ struct TransferRequest                     {1: _CCTransfer transfer, 2: _CCTxType type}
 /* R    */ struct TransferResponse                    {1: _ErrorCode error} // TODO(c): remove this struct
 /* C    */ struct QueryAddressRequest                 {1: string address}
 /* R    */ struct QueryAddressResponse                {1: _ErrorCode error}
@@ -167,7 +168,7 @@ typedef data.BlockIndex                 _BlockIndex
 /* R    */ struct CCTx                                {
                                                           1: optional string sigId,
                                                           2: optional string txid,
-                                                          3: optional list<i64> id,
+                                                          3: optional list<i64> ids,
                                                           4: optional set<_CCTxIO> inputs,
                                                           5: optional set<_CCTxIO> outputs,
                                                           6: optional _BlockIndex prevBlock,
@@ -176,7 +177,7 @@ typedef data.BlockIndex                 _BlockIndex
                                                           9: _CCTxStatus status
                                                       }
 /* R    */ struct CCBlock                             {1: _BlockIndex index, 2: _BlockIndex prevIndex, 3: list<CCTx> txs}
-/* R    */ struct CCBlocks                            {1: list<CCBlock> blocks}
+/* R    */ struct CCBlocks                            {1: optional _BlockIndex startIndex 2: list<CCBlock> blocks}
 /* R    */ struct BitwayMessage                       {1: _BitwayType type, 2: i64 requestId 3: _Currency currency, 4: optional GenerateAddressResponse generateAddressResponse, 5: optional TransferResponse transferResponse, 6: optional QueryAddressResponse queryAddressResponse, 7: optional CCTx tx, 8: optional CCBlocks blocks}
 
 // with other processor in akka

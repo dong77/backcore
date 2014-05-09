@@ -18,6 +18,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cAccountTransfer = BinaryScalaCodec(AccountTransfer)
   lazy val _cApiSecret = BinaryScalaCodec(ApiSecret)
   lazy val _cBlockIndex = BinaryScalaCodec(BlockIndex)
+  lazy val _cCCTransfer = BinaryScalaCodec(CCTransfer)
   lazy val _cCCTxIO = BinaryScalaCodec(CCTxIO)
   lazy val _cCandleData = BinaryScalaCodec(CandleData)
   lazy val _cCandleDataItem = BinaryScalaCodec(CandleDataItem)
@@ -168,6 +169,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: AccountTransfer => _cAccountTransfer(m)
     case m: ApiSecret => _cApiSecret(m)
     case m: BlockIndex => _cBlockIndex(m)
+    case m: CCTransfer => _cCCTransfer(m)
     case m: CCTxIO => _cCCTxIO(m)
     case m: CandleData => _cCandleData(m)
     case m: CandleDataItem => _cCandleDataItem(m)
@@ -322,6 +324,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[AccountTransfer.Immutable] => _cAccountTransfer.invert(bytes).get
     case Some(c) if c == classOf[ApiSecret.Immutable] => _cApiSecret.invert(bytes).get
     case Some(c) if c == classOf[BlockIndex.Immutable] => _cBlockIndex.invert(bytes).get
+    case Some(c) if c == classOf[CCTransfer.Immutable] => _cCCTransfer.invert(bytes).get
     case Some(c) if c == classOf[CCTxIO.Immutable] => _cCCTxIO.invert(bytes).get
     case Some(c) if c == classOf[CandleData.Immutable] => _cCandleData.invert(bytes).get
     case Some(c) if c == classOf[CandleDataItem.Immutable] => _cCandleDataItem.invert(bytes).get
