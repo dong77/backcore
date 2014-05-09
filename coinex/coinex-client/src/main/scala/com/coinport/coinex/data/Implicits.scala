@@ -35,7 +35,7 @@ class RichMarketSide(raw: MarketSide) {
 
 class RichOrder(raw: Order) {
   def inversePrice: Order = raw.price match {
-    case Some(p) if p > 0 => raw.copy(price = Some(1 / p))
+    case Some(p) if p > 0 => raw.copy(price = Some(new RichDouble(1 / p).!!!))
     case _ => raw
   }
 
@@ -51,7 +51,7 @@ class RichOrder(raw: Order) {
       // we need sell taker's 1 BTC in price 10000 even the limit quantity is 2000 / 10000 = 0.2
       // so need using "ceil"
       case Some(limit) if limit <= 0 => 0
-      case Some(limit) if limit / price < quantity => Math.ceil(limit / price).toLong
+      case Some(limit) if new RichDouble(limit / price).!!! < quantity => Math.ceil(limit / price).toLong
       case _ => quantity
     }
   }
