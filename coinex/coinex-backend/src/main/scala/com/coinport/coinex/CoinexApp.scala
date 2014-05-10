@@ -18,14 +18,11 @@ import scala.concurrent.duration._
 import akka.util.Timeout
 import java.net.InetAddress
 import com.typesafe.config.Config
-import com.coinport.coinex.common.Constants
 
 object CoinexApp extends App {
   val markets = Seq(Btc ~> Cny, Ltc ~> Cny, Ltc ~> Btc, Pts ~> Btc, Dog ~> Btc)
-  val currencySet = markets.flatMap(i => List(i.inCurrency, i.outCurrency)).toSet.filter(
-    _.value >= Constants.MIN_CRYPTO_CURRENCY_INDEX).toSeq
   val allRoles = (ConstantRole.values.map(_.<<) ++ MarketRole.values.map { v => markets.map { m => v << m } }.flatten ++
-    BitwayRole.values.map { v => currencySet.map { c => v << c } }.flatten)
+    BitwayRole.values.map { v => markets.toCryptoCurrencySet.map { c => v << c } }.flatten)
 
   if (args.length < 2 || args.length > 4) {
     val message = """please supply 1 to 4 parameters:

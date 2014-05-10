@@ -33,7 +33,6 @@ import com.coinport.coinex.fee._
 import com.coinport.coinex.transfer._
 import com.coinport.coinex.util._
 import com.coinport.coinex.bitway._
-import com.coinport.coinex.common.Constants
 import Implicits._
 import scala.collection.mutable.ListBuffer
 import com.coinport.coinex.common._
@@ -117,9 +116,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploySingleton(Props(new OrderWriter(dbForViews)), order_mongo_writer <<)
     deploySingleton(Props(new ExportOpenDataProcessor(asyncHBaseClient) with StackableEventsourced[ExportOpenDataMap, ExportOpenDataManager]), opendata_exporter <<)
 
-    val currencySet = markets.flatMap(i => List(i.inCurrency, i.outCurrency)).toSet.filter(
-      _.value >= Constants.MIN_CRYPTO_CURRENCY_INDEX).toSeq
-    currencySet foreach { c =>
+    markets.toCryptoCurrencySet foreach { c =>
       def props = Props(new BitwayProcessor(routers.depositWithdrawProcessor,
         c) with StackableEventsourced[TBitwayState, BitwayManager])
       deploySingleton(props, bitway_processor << c)

@@ -9,6 +9,7 @@
 package com.coinport.coinex.data
 
 import com.coinport.coinex.common._
+import com.coinport.coinex.common.Constants
 
 class RichDouble(raw: Double) {
   def !!! = {
@@ -156,6 +157,11 @@ class RichPersistentId(v: PersistentId.Value) {
   def <<(currency: Currency): String = << + "_" + currency.toString.toLowerCase
 }
 
+class RichMarketSideList(markets: Seq[MarketSide]) {
+  def toCryptoCurrencySet = markets.flatMap(i => List(
+    i.inCurrency, i.outCurrency)).toSet.filter(_.value >= Constants.MIN_CRYPTO_CURRENCY_INDEX).toSeq
+}
+
 object Implicits {
   implicit def double2Rich(raw: Double) = new RichDouble(raw)
   implicit def currency2Rich(raw: Currency) = new RichCurrency(raw)
@@ -183,4 +189,5 @@ object Implicits {
     }
   }
   implicit def string2RichMarket(raw: String): Market = string2RichMarketSide(raw).market
+  implicit def markets2CryptoCurrencySet(markets: Seq[MarketSide]) = new RichMarketSideList(markets)
 }
