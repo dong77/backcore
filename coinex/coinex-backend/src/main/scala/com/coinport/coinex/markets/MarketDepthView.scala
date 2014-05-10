@@ -48,8 +48,8 @@ class MarketDepthManager(market: MarketSide) extends Manager[TMarketDepthState] 
 
   // Business logics      ----------------------------------------------
   def get(maxDepth: Int): (Seq[MarketDepthItem], Seq[MarketDepthItem]) = {
-    val asks = askMap.take(maxDepth).toSeq.map(i => MarketDepthItem(i._1, i._2))
-    val bids = bidMap.takeRight(maxDepth).toSeq.map(i => MarketDepthItem(i._1, i._2)).reverse
+    val asks = askMap.take(maxDepth).toSeq.map(i => MarketDepthItem(i._1, Math.max(0, i._2)))
+    val bids = bidMap.takeRight(maxDepth).toSeq.map(i => MarketDepthItem(i._1, Math.max(0, i._2))).reverse
     (asks, bids)
   }
 
@@ -59,10 +59,8 @@ class MarketDepthManager(market: MarketSide) extends Manager[TMarketDepthState] 
       val price = order.price.get
       if (side == market) {
         adjustAsk(price, adjust(order.maxOutAmount(price)))
-        println(order.id + " A@ " + price + "\t  : " + adjust(order.maxOutAmount(price)))
       } else {
         adjustBid((1 / price).!!!, adjust(order.maxInAmount(price)))
-        println(order.id + " B@ " + (1 / price).!!! + "\t  : " + adjust(order.maxInAmount(price)))
       }
     }
 
@@ -71,17 +69,13 @@ class MarketDepthManager(market: MarketSide) extends Manager[TMarketDepthState] 
     val price = current.price.get
     if (side == market) {
       adjustAsk(price, -previous.maxOutAmount(price))
-      println(current.id + " a@ " + price + "\t  : " + (-previous.maxOutAmount(price)))
       if (current.canBecomeMaker) {
-        println(current.id + " a@ " + price + "\t  : " + (current.maxOutAmount(price)))
         adjustAsk(price, current.maxOutAmount(price))
       }
     } else {
       val indexPrice = (1 / price).!!!
       adjustBid(indexPrice, -previous.maxInAmount(price))
-      println(current.id + " b@ " + indexPrice + "\t  : " + (-previous.maxInAmount(price)))
       if (current.canBecomeMaker) {
-        println(current.id + " b@ " + indexPrice + "\t  : " + (current.maxInAmount(price)))
         adjustBid(indexPrice, current.maxInAmount(price))
       }
     }
@@ -89,15 +83,13 @@ class MarketDepthManager(market: MarketSide) extends Manager[TMarketDepthState] 
 
   private def adjustAsk(price: Double, amount: Long) = {
     val updatedAmount = askMap.getOrElse(price, 0L) + amount
-    assert(updatedAmount >= 0)
-    if (updatedAmount > 0) askMap += (price -> updatedAmount)
-    else askMap -= price
+    if (updatedAmount == 0) askMap -= price
+    else askMap += (price -> updatedAmount)
   }
 
   private def adjustBid(price: Double, amount: Long) = {
     val updatedAmount = bidMap.getOrElse(price, 0L) + amount
-    assert(updatedAmount >= 0)
-    if (updatedAmount > 0) bidMap += (price -> updatedAmount)
-    else bidMap -= price
+    if (updatedAmount == 0) bidMap -= price
+    else bidMap += (price -> updatedAmount)
   }
 }
