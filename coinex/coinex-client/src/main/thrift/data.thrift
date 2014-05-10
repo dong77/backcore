@@ -158,10 +158,7 @@ enum CryptoCurrencyTransactionType {
 enum BitwayRequestType {
     GENERATE_ADDRESS        = 0
     TRANSFER                = 1
-    QUERY_ADDRESS           = 2
-    CRYPTO_CURRENCY_TX      = 3
-    CRYPTO_CURRENCY_BLOCKS  = 4
-    GET_MISSED_BLOCKS       = 5
+    GET_MISSED_BLOCKS       = 2
 }
 
 ///////////////////////////////////////////////////////////////////////

@@ -88,6 +88,10 @@ class BitwayProcessor(transferProcessor: ActorRef) extends ExtendedProcessor wit
         sender ! GetNewAddressResult(ErrorCode.NotEnoughAddressInPool, None)
       }
 
+    case m @ TransferCryptoCurrency(currency, _, _) if pushClient.isDefined =>
+      pushClient.get.rpush(REQUEST_CHANNEL, serializer.toBinary(BitwayRequest(BitwayRequestType.Transfer,
+        Random.nextLong, currency, transferCryptoCurrency = Some(m))))
+
     case m @ BitwayMessage(t, id, currency, Some(res), None, None) =>
       if (res.error == ErrorCode.Ok) {
         persist(res) { event =>
