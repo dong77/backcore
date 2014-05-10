@@ -1,9 +1,12 @@
 package com.coinport.coinex.common.assumption
 
-import com.coinport.coinex.data.TMarketDepthState
 import org.specs2.mutable._
 import scala.collection.mutable.Map
 
+// This test is not needed anymore, but we need to remember:
+// "Construction of thrift state object should use `clone` to prevent being mutated.
+
+/*
 class ThriftStateImmutableAssumptionSpec extends Specification {
   "Construction of thrift state object" should {
     "use `clone` to prevent being mutated" in {
@@ -23,3 +26,4 @@ class ThriftStateImmutableAssumptionSpec extends Specification {
     }
   }
 }
+*/

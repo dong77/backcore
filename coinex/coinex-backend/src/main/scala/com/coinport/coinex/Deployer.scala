@@ -75,7 +75,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     // Deploy views first
     markets foreach { m =>
-      deploy(Props(new MarketDepthView(m) with StackableView[TMarketDepthState, MarketDepthManager]), market_depth_view << m)
+      deploy(Props(new MarketDepthView(m) with StackableView[TMarketState, MarketManager]), market_depth_view << m)
       deploy(Props(new CandleDataView(m) with StackableView[TCandleDataState, CandleDataManager]), candle_data_view << m)
     }
 

@@ -11,85 +11,56 @@ import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import com.coinport.coinex.common._
 import Implicits._
-import scala.collection.SortedMap
+import scala.collection.SortedSet
+import scala.collection.mutable.ListBuffer
 
 class MarketDepthView(market: MarketSide) extends ExtendedView {
-  override val processorId = MARKET_UPDATE_PROCESSOR <<
+  override val processorId = MARKET_PROCESSOR << market
   override val viewId = MARKET_DEPTH_VIEW << market
-  val manager = new MarketDepthManager(market)
+
+  val manager = new MarketManager(market)
+  private var cache: Option[QueryMarketDepthResult] = None
 
   def receive = LoggingReceive {
-    case Persistent(OrderCancelled(side, order), _) if side == market || side == market.reverse =>
-      manager.adjustDepth(side, order, false)
+    case Persistent(DoCancelOrder(_, orderId, userId), _) =>
+      manager.removeOrder(orderId, userId)
+      cache = None
 
-    case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
-      val order = txs.lastOption.map(_.takerUpdate.current).getOrElse(orderInfo.order)
-      manager.adjustDepth(orderInfo.side, order, true)
-      txs foreach { manager.reductDepth(orderInfo.side.reverse, _) }
+    case Persistent(OrderFundFrozen(side, order: Order), _) =>
+      manager.addOrderToMarket(side, order)
+      cache = None
 
-    case QueryMarketDepth(side, maxDepth) if side == market =>
-      val (asks, bids) = manager.get(maxDepth)
-      sender ! QueryMarketDepthResult(MarketDepth(market, asks, bids))
-  }
-}
-
-class MarketDepthManager(market: MarketSide) extends Manager[TMarketDepthState] {
-  // Internal mutable state ----------------------------------------------
-  var askMap = SortedMap.empty[Double, Long]
-  var bidMap = SortedMap.empty[Double, Long]
-
-  // Thrift conversions     ----------------------------------------------
-  def getSnapshot = TMarketDepthState(askMap, bidMap)
-
-  def loadSnapshot(snapshot: TMarketDepthState) = {
-    askMap = askMap.take(0) ++ snapshot.askMap
-    bidMap = bidMap.take(0) ++ snapshot.bidMap
+    case QueryMarketDepth(side, maxDepth) =>
+      assert(side == market)
+      if (cache.isEmpty) cache = Some(getDepthData(maxDepth))
+      sender ! cache.get
   }
 
-  // Business logics      ----------------------------------------------
-  def get(maxDepth: Int): (Seq[MarketDepthItem], Seq[MarketDepthItem]) = {
-    val asks = askMap.take(maxDepth).toSeq.map(i => MarketDepthItem(i._1, Math.max(0, i._2)))
-    val bids = bidMap.takeRight(maxDepth).toSeq.map(i => MarketDepthItem(i._1, Math.max(0, i._2))).reverse
-    (asks, bids)
-  }
+  private def getDepthData(maxDepth: Int) = {
+    def takeN(orders: SortedSet[Order], isAskOrder: Boolean) = {
 
-  def adjustDepth(side: MarketSide, order: Order, addOrRemove: Boolean /*true for increase, false for reduce*/ ) =
-    if (order.canBecomeMaker) {
-      def adjust(amount: Long) = if (addOrRemove) amount else -amount
-      val price = order.price.get
-      if (side == market) {
-        adjustAsk(price, adjust(order.maxOutAmount(price)))
-      } else {
-        adjustBid((1 / price).!!!, adjust(order.maxInAmount(price)))
+      def convert(order: Order) =
+        if (isAskOrder) MarketDepthItem(order.price.get, order.maxOutAmount(order.price.get))
+        else /* bid */ MarketDepthItem((1 / order.price.get).!!!, order.maxInAmount(order.price.get))
+
+      val buffer = new ListBuffer[MarketDepthItem]
+      var index = 0
+      while (buffer.size < maxDepth && index < orders.size) {
+        val order = orders.view(index, index + 1).head
+        val item = convert(order)
+        if (buffer.isEmpty || buffer.last.price != order.price.get) buffer += item
+        else {
+          val last = buffer.last
+          buffer.trimEnd(1)
+          buffer += last.copy(quantity = last.quantity + item.quantity)
+        }
+        index += 1
       }
+      buffer.toSeq
     }
+    val asks = takeN(manager.orderPool(market), true)
+    val bids = takeN(manager.orderPool(market.reverse), false)
 
-  def reductDepth(side: MarketSide, tx: Transaction) = {
-    val OrderUpdate(previous, current) = tx.makerUpdate
-    val price = current.price.get
-    if (side == market) {
-      adjustAsk(price, -previous.maxOutAmount(price))
-      if (current.canBecomeMaker) {
-        adjustAsk(price, current.maxOutAmount(price))
-      }
-    } else {
-      val indexPrice = (1 / price).!!!
-      adjustBid(indexPrice, -previous.maxInAmount(price))
-      if (current.canBecomeMaker) {
-        adjustBid(indexPrice, current.maxInAmount(price))
-      }
-    }
-  }
-
-  private def adjustAsk(price: Double, amount: Long) = {
-    val updatedAmount = askMap.getOrElse(price, 0L) + amount
-    if (updatedAmount == 0) askMap -= price
-    else askMap += (price -> updatedAmount)
-  }
-
-  private def adjustBid(price: Double, amount: Long) = {
-    val updatedAmount = bidMap.getOrElse(price, 0L) + amount
-    if (updatedAmount == 0) bidMap -= price
-    else bidMap += (price -> updatedAmount)
+    QueryMarketDepthResult(MarketDepth(market, asks, bids))
   }
 }
