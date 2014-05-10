@@ -82,7 +82,7 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: QueryAsset => routers.assetView forward m
 
       // Bitway
-      case m: GetNewAddress => routers.bitwayProcessor forward m
+      case m: GetNewAddress => routers.bitwayProcessors(m.currency) forward m
 
       //-------------------------------------------------------------------------
       case m =>

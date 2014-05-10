@@ -145,9 +145,14 @@ class RichMarketRole(v: MarketRole.Value) {
   def <<(side: MarketSide) = v.toString.toLowerCase + "_" + new RichMarketSide(side).s
 }
 
+class RichBitwayRole(v: BitwayRole.Value) {
+  def <<(currency: Currency) = v.toString.toLowerCase + "_" + currency.toString.toLowerCase
+}
+
 class RichPersistentId(v: PersistentId.Value) {
   def << : String = v.toString.toLowerCase
   def <<(side: MarketSide): String = << + "_" + new RichMarketSide(side).s
+  def <<(currency: Currency): String = << + "_" + currency.toString.toLowerCase
 }
 
 object Implicits {
@@ -164,6 +169,7 @@ object Implicits {
 
   implicit def constantRole2Rich(raw: ConstantRole.Value) = new RichConstRole(raw)
   implicit def marketRole2Rich(raw: MarketRole.Value) = new RichMarketRole(raw)
+  implicit def bitwayRole2Rich(raw: BitwayRole.Value) = new RichBitwayRole(raw)
   implicit def persistentId2Rich(raw: PersistentId.Value) = new RichPersistentId(raw)
 
   implicit def string2RichMarketSide(raw: String): MarketSide = {

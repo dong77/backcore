@@ -38,6 +38,7 @@ import scala.collection.mutable.ListBuffer
 import com.coinport.coinex.common._
 import ConstantRole._
 import MarketRole._
+import BitwayRole._
 import com.mongodb.casbah._
 
 import com.twitter.util.Eval
@@ -115,9 +116,13 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploySingleton(Props(new OrderWriter(dbForViews)), order_mongo_writer <<)
     deploySingleton(Props(new ExportOpenDataProcessor(asyncHBaseClient) with StackableEventsourced[ExportOpenDataMap, ExportOpenDataManager]), opendata_exporter <<)
 
-    // TODO(c): complete this
-    deploySingleton(Props(new BitwayProcessor(routers.depositWithdrawProcessor) with StackableEventsourced[TBitwayState, BitwayManager]), bitway_processor <<)
-    deploy(Props(new BitwayReceiver(routers.bitwayProcessor)), bitway_receiver <<)
+    val currencySet = markets.flatMap(i => List(i.inCurrency, i.outCurrency)).toSet.toSeq
+    currencySet foreach { c =>
+      def props = Props(new BitwayProcessor(routers.depositWithdrawProcessor,
+        c) with StackableEventsourced[TBitwayState, BitwayManager])
+      deploySingleton(props, bitway_processor << c)
+      deploy(Props(new BitwayReceiver(routers.bitwayProcessors(c), c)), bitway_receiver << c)
+    }
 
     // Deploy monitor at last
     deployMonitor(routers)

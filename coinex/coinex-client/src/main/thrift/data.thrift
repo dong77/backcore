@@ -410,15 +410,6 @@ struct BlockIndex {
     2: optional i64 height
 }
 
-struct CurrencyNetwork {
-    1: Currency currency
-    2: list<BlockIndex> blockIndexes
-    3: set<string> unusedAddresses
-    4: set<string> usedAddresses
-    5: set<string> hotAddresses
-    6: set<string> coldAddresses
-}
-
 // We have a case-class named Robot
 struct TRobot {
     1: i64 robotId

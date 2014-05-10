@@ -27,12 +27,7 @@ object ConstantRole extends Enumeration {
 
   val account_transfer_mongo_reader = Value
 
-  val bitway_receiver = Value
-
-  val bitway_processor = Value
-
   val opendata_exporter = Value
-
 }
 
 object MarketRole extends Enumeration {
@@ -40,4 +35,9 @@ object MarketRole extends Enumeration {
   val market_depth_view = Value
   val candle_data_view = Value
   val market_processor_event_export = Value
+}
+
+object BitwayRole extends Enumeration {
+  val bitway_processor = Value
+  val bitway_receiver = Value
 }

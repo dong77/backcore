@@ -26,8 +26,8 @@ typedef data.CashAccount           CashAccount
 typedef data.Currency              Currency
 typedef data.ABCodeItem            ABCodeItem
 typedef data.Metrics               Metrics
-typedef data.CurrencyNetwork       CurrencyNetwork
 typedef data.TRobot                TRobot
+typedef data.BlockIndex            BlockIndex
 
 struct TUserState {
     1: map<i64, i64> idMap
@@ -93,5 +93,10 @@ struct TRobotState {
 }
 
 struct TBitwayState {
-    1: map<Currency, CurrencyNetwork> stats
+    1: Currency currency
+    2: list<BlockIndex> blockIndexes
+    3: set<string> unusedAddresses
+    4: set<string> usedAddresses
+    5: set<string> hotAddresses
+    6: set<string> coldAddresses
 }

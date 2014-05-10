@@ -27,86 +27,74 @@ object BitwayManager {
   )
 }
 
-class BitwayManager extends Manager[TBitwayState] {
+class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
 
-  val unusedAddresses = Map.empty[Currency, Set[String]]
-  val usedAddresses = Map.empty[Currency, Set[String]]
-  val hotAddresses = Map.empty[Currency, Set[String]]
-  val coldAddresses = Map.empty[Currency, Set[String]]
-  val blockIndexes = Map.empty[Currency, ArrayBuffer[BlockIndex]]
-  val supportedCurrency = Set[Currency](Btc) // TODO(c): put this to config file
+  val unusedAddresses = Set.empty[String]
+  val usedAddresses = Set.empty[String]
+  val hotAddresses = Set.empty[String]
+  val coldAddresses = Set.empty[String]
+  val blockIndexes = ArrayBuffer.empty[BlockIndex]
 
   val FAUCET_THRESHOLD: Double = 0.5
   val INIT_ADDRESS_NUM: Int = 100
 
-  def getSnapshot = TBitwayState(blockIndexes.map(kv =>
-    (kv._1 -> CurrencyNetwork(
-      kv._1, kv._2,
-      unusedAddresses(kv._1).clone,
-      usedAddresses(kv._1).clone,
-      hotAddresses(kv._1).clone,
-      coldAddresses(kv._1).clone)
-    )));
+  def getSnapshot = TBitwayState(
+    supportedCurrency,
+    blockIndexes,
+    unusedAddresses,
+    usedAddresses,
+    hotAddresses,
+    coldAddresses
+  )
 
   def loadSnapshot(s: TBitwayState) {
     unusedAddresses.clear
-    unusedAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2.unusedAddresses)))
+    unusedAddresses ++= s.unusedAddresses
     usedAddresses.clear
-    usedAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2.usedAddresses)))
+    usedAddresses ++= s.usedAddresses
     hotAddresses.clear
-    hotAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2.hotAddresses)))
+    hotAddresses ++= s.hotAddresses
     coldAddresses.clear
-    coldAddresses ++= s.stats.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2.coldAddresses)))
+    coldAddresses ++= s.coldAddresses
     blockIndexes.clear
-    blockIndexes ++= s.stats.map(kv => (kv._1 -> (kv._2.blockIndexes.to[ArrayBuffer])))
+    blockIndexes ++= s.blockIndexes.to[ArrayBuffer]
   }
 
-  def isDryUp(currency: Currency) = (unusedAddresses.getOrElseUpdate(currency, Set.empty[String]).size == 0 ||
-    usedAddresses.getOrElseUpdate(currency, Set.empty[String]).size > unusedAddresses.getOrElseUpdate(
-      currency, Set.empty[String]).size * FAUCET_THRESHOLD)
+  def isDryUp = unusedAddresses.size == 0 || usedAddresses.size > unusedAddresses.size * FAUCET_THRESHOLD
 
-  def allocateAddress(currency: Currency): (Option[String], Boolean /* need fetch from bitway */ ) = {
-    if (!unusedAddresses.contains(currency)) {
+  def allocateAddress: (Option[String], Boolean /* need fetch from bitway */ ) = {
+    if (unusedAddresses.isEmpty) {
       (None, true)
     } else {
-      val addresses = unusedAddresses(currency)
-      if (addresses.isEmpty) {
-        (None, true)
-      } else {
-        val validAddress = addresses.headOption
-        if (isDryUp(currency))
-          (validAddress, true)
-        else
-          (validAddress, false)
-      }
+      val validAddress = unusedAddresses.headOption
+      if (isDryUp)
+        (validAddress, true)
+      else
+        (validAddress, false)
     }
   }
 
-  def addressAllocated(currency: Currency, address: String) {
-    assert(unusedAddresses.contains(currency))
-    val addresses = unusedAddresses(currency)
-    assert(addresses.contains(address))
-    addresses.remove(address)
-    usedAddresses.getOrElseUpdate(currency, Set.empty[String]).add(address)
+  def addressAllocated(address: String) {
+    assert(unusedAddresses.contains(address))
+    unusedAddresses.remove(address)
+    usedAddresses.add(address)
   }
 
-  def faucetAddress(currency: Currency, addresses: Set[String]) {
-    unusedAddresses.getOrElseUpdate(currency, Set.empty[String]) ++= addresses
+  def faucetAddress(addresses: Set[String]) {
+    unusedAddresses ++= addresses
   }
 
   def getSupportedCurrency = supportedCurrency
 
-  def getBlockIndexes(currency: Currency): Option[ArrayBuffer[BlockIndex]] = blockIndexes.get(currency)
+  def getBlockIndexes: Option[ArrayBuffer[BlockIndex]] = Option(blockIndexes)
 
-  def getCurrentBlockIndex(currency: Currency): Option[BlockIndex] = {
-    blockIndexes.get(currency) match {
-      case None => None
-      case Some(indexes) if indexes.size > 0 => Some(indexes(0))
-      case _ => None
-    }
+  def getCurrentBlockIndex: Option[BlockIndex] = {
+    if (blockIndexes.size > 0)
+      Some(blockIndexes(0))
+    else None
   }
 
-  def getCryptoCurrencyTransactionType(currency: Currency, inputs: Set[String],
+  def getCryptoCurrencyTransactionType(inputs: Set[String],
     outputs: Set[String]): Option[CryptoCurrencyTransactionType] = {
     object AddressSetEnum extends Enumeration {
       type AddressSet = Value
@@ -115,23 +103,23 @@ class BitwayManager extends Manager[TBitwayState] {
 
     import AddressSetEnum._
 
-    def getIntersectSet(currency: Currency, set: Set[String]): ValueSet = {
+    def getIntersectSet(set: Set[String]): ValueSet = {
       var enumSet = ValueSet.empty
-      if ((set & unusedAddresses.getOrElse(currency, Set.empty[String])).nonEmpty)
+      if ((set & unusedAddresses).nonEmpty)
         enumSet += UNUSED
-      if ((set & usedAddresses.getOrElse(currency, Set.empty[String])).nonEmpty)
+      if ((set & usedAddresses).nonEmpty)
         enumSet += USED
-      if ((set & hotAddresses.getOrElse(currency, Set.empty[String])).nonEmpty)
+      if ((set & hotAddresses).nonEmpty)
         enumSet += HOT
-      if ((set & coldAddresses.getOrElse(currency, Set.empty[String])).nonEmpty)
+      if ((set & coldAddresses).nonEmpty)
         enumSet += COLD
       return enumSet
     }
 
     // Transfer will disable someone withdrawal to his deposit address.
     // Which means one CryptoCurrencyTransaction can't has two types: Deposit as well as Withdrawal
-    val inputsMatched = getIntersectSet(currency, inputs)
-    val outputsMatched = getIntersectSet(currency, outputs)
+    val inputsMatched = getIntersectSet(inputs)
+    val outputsMatched = getIntersectSet(outputs)
     if (inputsMatched.contains(USED) && outputsMatched.contains(HOT)) {
       Some(CryptoCurrencyTransactionType.UserToHot)
     } else if (inputsMatched.contains(HOT)) {
@@ -154,9 +142,8 @@ class BitwayManager extends Manager[TBitwayState] {
 
   import BlockContinuityEnum._
 
-  def getBlockContinuity(currency: Currency,
-    blocksMsg: CryptoCurrencyBlocksMessage): BlockContinuity = {
-    getBlockIndexes(currency) match {
+  def getBlockContinuity(blocksMsg: CryptoCurrencyBlocksMessage): BlockContinuity = {
+    getBlockIndexes match {
       case None => SUCCESSOR
       case Some(indexList) if indexList.size > 0 =>
         assert(blocksMsg.blocks.size > 0)
@@ -177,42 +164,41 @@ class BitwayManager extends Manager[TBitwayState] {
   }
 
   def completeCryptoCurrencyTransaction(
-    currency: Currency,
     tx: CryptoCurrencyTransaction,
     prevBlock: Option[BlockIndex] = None,
     includedBlock: Option[BlockIndex] = None): Option[CryptoCurrencyTransaction] = {
     val CryptoCurrencyTransaction(_, _, _, inputs, outputs, _, _, _, status) = tx
-    val txType = getCryptoCurrencyTransactionType(currency, Set.empty[String] ++ inputs.get.map(_.address),
+    val txType = getCryptoCurrencyTransactionType(Set.empty[String] ++ inputs.get.map(_.address),
       Set.empty[String] ++ outputs.get.map(_.address))
     if (txType.isDefined) {
-      val regularizeInputs = inputs.map(_.map(i => i.copy(innerAmount = i.amount.map(_.internalValue(currency)))))
-      val regularizeOutputs = outputs.map(_.map(i => i.copy(innerAmount = i.amount.map(_.internalValue(currency)))))
+      val regularizeInputs = inputs.map(_.map(i => i.copy(
+        innerAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)))))
+      val regularizeOutputs = outputs.map(_.map(i => i.copy(
+        innerAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)))))
       Some(tx.copy(inputs = regularizeInputs, outputs = regularizeOutputs,
-        prevBlock = if (prevBlock.isDefined) prevBlock else getCurrentBlockIndex(currency),
+        prevBlock = if (prevBlock.isDefined) prevBlock else getCurrentBlockIndex,
         includedBlock = includedBlock, txType = txType))
     } else {
       None
     }
   }
 
-  def extractTxsFromBlocks(currency: Currency, blocks: List[CryptoCurrencyBlock]): List[CryptoCurrencyTransaction] = {
+  def extractTxsFromBlocks(blocks: List[CryptoCurrencyBlock]): List[CryptoCurrencyTransaction] = {
     blocks.flatMap { block =>
       val CryptoCurrencyBlock(index, prevIndex, txsInBlock) = block
-      txsInBlock.map(completeCryptoCurrencyTransaction(
-        currency, _, Some(prevIndex), Some(index))).filter(_.isDefined).map(_.get)
+      txsInBlock.map(completeCryptoCurrencyTransaction(_, Some(prevIndex), Some(index))).filter(_.isDefined).map(_.get)
     }
   }
 
   import BitwayManager._
 
-  def appendBlockChain(currency: Currency, chain: List[BlockIndex], startIndex: Option[BlockIndex] = None) {
-    val indexList = blockIndexes.getOrElseUpdate(currency, ArrayBuffer.empty[BlockIndex])
-    val reorgPos = indexList.indexWhere(Option(_) == startIndex) + 1
+  def appendBlockChain(chain: List[BlockIndex], startIndex: Option[BlockIndex] = None) {
+    val reorgPos = blockIndexes.indexWhere(Option(_) == startIndex) + 1
     if (reorgPos > 0) {
-      indexList.remove(reorgPos, indexList.length - reorgPos)
+      blockIndexes.remove(reorgPos, blockIndexes.length - reorgPos)
     }
-    indexList ++= chain
-    if (indexList.length > INDEX_LIST_LIMIT.getOrElseUpdate(currency, 10))
-      indexList.remove(0, indexList.length - INDEX_LIST_LIMIT(currency))
+    blockIndexes ++= chain
+    if (blockIndexes.length > INDEX_LIST_LIMIT.getOrElseUpdate(supportedCurrency, 10))
+      blockIndexes.remove(0, blockIndexes.length - INDEX_LIST_LIMIT(supportedCurrency))
   }
 }

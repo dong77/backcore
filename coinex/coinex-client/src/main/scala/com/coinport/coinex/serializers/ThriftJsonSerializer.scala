@@ -25,7 +25,6 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cCryptoCurrencyTransaction = JsonScalaCodec(CryptoCurrencyTransaction)
   lazy val _cCryptoCurrencyTransactionPort = JsonScalaCodec(CryptoCurrencyTransactionPort)
   lazy val _cCryptoCurrencyTransferInfo = JsonScalaCodec(CryptoCurrencyTransferInfo)
-  lazy val _cCurrencyNetwork = JsonScalaCodec(CurrencyNetwork)
   lazy val _cCurrentAsset = JsonScalaCodec(CurrentAsset)
   lazy val _cCurrentPrice = JsonScalaCodec(CurrentPrice)
   lazy val _cCursor = JsonScalaCodec(Cursor)
@@ -171,7 +170,6 @@ class ThriftJsonSerializer extends Serializer {
     case m: CryptoCurrencyTransaction => _cCryptoCurrencyTransaction(m)
     case m: CryptoCurrencyTransactionPort => _cCryptoCurrencyTransactionPort(m)
     case m: CryptoCurrencyTransferInfo => _cCryptoCurrencyTransferInfo(m)
-    case m: CurrencyNetwork => _cCurrencyNetwork(m)
     case m: CurrentAsset => _cCurrentAsset(m)
     case m: CurrentPrice => _cCurrentPrice(m)
     case m: Cursor => _cCursor(m)
@@ -321,7 +319,6 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[CryptoCurrencyTransaction.Immutable] => _cCryptoCurrencyTransaction.invert(bytes).get
     case Some(c) if c == classOf[CryptoCurrencyTransactionPort.Immutable] => _cCryptoCurrencyTransactionPort.invert(bytes).get
     case Some(c) if c == classOf[CryptoCurrencyTransferInfo.Immutable] => _cCryptoCurrencyTransferInfo.invert(bytes).get
-    case Some(c) if c == classOf[CurrencyNetwork.Immutable] => _cCurrencyNetwork.invert(bytes).get
     case Some(c) if c == classOf[CurrentAsset.Immutable] => _cCurrentAsset.invert(bytes).get
     case Some(c) if c == classOf[CurrentPrice.Immutable] => _cCurrentPrice.invert(bytes).get
     case Some(c) if c == classOf[Cursor.Immutable] => _cCursor.invert(bytes).get

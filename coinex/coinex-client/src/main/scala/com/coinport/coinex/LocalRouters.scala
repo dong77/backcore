@@ -14,6 +14,7 @@ import Implicits._
 import com.coinport.coinex.common._
 import ConstantRole._
 import MarketRole._
+import BitwayRole._
 import akka.cluster.Cluster
 
 class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
@@ -54,9 +55,14 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
 
   val mailer = routerFor(ConstantRole.mailer <<)
 
-  val bitwayReceiver = routerFor(ConstantRole.bitway_receiver <<)
+  val currencySet = markets.flatMap(i => List(i.inCurrency, i.outCurrency)).toSet.toSeq
+  val bitwayProcessors = Map(currencySet map (c =>
+    c -> routerForSingleton(bitway_processor << c)
+  ): _*)
 
-  val bitwayProcessor = routerForSingleton(ConstantRole.bitway_processor <<)
+  val bitwayReceivers = Map(currencySet map (c =>
+    c -> routerForSingleton(bitway_receiver << c)
+  ): _*)
 
   val metricsView = routerFor(metrics_view<<)
 
