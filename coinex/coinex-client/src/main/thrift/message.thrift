@@ -170,19 +170,16 @@ typedef data.CryptoCurrencyBlock                _CryptoCurrencyBlock
 /* I    */ struct CryptoCurrencyBlocksMessage             {1: optional _BlockIndex startIndex, /* BlockIndex(None, None) means in another branch */ 2: list<_CryptoCurrencyBlock> blocks}
 /* C    */ struct BitwayRequest                           {
                                                               1: _BitwayRequestType type
-                                                              2: i64 requestId
-                                                              3: _Currency currency
-                                                              4: optional GenerateAddresses generateAddresses
-                                                              5: optional GetMissedCryptoCurrencyBlocks getMissedCryptoCurrencyBlocksRequest
-                                                              6: optional TransferCryptoCurrency transferCryptoCurrency
+                                                              2: _Currency currency
+                                                              3: optional GenerateAddresses generateAddresses
+                                                              4: optional GetMissedCryptoCurrencyBlocks getMissedCryptoCurrencyBlocksRequest
+                                                              5: optional TransferCryptoCurrency transferCryptoCurrency
                                                           }
 /* I    */ struct BitwayMessage                           {
-                                                              1: _BitwayRequestType type
-                                                              2: i64 requestId
-                                                              3: _Currency currency
-                                                              4: optional GenerateAddressesResult generateAddressResponse
-                                                              5: optional _CryptoCurrencyTransaction tx
-                                                              6: optional CryptoCurrencyBlocksMessage blocks
+                                                              1: _Currency currency
+                                                              2: optional GenerateAddressesResult generateAddressResponse
+                                                              3: optional _CryptoCurrencyTransaction tx
+                                                              4: optional CryptoCurrencyBlocksMessage blocks
                                                           }
 
 ////////////////////////////////////////////////////////////////

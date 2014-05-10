@@ -17,7 +17,6 @@ import com.redis._
 import com.redis.serialization.Parse.Implicits.parseByteArray
 import scala.collection.mutable.Set
 import scala.concurrent.duration._
-import scala.util.Random
 
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.PersistentId._
@@ -74,7 +73,7 @@ class BitwayProcessor(transferProcessor: ActorRef) extends ExtendedProcessor wit
       }
     case FetchAddresses(currency) if pushClient.isDefined =>
       pushClient.get.rpush(REQUEST_CHANNEL, serializer.toBinary(BitwayRequest(BitwayRequestType.GenerateAddress,
-        Random.nextLong, currency, generateAddresses = Some(GenerateAddresses(INIT_FETCH_ADDRESS_NUM)))))
+        currency, generateAddresses = Some(GenerateAddresses(INIT_FETCH_ADDRESS_NUM)))))
 
     case m @ GetNewAddress(currency, _) =>
       val (address, needFetch) = manager.allocateAddress(currency)
@@ -90,9 +89,9 @@ class BitwayProcessor(transferProcessor: ActorRef) extends ExtendedProcessor wit
 
     case m @ TransferCryptoCurrency(currency, _, _) if pushClient.isDefined =>
       pushClient.get.rpush(REQUEST_CHANNEL, serializer.toBinary(BitwayRequest(BitwayRequestType.Transfer,
-        Random.nextLong, currency, transferCryptoCurrency = Some(m))))
+        currency, transferCryptoCurrency = Some(m))))
 
-    case m @ BitwayMessage(t, id, currency, Some(res), None, None) =>
+    case m @ BitwayMessage(currency, Some(res), None, None) =>
       if (res.error == ErrorCode.Ok) {
         persist(res) { event =>
           updateState(m)
@@ -100,7 +99,7 @@ class BitwayProcessor(transferProcessor: ActorRef) extends ExtendedProcessor wit
       } else {
         log.error("error occur when fetch addresses: " + res)
       }
-    case m @ BitwayMessage(t, id, currency, None, Some(tx), None) =>
+    case m @ BitwayMessage(currency, None, Some(tx), None) =>
       if (tx.status == CryptoCurrencyTransactionStatus.Failed) {
         channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(
           currency, List(tx))), transferProcessor.path)
@@ -112,7 +111,7 @@ class BitwayProcessor(transferProcessor: ActorRef) extends ExtendedProcessor wit
               List(completedTx))), transferProcessor.path)
         }
       }
-    case m @ BitwayMessage(t, id, currency, None, None, Some(blocksMsg)) =>
+    case m @ BitwayMessage(currency, None, None, Some(blocksMsg)) =>
       val continuity = manager.getBlockContinuity(currency, blocksMsg)
       continuity match {
         case DUP => log.info("receive block list which first block has seen: " + blocksMsg.blocks.head.index)
@@ -125,7 +124,7 @@ class BitwayProcessor(transferProcessor: ActorRef) extends ExtendedProcessor wit
           }
         case GAP if pushClient.isDefined =>
           pushClient.get.rpush(REQUEST_CHANNEL, serializer.toBinary(BitwayRequest(BitwayRequestType.GetMissedBlocks,
-            Random.nextLong, currency, getMissedCryptoCurrencyBlocksRequest = Some(GetMissedCryptoCurrencyBlocks(
+            currency, getMissedCryptoCurrencyBlocksRequest = Some(GetMissedCryptoCurrencyBlocks(
               manager.getBlockIndexes(currency).get, blocksMsg.blocks.head.index)))))
         case OTHER_BRANCH =>
           throw new RuntimeException("The crypto currency seems has multi branches: " + currency)
@@ -134,9 +133,9 @@ class BitwayProcessor(transferProcessor: ActorRef) extends ExtendedProcessor wit
 
   def updateState: Receive = {
     case GetNewAddress(currency, Some(address)) => manager.addressAllocated(currency, address)
-    case BitwayMessage(_, _, currency, Some(res), None, None) => manager.faucetAddress(currency,
+    case BitwayMessage(currency, Some(res), None, None) => manager.faucetAddress(currency,
       Set.empty[String] ++ res.addresses)
-    case BitwayMessage(t, id, currency, None, None, Some(CryptoCurrencyBlocksMessage(startIndex, blocks))) =>
+    case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlocksMessage(startIndex, blocks))) =>
       manager.appendBlockChain(currency, blocks.map(_.index).toList, startIndex)
   }
 
