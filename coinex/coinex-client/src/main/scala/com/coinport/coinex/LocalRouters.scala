@@ -9,6 +9,7 @@ import akka.actor._
 import akka.cluster.routing._
 import akka.routing._
 import akka.contrib.pattern.ClusterSingletonProxy
+import com.coinport.coinex.common.Constants
 import com.coinport.coinex.data._
 import Implicits._
 import com.coinport.coinex.common._
@@ -55,13 +56,10 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
 
   val mailer = routerFor(ConstantRole.mailer <<)
 
-  val currencySet = markets.flatMap(i => List(i.inCurrency, i.outCurrency)).toSet.toSeq
+  val currencySet = markets.flatMap(i => List(i.inCurrency, i.outCurrency)).toSet.filter(
+    _.value >= Constants.MIN_CRYPTO_CURRENCY_INDEX).toSeq
   val bitwayProcessors = Map(currencySet map (c =>
     c -> routerForSingleton(bitway_processor << c)
-  ): _*)
-
-  val bitwayReceivers = Map(currencySet map (c =>
-    c -> routerForSingleton(bitway_receiver << c)
   ): _*)
 
   val metricsView = routerFor(metrics_view<<)

@@ -41,8 +41,8 @@ object BitwayProcessor {
   }
   val serializer = new ThriftBinarySerializer()
 
-  def getRequestChannel(currency: Currency) = "creq_" + currency
-  def getResponseChannel(currency: Currency) = "cres_" + currency
+  def getRequestChannel(currency: Currency) = "creq_" + currency.toString.toLowerCase
+  def getResponseChannel(currency: Currency) = "cres_" + currency.toString.toLowerCase
 
 }
 

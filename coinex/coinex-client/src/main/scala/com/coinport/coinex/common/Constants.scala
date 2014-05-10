@@ -28,5 +28,7 @@ object Constants {
   // WARNING: this belongs to somewhere else
   def ascending = (lhs: Double, rhs: Double) => lhs <= rhs
   def descending = (lhs: Double, rhs: Double) => lhs >= rhs
+
+  val MIN_CRYPTO_CURRENCY_INDEX = 1000
 }
 
