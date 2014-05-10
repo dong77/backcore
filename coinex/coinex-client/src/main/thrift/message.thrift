@@ -161,10 +161,10 @@ typedef data.CryptoCurrencyBlock                _CryptoCurrencyBlock
 /* C    */ struct GetNewAddress                           {1: _Currency currency, 2: optional string assignedAddress}
 /* R    */ struct GetNewAddressResult                     {1: _ErrorCode error = data.ErrorCode.OK, 2: optional string address}
 /* C,I  */ struct TransferCryptoCurrency                  {1: _CryptoCurrencyTransferInfo transferInfo, 2: _CryptoCurrencyTransactionType type}
-/* I    */ struct MultiCryptoCurrencyTransactionMessage   {1: _Currency currency, 2: list<_CryptoCurrencyTransaction> txs, 3: optional _BlockIndex newIndex}
+/* I    */ struct MultiCryptoCurrencyTransactionMessage   {1: _Currency currency, 2: list<_CryptoCurrencyTransaction> txs, 3: optional _BlockIndex reorgIndex}
 
 ////////// Bitway nodejs
-/* C    */ struct GenerateAddresses                     {1: i32 num}
+/* C    */ struct GenerateAddresses                       {1: i32 num}
 /* C    */ struct GetMissedCryptoCurrencyBlocks           {1: list<_BlockIndex> startIndexs, 2: _BlockIndex endIndex} // returned (startIndex, endIndex]
 /* R    */ struct GenerateAddressesResult                 {1: _ErrorCode error, 2: set<string> addresses}
 /* I    */ struct CryptoCurrencyBlocksMessage             {1: optional _BlockIndex startIndex, /* BlockIndex(None, None) means in another branch */ 2: list<_CryptoCurrencyBlock> blocks}

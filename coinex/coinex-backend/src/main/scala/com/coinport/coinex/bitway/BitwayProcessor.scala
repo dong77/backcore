@@ -19,7 +19,6 @@ import scala.collection.mutable.Set
 import scala.concurrent.duration._
 import scala.util.Random
 
-import com.coinport.coinex.api.model._
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
@@ -102,26 +101,28 @@ class BitwayProcessor(transferProcessor: ActorRef) extends ExtendedProcessor wit
         channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(
           currency, List(tx))), transferProcessor.path)
       } else {
-        val CryptoCurrencyTransaction(_, _, _, inputs, outputs, _, _, _, status) = tx
-        val txType = manager.getCryptoCurrencyTxType(currency, Set.empty[String] ++ inputs.get.map(_.address),
-          Set.empty[String] ++ outputs.get.map(_.address))
-        if (txType.isDefined) {
-          val currentBlock = manager.getCurrentBlockIndex(currency)
-          val regularizeInputs = inputs.map(_.map(i => i.copy(innerAmount = i.amount.map(_.internalValue(currency)))))
-          val regularizeOutputs = outputs.map(_.map(i => i.copy(innerAmount = i.amount.map(_.internalValue(currency)))))
-          channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
-            List(tx.copy(inputs = regularizeInputs, outputs = regularizeOutputs, prevBlock = currentBlock,
-              txType = txType)))), transferProcessor.path)
+        manager.completeCryptoCurrencyTransaction(currency, tx) match {
+          case None => None
+          case Some(completedTx) =>
+            channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
+              List(completedTx))), transferProcessor.path)
         }
       }
-    case m @ BitwayMessage(t, id, currency, None, None, Some(blocks)) =>
-      manager.getBlockContinuity(currency, blocks) match {
-        case SUCCESSOR => None
-        case REORG => None
+    case m @ BitwayMessage(t, id, currency, None, None, Some(blocksMsg)) =>
+      val continuity = manager.getBlockContinuity(currency, blocksMsg)
+      continuity match {
+        case DUP => log.info("receive block list which first block has seen: " + blocksMsg.blocks.head.index)
+        case SUCCESSOR | REORG =>
+          persist(m) { event =>
+            updateState(event)
+            val reorgIndex = if (continuity == REORG) blocksMsg.startIndex else None
+            channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
+              manager.extractTxsFromBlocks(currency, blocksMsg.blocks.toList), reorgIndex)), transferProcessor.path)
+          }
         case GAP if pushClient.isDefined =>
           pushClient.get.rpush(REQUEST_CHANNEL, serializer.toBinary(BitwayRequest(BitwayRequestType.GetMissedBlocks,
             Random.nextLong, currency, getMissedCryptoCurrencyBlocksRequest = Some(GetMissedCryptoCurrencyBlocks(
-              manager.getBlockIndexes(currency).get, blocks.blocks.head.index)))))
+              manager.getBlockIndexes(currency).get, blocksMsg.blocks.head.index)))))
         case OTHER_BRANCH =>
           throw new RuntimeException("The crypto currency seems has multi branches: " + currency)
       }
@@ -131,6 +132,8 @@ class BitwayProcessor(transferProcessor: ActorRef) extends ExtendedProcessor wit
     case GetNewAddress(currency, Some(address)) => manager.addressAllocated(currency, address)
     case BitwayMessage(_, _, currency, Some(res), None, None) => manager.faucetAddress(currency,
       Set.empty[String] ++ res.addresses)
+    case BitwayMessage(t, id, currency, None, None, Some(CryptoCurrencyBlocksMessage(startIndex, blocks))) =>
+      manager.appendBlockChain(currency, blocks.map(_.index).toList, startIndex)
   }
 
   private def scheduleTryPour() = {
