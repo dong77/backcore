@@ -153,7 +153,6 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cTAssetState = BinaryScalaCodec(TAssetState)
   lazy val _cTBitwayState = BinaryScalaCodec(TBitwayState)
   lazy val _cTCandleDataState = BinaryScalaCodec(TCandleDataState)
-  lazy val _cTExportToMongoState = BinaryScalaCodec(TExportToMongoState)
   lazy val _cTMarketState = BinaryScalaCodec(TMarketState)
   lazy val _cTMetricsState = BinaryScalaCodec(TMetricsState)
   lazy val _cTRobotState = BinaryScalaCodec(TRobotState)
@@ -300,7 +299,6 @@ class ThriftBinarySerializer extends Serializer {
     case m: TAssetState => _cTAssetState(m)
     case m: TBitwayState => _cTBitwayState(m)
     case m: TCandleDataState => _cTCandleDataState(m)
-    case m: TExportToMongoState => _cTExportToMongoState(m)
     case m: TMarketState => _cTMarketState(m)
     case m: TMetricsState => _cTMetricsState(m)
     case m: TRobotState => _cTRobotState(m)
@@ -451,7 +449,6 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[TAssetState.Immutable] => _cTAssetState.invert(bytes).get
     case Some(c) if c == classOf[TBitwayState.Immutable] => _cTBitwayState.invert(bytes).get
     case Some(c) if c == classOf[TCandleDataState.Immutable] => _cTCandleDataState.invert(bytes).get
-    case Some(c) if c == classOf[TExportToMongoState.Immutable] => _cTExportToMongoState.invert(bytes).get
     case Some(c) if c == classOf[TMarketState.Immutable] => _cTMarketState.invert(bytes).get
     case Some(c) if c == classOf[TMetricsState.Immutable] => _cTMetricsState.invert(bytes).get
     case Some(c) if c == classOf[TRobotState.Immutable] => _cTRobotState.invert(bytes).get

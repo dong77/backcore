@@ -65,14 +65,6 @@ struct TAccountTransferState {
     2: RedeliverFilters filters
 }
 
-struct TExportToMongoState {
-    1: i64 height
-    2: i64 index
-    3: string hash
-    4: i64 lastSnapshotTimestamp
-    5: string version
-}
-
 struct TCandleDataState {
     1: map<ChartTimeDimension, map<i64, CandleDataItem>> candleMap
 }
