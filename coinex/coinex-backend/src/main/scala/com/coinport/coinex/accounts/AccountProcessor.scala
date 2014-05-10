@@ -30,7 +30,7 @@ class AccountProcessor(
   val feeConfig: FeeConfig) extends ExtendedProcessor with EventsourcedProcessor with ChannelSupport
     with AccountManagerBehavior with ActorLogging {
 
-  private val MAX_PRICE = 1e12.toDouble
+  private val MAX_PRICE = 1E8.toDouble // 100000000.00000001 can be preserved by toDouble.
 
   override val processorId = ACCOUNT_PROCESSOR <<
   val channelToMarketProcessors = createChannelTo(MARKET_PROCESSOR <<) // DO NOT CHANGE
