@@ -13,21 +13,22 @@ include "data.thrift"
 ///////////////////// PROCESSOR AND VIEW STATES ///////////////////////
 ///////////////////////////////////////////////////////////////////////
 
-typedef data.Order                 Order
-typedef data.MarketSide            MarketSide
-typedef data.ApiSecret             ApiSecret
-typedef data.UserAccount           UserAccount
-typedef data.UserProfile           UserProfile
-typedef data.RedeliverFilters      RedeliverFilters
-typedef data.ChartTimeDimension    ChartTimeDimension
-typedef data.CandleDataItem        CandleDataItem
-typedef data.TMetricsObserver      TMetricsObserver
-typedef data.CashAccount           CashAccount
-typedef data.Currency              Currency
-typedef data.ABCodeItem            ABCodeItem
-typedef data.Metrics               Metrics
-typedef data.TRobot                TRobot
-typedef data.BlockIndex            BlockIndex
+typedef data.Order                     Order
+typedef data.MarketSide                MarketSide
+typedef data.ApiSecret                 ApiSecret
+typedef data.UserAccount               UserAccount
+typedef data.UserProfile               UserProfile
+typedef data.RedeliverFilters          RedeliverFilters
+typedef data.ChartTimeDimension        ChartTimeDimension
+typedef data.CandleDataItem            CandleDataItem
+typedef data.TMetricsObserver          TMetricsObserver
+typedef data.CashAccount               CashAccount
+typedef data.Currency                  Currency
+typedef data.ABCodeItem                ABCodeItem
+typedef data.Metrics                   Metrics
+typedef data.TRobot                    TRobot
+typedef data.BlockIndex                BlockIndex
+typedef data.CryptoCurrencyAddressType CryptoCurrencyAddressType
 
 struct TUserState {
     1: map<i64, i64> idMap
@@ -95,8 +96,5 @@ struct TRobotState {
 struct TBitwayState {
     1: Currency currency
     2: list<BlockIndex> blockIndexes
-    3: set<string> unusedAddresses
-    4: set<string> usedAddresses
-    5: set<string> hotAddresses
-    6: set<string> coldAddresses
+    3: map<CryptoCurrencyAddressType, set<string>> addresses
 }

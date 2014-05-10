@@ -47,6 +47,7 @@ typedef data.CryptoCurrencyTransaction          _CryptoCurrencyTransaction
 typedef data.BlockIndex                         _BlockIndex
 typedef data.CryptoCurrencyTransferInfo         _CryptoCurrencyTransferInfo
 typedef data.CryptoCurrencyBlock                _CryptoCurrencyBlock
+typedef data.CryptoCurrencyAddressType          _CryptoCurrencyAddressType
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -166,7 +167,7 @@ typedef data.CryptoCurrencyBlock                _CryptoCurrencyBlock
 ////////// Bitway nodejs
 /* C    */ struct GenerateAddresses                       {1: i32 num}
 /* C    */ struct GetMissedCryptoCurrencyBlocks           {1: list<_BlockIndex> startIndexs, 2: _BlockIndex endIndex} // returned (startIndex, endIndex]
-/* R    */ struct GenerateAddressesResult                 {1: _ErrorCode error, 2: set<string> addresses}
+/* R    */ struct GenerateAddressesResult                 {1: _ErrorCode error, 2: set<string> addresses, 3: _CryptoCurrencyAddressType addressType}
 /* I    */ struct CryptoCurrencyBlocksMessage             {1: optional _BlockIndex startIndex, /* BlockIndex(None, None) means in another branch */ 2: list<_CryptoCurrencyBlock> blocks}
 /* C    */ struct BitwayRequest                           {
                                                               1: _BitwayRequestType type

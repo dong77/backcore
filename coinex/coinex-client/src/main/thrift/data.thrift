@@ -148,6 +148,13 @@ enum CryptoCurrencyTransactionStatus {
     SUCCESS   = 4
 }
 
+enum CryptoCurrencyAddressType {
+    USER_USED = 0
+    UNUSED    = 1
+    HOT       = 2
+    COLD      = 3
+}
+
 enum CryptoCurrencyTransactionType {
     DEPOSIT     = 0
     WITHDRAWAL  = 1

@@ -29,10 +29,10 @@ object BitwayManager {
 
 class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
 
-  val unusedAddresses = Set.empty[String]
-  val usedAddresses = Set.empty[String]
-  val hotAddresses = Set.empty[String]
-  val coldAddresses = Set.empty[String]
+  import CryptoCurrencyAddressType._
+
+  val addresses: Map[CryptoCurrencyAddressType, Set[String]] = Map(
+    CryptoCurrencyAddressType.list.map(_ -> Set.empty[String]): _*)
   val blockIndexes = ArrayBuffer.empty[BlockIndex]
 
   val FAUCET_THRESHOLD: Double = 0.5
@@ -41,32 +41,23 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
   def getSnapshot = TBitwayState(
     supportedCurrency,
     blockIndexes,
-    unusedAddresses,
-    usedAddresses,
-    hotAddresses,
-    coldAddresses
+    addresses.map(kv => (kv._1 -> kv._2.clone))
   )
 
   def loadSnapshot(s: TBitwayState) {
-    unusedAddresses.clear
-    unusedAddresses ++= s.unusedAddresses
-    usedAddresses.clear
-    usedAddresses ++= s.usedAddresses
-    hotAddresses.clear
-    hotAddresses ++= s.hotAddresses
-    coldAddresses.clear
-    coldAddresses ++= s.coldAddresses
     blockIndexes.clear
     blockIndexes ++= s.blockIndexes.to[ArrayBuffer]
+    addresses.clear
+    addresses ++= s.addresses.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2)))
   }
 
-  def isDryUp = unusedAddresses.size == 0 || usedAddresses.size > unusedAddresses.size * FAUCET_THRESHOLD
+  def isDryUp = addresses(Unused).size == 0 || addresses(UserUsed).size > addresses(Unused).size * FAUCET_THRESHOLD
 
   def allocateAddress: (Option[String], Boolean /* need fetch from bitway */ ) = {
-    if (unusedAddresses.isEmpty) {
+    if (addresses(Unused).isEmpty) {
       (None, true)
     } else {
-      val validAddress = unusedAddresses.headOption
+      val validAddress = addresses(Unused).headOption
       if (isDryUp)
         (validAddress, true)
       else
@@ -75,13 +66,13 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
   }
 
   def addressAllocated(address: String) {
-    assert(unusedAddresses.contains(address))
-    unusedAddresses.remove(address)
-    usedAddresses.add(address)
+    assert(addresses(Unused).contains(address))
+    addresses(Unused).remove(address)
+    addresses(UserUsed).add(address)
   }
 
-  def faucetAddress(addresses: Set[String]) {
-    unusedAddresses ++= addresses
+  def faucetAddress(cryptoCurrencyAddressType: CryptoCurrencyAddressType, addrs: Set[String]) {
+    addresses(cryptoCurrencyAddressType) ++= addrs
   }
 
   def getSupportedCurrency = supportedCurrency
@@ -105,13 +96,13 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
 
     def getIntersectSet(set: Set[String]): ValueSet = {
       var enumSet = ValueSet.empty
-      if ((set & unusedAddresses).nonEmpty)
+      if ((set & addresses(Unused)).nonEmpty)
         enumSet += UNUSED
-      if ((set & usedAddresses).nonEmpty)
+      if ((set & addresses(UserUsed)).nonEmpty)
         enumSet += USED
-      if ((set & hotAddresses).nonEmpty)
+      if ((set & addresses(Hot)).nonEmpty)
         enumSet += HOT
-      if ((set & coldAddresses).nonEmpty)
+      if ((set & addresses(Cold)).nonEmpty)
         enumSet += COLD
       return enumSet
     }

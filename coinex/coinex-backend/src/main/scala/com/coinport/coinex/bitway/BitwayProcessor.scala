@@ -135,7 +135,8 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency)
 
   def updateState: Receive = {
     case GetNewAddress(currency, Some(address)) => manager.addressAllocated(address)
-    case BitwayMessage(currency, Some(res), None, None) => manager.faucetAddress(Set.empty[String] ++ res.addresses)
+    case BitwayMessage(currency, Some(res), None, None) => manager.faucetAddress(
+      res.addressType, Set.empty[String] ++ res.addresses)
     case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlocksMessage(startIndex, blocks))) =>
       manager.appendBlockChain(blocks.map(_.index).toList, startIndex)
   }
