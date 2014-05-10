@@ -12,9 +12,10 @@ import com.coinport.coinex.common._
 
 class RichDouble(raw: Double) {
   def !!! = {
-    if (raw < 1.0) scaled(26)
+    if (raw <= 0.0) raw
+    else if (raw < 1.0) scaled(26)
     else if (raw > 1.0) scaled(8)
-    else raw
+    else 1.0
   }
 
   def scaled(s: Int) = BigDecimal(raw).setScale(s, BigDecimal.RoundingMode.HALF_UP).toDouble
