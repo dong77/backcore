@@ -35,3 +35,5 @@ lmdb/
 gen-java/
 node_modules/
 gen-nodejs/
+
+coinex/.ensime
