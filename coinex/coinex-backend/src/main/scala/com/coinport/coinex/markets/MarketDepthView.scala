@@ -20,12 +20,12 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
 
   def receive = LoggingReceive {
     case Persistent(OrderCancelled(side, order), _) if side == market || side == market.reverse =>
-      manager.adjustAmount(side, order, false)
+      manager.adjustDepth(side, order, false)
 
     case Persistent(OrderSubmitted(orderInfo, txs), _) if orderInfo.side == market || orderInfo.side == market.reverse =>
       val order = txs.lastOption.map(_.takerUpdate.current).getOrElse(orderInfo.order)
-      manager.adjustAmount(orderInfo.side, order, true)
-      txs foreach { manager.reduceAmount(orderInfo.side.reverse, _) }
+      manager.adjustDepth(orderInfo.side, order, true)
+      txs foreach { manager.reductDepth(orderInfo.side.reverse, _) }
 
     case QueryMarketDepth(side, maxDepth) if side == market =>
       val (asks, bids) = manager.get(maxDepth)
@@ -53,24 +53,37 @@ class MarketDepthManager(market: MarketSide) extends Manager[TMarketDepthState] 
     (asks, bids)
   }
 
-  def adjustAmount(side: MarketSide, order: Order, addOrRemove: Boolean /*true for increase, false for reduce*/ ) =
+  def adjustDepth(side: MarketSide, order: Order, addOrRemove: Boolean /*true for increase, false for reduce*/ ) =
     if (order.canBecomeMaker) {
       def adjust(amount: Long) = if (addOrRemove) amount else -amount
       val price = order.price.get
-      if (side == market) adjustAsk(price, adjust(order.maxOutAmount(price)))
-      else adjustBid((1 / price).!!!, adjust(order.maxInAmount(price)))
+      if (side == market) {
+        adjustAsk(price, adjust(order.maxOutAmount(price)))
+        println(order.id + " A@ " + price + "\t  : " + adjust(order.maxOutAmount(price)))
+      } else {
+        adjustBid((1 / price).!!!, adjust(order.maxInAmount(price)))
+        println(order.id + " B@ " + (1 / price).!!! + "\t  : " + adjust(order.maxInAmount(price)))
+      }
     }
 
-  def reduceAmount(side: MarketSide, tx: Transaction) = {
+  def reductDepth(side: MarketSide, tx: Transaction) = {
     val OrderUpdate(previous, current) = tx.makerUpdate
     val price = current.price.get
     if (side == market) {
       adjustAsk(price, -previous.maxOutAmount(price))
-      if (current.canBecomeMaker) adjustAsk(price, current.maxOutAmount(price))
+      println(current.id + " a@ " + price + "\t  : " + (-previous.maxOutAmount(price)))
+      if (current.canBecomeMaker) {
+        println(current.id + " a@ " + price + "\t  : " + (current.maxOutAmount(price)))
+        adjustAsk(price, current.maxOutAmount(price))
+      }
     } else {
       val indexPrice = (1 / price).!!!
       adjustBid(indexPrice, -previous.maxInAmount(price))
-      if (current.canBecomeMaker) adjustBid(indexPrice, current.maxInAmount(price))
+      println(current.id + " b@ " + indexPrice + "\t  : " + (-previous.maxInAmount(price)))
+      if (current.canBecomeMaker) {
+        println(current.id + " b@ " + indexPrice + "\t  : " + (current.maxInAmount(price)))
+        adjustBid(indexPrice, current.maxInAmount(price))
+      }
     }
   }
 
