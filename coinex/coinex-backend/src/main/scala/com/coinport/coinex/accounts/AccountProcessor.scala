@@ -30,6 +30,8 @@ class AccountProcessor(
   val feeConfig: FeeConfig) extends ExtendedProcessor with EventsourcedProcessor with ChannelSupport
     with AccountManagerBehavior with ActorLogging {
 
+  private val MAX_PRICE = 1e12.toDouble
+
   override val processorId = ACCOUNT_PROCESSOR <<
   val channelToMarketProcessors = createChannelTo(MARKET_PROCESSOR <<) // DO NOT CHANGE
   val channelToMarketUpdateProcessor = createChannelTo(MARKET_UPDATE_PROCESSOR<<) // DO NOT CHANGE
@@ -143,9 +145,13 @@ class AccountProcessor(
             price = order.price.map(_.!!!),
             timestamp = Some(System.currentTimeMillis))
 
-          persist(DoSubmitOrder(side, updated)) { event =>
-            channelToMarketProcessors forward Deliver(Persistent(OrderFundFrozen(side, updated)), getProcessorPath(side))
-            updateState(event)
+          if (updated.price.isDefined && (updated.price.get == 0.0 || updated.price.get > MAX_PRICE)) {
+            sender ! SubmitOrderFailed(side, order, ErrorCode.PriceOutOfRange)
+          } else {
+            persist(DoSubmitOrder(side, updated)) { event =>
+              channelToMarketProcessors forward Deliver(Persistent(OrderFundFrozen(side, updated)), getProcessorPath(side))
+              updateState(event)
+            }
           }
         }
       }
