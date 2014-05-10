@@ -12,7 +12,7 @@ var Events         = require('events'),
     Message        = require('../../../../gen-nodejs/message_types'),
     BitwayRequest  = Message.BitwayRequest,
     Data           = require('../../../../gen-nodejs/data_types'),
-    BitwayType     = Data.BitwayType,
+    BitwayRequestType     = Data.BitwayRequestType,
     Currency       = Data.Currency,
     Serializer     = require('../serializer/thrift_binary_serializer').ThriftBinarySerializer;
 
@@ -23,9 +23,12 @@ var Events         = require('events'),
  * @constructor
  * @extends {Events.EventEmitter}
  */
-var RedisProxy = module.exports.RedisProxy = function(ip, port) {
+var RedisProxy = module.exports.RedisProxy = function(currency, ip, port) {
     Events.EventEmitter.call(this);
 
+    RedisProxy.REQUEST_CHANNEL = 'creq_' + currency.toLowerCase();
+
+    RedisProxy.RESPONSE_CHANNEL = 'cres_' + currency.toLowerCase();
     this.pollClient = Redis.createClient(port, ip, { return_buffers: true });
     this.pushClient = Redis.createClient(port, ip, { return_buffers: true });
     this.serializer = new Serializer();
@@ -38,9 +41,6 @@ RedisProxy.EventType = {
     QUERY_ADDRESS: 'query_address'
 };
 
-RedisProxy.REQUEST_CHANNEL = 'creq';
-
-RedisProxy.RESPONSE_CHANNEL = 'cres';
 
 RedisProxy.prototype.start = function() {
     var listen = function(proxy) {
@@ -50,14 +50,16 @@ RedisProxy.prototype.start = function() {
                 var bwr = new BitwayRequest();
                 proxy.serializer.fromBinary(bwr, buf);
                 switch (bwr.type) {
-                    case BitwayType.GENERATE_ADDRESS:
-                        proxy.emit(RedisProxy.EventType.GENERATE_ADDRESS, bwr.requestId, bwr.currency,
-                            bwr.generateAddressRequest);
+                    case BitwayRequestType.GENERATE_ADDRESS:
+					    console.log(bwr.currency);
+						console.log(bwr.generateAddresses.num);
+                        proxy.emit(RedisProxy.EventType.GENERATE_ADDRESS, bwr.currency,
+                            bwr.generateAddresses);
                         break;
-                    case BitwayType.TRANSFER:
+                    case BitwayRequestType.TRANSFER:
                         proxy.emit(RedisProxy.EventType.TRANSFER, bwr.requestId, bwr.currency, bwr.transferRequest);
                         break;
-                    case BitwayType.QUERY_ADDRESS:
+                    case BitwayRequestType.QUERY_ADDRESS:
                         proxy.emit(RedisProxy.EventType.QUERY_ADDRESS, bwr.requestId, bwr.currency,
                             bwr.queryAddressRequest);
                         break;
