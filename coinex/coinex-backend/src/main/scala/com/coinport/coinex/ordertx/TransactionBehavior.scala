@@ -13,7 +13,8 @@ trait TransactionBehavior {
   val TAKER_ORDER_ID = "toid"
   val MAKER_ORDER_ID = "moid"
   val TIMESTAMP = "@"
-  val MARKET_SIDE = "m"
+  val MARKET = "m"
+  val SIDE = "s"
   val TRANSACTION = "t"
 
   val coll: MongoCollection
@@ -23,14 +24,17 @@ trait TransactionBehavior {
 
   def countItems(q: QueryTransaction) = coll.count(mkQuery(q))
 
-  def getItems(q: QueryTransaction): Seq[Transaction] =
+  def getItems(q: QueryTransaction): Seq[Transaction] = {
     coll.find(mkQuery(q)).sort(DBObject(TID -> -1)).skip(q.cursor.skip).limit(q.cursor.limit).map(toClass(_)).toSeq
+  }
 
   private def toBson(t: Transaction) = {
+    val market = Market(t.side._1, t.side._2)
+    val side = t.side.ordered
     MongoDBObject(
       TID -> t.id, TAKER_ID -> t.takerUpdate.current.userId, TAKER_ORDER_ID -> t.takerUpdate.current.id,
       MAKER_ID -> t.makerUpdate.current.userId, MAKER_ORDER_ID -> t.makerUpdate.current.id,
-      MARKET_SIDE -> t.side, TIMESTAMP -> t.timestamp, TIMESTAMP -> t.timestamp,
+      MARKET -> market.toString, SIDE -> side, TIMESTAMP -> t.timestamp, TIMESTAMP -> t.timestamp,
       TRANSACTION -> converter.toBinary(t))
   }
 
@@ -44,8 +48,10 @@ trait TransactionBehavior {
     if (q.uid.isDefined) query ++= $or(TAKER_ID -> q.uid.get, MAKER_ID -> q.uid.get)
     if (q.side.isDefined) query ++= {
       val qs = q.side.get
-      if (qs.bothSide) $or(MARKET_SIDE -> q.side.get.side, MARKET_SIDE -> q.side.get.side.reverse)
-      else MongoDBObject(MARKET_SIDE -> q.side.get.side)
+      val market = Market(qs.side.inCurrency, qs.side.outCurrency).toString
+      val side = qs.side.ordered
+      if (qs.bothSide) MongoDBObject(MARKET -> market)
+      else MongoDBObject(MARKET -> q.side.get.side.S, SIDE -> side)
     }
     query
   }
