@@ -41,10 +41,15 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
   }
 
   // Business logics      ----------------------------------------------
-  def regulateProfile(profile: UserProfile, verificationToken: String): UserProfile = {
+  def regulateProfile(profile: UserProfile, password: String, verificationToken: String): UserProfile = {
+    val email = profile.email.trim.toLowerCase
+    val id = getUserId
     val googleAuthenticatorSecret = googleAuthenticator.createSecret
     profile.copy(
+      id = id,
+      email = email,
       emailVerified = false,
+      passwordHash = Some(computePassword(id, email, password)),
       passwordResetToken = None,
       verificationToken = Some(verificationToken),
       loginToken = None,
