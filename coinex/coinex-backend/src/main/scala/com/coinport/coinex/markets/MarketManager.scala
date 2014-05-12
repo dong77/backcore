@@ -240,7 +240,7 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
     OrderSubmitted(orderInfo, txs)
   }
 
-  def getSnapshot = TMarketState(
+  def getSnapshot() = TMarketState(
     orderPools.map(item => (item._1 -> item._2.toList)),
     orderMap.clone, priceRestriction, getFiltersSnapshot)
 
@@ -254,10 +254,12 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
 
   // Quickly get and restore state for order simulation, this has better performance
   // than getSnapshot and loadSnapshot.
-  def getState = (orderPools.clone, orderMap.clone, priceRestriction)
+  def getState() = (orderPools.clone, orderMap.clone, priceRestriction)
 
-  def loadState(state: (Map[[MarketSide, SortedSet[Order]], Map[Long, Order], Option[Double])) = {
-    (orderPools, orderMap, priceRestriction) = state
+  def loadState(state: (Map[MarketSide, SortedSet[Order]], Map[Long, Order], Option[Double])) = {
+    orderPools = state._1
+    orderMap = state._2
+    priceRestriction = state._3
   }
 
   def isOrderPriceInGoodRange(takerSide: MarketSide, price: Option[Double]): Boolean = {
