@@ -92,4 +92,57 @@ object PerformanceTest {
       }
     }
   }
+
+  def continusPressureTest(qps: Int, cycle: Int) {
+    ////////// register user and deposit
+    before
+
+    val startTime = System.currentTimeMillis
+    var errorCount = 0L
+    val btcSide = MarketSide(Btc, Cny)
+    val rmbSide = MarketSide(Cny, Btc)
+
+    ////////// prepare test data
+    var dataList = List.empty[(Long, MarketSide, Double, Double)]
+    1 to cycle foreach { _ =>
+      val side = List(btcSide, rmbSide)(Random.nextInt(2))
+      var quantity = 0d
+      var orderPrice = 0d
+      if (side == btcSide) {
+        quantity = Random.nextDouble() + Random.nextInt(1000)
+        orderPrice = 250 + Random.nextInt(100)
+      } else {
+        quantity = 100000 + Random.nextInt(900000)
+        orderPrice = 1.0 / (250 + Random.nextInt(100))
+      }
+      val userId = Client.userMap.values.toList(Random.nextInt(Client.userMap.size))
+      dataList = dataList.::((userId, side, quantity, orderPrice))
+    }
+
+    ////////// execute test
+    1 to cycle foreach { i =>
+      val sleepTime = Random.nextInt((1000 / qps) * 2)
+
+      if (i == (cycle - 100)) {
+        val endTime = System.currentTimeMillis
+        println("execute time " + (endTime - startTime))
+      }
+      if (i % 10 == 0) Thread.sleep(sleepTime * 10)
+
+      if (i % 1000 == 0) println("sent >>>>> " + i)
+      val j = i - 1
+      val f = Client.backend ? DoSubmitOrder(
+        dataList(j)._2,
+        Order(dataList(j)._1, 0, dataList(j)._3.toLong, price = Some(dataList(j)._4), robotId = Some(dataList(j)._1)))
+
+      f onFailure {
+        case m => {
+          errorCount += 1
+          println("execute total error count: " + errorCount)
+          println("response error: " + m)
+          return
+        }
+      }
+    }
+  }
 }

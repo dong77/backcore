@@ -9,7 +9,7 @@ import com.coinport.coinex.data.MarketSide
 
 object Akka {
   val defaultAkkaConfig = "akka.conf"
-  val akkaConfigProp = System.getProperty("akka.conf")
+  val akkaConfigProp = System.getProperty("akka.config")
   val akkaConfigResource = if (akkaConfigProp != null) akkaConfigProp else defaultAkkaConfig
 
   println("=" * 20 + "  Akka config  " + "=" * 20)

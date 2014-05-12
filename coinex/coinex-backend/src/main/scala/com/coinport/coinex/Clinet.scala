@@ -24,7 +24,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object Client {
   implicit val timeout = Timeout(10 seconds)
 
-  private val config = ConfigFactory.load("client.conf")
+  val configPath = System.getProperty("akka.config") match {
+    case null => "akka.conf"
+    case c => c
+  }
+  private val config = ConfigFactory.load(configPath)
   private implicit val system = ActorSystem("coinex", config)
   private implicit val cluster = Cluster(system)
   private val markets = Seq(Btc ~> Cny)
@@ -32,8 +36,6 @@ object Client {
 
   val backend = system.actorOf(Props(new Coinex(routers)), name = "backend")
   println("Example: Client.backend ! SomeMessage()")
-
-  System.setProperty("akka.config", "client.conf")
 
   val userMap = Map(
     "wd" -> -245561917658914311L,
@@ -46,12 +48,12 @@ object Client {
 
   var robotMap: Map[String, Long] = Map.empty[String, Long]
 
-    // register default user and deposit
-    userMap.map(kv => registerUser(kv._2, kv._1 + "@coinport.com", kv._1))
-    userMap foreach { kv =>
-      AccountService.deposit(kv._2, Btc, 10000 * 1000)
-      AccountService.deposit(kv._2, Cny, 1000000 * 100)
-    }
+  // register default user and deposit
+  userMap.map(kv => registerUser(kv._2, kv._1 + "@coinport.com", kv._1))
+  userMap foreach { kv =>
+    AccountService.deposit(kv._2, Btc, 10000 * 1000)
+    AccountService.deposit(kv._2, Cny, 1000000 * 100)
+  }
 
   var basicRisk = 10.0
   val risk = userMap.map(kv => { basicRisk += 10.0; (kv._2 -> basicRisk) })
@@ -160,8 +162,8 @@ object Client {
     println("add user >>>> " + mail)
   }
 
-  def deposit(uid: Long, currency: Currency, amount: Double) =
-    AccountService.deposit(1001, Currency.Cny, 10000.0)
+  def deposit(uid: Long, amount: Double) =
+    AccountService.deposit(uid, Currency.Cny, amount)
 
   def createABCode(wUserId: Long, amount: Long, dUserId: Long) {
     Client.backend ? DoRequestGenerateABCode(wUserId, amount, None, None) map {
