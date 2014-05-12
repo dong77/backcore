@@ -23,6 +23,7 @@ import org.hbase.async.KeyValue
 import scala.concurrent.duration._
 import scala.concurrent.Future
 import scala.collection.JavaConverters._
+import scala.collection.mutable.Map
 
 import Implicits._
 import DeferredConversions._
@@ -30,6 +31,7 @@ import DeferredConversions._
 class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends ExtendedProcessor
     with EventsourcedProcessor {
   override def processorId = EXPORT_OPEN_DATA_PROCESSOR <<
+
   val config = context.system.settings.config
   private var cancellable: Cancellable = null
   lazy val openDataConfig = loadConfig("open_data_config.scala")
@@ -43,31 +45,23 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
     }
   }
 
+  // TODO(weichao): need to cancel the scheduled before handling DoExportData then reschedule.
   override def receiveCommand = LoggingReceive {
-    case DoExportData => doExportData()
+    case DoExportData =>
+      val dumpedMap = manager.exportData()
+      if (dumpedMap.nonEmpty) {
+        persist(ExportOpenDataMap(dumpedMap)) { _ => }
+      }
   }
 
   def receiveRecover = updateState
 
   def updateState: Receive = {
-    case map: ExportOpenDataMap =>
-      manager.updatePSeqMap(scala.collection.mutable.Map.empty[String, Long] ++ map.processorSeqMap)
+    case m: ExportOpenDataMap => manager.updatePSeqMap(Map.empty[String, Long] ++ m.processorSeqMap)
   }
 
   private def scheduleExport() = {
-    cancellable = context.system.scheduler.schedule(10 second, scheduleInterval, self, DoExportData)(
-      context.system.dispatcher)
-  }
-
-  override def postStop() {
-    //    fs.close()
-  }
-
-  private def doExportData() {
-    val dumpedMap = manager.doExportData()
-    if (!dumpedMap.isEmpty) {
-      persist(ExportOpenDataMap(dumpedMap))(_ => ())
-    }
+    cancellable = context.system.scheduler.schedule(10 second, scheduleInterval, self, DoExportData)(context.system.dispatcher)
   }
 
   private def loadConfig(configPath: String): OpenDataConfig = {
@@ -77,7 +71,9 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
 
 }
 
-class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context: ActorContext, val openDataConfig: OpenDataConfig) extends Manager[ExportOpenDataMap] {
+// TODO(weichao): move this manager to its own file.
+class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context: ActorContext, val openDataConfig: OpenDataConfig)
+    extends Manager[ExportOpenDataMap] {
   private val config = context.system.settings.config
   private lazy val fs: FileSystem = openHdfsSystem(openDataConfig.hdfsHost)
   private val exportSnapshotHdfsDir = openDataConfig.exportSnapshotHdfsDir
@@ -87,14 +83,16 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
   private val messagesFamily = config.getString("hbase-journal.family")
   private val cryptKey = config.getString("akka.persistence.encryption-settings")
   private val BUFFER_SIZE = 2048
-  private val SCAN_MAX_NUM_ROWS = 50
+  private val SCAN_MAX_NUM_ROWS = 200
+
   implicit var pluginPersistenceSettings = PluginPersistenceSettings(config, JOURNAL_CONFIG)
   implicit var executionContext = context.system.dispatcher
   implicit var serialization = EncryptingSerializationExtension(context.system, cryptKey)
+
   // [pid, dumpFileName]
   private val pFileMap = openDataConfig.pFileMap
   // [pId, (seqNum, timestamp)]
-  private val pSeqMap = collection.mutable.Map.empty[String, Long]
+  private val pSeqMap = Map.empty[String, Long]
   pFileMap.keySet foreach { key => pSeqMap.put(key, 1L) }
 
   def getSnapshot(): ExportOpenDataMap = {
@@ -102,10 +100,10 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
   }
 
   override def loadSnapshot(map: ExportOpenDataMap) {
-    updatePSeqMap(scala.collection.mutable.Map.empty[String, Long] ++ map.processorSeqMap)
+    updatePSeqMap(Map.empty[String, Long] ++ map.processorSeqMap)
   }
 
-  def updatePSeqMap(addedMap: scala.collection.mutable.Map[String, Long]) {
+  def updatePSeqMap(addedMap: Map[String, Long]) {
     addedMap.keySet foreach {
       key =>
         if (pFileMap.contains(key)) {
@@ -114,8 +112,8 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
     }
   }
 
-  def doExportData(): (scala.collection.mutable.Map[String, Long]) = {
-    val dumpedMap = scala.collection.mutable.Map.empty[String, Long]
+  def exportData(): (Map[String, Long]) = {
+    val dumpedMap = Map.empty[String, Long]
     pSeqMap.keySet foreach {
       processorId =>
         if (processorId != null && !processorId.isEmpty) {
@@ -151,7 +149,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
             }, classOf[Snapshot])
         val exportSnapshotPath = new Path(exportSnapshotHdfsDir,
           s"coinport_${pFileMap(processorId)}_snapshot_${String.valueOf(seqNum).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase)
-        val jsonSnapshot = s"""{"timestamp" : ${System.currentTimeMillis()}, "snapshot" : ${PrettyJsonSerializer.toJson(snapshot)}}"""
+        val jsonSnapshot = s"""{"timestamp": ${System.currentTimeMillis()},\n"snapshot": ${PrettyJsonSerializer.toJson(snapshot)}}"""
         withStream(new BufferedWriter(new OutputStreamWriter(fs.create(exportSnapshotPath, true)), BUFFER_SIZE))(IOUtils.write(jsonSnapshot, _))
         seqNum
 
@@ -159,7 +157,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
     }
   }
 
-  // "fromSeqNum" is included, "toSeqNum" is excluded
+  // "fromSeqNum" is inclusive, "toSeqNum" is exclusive
   def dumpMessages(processorId: String, fromSeqNum: Long, toSeqNum: Long) {
     if (toSeqNum <= fromSeqNum) return
     val client = asyncHBaseClient.getClient()
@@ -213,7 +211,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
       case data if !data.isEmpty =>
         val writer = new BufferedWriter(new OutputStreamWriter(fs.create(
           new Path(exportMessagesHdfsDir, s"coinport_${pFileMap(processorId)}_events_${String.valueOf(toSeqNum - 1).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase))))
-        writer.write(s"""{"timestamp" : ${System.currentTimeMillis()}, "messages":[""")
+        writer.write(s"""{"timestamp": ${System.currentTimeMillis()},\n"events": [""")
         writer.write(data.substring(0, data.length - 1).toString())
         writer.write("]}")
         writer.flush()
@@ -230,11 +228,11 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
   private def withStream[S <: Closeable, A](stream: S)(fun: S => A): A =
     try fun(stream) finally stream.close()
 
-  private def listSnapshots(snapshotDir: String, processorId: String): List[HdfsSnapshotDescriptor] = {
+  private def listSnapshots(snapshotDir: String, processorId: String): Seq[HdfsSnapshotDescriptor] = {
     val descs = fs.listStatus(new Path(snapshotDir)) flatMap {
       HdfsSnapshotDescriptor.from(_, processorId)
     }
-    if (descs.isEmpty) Nil else descs.sortWith(_.seqNumber > _.seqNumber).toList
+    if (descs.isEmpty) Nil else descs.sortWith(_.seqNumber > _.seqNumber).toSeq
   }
 
 }
