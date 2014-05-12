@@ -34,6 +34,12 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
       assert(side == market)
       if (cache.isEmpty) cache = Some(getDepthData(maxDepth))
       sender ! cache.get
+
+    case DoSimulateOrderSubmission(DoSubmitOrder(side, order)) =>
+      val state = manager.getState()
+      val orderSubmitted = manager.addOrderToMarket(side, order)
+      manager.loadState(state)
+      sender ! OrderSubmissionSimulated(orderSubmitted)
   }
 
   private def getDepthData(maxDepth: Int) = {

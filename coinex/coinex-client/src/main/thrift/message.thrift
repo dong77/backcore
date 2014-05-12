@@ -201,6 +201,9 @@ typedef data.CryptoCurrencyAddressType          _CryptoCurrencyAddressType
 /* Q    */ struct QueryMarketDepth                        {1: _MarketSide side, 2: i32 maxDepth}
 /* R    */ struct QueryMarketDepthResult                  {1: _MarketDepth marketDepth}
 
+/* Q    */ struct DoSimulateOrderSubmission           {1: DoSubmitOrder doSubmitOrder}
+/* R+   */ struct OrderSubmissionSimulated            {1: OrderSubmitted orderSubmitted}
+
 ////////// CandleDataView
 /* Q    */ struct QueryCandleData                         {1: _MarketSide side, 2: _ChartTimeDimension dimension, 3: i64 from, 4: i64 to}
 /* R    */ struct QueryCandleDataResult                   {1: _CandleData candleData}

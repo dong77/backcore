@@ -81,6 +81,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cDoRequestTransfer = JsonScalaCodec(DoRequestTransfer)
   lazy val _cDoResetPassword = JsonScalaCodec(DoResetPassword)
   lazy val _cDoSendEmail = JsonScalaCodec(DoSendEmail)
+  lazy val _cDoSimulateOrderSubmission = JsonScalaCodec(DoSimulateOrderSubmission)
   lazy val _cDoSubmitOrder = JsonScalaCodec(DoSubmitOrder)
   lazy val _cDoUpdateMetrics = JsonScalaCodec(DoUpdateMetrics)
   lazy val _cDoUpdateUserProfile = JsonScalaCodec(DoUpdateUserProfile)
@@ -96,6 +97,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cMultiCryptoCurrencyTransactionMessage = JsonScalaCodec(MultiCryptoCurrencyTransactionMessage)
   lazy val _cOrderCancelled = JsonScalaCodec(OrderCancelled)
   lazy val _cOrderFundFrozen = JsonScalaCodec(OrderFundFrozen)
+  lazy val _cOrderSubmissionSimulated = JsonScalaCodec(OrderSubmissionSimulated)
   lazy val _cOrderSubmitted = JsonScalaCodec(OrderSubmitted)
   lazy val _cPasswordResetTokenValidationResult = JsonScalaCodec(PasswordResetTokenValidationResult)
   lazy val _cQueryAccount = JsonScalaCodec(QueryAccount)
@@ -228,6 +230,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: DoRequestTransfer => _cDoRequestTransfer(m)
     case m: DoResetPassword => _cDoResetPassword(m)
     case m: DoSendEmail => _cDoSendEmail(m)
+    case m: DoSimulateOrderSubmission => _cDoSimulateOrderSubmission(m)
     case m: DoSubmitOrder => _cDoSubmitOrder(m)
     case m: DoUpdateMetrics => _cDoUpdateMetrics(m)
     case m: DoUpdateUserProfile => _cDoUpdateUserProfile(m)
@@ -243,6 +246,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: MultiCryptoCurrencyTransactionMessage => _cMultiCryptoCurrencyTransactionMessage(m)
     case m: OrderCancelled => _cOrderCancelled(m)
     case m: OrderFundFrozen => _cOrderFundFrozen(m)
+    case m: OrderSubmissionSimulated => _cOrderSubmissionSimulated(m)
     case m: OrderSubmitted => _cOrderSubmitted(m)
     case m: PasswordResetTokenValidationResult => _cPasswordResetTokenValidationResult(m)
     case m: QueryAccount => _cQueryAccount(m)
@@ -379,6 +383,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[DoRequestTransfer.Immutable] => _cDoRequestTransfer.invert(bytes).get
     case Some(c) if c == classOf[DoResetPassword.Immutable] => _cDoResetPassword.invert(bytes).get
     case Some(c) if c == classOf[DoSendEmail.Immutable] => _cDoSendEmail.invert(bytes).get
+    case Some(c) if c == classOf[DoSimulateOrderSubmission.Immutable] => _cDoSimulateOrderSubmission.invert(bytes).get
     case Some(c) if c == classOf[DoSubmitOrder.Immutable] => _cDoSubmitOrder.invert(bytes).get
     case Some(c) if c == classOf[DoUpdateMetrics.Immutable] => _cDoUpdateMetrics.invert(bytes).get
     case Some(c) if c == classOf[DoUpdateUserProfile.Immutable] => _cDoUpdateUserProfile.invert(bytes).get
@@ -394,6 +399,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[MultiCryptoCurrencyTransactionMessage.Immutable] => _cMultiCryptoCurrencyTransactionMessage.invert(bytes).get
     case Some(c) if c == classOf[OrderCancelled.Immutable] => _cOrderCancelled.invert(bytes).get
     case Some(c) if c == classOf[OrderFundFrozen.Immutable] => _cOrderFundFrozen.invert(bytes).get
+    case Some(c) if c == classOf[OrderSubmissionSimulated.Immutable] => _cOrderSubmissionSimulated.invert(bytes).get
     case Some(c) if c == classOf[OrderSubmitted.Immutable] => _cOrderSubmitted.invert(bytes).get
     case Some(c) if c == classOf[PasswordResetTokenValidationResult.Immutable] => _cPasswordResetTokenValidationResult.invert(bytes).get
     case Some(c) if c == classOf[QueryAccount.Immutable] => _cQueryAccount.invert(bytes).get

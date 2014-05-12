@@ -39,10 +39,12 @@ object MarketManager {
 }
 
 class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
-  private[markets] val orderPools = Map.empty[MarketSide, SortedSet[Order]]
-  private[markets] val orderMap = Map.empty[Long, Order]
+  // The following are part of persistent state.
+  private[markets] var orderPools = Map.empty[MarketSide, SortedSet[Order]]
+  private[markets] var orderMap = Map.empty[Long, Order]
   private[markets] var priceRestriction: Option[Double] = None
 
+  // The following are not part of persistent state.
   private val tailSide = headSide.reverse
   private val bothSides = Seq(headSide, tailSide)
 
@@ -248,6 +250,14 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
     orderMap.clear
     orderMap ++= s.orderMap
     loadFiltersSnapshot(s.filters)
+  }
+
+  // Quickly get and restore state for order simulation, this has better performance
+  // than getSnapshot and loadSnapshot.
+  def getState = (orderPools.clone, orderMap.clone, priceRestriction)
+
+  def loadState(state: (Map[[MarketSide, SortedSet[Order]], Map[Long, Order], Option[Double])) = {
+    (orderPools, orderMap, priceRestriction) = state
   }
 
   def isOrderPriceInGoodRange(takerSide: MarketSide, price: Option[Double]): Boolean = {
