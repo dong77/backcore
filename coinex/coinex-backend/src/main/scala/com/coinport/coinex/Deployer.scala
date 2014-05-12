@@ -48,7 +48,6 @@ import java.io.InputStream
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
   val paths = new ListBuffer[String]
-  val actors = new ListBuffer[ActorRef]
   val secret = config.getString("akka.exchange.secret")
   val userManagerSecret = MHash.sha256Base64(secret + "userProcessorSecret")
   val apiAuthSecret = MHash.sha256Base64(secret + "apiAuthSecret")
@@ -128,8 +127,6 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     // Deploy monitor at last
     deployMonitor(routers)
 
-    deployWatcher
-
     routers
   }
 
@@ -142,14 +139,12 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
         role = Some(name)),
         name = name)
       paths += actor.path.toString + "/singleton"
-      actors += actor
     }
 
   private def deploy(props: => Props, name: String) =
     if (cluster.selfRoles.contains(name)) {
       val actor = system.actorOf(props, name)
       paths += actor.path.toString
-      actors += actor
     }
 
   private def deployMailer(name: String) = {
@@ -159,7 +154,6 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       val props = Props(new Mailer(handler))
       val actor = system.actorOf(FromConfig.props(props), name)
       paths += actor.path.toString
-      actors += actor
     }
   }
 
@@ -168,10 +162,6 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     val port = config.getInt("akka.exchange.monitor.http-port")
     IO(Http) ! Http.Bind(service, hostname, port)
     log.info("Started HTTP server: http://" + hostname + ":" + port)
-  }
-
-  private def deployWatcher {
-    val watchService = system.actorOf(Props(new ActorWatcher(actors.toList)), "watch-service")
   }
 
   private def loadFeeConfig(feeConfigPath: String): FeeConfig = {
