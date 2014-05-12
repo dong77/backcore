@@ -69,6 +69,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cCryptoCurrencyBlocksMessage = BinaryScalaCodec(CryptoCurrencyBlocksMessage)
   lazy val _cDoAddNewApiSecret = BinaryScalaCodec(DoAddNewApiSecret)
   lazy val _cDoAddRobotDNA = BinaryScalaCodec(DoAddRobotDNA)
+  lazy val _cDoBitRequestTransfer = BinaryScalaCodec(DoBitRequestTransfer)
   lazy val _cDoCancelOrder = BinaryScalaCodec(DoCancelOrder)
   lazy val _cDoDeleteApiSecret = BinaryScalaCodec(DoDeleteApiSecret)
   lazy val _cDoRegisterUser = BinaryScalaCodec(DoRegisterUser)
@@ -221,6 +222,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: CryptoCurrencyBlocksMessage => _cCryptoCurrencyBlocksMessage(m)
     case m: DoAddNewApiSecret => _cDoAddNewApiSecret(m)
     case m: DoAddRobotDNA => _cDoAddRobotDNA(m)
+    case m: DoBitRequestTransfer => _cDoBitRequestTransfer(m)
     case m: DoCancelOrder => _cDoCancelOrder(m)
     case m: DoDeleteApiSecret => _cDoDeleteApiSecret(m)
     case m: DoRegisterUser => _cDoRegisterUser(m)
@@ -377,6 +379,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[CryptoCurrencyBlocksMessage.Immutable] => _cCryptoCurrencyBlocksMessage.invert(bytes).get
     case Some(c) if c == classOf[DoAddNewApiSecret.Immutable] => _cDoAddNewApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoAddRobotDNA.Immutable] => _cDoAddRobotDNA.invert(bytes).get
+    case Some(c) if c == classOf[DoBitRequestTransfer.Immutable] => _cDoBitRequestTransfer.invert(bytes).get
     case Some(c) if c == classOf[DoCancelOrder.Immutable] => _cDoCancelOrder.invert(bytes).get
     case Some(c) if c == classOf[DoDeleteApiSecret.Immutable] => _cDoDeleteApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoRegisterUser.Immutable] => _cDoRegisterUser.invert(bytes).get

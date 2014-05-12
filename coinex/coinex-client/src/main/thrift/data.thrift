@@ -464,3 +464,16 @@ struct CryptoCurrencyBlock {
     2: BlockIndex prevIndex
     3: list<CryptoCurrencyTransaction> txs
 }
+
+struct CryptoCurrencyTransferItem {
+    1: optional i64 id
+    2: optional string sigId
+    3: optional string txid
+    4: optional Currency currency
+    5: optional CryptoCurrencyTransactionPort from
+    6: optional CryptoCurrencyTransactionPort to
+    7: optional BlockIndex includedBlock
+    8: optional CryptoCurrencyTransactionType txType
+    9: optional CryptoCurrencyTransactionStatus status
+    10: optional i64 userToHotMapedDepositId
+}
