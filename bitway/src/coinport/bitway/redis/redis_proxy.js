@@ -6,15 +6,15 @@
  *        proxy.publish(xxx);
  */
 
-var Events         = require('events'),
-    Redis          = require('redis'),
-    Util           = require("util"),
-    Message        = require('../../../../gen-nodejs/message_types'),
-    BitwayRequest  = Message.BitwayRequest,
-    Data           = require('../../../../gen-nodejs/data_types'),
-    BitwayRequestType     = Data.BitwayRequestType,
-    Currency       = Data.Currency,
-    Serializer     = require('../serializer/thrift_binary_serializer').ThriftBinarySerializer;
+var Events             = require('events'),
+    Redis              = require('redis'),
+    Util               = require("util"),
+    Message            = require('../../../../gen-nodejs/message_types'),
+    BitwayRequest      = Message.BitwayRequest,
+    Data               = require('../../../../gen-nodejs/data_types'),
+    BitwayRequestType  = Data.BitwayRequestType,
+    Currency           = Data.Currency,
+    Serializer         = require('../serializer/thrift_binary_serializer').ThriftBinarySerializer;
 
 /**
  * The redis pub/sub clinet
@@ -51,8 +51,8 @@ RedisProxy.prototype.start = function() {
                 proxy.serializer.fromBinary(bwr, buf);
                 switch (bwr.type) {
                     case BitwayRequestType.GENERATE_ADDRESS:
-					    console.log(bwr.currency);
-						console.log(bwr.generateAddresses.num);
+                        console.log(bwr.currency);
+                        console.log(bwr.generateAddresses.num);
                         proxy.emit(RedisProxy.EventType.GENERATE_ADDRESS, bwr.currency,
                             bwr.generateAddresses);
                         break;
