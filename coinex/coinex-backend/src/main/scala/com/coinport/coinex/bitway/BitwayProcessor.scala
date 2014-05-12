@@ -90,9 +90,10 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency)
         sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.NotEnoughAddressInPool, None)
       }
 
-    case m @ TransferCryptoCurrency(currency, _, _) if pushClient.isDefined =>
+    case m @ TransferCryptoCurrency(currency, infos, _) if pushClient.isDefined =>
       pushClient.get.rpush(getRequestChannel(supportedCurrency), serializer.toBinary(BitwayRequest(
-        BitwayRequestType.Transfer, currency, transferCryptoCurrency = Some(m))))
+        BitwayRequestType.Transfer, currency, transferCryptoCurrency = Some(
+          m.copy(transferInfos = manager.completeTransferInfos(infos))))))
 
     case m @ BitwayMessage(currency, Some(res), None, None) =>
       if (res.error == ErrorCode.Ok) {

@@ -432,14 +432,15 @@ struct TRobot {
 struct CryptoCurrencyTransactionPort {
     1: string address
     2: optional double amount
-    3: optional i64 innerAmount
+    3: optional i64 internalAmount
 }
 
 struct CryptoCurrencyTransferInfo {
     1: i64 id
     2: string to
-    3: i64 amount
-    4: optional string from
+    3: optional i64 internalAmount
+    4: optional double amount
+    5: optional string from
 }
 
 struct CryptoCurrencyTransaction {

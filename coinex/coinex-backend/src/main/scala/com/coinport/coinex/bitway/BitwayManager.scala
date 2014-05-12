@@ -137,7 +137,7 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
     if (inputsMatched.contains(USED) && outputsMatched.contains(HOT)) {
       Some(CryptoCurrencyTransactionType.UserToHot)
     } else if (inputsMatched.contains(HOT)) {
-      assert(outputsMatched.contains(USED))
+      assert(!outputsMatched.contains(USED))
       if (outputsMatched.contains(COLD)) {
         Some(CryptoCurrencyTransactionType.HotToCold)
       } else {
@@ -170,11 +170,16 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
             else
               GAP
           case Some(BlockIndex(Some(id), _)) =>
-            if (id == indexList.last.id) SUCCESSOR else REORG
+            if (Some(id) == indexList.last.id) SUCCESSOR else REORG
           case Some(BlockIndex(None, _)) => OTHER_BRANCH
         }
       case _ => SUCCESSOR
     }
+  }
+
+  def completeTransferInfos(infos: Seq[CryptoCurrencyTransferInfo]): Seq[CryptoCurrencyTransferInfo] = {
+    infos.map(info =>
+      info.copy(amount = info.internalAmount.map((new CurrencyWrapper(_).externalValue(supportedCurrency)))))
   }
 
   def completeCryptoCurrencyTransaction(
@@ -189,9 +194,9 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
         Set.empty[String] ++ outputs.get.map(_.address))
       if (txType.isDefined) {
         val regularizeInputs = inputs.map(_.map(i => i.copy(
-          innerAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)))))
+          internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)))))
         val regularizeOutputs = outputs.map(_.map(i => i.copy(
-          innerAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)))))
+          internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)))))
         Some(tx.copy(inputs = regularizeInputs, outputs = regularizeOutputs,
           prevBlock = if (prevBlock.isDefined) prevBlock else getCurrentBlockIndex,
           includedBlock = includedBlock, txType = txType))

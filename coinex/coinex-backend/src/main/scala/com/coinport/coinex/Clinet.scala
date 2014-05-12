@@ -46,12 +46,12 @@ object Client {
 
   var robotMap: Map[String, Long] = Map.empty[String, Long]
 
-    // register default user and deposit
-    userMap.map(kv => registerUser(kv._2, kv._1 + "@coinport.com", kv._1))
-    userMap foreach { kv =>
-      AccountService.deposit(kv._2, Btc, 10000 * 1000)
-      AccountService.deposit(kv._2, Cny, 1000000 * 100)
-    }
+  // register default user and deposit
+  userMap.map(kv => registerUser(kv._2, kv._1 + "@coinport.com", kv._1))
+  userMap foreach { kv =>
+    AccountService.deposit(kv._2, Btc, 10000 * 1000)
+    AccountService.deposit(kv._2, Cny, 1000000 * 100)
+  }
 
   var basicRisk = 10.0
   val risk = userMap.map(kv => { basicRisk += 10.0; (kv._2 -> basicRisk) })
