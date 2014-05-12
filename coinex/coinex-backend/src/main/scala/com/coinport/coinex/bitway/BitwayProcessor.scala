@@ -6,6 +6,7 @@
 package com.coinport.coinex.bitway
 
 import akka.actor.Actor
+import akka.actor.Actor.Receive
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.event.LoggingReceive
@@ -47,7 +48,7 @@ object BitwayProcessor {
 }
 
 class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency)
-    extends ExtendedProcessor with EventsourcedProcessor with ActorLogging {
+    extends ExtendedProcessor with EventsourcedProcessor with BitwayManagerBehavior with ActorLogging {
 
   import BitwayProcessor._
   import BlockContinuityEnum._
@@ -77,16 +78,16 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency)
         BitwayRequestType.GenerateAddress, currency, generateAddresses = Some(
           GenerateAddresses(INIT_FETCH_ADDRESS_NUM)))))
 
-    case m @ GetNewAddress(currency, _) =>
+    case m @ AllocateNewAddress(currency, _) =>
       val (address, needFetch) = manager.allocateAddress
       if (needFetch) self ! FetchAddresses(currency)
       if (address.isDefined) {
         persist(m) { event =>
           updateState(event.copy(assignedAddress = address))
         }
-        sender ! GetNewAddressResult(ErrorCode.Ok, address)
+        sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.Ok, address)
       } else {
-        sender ! GetNewAddressResult(ErrorCode.NotEnoughAddressInPool, None)
+        sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.NotEnoughAddressInPool, None)
       }
 
     case m @ TransferCryptoCurrency(currency, _, _) if pushClient.isDefined =>
@@ -118,11 +119,14 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency)
       continuity match {
         case DUP => log.info("receive block list which first block has seen: " + blocksMsg.blocks.head.index)
         case SUCCESSOR | REORG =>
-          persist(m) { event =>
-            updateState(event)
-            val reorgIndex = if (continuity == REORG) blocksMsg.startIndex else None
-            channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
-              manager.extractTxsFromBlocks(blocksMsg.blocks.toList), reorgIndex)), transferProcessor.path)
+          val relatedTxs = manager.extractTxsFromBlocks(blocksMsg.blocks.toList)
+          if (relatedTxs.nonEmpty) {
+            persist(m) { event =>
+              updateState(event)
+              val reorgIndex = if (continuity == REORG) blocksMsg.startIndex else None
+              channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
+                relatedTxs, reorgIndex)), transferProcessor.path)
+            }
           }
         case GAP if pushClient.isDefined =>
           pushClient.get.rpush(getRequestChannel(supportedCurrency), serializer.toBinary(BitwayRequest(
@@ -133,16 +137,24 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency)
       }
   }
 
+  private def scheduleTryPour() = {
+    context.system.scheduler.scheduleOnce(delayinSeconds seconds, self, TryFetchAddresses)(context.system.dispatcher)
+  }
+}
+
+trait BitwayManagerBehavior {
+  val manager: BitwayManager
+
   def updateState: Receive = {
-    case GetNewAddress(currency, Some(address)) => manager.addressAllocated(address)
+    case AllocateNewAddress(currency, Some(address)) => manager.addressAllocated(address)
     case BitwayMessage(currency, Some(res), None, None) => manager.faucetAddress(
       res.addressType, Set.empty[String] ++ res.addresses)
     case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlocksMessage(startIndex, blocks))) =>
       manager.appendBlockChain(blocks.map(_.index).toList, startIndex)
-  }
-
-  private def scheduleTryPour() = {
-    context.system.scheduler.scheduleOnce(delayinSeconds seconds, self, TryFetchAddresses)(context.system.dispatcher)
+      blocks foreach { block =>
+        manager.updateLastBlock(block.index)
+        manager.updateLastTx(block.txs)
+      }
   }
 }
 

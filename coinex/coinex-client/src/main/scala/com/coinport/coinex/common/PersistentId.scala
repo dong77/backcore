@@ -22,4 +22,5 @@ object PersistentId extends Enumeration {
   val USER_VIEW = Value("v_u")
   val USER_WRITER_VIEW = Value("v_uw")
   val USER_ASSET = Value("v_ua")
+  val BITWAY_VIEW = Value("v_bw")
 }

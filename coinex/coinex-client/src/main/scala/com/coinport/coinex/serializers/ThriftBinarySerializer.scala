@@ -60,6 +60,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cAdminCommandResult = BinaryScalaCodec(AdminCommandResult)
   lazy val _cAdminConfirmTransferFailure = BinaryScalaCodec(AdminConfirmTransferFailure)
   lazy val _cAdminConfirmTransferSuccess = BinaryScalaCodec(AdminConfirmTransferSuccess)
+  lazy val _cAllocateNewAddress = BinaryScalaCodec(AllocateNewAddress)
+  lazy val _cAllocateNewAddressResult = BinaryScalaCodec(AllocateNewAddressResult)
   lazy val _cApiSecretOperationResult = BinaryScalaCodec(ApiSecretOperationResult)
   lazy val _cBitwayMessage = BinaryScalaCodec(BitwayMessage)
   lazy val _cBitwayRequest = BinaryScalaCodec(BitwayRequest)
@@ -86,8 +88,6 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cGenerateAddresses = BinaryScalaCodec(GenerateAddresses)
   lazy val _cGenerateAddressesResult = BinaryScalaCodec(GenerateAddressesResult)
   lazy val _cGetMissedCryptoCurrencyBlocks = BinaryScalaCodec(GetMissedCryptoCurrencyBlocks)
-  lazy val _cGetNewAddress = BinaryScalaCodec(GetNewAddress)
-  lazy val _cGetNewAddressResult = BinaryScalaCodec(GetNewAddressResult)
   lazy val _cGoogleAuthCodeVerificationResult = BinaryScalaCodec(GoogleAuthCodeVerificationResult)
   lazy val _cLogin = BinaryScalaCodec(Login)
   lazy val _cLoginFailed = BinaryScalaCodec(LoginFailed)
@@ -106,6 +106,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cQueryAssetResult = BinaryScalaCodec(QueryAssetResult)
   lazy val _cQueryCandleData = BinaryScalaCodec(QueryCandleData)
   lazy val _cQueryCandleDataResult = BinaryScalaCodec(QueryCandleDataResult)
+  lazy val _cQueryLatestCryptoCurrencyStatus = BinaryScalaCodec(QueryLatestCryptoCurrencyStatus)
+  lazy val _cQueryLatestCryptoCurrencyStatusResult = BinaryScalaCodec(QueryLatestCryptoCurrencyStatusResult)
   lazy val _cQueryMarketDepth = BinaryScalaCodec(QueryMarketDepth)
   lazy val _cQueryMarketDepthResult = BinaryScalaCodec(QueryMarketDepthResult)
   lazy val _cQueryOrder = BinaryScalaCodec(QueryOrder)
@@ -205,6 +207,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: AdminCommandResult => _cAdminCommandResult(m)
     case m: AdminConfirmTransferFailure => _cAdminConfirmTransferFailure(m)
     case m: AdminConfirmTransferSuccess => _cAdminConfirmTransferSuccess(m)
+    case m: AllocateNewAddress => _cAllocateNewAddress(m)
+    case m: AllocateNewAddressResult => _cAllocateNewAddressResult(m)
     case m: ApiSecretOperationResult => _cApiSecretOperationResult(m)
     case m: BitwayMessage => _cBitwayMessage(m)
     case m: BitwayRequest => _cBitwayRequest(m)
@@ -231,8 +235,6 @@ class ThriftBinarySerializer extends Serializer {
     case m: GenerateAddresses => _cGenerateAddresses(m)
     case m: GenerateAddressesResult => _cGenerateAddressesResult(m)
     case m: GetMissedCryptoCurrencyBlocks => _cGetMissedCryptoCurrencyBlocks(m)
-    case m: GetNewAddress => _cGetNewAddress(m)
-    case m: GetNewAddressResult => _cGetNewAddressResult(m)
     case m: GoogleAuthCodeVerificationResult => _cGoogleAuthCodeVerificationResult(m)
     case m: Login => _cLogin(m)
     case m: LoginFailed => _cLoginFailed(m)
@@ -251,6 +253,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: QueryAssetResult => _cQueryAssetResult(m)
     case m: QueryCandleData => _cQueryCandleData(m)
     case m: QueryCandleDataResult => _cQueryCandleDataResult(m)
+    case m: QueryLatestCryptoCurrencyStatus => _cQueryLatestCryptoCurrencyStatus(m)
+    case m: QueryLatestCryptoCurrencyStatusResult => _cQueryLatestCryptoCurrencyStatusResult(m)
     case m: QueryMarketDepth => _cQueryMarketDepth(m)
     case m: QueryMarketDepthResult => _cQueryMarketDepthResult(m)
     case m: QueryOrder => _cQueryOrder(m)
@@ -354,6 +358,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[AdminCommandResult.Immutable] => _cAdminCommandResult.invert(bytes).get
     case Some(c) if c == classOf[AdminConfirmTransferFailure.Immutable] => _cAdminConfirmTransferFailure.invert(bytes).get
     case Some(c) if c == classOf[AdminConfirmTransferSuccess.Immutable] => _cAdminConfirmTransferSuccess.invert(bytes).get
+    case Some(c) if c == classOf[AllocateNewAddress.Immutable] => _cAllocateNewAddress.invert(bytes).get
+    case Some(c) if c == classOf[AllocateNewAddressResult.Immutable] => _cAllocateNewAddressResult.invert(bytes).get
     case Some(c) if c == classOf[ApiSecretOperationResult.Immutable] => _cApiSecretOperationResult.invert(bytes).get
     case Some(c) if c == classOf[BitwayMessage.Immutable] => _cBitwayMessage.invert(bytes).get
     case Some(c) if c == classOf[BitwayRequest.Immutable] => _cBitwayRequest.invert(bytes).get
@@ -380,8 +386,6 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[GenerateAddresses.Immutable] => _cGenerateAddresses.invert(bytes).get
     case Some(c) if c == classOf[GenerateAddressesResult.Immutable] => _cGenerateAddressesResult.invert(bytes).get
     case Some(c) if c == classOf[GetMissedCryptoCurrencyBlocks.Immutable] => _cGetMissedCryptoCurrencyBlocks.invert(bytes).get
-    case Some(c) if c == classOf[GetNewAddress.Immutable] => _cGetNewAddress.invert(bytes).get
-    case Some(c) if c == classOf[GetNewAddressResult.Immutable] => _cGetNewAddressResult.invert(bytes).get
     case Some(c) if c == classOf[GoogleAuthCodeVerificationResult.Immutable] => _cGoogleAuthCodeVerificationResult.invert(bytes).get
     case Some(c) if c == classOf[Login.Immutable] => _cLogin.invert(bytes).get
     case Some(c) if c == classOf[LoginFailed.Immutable] => _cLoginFailed.invert(bytes).get
@@ -400,6 +404,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[QueryAssetResult.Immutable] => _cQueryAssetResult.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleData.Immutable] => _cQueryCandleData.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleDataResult.Immutable] => _cQueryCandleDataResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryLatestCryptoCurrencyStatus.Immutable] => _cQueryLatestCryptoCurrencyStatus.invert(bytes).get
+    case Some(c) if c == classOf[QueryLatestCryptoCurrencyStatusResult.Immutable] => _cQueryLatestCryptoCurrencyStatusResult.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepth.Immutable] => _cQueryMarketDepth.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepthResult.Immutable] => _cQueryMarketDepthResult.invert(bytes).get
     case Some(c) if c == classOf[QueryOrder.Immutable] => _cQueryOrder.invert(bytes).get

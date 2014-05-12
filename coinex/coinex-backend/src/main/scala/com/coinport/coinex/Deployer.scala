@@ -120,6 +120,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       def props = Props(new BitwayProcessor(routers.depositWithdrawProcessor,
         c) with StackableEventsourced[TBitwayState, BitwayManager])
       deploySingleton(props, bitway_processor << c)
+      deploy(Props(new BitwayView(c) with StackableView[TBitwayState, BitwayManager]), bitway_view << c)
       deploy(Props(new BitwayReceiver(routers.bitwayProcessors(c), c)), bitway_receiver << c)
     }
 

@@ -59,6 +59,10 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
     c -> routerForSingleton(bitway_processor << c)
   ): _*)
 
+  val bitwayViews = Map(markets.toCryptoCurrencySet map (c =>
+    c -> routerFor(bitway_view << c)
+  ): _*)
+
   val metricsView = routerFor(metrics_view<<)
 
   private def routerForSingleton(name: String) = system.actorOf(

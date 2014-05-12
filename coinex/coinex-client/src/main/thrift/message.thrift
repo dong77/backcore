@@ -159,10 +159,12 @@ typedef data.CryptoCurrencyAddressType          _CryptoCurrencyAddressType
 /* C    */ struct DoSendEmail                             {1: string email, 2: _EmailType emailType, 3: map<string, string> params}
 
 ////////// BitwayProcessor
-/* C    */ struct GetNewAddress                           {1: _Currency currency, 2: optional string assignedAddress}
-/* R    */ struct GetNewAddressResult                     {1: _ErrorCode error = data.ErrorCode.OK, 2: optional string address}
+/* C    */ struct AllocateNewAddress                      {1: _Currency currency, 2: optional string assignedAddress}
+/* R    */ struct AllocateNewAddressResult                {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional string address}
 /* C,I  */ struct TransferCryptoCurrency                  {1: _Currency currency, 2: list<_CryptoCurrencyTransferInfo> transferInfos, 3: _CryptoCurrencyTransactionType type}
 /* I    */ struct MultiCryptoCurrencyTransactionMessage   {1: _Currency currency, 2: list<_CryptoCurrencyTransaction> txs, 3: optional _BlockIndex reorgIndex}
+/* C    */ struct QueryLatestCryptoCurrencyStatus         {1: _Currency currency, 2: _CryptoCurrencyAddressType addressType}
+/* R    */ struct QueryLatestCryptoCurrencyStatusResult   {1: _Currency currency, 2: map<string, _BlockIndex> lastTxs, 3: _BlockIndex lastBlock}
 
 ////////// Bitway nodejs
 /* C    */ struct GenerateAddresses                       {1: i32 num}

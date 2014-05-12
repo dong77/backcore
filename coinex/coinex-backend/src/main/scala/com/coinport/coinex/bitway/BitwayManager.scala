@@ -31,9 +31,11 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
 
   import CryptoCurrencyAddressType._
 
+  val blockIndexes = ArrayBuffer.empty[BlockIndex]
   val addresses: Map[CryptoCurrencyAddressType, Set[String]] = Map(
     CryptoCurrencyAddressType.list.map(_ -> Set.empty[String]): _*)
-  val blockIndexes = ArrayBuffer.empty[BlockIndex]
+  val addressLastTx = Map.empty[String, BlockIndex]
+  var lastBlock = BlockIndex()
 
   val FAUCET_THRESHOLD: Double = 0.5
   val INIT_ADDRESS_NUM: Int = 100
@@ -41,7 +43,9 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
   def getSnapshot = TBitwayState(
     supportedCurrency,
     blockIndexes,
-    addresses.map(kv => (kv._1 -> kv._2.clone))
+    addresses.map(kv => (kv._1 -> kv._2.clone)),
+    addressLastTx.clone,
+    lastBlock
   )
 
   def loadSnapshot(s: TBitwayState) {
@@ -49,6 +53,9 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
     blockIndexes ++= s.blockIndexes.to[ArrayBuffer]
     addresses.clear
     addresses ++= s.addresses.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2)))
+    addressLastTx.clear
+    addressLastTx ++= s.addressLastTx
+    lastBlock = s.lastBlock
   }
 
   def isDryUp = addresses(Unused).size == 0 || addresses(UserUsed).size > addresses(Unused).size * FAUCET_THRESHOLD
@@ -73,6 +80,22 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
 
   def faucetAddress(cryptoCurrencyAddressType: CryptoCurrencyAddressType, addrs: Set[String]) {
     addresses(cryptoCurrencyAddressType) ++= addrs
+    addressLastTx ++= addrs.map(i => (i -> BlockIndex()))
+  }
+
+  def updateLastTx(txs: Seq[CryptoCurrencyTransaction]) {
+    txs.foreach {
+      case CryptoCurrencyTransaction(_, Some(txid), _, Some(inputs), Some(outputs), _, Some(includedBlock), _, _) =>
+        (inputs ++ outputs).filter(port => addressLastTx.contains(port.address)).foreach { port =>
+          if (includedBlock.height.isDefined)
+            addressLastTx += (port.address -> BlockIndex(Some(txid), includedBlock.height))
+        }
+      case _ => None
+    }
+  }
+
+  def updateLastBlock(blockIndex: BlockIndex) {
+    lastBlock = blockIndex
   }
 
   def getSupportedCurrency = supportedCurrency
@@ -159,18 +182,22 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
     prevBlock: Option[BlockIndex] = None,
     includedBlock: Option[BlockIndex] = None): Option[CryptoCurrencyTransaction] = {
     val CryptoCurrencyTransaction(_, _, _, inputs, outputs, _, _, _, status) = tx
-    val txType = getCryptoCurrencyTransactionType(Set.empty[String] ++ inputs.get.map(_.address),
-      Set.empty[String] ++ outputs.get.map(_.address))
-    if (txType.isDefined) {
-      val regularizeInputs = inputs.map(_.map(i => i.copy(
-        innerAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)))))
-      val regularizeOutputs = outputs.map(_.map(i => i.copy(
-        innerAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)))))
-      Some(tx.copy(inputs = regularizeInputs, outputs = regularizeOutputs,
-        prevBlock = if (prevBlock.isDefined) prevBlock else getCurrentBlockIndex,
-        includedBlock = includedBlock, txType = txType))
-    } else {
+    if (!inputs.isDefined || !outputs.isDefined) {
       None
+    } else {
+      val txType = getCryptoCurrencyTransactionType(Set.empty[String] ++ inputs.get.map(_.address),
+        Set.empty[String] ++ outputs.get.map(_.address))
+      if (txType.isDefined) {
+        val regularizeInputs = inputs.map(_.map(i => i.copy(
+          innerAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)))))
+        val regularizeOutputs = outputs.map(_.map(i => i.copy(
+          innerAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)))))
+        Some(tx.copy(inputs = regularizeInputs, outputs = regularizeOutputs,
+          prevBlock = if (prevBlock.isDefined) prevBlock else getCurrentBlockIndex,
+          includedBlock = includedBlock, txType = txType))
+      } else {
+        None
+      }
     }
   }
 
@@ -191,5 +218,13 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
     blockIndexes ++= chain
     if (blockIndexes.length > INDEX_LIST_LIMIT.getOrElseUpdate(supportedCurrency, 10))
       blockIndexes.remove(0, blockIndexes.length - INDEX_LIST_LIMIT(supportedCurrency))
+  }
+
+  def getLastBlock = lastBlock
+
+  def getLastTxs(t: CryptoCurrencyAddressType): Map[String, BlockIndex] = {
+    Map(addresses(t).filter(d => addressLastTx.contains(d) && addressLastTx(d) != BlockIndex(None, None)).toSeq.map(address =>
+      (address -> addressLastTx(address))
+    ): _*)
   }
 }

@@ -40,4 +40,5 @@ object MarketRole extends Enumeration {
 object BitwayRole extends Enumeration {
   val bitway_processor = Value
   val bitway_receiver = Value
+  val bitway_view = Value
 }
