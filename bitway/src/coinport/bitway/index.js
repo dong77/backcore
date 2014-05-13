@@ -62,10 +62,12 @@ proxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
                     return;
                 }
                 var address = "";
+                // TODO(yangli): don't log private key
                 console.log(retAddress.result);
                 address = retAddress.result;
                 var addr = new Bitcore.Address(address);
                 if(addr.isValid()){
+                    // TODO(yangli): not sure this is needed
                     rpc.dumpPrivKey(addr.data, function(err, retPrivKey) {
                         if (err) {
                            console.error('An error occured dumpPrivKey', hash);
@@ -73,14 +75,13 @@ proxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
                            return;
                         }
                         addresses.push(address);
-                        console.log(retPrivKey);
-                        if (addresses.length == request.num){
+                        if (addresses.length == request.num) {
                             console.log("addresses: " + addresses);
                             proxy.publish(new BitwayMessage({currency: Currency.BTC,
-                            generateAddressResponse: new GenerateAddressesResult({error: ErrorCode.OK,
-                                addresses: addresses, addressType: CryptoCurrencyAddressType.UNUSED})}));
+                                generateAddressResponse: new GenerateAddressesResult({error: ErrorCode.OK,
+                                    addresses: addresses, addressType: CryptoCurrencyAddressType.UNUSED})}));
                             console.log("costTime: " + (new Date().getTime() - startTime) + "ms");
-                       }
+                        }
                     });
                 }
             });
