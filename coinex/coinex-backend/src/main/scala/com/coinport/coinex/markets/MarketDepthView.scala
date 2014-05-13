@@ -18,8 +18,10 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
   override val processorId = MARKET_PROCESSOR << market
   override val viewId = MARKET_DEPTH_VIEW << market
 
+  case class Cached(depth: Int, asks: Seq[MarketDepthItem], bids: Seq[MarketDepthItem])
+
   val manager = new MarketManager(market)
-  private var cache: Option[QueryMarketDepthResult] = None
+  private var cache: Option[Cached] = None
 
   def receive = LoggingReceive {
     case Persistent(DoCancelOrder(_, orderId, userId), _) =>
@@ -30,10 +32,11 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
       manager.addOrderToMarket(side, order)
       cache = None
 
-    case QueryMarketDepth(side, maxDepth) =>
+    case QueryMarketDepth(side, depth) =>
       assert(side == market)
-      if (cache.isEmpty) cache = Some(getDepthData(maxDepth))
-      sender ! cache.get
+      if (cache.isEmpty || cache.get.depth < depth) cache = Some(getDepthData(depth))
+      val cached = cache.get
+      sender ! QueryMarketDepthResult(MarketDepth(market, cached.asks.take(depth), cached.bids.take(depth)))
 
     case DoSimulateOrderSubmission(DoSubmitOrder(side, order)) =>
       val state = manager.getState()
@@ -42,7 +45,7 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
       sender ! OrderSubmissionSimulated(orderSubmitted)
   }
 
-  private def getDepthData(maxDepth: Int) = {
+  private def getDepthData(depth: Int) = {
     def takeN(orders: SortedSet[Order], isAskOrder: Boolean) = {
 
       def convert(order: Order) =
@@ -51,7 +54,7 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
 
       val buffer = new ListBuffer[MarketDepthItem]
       var index = 0
-      while (buffer.size < maxDepth && index < orders.size) {
+      while (buffer.size < depth && index < orders.size) {
         val order = orders.view(index, index + 1).head
         val item = convert(order)
         if (buffer.isEmpty || buffer.last.price != order.price.get) buffer += item
@@ -64,9 +67,9 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
       }
       buffer.toSeq
     }
+
     val asks = takeN(manager.orderPool(market), true)
     val bids = takeN(manager.orderPool(market.reverse), false)
-
-    QueryMarketDepthResult(MarketDepth(market, asks, bids))
+    Cached(depth, asks, bids)
   }
 }
