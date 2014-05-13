@@ -24,7 +24,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object Client {
   implicit val timeout = Timeout(10 seconds)
 
-  private val config = ConfigFactory.load("client.conf")
+  val configPath = System.getProperty("akka.config") match {
+    case null => "akka.conf"
+    case c => c
+  }
+  private val config = ConfigFactory.load(configPath)
   private implicit val system = ActorSystem("coinex", config)
   private implicit val cluster = Cluster(system)
   private val markets = Seq(Btc ~> Cny)
@@ -32,8 +36,6 @@ object Client {
 
   val backend = system.actorOf(Props(new Coinex(routers)), name = "backend")
   println("Example: Client.backend ! SomeMessage()")
-
-  System.setProperty("akka.config", "client.conf")
 
   val userMap = Map(
     "wd" -> -245561917658914311L,
@@ -160,8 +162,8 @@ object Client {
     println("add user >>>> " + mail)
   }
 
-  def deposit(uid: Long, currency: Currency, amount: Double) =
-    AccountService.deposit(1001, Currency.Cny, 10000.0)
+  def deposit(uid: Long, amount: Double) =
+    AccountService.deposit(uid, Currency.Cny, amount)
 
   def createABCode(wUserId: Long, amount: Long, dUserId: Long) {
     Client.backend ? DoRequestGenerateABCode(wUserId, amount, None, None) map {
