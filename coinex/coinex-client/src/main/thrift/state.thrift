@@ -98,5 +98,5 @@ struct TBitwayState {
     2: list<BlockIndex> blockIndexes
     3: map<CryptoCurrencyAddressType, set<string>> addresses
     4: map<string, BlockIndex> addressLastTx // key: address value: reuse BlockIndex, id is txid, height is tx first included block height
-    5: BlockIndex lastBlock
+    5: i64 lastAlive
 }

@@ -184,7 +184,7 @@ class BitwayManagerSpec extends Specification {
           Some(Withdrawal), Pending))
     }
 
-    "lastTx/lastBlock test" in {
+    "lastTx/lastAlive test" in {
       val bwm = new BitwayManager(Btc)
       bwm.faucetAddress(UserUsed, Set("u1", "u2", "u3", "u4", "u5", "u6"))
       bwm.faucetAddress(Hot, Set("h1", "h2"))
@@ -209,8 +209,8 @@ class BitwayManagerSpec extends Specification {
           status = Pending
         )
       ))
-      bwm.updateLastBlock(bi2)
-      bwm.getLastBlock mustEqual bi2
+      bwm.updateLastAlive(1234L)
+      bwm.getLastAlive mustEqual 1234L
       bwm.getLastTxs(Hot) mustEqual Map("h1" -> BlockIndex(Some("t2"), Some(2)), "h2" -> BlockIndex(Some("t2"), Some(2)))
       bwm.getLastTxs(Cold) mustEqual Map.empty[String, BlockIndex]
       bwm.getLastTxs(UserUsed) mustEqual Map("u1" -> BlockIndex(Some("t1"), Some(1)), "u2" -> BlockIndex(Some("t2"), Some(2)))

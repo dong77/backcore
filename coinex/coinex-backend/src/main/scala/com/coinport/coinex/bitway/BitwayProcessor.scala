@@ -123,7 +123,8 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency)
           val relatedTxs = manager.extractTxsFromBlocks(blocksMsg.blocks.toList)
           if (relatedTxs.nonEmpty) {
             persist(m) { event =>
-              updateState(event)
+              val ts = if (blocksMsg.timestamp.isDefined) blocksMsg.timestamp.get else System.currentTimeMillis
+              updateState(event.copy(blocksMsg = Some(blocksMsg.copy(timestamp = Some(ts)))))
               val reorgIndex = if (continuity == REORG) blocksMsg.startIndex else None
               channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
                 relatedTxs, reorgIndex)), transferProcessor.path)
@@ -150,10 +151,10 @@ trait BitwayManagerBehavior {
     case AllocateNewAddress(currency, Some(address)) => manager.addressAllocated(address)
     case BitwayMessage(currency, Some(res), None, None) => manager.faucetAddress(
       res.addressType, Set.empty[String] ++ res.addresses)
-    case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlocksMessage(startIndex, blocks))) =>
+    case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlocksMessage(startIndex, blocks, Some(timestamp)))) =>
       manager.appendBlockChain(blocks.map(_.index).toList, startIndex)
       blocks foreach { block =>
-        manager.updateLastBlock(block.index)
+        manager.updateLastAlive(timestamp)
         manager.updateLastTx(block.txs)
       }
   }

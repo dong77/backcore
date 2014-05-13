@@ -164,13 +164,13 @@ typedef data.CryptoCurrencyAddressType          _CryptoCurrencyAddressType
 /* C,I  */ struct TransferCryptoCurrency                  {1: _Currency currency, 2: list<_CryptoCurrencyTransferInfo> transferInfos, 3: _CryptoCurrencyTransactionType type}
 /* I    */ struct MultiCryptoCurrencyTransactionMessage   {1: _Currency currency, 2: list<_CryptoCurrencyTransaction> txs, 3: optional _BlockIndex reorgIndex}
 /* C    */ struct QueryLatestCryptoCurrencyStatus         {1: _Currency currency, 2: _CryptoCurrencyAddressType addressType}
-/* R    */ struct QueryLatestCryptoCurrencyStatusResult   {1: _Currency currency, 2: map<string, _BlockIndex> lastTxs, 3: _BlockIndex lastBlock}
+/* R    */ struct QueryLatestCryptoCurrencyStatusResult   {1: _Currency currency, 2: map<string, _BlockIndex> lastTxs, 3: i64 lastAlive}
 
 ////////// Bitway nodejs
 /* C    */ struct GenerateAddresses                       {1: i32 num}
 /* C    */ struct GetMissedCryptoCurrencyBlocks           {1: list<_BlockIndex> startIndexs, 2: _BlockIndex endIndex} // returned (startIndex, endIndex]
 /* R    */ struct GenerateAddressesResult                 {1: _ErrorCode error, 2: set<string> addresses, 3: _CryptoCurrencyAddressType addressType}
-/* I    */ struct CryptoCurrencyBlocksMessage             {1: optional _BlockIndex startIndex, /* BlockIndex(None, None) means in another branch */ 2: list<_CryptoCurrencyBlock> blocks}
+/* I    */ struct CryptoCurrencyBlocksMessage             {1: optional _BlockIndex startIndex, /* BlockIndex(None, None) means in another branch */ 2: list<_CryptoCurrencyBlock> blocks, 3: optional i64 timestamp}
 /* C    */ struct BitwayRequest                           {
                                                               1: _BitwayRequestType type
                                                               2: _Currency currency
@@ -182,7 +182,7 @@ typedef data.CryptoCurrencyAddressType          _CryptoCurrencyAddressType
                                                               1: _Currency currency
                                                               2: optional GenerateAddressesResult generateAddressResponse
                                                               3: optional _CryptoCurrencyTransaction tx
-                                                              4: optional CryptoCurrencyBlocksMessage blocks
+                                                              4: optional CryptoCurrencyBlocksMessage blocksMsg
                                                           }
 
 ////////////////////////////////////////////////////////////////

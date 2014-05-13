@@ -35,7 +35,7 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
   val addresses: Map[CryptoCurrencyAddressType, Set[String]] = Map(
     CryptoCurrencyAddressType.list.map(_ -> Set.empty[String]): _*)
   val addressLastTx = Map.empty[String, BlockIndex]
-  var lastBlock = BlockIndex()
+  var lastAlive: Long = -1
 
   val FAUCET_THRESHOLD: Double = 0.5
   val INIT_ADDRESS_NUM: Int = 100
@@ -45,7 +45,7 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
     blockIndexes,
     addresses.map(kv => (kv._1 -> kv._2.clone)),
     addressLastTx.clone,
-    lastBlock
+    lastAlive
   )
 
   def loadSnapshot(s: TBitwayState) {
@@ -55,7 +55,7 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
     addresses ++= s.addresses.map(kv => (kv._1 -> (Set.empty[String] ++ kv._2)))
     addressLastTx.clear
     addressLastTx ++= s.addressLastTx
-    lastBlock = s.lastBlock
+    lastAlive = s.lastAlive
   }
 
   def isDryUp = addresses(Unused).size == 0 || addresses(UserUsed).size > addresses(Unused).size * FAUCET_THRESHOLD
@@ -94,8 +94,8 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
     }
   }
 
-  def updateLastBlock(blockIndex: BlockIndex) {
-    lastBlock = blockIndex
+  def updateLastAlive(ts: Long) {
+    lastAlive = ts
   }
 
   def getSupportedCurrency = supportedCurrency
@@ -225,7 +225,7 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
       blockIndexes.remove(0, blockIndexes.length - INDEX_LIST_LIMIT(supportedCurrency))
   }
 
-  def getLastBlock = lastBlock
+  def getLastAlive = lastAlive
 
   def getLastTxs(t: CryptoCurrencyAddressType): Map[String, BlockIndex] = {
     Map(addresses(t).filter(d => addressLastTx.contains(d) && addressLastTx(d) != BlockIndex(None, None)).toSeq.map(address =>
