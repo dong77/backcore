@@ -38,7 +38,7 @@ Util.inherits(RedisProxy, Events.EventEmitter);
 RedisProxy.EventType = {
     GENERATE_ADDRESS: 'generate_address',
     TRANSFER : 'transfer',
-    QUERY_ADDRESS: 'query_address'
+    GET_MISSED_BLOCKS: 'get_missed_blocks'
 };
 
 
@@ -57,11 +57,11 @@ RedisProxy.prototype.start = function() {
                             bwr.generateAddresses);
                         break;
                     case BitwayRequestType.TRANSFER:
-                        proxy.emit(RedisProxy.EventType.TRANSFER, bwr.requestId, bwr.currency, bwr.transferRequest);
+                        proxy.emit(RedisProxy.EventType.TRANSFER, bwr.currency, bwr.transferCryptoCurrency);
                         break;
-                    case BitwayRequestType.QUERY_ADDRESS:
-                        proxy.emit(RedisProxy.EventType.QUERY_ADDRESS, bwr.requestId, bwr.currency,
-                            bwr.queryAddressRequest);
+                    case BitwayRequestType.GET_MISSED_BLOCKS:
+                        proxy.emit(RedisProxy.EventType.GET_MISSED_BLOCKS, bwr.currency,
+                            bwr.getMissedCryptoCurrencyBlocksRequest);
                         break;
                 }
             } else if (!error && !result) {

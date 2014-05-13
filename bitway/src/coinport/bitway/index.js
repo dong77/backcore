@@ -11,6 +11,7 @@ var RedisProxy                      = require('./redis/redis_proxy').RedisProxy,
     CryptoCurrencyTransactionPort   = require('../../../gen-nodejs/data_types').CryptoCurrencyTransactionPort,
     CryptoCurrencyBlock             = require('../../../gen-nodejs/data_types').CryptoCurrencyBlock,
     CryptoCurrencyTransactionStatus = require('../../../gen-nodejs/data_types').CryptoCurrencyTransactionStatus,
+    CryptoCurrencyTransactionType   = require('../../../gen-nodejs/data_types').CryptoCurrencyTransactionType,
     Currency                        = require('../../../gen-nodejs/data_types').Currency,
     ErrorCode                       = require('../../../gen-nodejs/data_types').ErrorCode,
     BitwayMessage                   = require('../../../gen-nodejs/message_types').BitwayMessage,
@@ -34,9 +35,10 @@ var rpc = new RpcClient(config);
 var MIN_GENERATE_ADDR_NUM = 1;
 var MAX_GENERATE_ADDR_NUM = 1000;
 var ACCOUNT = "customers";
+var HOT_ACCOUNT = "coinport";
 var needJson = 1;
 var AUTO_REPORT = 0;
-
+var tip = 0.000001;
 proxy.start();
 
 proxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
@@ -45,15 +47,15 @@ proxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
     console.log(currency);
     console.log(request);
     if(request.num < MIN_GENERATE_ADDR_NUM || request.num > MAX_GENERATE_ADDR_NUM){
-       proxy.publish(new BitwayMessage({type: BitwayRequestType.GENERATE_ADDRESS,
-           currency: Currency.BTC,
-           generateAddressResponse: new GenerateAddressesResult({error: ErrorCode.ROBOT_DNA_EXIST})}));
+        proxy.publish(new BitwayMessage({type: BitwayRequestType.GENERATE_ADDRESS,
+            currency: Currency.BTC,
+            generateAddressResponse: new GenerateAddressesResult({error: ErrorCode.ROBOT_DNA_EXIST})}));
     }else{
         var addresses = [];
         for(var i = 0; i < request.num; i++){
             rpc.getNewAddress(ACCOUNT, function(err, retAddress) {
                 var address = "";
-                if (err) {
+                if(err) {
                     console.error('An error occured generate address');
                     console.error(err);
                     proxy.publish(new BitwayMessage({type: BitwayRequestType.GENERATE_ADDRESS,
@@ -88,57 +90,154 @@ proxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
     }
 });
 
-proxy.on(RedisProxy.EventType.TRANSFER, function(requestId, currency, request) {
+proxy.on(RedisProxy.EventType.TRANSFER, function(currency, request) {
     console.log('** TransferRequest Received **');
     console.log(RedisProxy.EventType.TRANSFER);
-    console.log(requestId);
-    console.log(requestId === 123);
     console.log(currency);
-    console.log(request);
+    /*var transferInfos = [];
+    var transfer1 = new CryptoCurrencyTransferInfo({id: 0, to: 'mrhMpyaM4TZn6QFdTCZhbZzM89yNnPPnGP',
+        amount: 0.01, from: 'mzhVJHArQ2ropmyGS3HMwyV6LQLs4pkjXM'});
+    var transfer2 = new CryptoCurrencyTransferInfo({id: 0, to: 'mqWs5kNcb6W2oiogTWXYXHBip8E4S6NzA5',
+        amount: 0.01, from: 'n3vJJnkJBRQfwfoN7miz1FfYknk382DCaw'});
+    transferInfos.push(transfer1);
+    transferInfos.push(transfer2);
     var fromAddresses = [];
-    fromAddresses[0] = request.from;
-    var toAddress = request.to;
-    var amount = request.amount;
+    var toAddress = 'mqWs5kNcb6W2oiogTWXYXHBip8E4S6NzA5';
+    var amount = 0.01;
     var minConfirmedNum = 6;
     var maxConfirmedNum = 9999999;
     var addresses = {};
-    addresses[request.to] = request.amount;
+    //var request = new TransferCryptoCurrency({currency: Currency.BTC,
+    //    transferInfos: transferInfos, type:CryptoCurrencyTransactionType.WITHDRAWAL});
+    var request = new TransferCryptoCurrency({currency: Currency.BTC,
+        transferInfos: transferInfos, type:CryptoCurrencyTransactionType.USER_TO_HOT});*/
+    switch(request.type){
+        case CryptoCurrencyTransactionType.WITHDRAWAL:
+            txWithoutDefiniteFrom(request);
+            break;
+        case CryptoCurrencyTransactionType.USER_TO_HOT:
+            txWithDefiniteFrom(request);
+            break;
+        default:
+            console("Invalid request type: " + request.type);
+    }
+});
+
+var txWithDefiniteFrom = function(request){
+    var minConfirmedNum = 6;
+    var maxConfirmedNum = 9999999;
+    var amountTotal = 0;
+    var addresses = {};
+    var transactions = [];
+    var fromAddresses = [];
+    for(var i = 0; i < request.transferInfos.length; i++){
+        amountTotal += request.transferInfos[i].amount;
+        makeTransaction(request.transferInfos[i], request.transferInfos.length, fromAddresses,transactions, addresses);
+    }
+}
+
+var makeTransaction = function(transferInfo, finishLength, fromAddresses, transactions, addresses){
+    var from = transferInfo.from;
+    var to = transferInfo.to;
+    var amountPay = transferInfo.amount;
+    var minConfirmedNum = 6;
+    var maxConfirmedNum = 9999999;
+    var fromArray = [];
+    fromArray.push(from);
+    console.log("from: " + from);
+    rpc.listUnspent(minConfirmedNum, maxConfirmedNum, fromArray, function(errUnspent, retUnspent){
+        if(errUnspent){
+            console.log("errUnspent code: " + errUnspent.code);
+            console.log("errUnspent message: " + errUnspent.message);
+        }else{
+            var amountCanUse = 0;
+            console.log("retUnspent.length: " + retUnspent.result.length);
+            for(var j = 0; j < retUnspent.result.length; j++){
+                console.log("txid: " + retUnspent.result[j].txid);
+                console.log("vout: " + retUnspent.result[j].vout);
+                var transaction = {
+                    txid: retUnspent.result[j].txid,
+                    vout: retUnspent.result[j].vout,
+                    };
+                transactions.push(transaction);
+                amountCanUse += retUnspent.result[j].amount;
+                if(amountCanUse > amountPay || amountCanUse == amountPay){
+                    break;
+                }
+            }
+            fromAddresses.push(from);
+            addresses[to] = amountPay;
+            if(amountCanUse > amountPay){
+                addresses[from] = amountCanUse - amountPay;
+            }
+            if(fromAddresses.length == finishLength){
+                createSignSend(transactions, addresses);
+            }
+        }
+    });
+};
+
+var txWithoutDefiniteFrom = function(request){
+    var minConfirmedNum = 6;
+    var maxConfirmedNum = 9999999;
+    var amountTotal = 0;
+    var addresses = {};
+    for(var i = 0; i < request.transferInfos.length; i++){
+        amountTotal += request.transferInfos[i].amount;
+    }
     rpc.listUnspent(minConfirmedNum, maxConfirmedNum, function(err, ret){
         if(err){
             console.error('An error occured listUnspent', hash);
             console.error(err);
             return;
         }else{
+            var result = ret.result;
             if(result.length == 0){
             //TODO:
             }else{
                 var amountCanUse = 0;
                 var i = 0;
                 var transactions = [];
-                for(i = 0; i < result.length; i++){
-                    amountCanUse += result[i].amount;
-                    var transaction = {
-                        txid: result[i].txid,
-                        vout: result[i].amount,
-                        };
-                    if(amountCanUse > (amount + tip)){//TODO:
-                        addresses[request.to] = request.amount;
-                        addresses[changeAddress] = amountCanUse - amount - tip;
-                        break;
-                    }else if(amountCanUse == (amount + tip)){
-                        addresses[request.to] = request.amount;
-                        break;
+                rpc.getAddressesByAccount(HOT_ACCOUNT, function(err, ret){
+                    if(err){
+                    }else{
+                        var changePos = Math.floor(Math.random()*ret.result.length);
+                        console.log("changePos: " + changePos);
+                        var changeAddress = ret.result[changePos];
+                        for(i = 0; i < result.length; i++){
+                            amountCanUse += result[i].amount;
+                            var transaction = {
+                                txid: result[i].txid,
+                                vout: result[i].vout,
+                                };
+                            transactions.push(transaction);
+                            if(amountCanUse > (amountTotal + tip)){//TODO:
+                                for(var j =0; j < request.transferInfos.length; j++)
+                                {
+                                    addresses[request.transferInfos[j].to] = request.transferInfos[j].amount;
+                                }
+                                addresses[changeAddress] = amountCanUse - amountTotal - tip;
+                                break;
+                            }else if(amountCanUse == (amount + tip)){
+                                for(var j =0; j < request.transferInfos.length; j++)
+                                {
+                                    addresses[request.transferInfos[j].to] = request.transferInfos[j].amount;
+                                }
+                                break;
+                            }
+                        }
+                        if(i <= result.length){
+                            createSignSend(transactions, addresses);
+                        }
                     }
-                }
-                if(i <= result.length){
-                        createSignSend(transactions, addresses);
-                }
+                });
             }
         }
     });
-});
+};
 
 var getTransactionInfo = function(txid){
+    console.log("txid: " + txid);
     rpc.getRawTransaction(txid, needJson, function(err,ret){
         if(err){
             console.log("fail code: " + err.code);
@@ -158,19 +257,30 @@ var getTransactionInfo = function(txid){
 }
 
 var createSignSend = function(transactions, addresses){
+    for(var i = 0; i < transactions.length; i++)
+    {
+        console.log("tx.txid: " + transactions[i].txid);
+        console.log("tx.vout: " + transactions[i].vout);
+    }
+    console.log(addresses);
     rpc.createRawTransaction(transactions, addresses, function(errCreate, retCreate){
         if(errCreate){
-            //TODO:
+            console.log("errCreate code: " + errCreate.code);
+            console.log("errCreate message: " + errCreate.message);
         }else{
-            rpc.signRawTransaction(retCreate.result.transaction, function(errSign, retSign){
+            console.log("transaction: " + retCreate.result);
+            rpc.signRawTransaction(retCreate.result, function(errSign, retSign){
                 if(errSign){
-                    //TODO:
+                    console.log("errSign code: " + errSign.code);
+                    console.log("errSign message: " + errSign.message);
                 }else{
                     rpc.sendRawTransaction(retSign.result.hex, function(errSend, retSend){
+                        console.log("send hex: " + retSign.result.hex);
                         if(errSend){
-                            //TODO:
+                            console.log("errSend code: " + errSend.code);
+                            console.log("errSend message: " + errSend.message);
                         }else{
-                            getTransactionInfo(retSend.result.hex);
+                            getTransactionInfo(retSend.result);
                         }
                     });
                 }
@@ -179,12 +289,124 @@ var createSignSend = function(transactions, addresses){
     });
 }
 
-proxy.on(RedisProxy.EventType.QUERY_ADDRESS, function(requestId, currency, request) {
-    console.log(RedisProxy.EventType.QUERY_ADDRESS);
-    console.log(requestId);
+proxy.on(RedisProxy.EventType.GET_MISSED_BLOCKS, function(currency, request) {
+    console.log(RedisProxy.EventType.GET_MISSED_BLOCKS);
     console.log(currency);
     console.log(request);
+    console.log("endIndex hash:" + request.endIndex.id);
+    for(var i = request.startIndexs[0].height; i < request.endIndex.height; i++){
+        rpc.getBlockHash(i, function(errHash, retHash){
+            rpc.getBlock(retHash.result, function(errBlock, retBlock){
+                if(errBlock){
+                    console.log("errBlock code: " + errBlock.code);
+                    console.log("errBlock message: " + errBlock.message);
+                }else{
+                    var index = new BlockIndex({id: retBlock.result.hash, height:retBlock.result.heigth});
+                    console.log(index.id);
+                    var prevIndex = new BlockIndex({id:retBlock.result.previousblockhash, height:retBlock.height - 1});
+                    var txs = [];
+                    var block = new CryptoCurrencyBlock({index:index, preIndex:prevIndex, txs:txs});
+                    for(var i = 0; i < retBlock.result.tx.length; i++){
+                        rpc.getRawTransaction(retBlock.result.tx[i], needJson, function(errTx, retTx){
+                            if(errTx){
+                                console.log("errTx code: " + errBlock.code);
+                                console.log("errTx message: " + errBlock.message);
+                            }else{
+                                console.log("txid: " + retTx.result.txid);
+                                var cctx = new CryptoCurrencyTransaction({inputs: [], outputs: [],
+                                    status: CryptoCurrencyTransactionStatus.PENDING});
+                                cctx.txid = retTx.result.txid;
+                                getOutputAddresses(retTx.result, cctx);
+                                for(var j = 0; j < retTx.result.vin.length; j++){
+                                    console.log("vout: " + retTx.result.vin[j].vout);
+                                    getAllTxsInBlock(retTx.result.vin[j], retTx.result.vin.length,
+                                        retBlock.result.tx.length, cctx, block);
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+        });
+    }
 });
+
+var constructBlocks = function(input, txFinishLength, blockFinishLength, cctx, block){
+    console.log("input-txid vin: " + input.txid);
+    console.log("txFinishLength: " + txFinishLength);
+    console.log("blockFinishLength: " + blockFinishLength);
+    console.log("input-vout vin: " + input.vout);
+    console.log("block.index: " + block.index.hash);
+    var vout = input.vout;
+    if(input.txid != undefined){
+        rpc.getRawTransaction(input.txid, needJson, function(errIn,retIn){
+            if(errIn){
+                console.log("fail code: " + err.code);
+                console.log("fail message: " + err.message);
+            }else{
+                for(var j = 0; j < retIn.result.vout.length; j++){
+                    if(vout == retIn.result.vout[j].n){
+                        console.log("success match: " + retIn.result.vout[j].n);
+                        var input = new CryptoCurrencyTransactionPort();
+                        input.address = retIn.result.vout[j].scriptPubKey.addresses.toString();
+                        input.amount = retIn.result.vout[j].value;
+                        console.log("input.address: " + input.address);
+                        cctx.inputs.push(input);
+                    }
+                }
+                console.log("cctx.inputs.length: " + cctx.inputs.length);
+                if(cctx.inputs.length == txFinishLength){
+                    console.log("block.txs.length: " + block.txs.length);
+                    console.log("blockFinishLength: " + blockFinishLength);
+                    block.txs.push(cctx);
+                    if(block.txs.length == blockFinishLength){
+                        var blocksMsg = new ({blocks:[]});
+                        blocksMsg.blocks.push(block);
+                        if(blocksMsg.blocks.length == blocksFinishLength){
+                            makeFinalBlocksResponse(request, blocksMsg);
+                        }
+                    }
+                }
+            }
+        });
+    }else{
+        var input = new CryptoCurrencyTransactionPort();
+        input.address = "coinbase";
+        input.amount = 0;
+        console.log("input.address: " + input.address);
+        cctx.inputs.push(input);
+        if(cctx.inputs.length == txFinishLength){
+            console.log("block.txs.length: " + block.txs.length);
+            console.log("blockFinishLength: " + blockFinishLength);
+            block.txs.push(cctx);
+            if(block.txs.length == blockFinishLength){
+                var blocksMsg = new ({blocks:[]});
+                blocksMsg.blocks.push(block);
+                if(blocksMsg.blocks.length == blocksFinishLength){
+                    makeFinalBlocksResponse(request, blocksMsg);
+                }
+            }
+        }
+    }
+};
+
+var makeFinalBlocksResponse = function(request, blocksMsg){
+    for(var i = 0; i < request.startIndexs.length; i++){
+        if(request.startIndexs[i].id == blocksMsg[i].index.id &&
+           request.startIndexs[i].height == blocksMsg[i].index.height){
+           //TODO:顺序不一定对应
+        }else{
+            break;
+        }
+    }
+    var startIndex = new BlockIndex({id: blocksMsg[i].id, height: blocksMsg[i].height});
+    var blocks = [];
+    for(var j = i; j < blocksMsg.length; j++){
+        blocks.push(blocksMsg[j]);
+    }
+    var blocksFinal = new CryptoCurrencyBlocksMessage({startIndex: startIndex, blocks:blocks});
+    makeNormalResponse(BitwayRequestType.GET_MISSED_BLOCKS, AUTO_REPORT, Currency.BTC, blocksFinal);
+};
 
 var handleTx = function(info) {
     console.log('** TX Received **');
@@ -229,7 +451,7 @@ var makeNormalResponse = function(type, requestId, currency, response){
             break;
         case BitwayRequestType.GET_MISSED_BLOCKS:
             proxy.publish(new BitwayMessage({type: type,
-                requestId: requestId, currency: currency, block: response}));
+                requestId: requestId, currency: currency, blocks: response}));
             break;
         default:
             console.log("Inavalid Type!");
@@ -266,6 +488,7 @@ var getInputAddresses = function(input, cctx, finishLength) {
 
 var handleInv = function(info) {
     console.log('** Inv **');
+    return;
     console.log(info.message);
     var inv = info.message;
     console.log(inv.invs[0].type);
@@ -294,14 +517,13 @@ var getBlockByIndex = function(index){
     console.log("current block index: " + index);
     rpc.getBlockHash(index, function(errHash,retHash){
         if(errHash){
-            console.log("fail code: " + errHash.code);
-            console.log("fail message: " + errHash.message);
-        //TODO:
+            console.log("errHash code: " + errHash.code);
+            console.log("errHash message: " + errHash.message);
         }else{
             rpc.getBlock(retHash.result, function(errBlock, retBlock){
                 if(errBlock){
-                    console.log("fail code: " + errBlock.code);
-                    console.log("fail message: " + errBlock.message);
+                    console.log("errBlock code: " + errBlock.code);
+                    console.log("errBlock message: " + errBlock.message);
                 }else{
                     var index = new BlockIndex({id: retBlock.result.hash, height:retBlock.result.heigth});
                     console.log(index.id);
@@ -362,7 +584,9 @@ var getAllTxsInBlock = function(input, txFinishLength, blockFinishLength, cctx, 
                     console.log("blockFinishLength: " + blockFinishLength);
                     block.txs.push(cctx);
                     if(block.txs.length == blockFinishLength){
-                        makeNormalResponse(BitwayRequestType.GET_MISSED_BLOCKS, AUTO_REPORT, Currency.BTC, block);
+                        var blocksMsg = new ({blocks:[]});
+                        blocksMsg.blocks.push(block);
+                        makeNormalResponse(BitwayRequestType.GET_MISSED_BLOCKS, AUTO_REPORT, Currency.BTC, blocksMsg);
                     }
                 }
             }
@@ -378,7 +602,9 @@ var getAllTxsInBlock = function(input, txFinishLength, blockFinishLength, cctx, 
             console.log("blockFinishLength: " + blockFinishLength);
             block.txs.push(cctx);
             if(block.txs.length == blockFinishLength){
-                makeNormalResponse(BitwayRequestType.GET_MISSED_BLOCKS, AUTO_REPORT, Currency.BTC, block);
+                var blocksMsg = new ({blocks:[]});
+                blocksMsg.blocks.push(block);
+                makeNormalResponse(BitwayRequestType.GET_MISSED_BLOCKS, AUTO_REPORT, Currency.BTC, blocksMsg);
             }
         }
     }
