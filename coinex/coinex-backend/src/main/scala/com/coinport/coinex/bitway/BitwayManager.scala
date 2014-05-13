@@ -27,6 +27,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
   val addresses: Map[CryptoCurrencyAddressType, Set[String]] = Map(
     CryptoCurrencyAddressType.list.map(_ -> Set.empty[String]): _*)
   val addressLastTx = Map.empty[String, BlockIndex]
+  val addressUidMap = Map.empty[String, Long]
   var lastAlive: Long = -1
 
   val FAUCET_THRESHOLD: Double = 0.5
@@ -38,7 +39,8 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     blockIndexes,
     addresses.map(kv => (kv._1 -> kv._2.clone)),
     addressLastTx.clone,
-    lastAlive
+    lastAlive,
+    addressUidMap.clone
   )
 
   def loadSnapshot(s: TBitwayState) {
@@ -50,6 +52,8 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     addressLastTx ++= s.addressLastTx
     lastAlive = s.lastAlive
     loadFiltersSnapshot(s.filters)
+    addressUidMap.clear
+    addressUidMap ++= s.addressUidMap
   }
 
   def isDryUp = addresses(Unused).size == 0 || addresses(UserUsed).size > addresses(Unused).size * FAUCET_THRESHOLD
@@ -66,10 +70,11 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     }
   }
 
-  def addressAllocated(address: String) {
+  def addressAllocated(uid: Long, address: String) {
     assert(addresses(Unused).contains(address))
     addresses(Unused).remove(address)
     addresses(UserUsed).add(address)
+    addressUidMap += (address -> uid)
   }
 
   def faucetAddress(cryptoCurrencyAddressType: CryptoCurrencyAddressType, addrs: Set[String]) {
@@ -188,9 +193,11 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
         Set.empty[String] ++ outputs.get.map(_.address))
       if (txType.isDefined) {
         val regularizeInputs = inputs.map(_.map(i => i.copy(
-          internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)))))
+          internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)),
+          userId = addressUidMap.get(i.address))))
         val regularizeOutputs = outputs.map(_.map(i => i.copy(
-          internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)))))
+          internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)),
+          userId = addressUidMap.get(i.address))))
         Some(tx.copy(inputs = regularizeInputs, outputs = regularizeOutputs,
           prevBlock = if (prevBlock.isDefined) prevBlock else getCurrentBlockIndex,
           includedBlock = includedBlock, txType = txType))

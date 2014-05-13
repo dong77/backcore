@@ -33,25 +33,25 @@ class BitwayManagerSpec extends Specification {
       d1 mustEqual d1_
       d1._2 mustEqual false
 
-      bwm.addressAllocated(d1._1.get)
+      bwm.addressAllocated(1, d1._1.get)
       val d2 = bwm.allocateAddress
       d1 mustNotEqual d2
       d2._2 mustEqual false
-      bwm.addressAllocated(d2._1.get)
+      bwm.addressAllocated(1, d2._1.get)
       val d3 = bwm.allocateAddress
       d3._2 mustEqual false
-      bwm.addressAllocated(d3._1.get)
+      bwm.addressAllocated(1, d3._1.get)
       val d4 = bwm.allocateAddress
       d4._2 mustEqual true
-      bwm.addressAllocated(d4._1.get)
+      bwm.addressAllocated(1, d4._1.get)
       val d5 = bwm.allocateAddress
       d5._1 mustNotEqual None
       d5._2 mustEqual true
-      bwm.addressAllocated(d5._1.get)
+      bwm.addressAllocated(1, d5._1.get)
       val d6 = bwm.allocateAddress
       d6._1 mustNotEqual None
       d6._2 mustEqual true
-      bwm.addressAllocated(d6._1.get)
+      bwm.addressAllocated(1, d6._1.get)
       val none = bwm.allocateAddress
       none mustEqual (None, true)
       val noneAgain = bwm.allocateAddress
@@ -122,17 +122,20 @@ class BitwayManagerSpec extends Specification {
 
     "tx generation test" in {
       val bwm = new BitwayManager(Btc, 10)
+      bwm.faucetAddress(Unused, Set("u7"))
       bwm.faucetAddress(UserUsed, Set("u1", "u2", "u3", "u4", "u5", "u6"))
       bwm.faucetAddress(Hot, Set("h1", "h2", "h3"))
       bwm.faucetAddress(Cold, Set("c1"))
 
+      bwm.addressAllocated(1, "u7")
+
       val bi1 = BlockIndex(Some("b1"), Some(1))
       val rawTx = CryptoCurrencyTransaction(
         txid = Some("t1"),
-        inputs = Some(Set(CryptoCurrencyTransactionPort("h1", Some(1.1)))),
-        outputs = Some(Set(CryptoCurrencyTransactionPort("d1", Some(0.9)))),
+        inputs = Some(Set(CryptoCurrencyTransactionPort("u7", Some(1.1)))),
+        outputs = Some(Set(CryptoCurrencyTransactionPort("h1", Some(0.9)))),
         includedBlock = Some(bi1), status = Pending)
-      bwm.completeCryptoCurrencyTransaction(rawTx, None, None) mustEqual Some(CryptoCurrencyTransaction(None, Some("t1"), None, Some(Set(CryptoCurrencyTransactionPort("h1", Some(1.1), Some(1100)))), Some(Set(CryptoCurrencyTransactionPort("d1", Some(0.9), Some(900)))), None, None, Some(Withdrawal), Pending))
+      bwm.completeCryptoCurrencyTransaction(rawTx, None, None) mustEqual Some(CryptoCurrencyTransaction(None, Some("t1"), None, Some(Set(CryptoCurrencyTransactionPort("u7", Some(1.1), Some(1100), Some(1)))), Some(Set(CryptoCurrencyTransactionPort("h1", Some(0.9), Some(900)))), None, None, Some(UserToHot), Pending))
 
       val infos = Seq(
         CryptoCurrencyTransferInfo(1, "i1", Some(1000)),

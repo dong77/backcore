@@ -63,7 +63,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         BitwayRequestType.GenerateAddress, currency, generateAddresses = Some(
           GenerateAddresses(config.batchFetchAddressNum)))))
 
-    case m @ AllocateNewAddress(currency, _) =>
+    case m @ AllocateNewAddress(currency, _, _) =>
       val (address, needFetch) = manager.allocateAddress
       if (needFetch) self ! FetchAddresses(currency)
       if (address.isDefined) {
@@ -136,7 +136,7 @@ trait BitwayManagerBehavior {
   val manager: BitwayManager
 
   def updateState: Receive = {
-    case AllocateNewAddress(currency, Some(address)) => manager.addressAllocated(address)
+    case AllocateNewAddress(currency, uid, Some(address)) => manager.addressAllocated(uid, address)
     case BitwayMessage(currency, Some(res), None, None) =>
       if (res.addressType.isDefined && res.addresses.isDefined && res.addresses.get.size > 0)
         manager.faucetAddress(res.addressType.get, Set.empty[String] ++ res.addresses.get)

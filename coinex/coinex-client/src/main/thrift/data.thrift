@@ -434,6 +434,7 @@ struct CryptoCurrencyTransactionPort {
     1: string address
     2: optional double amount
     3: optional i64 internalAmount
+    4: optional i64 userId
 }
 
 struct CryptoCurrencyTransferInfo {
