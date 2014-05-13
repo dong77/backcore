@@ -102,6 +102,16 @@ class UserProcessor(mailer: ActorRef, secret: String)
           else GoogleAuthCodeVerificationResult(None)
         case _ => GoogleAuthCodeVerificationResult(None)
       }
+
+    case m @ QueryProfile(uid, email) =>
+      val profileOpt = if (uid.isDefined) manager.profileMap.get(uid.get) else manager.getUser(email.getOrElse(""))
+
+      profileOpt match {
+        case Some(profile) =>
+          sender ! QueryProfileResult(Some(profile))
+        case None =>
+          sender ! QueryProfileResult(None)
+      }
   }
 
   def updateState: Receive = {

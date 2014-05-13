@@ -18,6 +18,7 @@ enum ErrorCode {
     USER_NOT_EXIST                   = 1003
     PASSWORD_NOT_MATCH               = 1004
     TOKEN_NOT_MATCH                  = 1005
+    EMAIL_NOT_VERIFIED               = 1006
 
     // Account related
     PRICE_OUT_OF_RANGE               = 2001
@@ -185,6 +186,8 @@ struct UserProfile {
     12: optional string loginToken
     13: optional string googleAuthenticatorSecret
     14: UserStatus status
+    15: optional map<Currency, string> depositAddresses
+    16: optional map<Currency, string> withdrawalAddresses
 }
 
 struct MarketSide {

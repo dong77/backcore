@@ -105,7 +105,8 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
       case None => Left(ErrorCode.UserNotExist)
       case Some(profile) =>
         val passwordHash = computePassword(profile.id, profile.email, password)
-        if (Some(passwordHash) == profile.passwordHash) Right(profile)
+        if (!profile.emailVerified) Left(ErrorCode.EmailNotVerified)
+        else if (Some(passwordHash) == profile.passwordHash) Right(profile)
         else Left(ErrorCode.PasswordNotMatch)
     }
 

@@ -32,7 +32,10 @@ object UserService extends AkkaService {
       verificationToken = None,
       loginToken = None,
       googleAuthenticatorSecret = None,
-      UserStatus.Normal)
+      status = UserStatus.Normal,
+      depositAddresses = null,
+      withdrawalAddresses = null
+    )
 
     val command = DoRegisterUser(profile, password)
 
@@ -149,6 +152,26 @@ object UserService extends AkkaService {
         ApiResult(true, 0, "", Some(succeeded))
       case failed: ResetPasswordFailed =>
         ApiResult(false, -1, failed.toString)
+      case e =>
+        ApiResult(false, -1, e.toString)
+    }
+  }
+
+  def queryUserProfileByEmail(email: String) = {
+    val command = QueryProfile(email = Some(email))
+    backend ? command map {
+      case result: QueryProfileResult =>
+        ApiResult(true, 0, "", result.userProfile)
+      case e =>
+        ApiResult(false, -1, e.toString)
+    }
+  }
+
+  def queryUserProfileById(uid: Long) = {
+    val command = QueryProfile(uid = Some(uid))
+    backend ? command map {
+      case result: QueryProfileResult =>
+        ApiResult(true, 0, "", result.userProfile)
       case e =>
         ApiResult(false, -1, e.toString)
     }

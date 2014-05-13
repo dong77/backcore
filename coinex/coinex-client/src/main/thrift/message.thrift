@@ -193,12 +193,14 @@ typedef data.CryptoCurrencyAddressType          _CryptoCurrencyAddressType
 ////////////////////////////////////////////////////////////////
 
 ////////// AccountView
-/* Q    */ struct QueryAccount                            {1: i64 userId}
-/* R    */ struct QueryAccountResult                      {1: _UserAccount userAccount}
-/* Q    */ struct QueryRCDepositRecord                    {1: i64 userId}
-/* R    */ struct QueryRCDepositRecordResult              {1: list<_ABCodeItem> items}
-/* Q    */ struct QueryRCWithdrawalRecord                 {1: i64 userId}
-/* R    */ struct QueryRCWithdrawalRecordResult           {1: list<_ABCodeItem> items}
+/* Q    */ struct QueryProfile                        {1: optional i64 uid, optional string email}
+/* R    */ struct QueryProfileResult                  {1: optional _UserProfile userProfile}
+/* Q    */ struct QueryAccount                        {1: i64 userId}
+/* R    */ struct QueryAccountResult                  {1: _UserAccount userAccount}
+/* Q    */ struct QueryRCDepositRecord                {1: i64 userId}
+/* R    */ struct QueryRCDepositRecordResult          {1: list<_ABCodeItem> items}
+/* Q    */ struct QueryRCWithdrawalRecord             {1: i64 userId}
+/* R    */ struct QueryRCWithdrawalRecordResult       {1: list<_ABCodeItem> items}
 
 ////////// MarketDepthView
 /* Q    */ struct QueryMarketDepth                        {1: _MarketSide side, 2: i32 maxDepth}
