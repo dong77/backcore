@@ -172,7 +172,7 @@ typedef data.CryptoCurrencyAddressType          _CryptoCurrencyAddressType
 /* R    */ struct GenerateAddressesResult                 {
                                                               1: _ErrorCode error,
                                                               2: optional set<string> addresses,
-                                                              3: optional_CryptoCurrencyAddressType addressType
+                                                              3: optional _CryptoCurrencyAddressType addressType
                                                           }
 /* I    */ struct CryptoCurrencyBlocksMessage             {1: optional _BlockIndex startIndex, /* BlockIndex(None, None) means in another branch */ 2: list<_CryptoCurrencyBlock> blocks, 3: optional i64 timestamp}
 /* C    */ struct BitwayRequest                           {

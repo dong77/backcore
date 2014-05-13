@@ -81,8 +81,8 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
 
     case m @ BitwayMessage(currency, Some(res), None, None) =>
       if (res.error == ErrorCode.Ok) {
-        persist(res) { event =>
-          updateState(m)
+        persist(m) { event =>
+          updateState(event)
         }
       } else {
         log.error("error occur when fetch addresses: " + res)
