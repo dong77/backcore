@@ -12,6 +12,7 @@ import akka.actor.ActorRef
 import akka.event.LoggingReceive
 import akka.persistence.Deliver
 import akka.persistence.Persistent
+import akka.persistence.ConfirmablePersistent
 import akka.persistence.EventsourcedProcessor
 
 import com.redis._
@@ -74,7 +75,8 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.NotEnoughAddressInPool, None)
       }
 
-    case m @ TransferCryptoCurrency(currency, infos, _) if client.isDefined =>
+    case p @ ConfirmablePersistent(m @ TransferCryptoCurrency(currency, infos, _)) if client.isDefined =>
+      confirm(p)
       client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
         BitwayRequestType.Transfer, currency, transferCryptoCurrency = Some(
           m.copy(transferInfos = manager.completeTransferInfos(infos))))))
