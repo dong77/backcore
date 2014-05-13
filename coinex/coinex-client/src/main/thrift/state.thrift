@@ -95,8 +95,9 @@ struct TRobotState {
 
 struct TBitwayState {
     1: Currency currency
-    2: list<BlockIndex> blockIndexes
-    3: map<CryptoCurrencyAddressType, set<string>> addresses
-    4: map<string, BlockIndex> addressLastTx // key: address value: reuse BlockIndex, id is txid, height is tx first included block height
-    5: i64 lastAlive
+    2: RedeliverFilters filters
+    3: list<BlockIndex> blockIndexes
+    4: map<CryptoCurrencyAddressType, set<string>> addresses
+    5: map<string, BlockIndex> addressLastTx // key: address value: reuse BlockIndex, id is txid, height is tx first included block height
+    6: i64 lastAlive
 }

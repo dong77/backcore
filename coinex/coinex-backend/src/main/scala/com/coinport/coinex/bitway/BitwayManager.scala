@@ -34,6 +34,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
 
   def getSnapshot = TBitwayState(
     supportedCurrency,
+    getFiltersSnapshot,
     blockIndexes,
     addresses.map(kv => (kv._1 -> kv._2.clone)),
     addressLastTx.clone,
@@ -48,6 +49,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     addressLastTx.clear
     addressLastTx ++= s.addressLastTx
     lastAlive = s.lastAlive
+    loadFiltersSnapshot(s.filters)
   }
 
   def isDryUp = addresses(Unused).size == 0 || addresses(UserUsed).size > addresses(Unused).size * FAUCET_THRESHOLD
