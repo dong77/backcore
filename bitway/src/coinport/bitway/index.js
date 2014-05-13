@@ -47,8 +47,7 @@ proxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
     console.log(currency);
     console.log(request);
     if(request.num < MIN_GENERATE_ADDR_NUM || request.num > MAX_GENERATE_ADDR_NUM){
-        proxy.publish(new BitwayMessage({type: BitwayRequestType.GENERATE_ADDRESS,
-            currency: Currency.BTC,
+        proxy.publish(new BitwayMessage({currency: Currency.BTC,
             generateAddressResponse: new GenerateAddressesResult({error: ErrorCode.ROBOT_DNA_EXIST})}));
     }else{
         var addresses = [];
@@ -58,8 +57,7 @@ proxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
                 if(err) {
                     console.error('An error occured generate address');
                     console.error(err);
-                    proxy.publish(new BitwayMessage({type: BitwayRequestType.GENERATE_ADDRESS,
-                        currency: Currency.BTC,
+                    proxy.publish(new BitwayMessage({currency: Currency.BTC,
                         generateAddressResponse: new GenerateAddressesResult({error: ErrorCode.ROBOT_DNA_EXIST})}));
                     return;
                 }
@@ -77,8 +75,7 @@ proxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
                         console.log(retPrivKey);
                         if (addresses.length == request.num){
                             console.log("addresses: " + addresses);
-                            proxy.publish(new BitwayMessage({type: BitwayRequestType.GENERATE_ADDRESS,
-                                currency: Currency.BTC,
+                            proxy.publish(new BitwayMessage({currency: Currency.BTC,
                             generateAddressResponse: new GenerateAddressesResult({error: ErrorCode.OK,
                                 addresses: addresses})}));
                             console.log("costTime: " + (new Date().getTime() - startTime) + "ms");
@@ -446,12 +443,10 @@ var makeNormalResponse = function(type, requestId, currency, response){
                 console.log("output address "+ n + ": " + response.outputs[n].address);
                 console.log("output amount "+ n + ": " + response.outputs[n].amount);
             }
-            proxy.publish(new BitwayMessage({type: type,
-                requestId: requestId, currency: currency, tx: response}));
+            proxy.publish(new BitwayMessage({currency: currency, tx: response}));
             break;
         case BitwayRequestType.GET_MISSED_BLOCKS:
-            proxy.publish(new BitwayMessage({type: type,
-                requestId: requestId, currency: currency, blocks: response}));
+            proxy.publish(new BitwayMessage({currency: currency, blocks: response}));
             break;
         default:
             console.log("Inavalid Type!");
