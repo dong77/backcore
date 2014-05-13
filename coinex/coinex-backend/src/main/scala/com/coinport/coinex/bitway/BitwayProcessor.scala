@@ -66,8 +66,8 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       val (address, needFetch) = manager.allocateAddress
       if (needFetch) self ! FetchAddresses(currency)
       if (address.isDefined) {
-        persist(m) { event =>
-          updateState(event.copy(assignedAddress = address))
+        persist(m.copy(assignedAddress = address)) { event =>
+          updateState(event)
         }
         sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.Ok, address)
       } else {
@@ -106,9 +106,9 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         case SUCCESSOR | REORG =>
           val relatedTxs = manager.extractTxsFromBlocks(blocksMsg.blocks.toList)
           if (relatedTxs.nonEmpty) {
-            persist(m) { event =>
-              val ts = if (blocksMsg.timestamp.isDefined) blocksMsg.timestamp.get else System.currentTimeMillis
-              updateState(event.copy(blocksMsg = Some(blocksMsg.copy(timestamp = Some(ts)))))
+            val ts = if (blocksMsg.timestamp.isDefined) blocksMsg.timestamp.get else System.currentTimeMillis
+            persist(m.copy(blocksMsg = Some(blocksMsg.copy(timestamp = Some(ts))))) { event =>
+              updateState(event)
               val reorgIndex = if (continuity == REORG) blocksMsg.startIndex else None
               channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
                 relatedTxs, reorgIndex)), transferProcessor.path)
