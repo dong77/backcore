@@ -13,14 +13,15 @@ var RedisProxy                      = require('./redis/redis_proxy').RedisProxy,
     CryptoCurrencyTransactionType   = require('../../../gen-nodejs/data_types').CryptoCurrencyTransactionType,
     CryptoCurrencyAddressType       = require('../../../gen-nodejs/data_types').CryptoCurrencyAddressType,
     Currency                        = require('../../../gen-nodejs/data_types').Currency,
+    BlockIndex                      = require('../../../gen-nodejs/data_types').BlockIndex,
+    CryptoCurrencyBlocksMessage     = require('../../../gen-nodejs/message_types').CryptoCurrencyBlocksMessage,
     ErrorCode                       = require('../../../gen-nodejs/data_types').ErrorCode,
     BitwayMessage                   = require('../../../gen-nodejs/message_types').BitwayMessage,
     Bitcore                         = require('bitcore'),
     Peer                            = Bitcore.Peer,
-    Networks                        = Bitcore.networks,
-    PeerManager                     = require('soop').load('bitcore/PeerManager', {
-                                          network: Networks.testnet
-                                      });
+    Networks                        = Bitcore.networks;
+
+var PeerManager = Bitcore.PeerManager;
 
 var proxy = new RedisProxy("btc", "127.0.0.1", "6379");
 var RpcClient = Bitcore.RpcClient;
@@ -485,7 +486,6 @@ var getInputAddresses = function(input, cctx, finishLength) {
 
 var handleInv = function(info) {
     console.log('** Inv **');
-    return;
     console.log(info.message);
     var inv = info.message;
     console.log(inv.invs[0].type);
@@ -522,6 +522,7 @@ var getBlockByIndex = function(index){
                     console.log("errBlock code: " + errBlock.code);
                     console.log("errBlock message: " + errBlock.message);
                 }else{
+                    console.log("retBlock.result.hash: " + retBlock.result.hash);
                     var index = new BlockIndex({id: retBlock.result.hash, height:retBlock.result.heigth});
                     console.log(index.id);
                     var prevIndex = new BlockIndex({id:retBlock.result.previousblockhash, height:retBlock.height - 1});
@@ -581,7 +582,7 @@ var getAllTxsInBlock = function(input, txFinishLength, blockFinishLength, cctx, 
                     console.log("blockFinishLength: " + blockFinishLength);
                     block.txs.push(cctx);
                     if(block.txs.length == blockFinishLength){
-                        var blocksMsg = new ({blocks:[]});
+                        var blocksMsg = new CryptoCurrencyBlocksMessage({blocks:[]});
                         blocksMsg.blocks.push(block);
                         makeNormalResponse(BitwayRequestType.GET_MISSED_BLOCKS, AUTO_REPORT, Currency.BTC, blocksMsg);
                     }
@@ -599,7 +600,7 @@ var getAllTxsInBlock = function(input, txFinishLength, blockFinishLength, cctx, 
             console.log("blockFinishLength: " + blockFinishLength);
             block.txs.push(cctx);
             if(block.txs.length == blockFinishLength){
-                var blocksMsg = new ({blocks:[]});
+                var blocksMsg = new CryptoCurrencyBlocksMessage({blocks:[]});
                 blocksMsg.blocks.push(block);
                 makeNormalResponse(BitwayRequestType.GET_MISSED_BLOCKS, AUTO_REPORT, Currency.BTC, blocksMsg);
             }
@@ -620,7 +621,9 @@ var getOutputAddresses = function(tx, cctx){
     }
 }
 
-var peerman = new PeerManager();
+var peerman = new PeerManager({
+    network: 'testnet'       
+});
 
 peerman.addPeer(new Peer('127.0.0.1', 18333));
 
