@@ -20,7 +20,7 @@ class BitwayManagerSpec extends Specification {
 
   "BitwayManager" should {
     "address accocate test" in {
-      val bwm = new BitwayManager(Btc)
+      val bwm = new BitwayManager(Btc, 10)
 
       bwm.getSupportedCurrency mustEqual Btc
 
@@ -59,7 +59,7 @@ class BitwayManagerSpec extends Specification {
     }
 
     "get tx type test" in {
-      val bwm = new BitwayManager(Btc)
+      val bwm = new BitwayManager(Btc, 10)
       bwm.faucetAddress(UserUsed, Set("u1", "u2", "u3", "u4", "u5", "u6"))
       bwm.faucetAddress(Hot, Set("h1", "h2"))
       bwm.faucetAddress(Cold, Set("c1"))
@@ -75,7 +75,7 @@ class BitwayManagerSpec extends Specification {
     }
 
     "block chain test" in {
-      val bwm = new BitwayManager(Btc)
+      val bwm = new BitwayManager(Btc, 10)
       bwm.getBlockIndexes mustEqual Some(ArrayBuffer.empty[BlockIndex])
       bwm.getCurrentBlockIndex mustEqual None
       bwm.appendBlockChain(List(
@@ -121,7 +121,7 @@ class BitwayManagerSpec extends Specification {
     }
 
     "tx generation test" in {
-      val bwm = new BitwayManager(Btc)
+      val bwm = new BitwayManager(Btc, 10)
       bwm.faucetAddress(UserUsed, Set("u1", "u2", "u3", "u4", "u5", "u6"))
       bwm.faucetAddress(Hot, Set("h1", "h2", "h3"))
       bwm.faucetAddress(Cold, Set("c1"))
@@ -185,7 +185,7 @@ class BitwayManagerSpec extends Specification {
     }
 
     "lastTx/lastAlive test" in {
-      val bwm = new BitwayManager(Btc)
+      val bwm = new BitwayManager(Btc, 10)
       bwm.faucetAddress(UserUsed, Set("u1", "u2", "u3", "u4", "u5", "u6"))
       bwm.faucetAddress(Hot, Set("h1", "h2"))
       bwm.faucetAddress(Cold, Set("c1"))

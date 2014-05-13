@@ -19,15 +19,7 @@ object BlockContinuityEnum extends Enumeration {
   val SUCCESSOR, GAP, REORG, OTHER_BRANCH, DUP = Value
 }
 
-object BitwayManager {
-  final val INDEX_LIST_LIMIT: Map[Currency, Int] = Map(
-    Btc -> 10,
-    Ltc -> 20,
-    Pts -> 30
-  )
-}
-
-class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
+class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) extends Manager[TBitwayState] {
 
   import CryptoCurrencyAddressType._
 
@@ -213,16 +205,14 @@ class BitwayManager(supportedCurrency: Currency) extends Manager[TBitwayState] {
     }
   }
 
-  import BitwayManager._
-
   def appendBlockChain(chain: List[BlockIndex], startIndex: Option[BlockIndex] = None) {
     val reorgPos = blockIndexes.indexWhere(Option(_) == startIndex) + 1
     if (reorgPos > 0) {
       blockIndexes.remove(reorgPos, blockIndexes.length - reorgPos)
     }
     blockIndexes ++= chain
-    if (blockIndexes.length > INDEX_LIST_LIMIT.getOrElseUpdate(supportedCurrency, 10))
-      blockIndexes.remove(0, blockIndexes.length - INDEX_LIST_LIMIT(supportedCurrency))
+    if (blockIndexes.length > maintainedChainLength)
+      blockIndexes.remove(0, blockIndexes.length - maintainedChainLength)
   }
 
   def getLastAlive = lastAlive

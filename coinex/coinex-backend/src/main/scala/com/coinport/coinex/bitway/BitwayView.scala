@@ -13,10 +13,10 @@ import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import Implicits._
 
-class BitwayView(supportedCurrency: Currency) extends ExtendedView with BitwayManagerBehavior {
+class BitwayView(supportedCurrency: Currency, config: BitwayConfig) extends ExtendedView with BitwayManagerBehavior {
   override val processorId = BITWAY_PROCESSOR << supportedCurrency
   override val viewId = BITWAY_VIEW << supportedCurrency
-  val manager = new BitwayManager(supportedCurrency)
+  val manager = new BitwayManager(supportedCurrency, config.maintainedChainLength)
 
   def receive = LoggingReceive {
     case Persistent(msg, _) => updateState(msg)

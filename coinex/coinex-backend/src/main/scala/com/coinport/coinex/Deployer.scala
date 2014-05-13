@@ -71,7 +71,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
   }
 
   def deploy(): LocalRouters = {
-    val feeConfig = loadFeeConfig(config.getString("akka.exchange.fee-rules-path"))
+    val feeConfig = loadConfig[FeeConfig](config.getString("akka.exchange.fee-rules-path"))
 
     deployMailer(mailer <<)
 
@@ -117,12 +117,13 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploySingleton(Props(new OrderWriter(dbForViews)), order_mongo_writer <<)
     deploySingleton(Props(new ExportOpenDataProcessor(asyncHBaseClient) with StackableEventsourced[ExportOpenDataMap, ExportOpenDataManager]), opendata_exporter <<)
 
+    val configs = loadConfig[BitwayConfigs](config.getString("akka.exchange.bitway-path")).configs
     markets.toCryptoCurrencySet foreach { c =>
       def props = Props(new BitwayProcessor(routers.depositWithdrawProcessor,
-        c) with StackableEventsourced[TBitwayState, BitwayManager])
+        c, configs.getOrElse(c, BitwayConfig())) with StackableEventsourced[TBitwayState, BitwayManager])
       deploySingleton(props, bitway_processor << c)
-      deploy(Props(new BitwayView(c) with StackableView[TBitwayState, BitwayManager]), bitway_view << c)
-      deploy(Props(new BitwayReceiver(routers.bitwayProcessors(c), c)), bitway_receiver << c)
+      deploy(Props(new BitwayView(c, configs.getOrElse(c, BitwayConfig())) with StackableView[TBitwayState, BitwayManager]), bitway_view << c)
+      deploy(Props(new BitwayReceiver(routers.bitwayProcessors(c), c, configs.getOrElse(c, BitwayConfig()))), bitway_receiver << c)
     }
 
     // Deploy monitor at last
@@ -174,8 +175,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     val watchService = system.actorOf(Props(new ActorWatcher(actors.toList)), "watch-service")
   }
 
-  private def loadFeeConfig(feeConfigPath: String): FeeConfig = {
-    val in: InputStream = this.getClass.getClassLoader.getResourceAsStream(feeConfigPath)
-    (new Eval()(IOUtils.toString(in))).asInstanceOf[FeeConfig]
+  private def loadConfig[T](configPath: String): T = {
+    val in: InputStream = this.getClass.getClassLoader.getResourceAsStream(configPath)
+    (new Eval()(IOUtils.toString(in))).asInstanceOf[T]
   }
 }
