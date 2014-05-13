@@ -8,7 +8,6 @@ var RedisProxy                      = require('./redis/redis_proxy').RedisProxy,
     GenerateAddressesResult         = require('../../../gen-nodejs/message_types').GenerateAddressesResult,
     CryptoCurrencyTransaction       = require('../../../gen-nodejs/data_types').CryptoCurrencyTransaction,
     CryptoCurrencyTransactionPort   = require('../../../gen-nodejs/data_types').CryptoCurrencyTransactionPort,
-    CryptoCurrencyTransactionPort   = require('../../../gen-nodejs/data_types').CryptoCurrencyTransactionPort,
     CryptoCurrencyBlock             = require('../../../gen-nodejs/data_types').CryptoCurrencyBlock,
     CryptoCurrencyTransactionStatus = require('../../../gen-nodejs/data_types').CryptoCurrencyTransactionStatus,
     CryptoCurrencyTransactionType   = require('../../../gen-nodejs/data_types').CryptoCurrencyTransactionType,
@@ -25,6 +24,7 @@ var RedisProxy                      = require('./redis/redis_proxy').RedisProxy,
 
 var proxy = new RedisProxy("btc", "127.0.0.1", "6379");
 var RpcClient = Bitcore.RpcClient;
+// TODO(yangli): make CryptoProxy and config following params
 var config = {
     protocol: 'http',
     user: 'user',

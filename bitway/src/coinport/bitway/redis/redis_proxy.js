@@ -1,7 +1,7 @@
 /**
  * Copyright 2014 Coinport Inc. All Rights Reserved.
  * Author: c@coinport.com (Chao Ma)
- * Usage: var proxy = new RedisProxy(BTC, "127.0.0.1", "6379");
+ * Usage: var proxy = new RedisProxy("btc", "127.0.0.1", "6379");
  *        proxy.start();
  *        proxy.publish(xxx);
  */

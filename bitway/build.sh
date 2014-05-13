@@ -6,5 +6,3 @@
 thrift --gen js:node -o ./ proto/data.thrift
 thrift --gen js:node -o ./ proto/message.thrift
 thrift --gen js:node -o ./ proto/test.thrift
-
-node src/coinport/bitway/index.js
