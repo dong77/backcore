@@ -111,7 +111,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploySingleton(Props(new UserProcessor(routers.mailer, userManagerSecret) with StackableEventsourced[TUserState, UserManager]), user_processor <<)
     deploySingleton(Props(new ApiAuthProcessor(apiAuthSecret) with StackableCmdsourced[TApiSecretState, ApiAuthManager]), api_auth_processor <<)
     deploySingleton(Props(new RobotProcessor(routers) with StackableCmdsourced[TRobotState, RobotManager]), robot_processor <<)
-    deploySingleton(Props(new AccountTransferProcessor(dbForViews, routers.accountProcessor.path) with StackableEventsourced[TAccountTransferState, AccountTransferManager]), account_transfer_processor <<)
+    deploySingleton(Props(new AccountTransferProcessor(dbForViews, routers.accountProcessor.path, routers.bitwayProcessors) with StackableEventsourced[TAccountTransferState, AccountTransferManager]), account_transfer_processor <<)
 
     deploySingleton(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer <<)
     deploySingleton(Props(new OrderWriter(dbForViews)), order_mongo_writer <<)

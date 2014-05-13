@@ -203,27 +203,19 @@ trait AccountManagerBehavior extends CountFeeSupport {
       }
 
     case AdminConfirmTransferSuccess(t) =>
-      t.`type` match {
-        case Deposit =>
-          manager.updateCashAccount(t.userId, CashAccount(t.currency, t.amount, 0, 0))
-          t.fee match {
-            case Some(f) if (f.amount > 0) =>
-              manager.transferFundFromAvailable(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
-            case _ => None
-          }
-        case Withdrawal =>
-          t.fee match {
-            case Some(f) if (f.amount > 0) =>
-              manager.transferFundFromPendingWithdrawal(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
-              manager.updateCashAccount(t.userId, CashAccount(t.currency, 0, 0, f.amount - t.amount))
-            case _ =>
-              manager.updateCashAccount(t.userId, CashAccount(t.currency, 0, 0, -t.amount))
-          }
-      }
+      succeededTransfer(t)
 
-    case AdminConfirmTransferFailure(t, _) => t.`type` match {
-      case Withdrawal => manager.updateCashAccount(t.userId, CashAccount(t.currency, t.amount, 0, -t.amount))
-      case Deposit =>
+    case AdminConfirmTransferFailure(t, _) =>
+      failedTransfer(t)
+
+    case CryptoTransferSucceeded(t) => {
+      //      println(s"AccountProcessor got success accountTransfer => ${t.toString}")
+      succeededTransfer(t)
+    }
+
+    case CryptoTransferFailed(t, _) => {
+      //      println(s"AccountProcessor got failed accountTransfer => ${t.toString}")
+      failedTransfer(t)
     }
 
     case DoSubmitOrder(side: MarketSide, order) =>
@@ -248,6 +240,33 @@ trait AccountManagerBehavior extends CountFeeSupport {
 
     case OrderCancelled(side, order) =>
       manager.conditionalRefund(true)(side.outCurrency, order)
+  }
+
+  private def succeededTransfer(t: AccountTransfer) {
+    t.`type` match {
+      case Deposit =>
+        manager.updateCashAccount(t.userId, CashAccount(t.currency, t.amount, 0, 0))
+        t.fee match {
+          case Some(f) if (f.amount > 0) =>
+            manager.transferFundFromAvailable(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
+          case _ => None
+        }
+      case Withdrawal =>
+        t.fee match {
+          case Some(f) if (f.amount > 0) =>
+            manager.transferFundFromPendingWithdrawal(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
+            manager.updateCashAccount(t.userId, CashAccount(t.currency, 0, 0, f.amount - t.amount))
+          case _ =>
+            manager.updateCashAccount(t.userId, CashAccount(t.currency, 0, 0, -t.amount))
+        }
+    }
+  }
+
+  private def failedTransfer(t: AccountTransfer) {
+    t.`type` match {
+      case Withdrawal => manager.updateCashAccount(t.userId, CashAccount(t.currency, t.amount, 0, -t.amount))
+      case Deposit =>
+    }
   }
 
   private def refund(currency: Currency, order: Order) = order.refund match {

@@ -25,6 +25,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cCryptoCurrencyTransaction = JsonScalaCodec(CryptoCurrencyTransaction)
   lazy val _cCryptoCurrencyTransactionPort = JsonScalaCodec(CryptoCurrencyTransactionPort)
   lazy val _cCryptoCurrencyTransferInfo = JsonScalaCodec(CryptoCurrencyTransferInfo)
+  lazy val _cCryptoCurrencyTransferItem = JsonScalaCodec(CryptoCurrencyTransferItem)
   lazy val _cCurrentAsset = JsonScalaCodec(CurrentAsset)
   lazy val _cCurrentPrice = JsonScalaCodec(CurrentPrice)
   lazy val _cCursor = JsonScalaCodec(Cursor)
@@ -67,9 +68,10 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cBitwayRequest = JsonScalaCodec(BitwayRequest)
   lazy val _cCancelOrderFailed = JsonScalaCodec(CancelOrderFailed)
   lazy val _cCryptoCurrencyBlocksMessage = JsonScalaCodec(CryptoCurrencyBlocksMessage)
+  lazy val _cCryptoTransferFailed = JsonScalaCodec(CryptoTransferFailed)
+  lazy val _cCryptoTransferSucceeded = JsonScalaCodec(CryptoTransferSucceeded)
   lazy val _cDoAddNewApiSecret = JsonScalaCodec(DoAddNewApiSecret)
   lazy val _cDoAddRobotDNA = JsonScalaCodec(DoAddRobotDNA)
-  lazy val _cDoBitRequestTransfer = JsonScalaCodec(DoBitRequestTransfer)
   lazy val _cDoCancelOrder = JsonScalaCodec(DoCancelOrder)
   lazy val _cDoDeleteApiSecret = JsonScalaCodec(DoDeleteApiSecret)
   lazy val _cDoRegisterUser = JsonScalaCodec(DoRegisterUser)
@@ -110,6 +112,8 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cQueryAssetResult = JsonScalaCodec(QueryAssetResult)
   lazy val _cQueryCandleData = JsonScalaCodec(QueryCandleData)
   lazy val _cQueryCandleDataResult = JsonScalaCodec(QueryCandleDataResult)
+  lazy val _cQueryCryptoCurrencyTransfer = JsonScalaCodec(QueryCryptoCurrencyTransfer)
+  lazy val _cQueryCryptoCurrencyTransferResult = JsonScalaCodec(QueryCryptoCurrencyTransferResult)
   lazy val _cQueryLatestCryptoCurrencyStatus = JsonScalaCodec(QueryLatestCryptoCurrencyStatus)
   lazy val _cQueryLatestCryptoCurrencyStatusResult = JsonScalaCodec(QueryLatestCryptoCurrencyStatusResult)
   lazy val _cQueryMarketDepth = JsonScalaCodec(QueryMarketDepth)
@@ -178,6 +182,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: CryptoCurrencyTransaction => _cCryptoCurrencyTransaction(m)
     case m: CryptoCurrencyTransactionPort => _cCryptoCurrencyTransactionPort(m)
     case m: CryptoCurrencyTransferInfo => _cCryptoCurrencyTransferInfo(m)
+    case m: CryptoCurrencyTransferItem => _cCryptoCurrencyTransferItem(m)
     case m: CurrentAsset => _cCurrentAsset(m)
     case m: CurrentPrice => _cCurrentPrice(m)
     case m: Cursor => _cCursor(m)
@@ -220,9 +225,10 @@ class ThriftJsonSerializer extends Serializer {
     case m: BitwayRequest => _cBitwayRequest(m)
     case m: CancelOrderFailed => _cCancelOrderFailed(m)
     case m: CryptoCurrencyBlocksMessage => _cCryptoCurrencyBlocksMessage(m)
+    case m: CryptoTransferFailed => _cCryptoTransferFailed(m)
+    case m: CryptoTransferSucceeded => _cCryptoTransferSucceeded(m)
     case m: DoAddNewApiSecret => _cDoAddNewApiSecret(m)
     case m: DoAddRobotDNA => _cDoAddRobotDNA(m)
-    case m: DoBitRequestTransfer => _cDoBitRequestTransfer(m)
     case m: DoCancelOrder => _cDoCancelOrder(m)
     case m: DoDeleteApiSecret => _cDoDeleteApiSecret(m)
     case m: DoRegisterUser => _cDoRegisterUser(m)
@@ -263,6 +269,8 @@ class ThriftJsonSerializer extends Serializer {
     case m: QueryAssetResult => _cQueryAssetResult(m)
     case m: QueryCandleData => _cQueryCandleData(m)
     case m: QueryCandleDataResult => _cQueryCandleDataResult(m)
+    case m: QueryCryptoCurrencyTransfer => _cQueryCryptoCurrencyTransfer(m)
+    case m: QueryCryptoCurrencyTransferResult => _cQueryCryptoCurrencyTransferResult(m)
     case m: QueryLatestCryptoCurrencyStatus => _cQueryLatestCryptoCurrencyStatus(m)
     case m: QueryLatestCryptoCurrencyStatusResult => _cQueryLatestCryptoCurrencyStatusResult(m)
     case m: QueryMarketDepth => _cQueryMarketDepth(m)
@@ -335,6 +343,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[CryptoCurrencyTransaction.Immutable] => _cCryptoCurrencyTransaction.invert(bytes).get
     case Some(c) if c == classOf[CryptoCurrencyTransactionPort.Immutable] => _cCryptoCurrencyTransactionPort.invert(bytes).get
     case Some(c) if c == classOf[CryptoCurrencyTransferInfo.Immutable] => _cCryptoCurrencyTransferInfo.invert(bytes).get
+    case Some(c) if c == classOf[CryptoCurrencyTransferItem.Immutable] => _cCryptoCurrencyTransferItem.invert(bytes).get
     case Some(c) if c == classOf[CurrentAsset.Immutable] => _cCurrentAsset.invert(bytes).get
     case Some(c) if c == classOf[CurrentPrice.Immutable] => _cCurrentPrice.invert(bytes).get
     case Some(c) if c == classOf[Cursor.Immutable] => _cCursor.invert(bytes).get
@@ -377,9 +386,10 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[BitwayRequest.Immutable] => _cBitwayRequest.invert(bytes).get
     case Some(c) if c == classOf[CancelOrderFailed.Immutable] => _cCancelOrderFailed.invert(bytes).get
     case Some(c) if c == classOf[CryptoCurrencyBlocksMessage.Immutable] => _cCryptoCurrencyBlocksMessage.invert(bytes).get
+    case Some(c) if c == classOf[CryptoTransferFailed.Immutable] => _cCryptoTransferFailed.invert(bytes).get
+    case Some(c) if c == classOf[CryptoTransferSucceeded.Immutable] => _cCryptoTransferSucceeded.invert(bytes).get
     case Some(c) if c == classOf[DoAddNewApiSecret.Immutable] => _cDoAddNewApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoAddRobotDNA.Immutable] => _cDoAddRobotDNA.invert(bytes).get
-    case Some(c) if c == classOf[DoBitRequestTransfer.Immutable] => _cDoBitRequestTransfer.invert(bytes).get
     case Some(c) if c == classOf[DoCancelOrder.Immutable] => _cDoCancelOrder.invert(bytes).get
     case Some(c) if c == classOf[DoDeleteApiSecret.Immutable] => _cDoDeleteApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoRegisterUser.Immutable] => _cDoRegisterUser.invert(bytes).get
@@ -420,6 +430,8 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[QueryAssetResult.Immutable] => _cQueryAssetResult.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleData.Immutable] => _cQueryCandleData.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleDataResult.Immutable] => _cQueryCandleDataResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryCryptoCurrencyTransfer.Immutable] => _cQueryCryptoCurrencyTransfer.invert(bytes).get
+    case Some(c) if c == classOf[QueryCryptoCurrencyTransferResult.Immutable] => _cQueryCryptoCurrencyTransferResult.invert(bytes).get
     case Some(c) if c == classOf[QueryLatestCryptoCurrencyStatus.Immutable] => _cQueryLatestCryptoCurrencyStatus.invert(bytes).get
     case Some(c) if c == classOf[QueryLatestCryptoCurrencyStatusResult.Immutable] => _cQueryLatestCryptoCurrencyStatusResult.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepth.Immutable] => _cQueryMarketDepth.invert(bytes).get

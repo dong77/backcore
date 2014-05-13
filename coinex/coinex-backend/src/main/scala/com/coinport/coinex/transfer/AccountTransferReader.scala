@@ -5,7 +5,7 @@ import akka.event.LoggingReceive
 import com.coinport.coinex.data._
 import com.mongodb.casbah.Imports._
 
-class AccountTransferReader(val db: MongoDB) extends Actor with TransferBehavior with ActorLogging {
+class AccountTransferReader(val db: MongoDB) extends Actor with AccountTransferBehavior with ActorLogging {
   val manager = new AccountTransferManager()
 
   def receive = LoggingReceive {
@@ -14,5 +14,11 @@ class AccountTransferReader(val db: MongoDB) extends Actor with TransferBehavior
       val count = transferHandler.count(query)
       val items = transferHandler.find(query, q.cur.skip, q.cur.limit)
       sender ! QueryTransferResult(items, count)
+
+    case q: QueryCryptoCurrencyTransfer =>
+      val query = transferItemHandler.getQueryDBObject(q)
+      val count = transferItemHandler.count(query)
+      val items = transferItemHandler.find(query, q.cur.skip, q.cur.limit)
+      sender ! QueryCryptoCurrencyTransferResult(items, count)
   }
 }

@@ -104,13 +104,9 @@ typedef data.CryptoCurrencyTransferItem         _CryptoCurrencyTransferItem
 /* C,P  */ struct DoRequestTransfer                       {1: _AccountTransfer transfer}
 /* R-   */ struct RequestTransferFailed                   {1: _ErrorCode error}
 /* R+   */ struct RequestTransferSucceeded                {1: _AccountTransfer transfer}
-//// Deposit Bit conins
-///* C,P  */ struct DoRequestBitUser2Hot                {1: _TransferUser2Hot transferUser2Hot} // Comment: accept CryptoCurrencysMsg with deposit, temp operation will pending at db, and send DoRequestBitUser2Hot for tes
-///* R-   */ struct RequestBitUser2HotFailed            {1: _ErrorCode error}
-///* R+   */ struct RequestBitUser2HotSucceeded         {1: _AccountTransfer transfer}
 
-///* C,P  */ struct DoRequestBitWithdraw                {1: _AccountBitWithdraw bitWithdraw}
-
+/* R-   */ struct CryptoTransferFailed                   {1: _AccountTransfer transfer, 2:_ErrorCode error}
+/* R+   */ struct CryptoTransferSucceeded                {1: _AccountTransfer transfer}
 
 /* C,P  */ struct AdminConfirmTransferFailure             {1: _AccountTransfer transfer, 2:_ErrorCode error}
 /* C,P  */ struct AdminConfirmTransferSuccess             {1: _AccountTransfer transfer}
@@ -238,18 +234,16 @@ typedef data.CryptoCurrencyTransferItem         _CryptoCurrencyTransferItem
 /* Q    */ struct QueryAsset                              {1: i64 uid, 2: i64 from, 3: i64 to}
 /* R    */ struct QueryAssetResult                        {1: _CurrentAsset currentAsset, 2: _HistoryAsset historyAsset, 3: _CurrentPrice currentPrice, 4: _HistoryPrice historyPrice}
 
-////////// query match transfer
+////////// query crypto currency transfer item
 /* Q    */ struct QueryCryptoCurrencyTransfer             {
                                                             1: optional i64 id,
                                                             2: optional string sigId,
                                                             3: optional string txid,
                                                             4: optional _Currency currency,
-                                                            5:optional _CryptoCurrencyTransactionType txType,
-                                                            6: optional _CryptoCurrencyTransactionStatus status
+                                                            5: optional _CryptoCurrencyTransactionType txType,
+                                                            6: optional _TransferStatus status
+                                                            7: optional _SpanCursor spanCur
+                                                            8:  _Cursor cur
                                                           }
 /* R    */ struct QueryCryptoCurrencyTransferResult       {1: list<_CryptoCurrencyTransferItem> transfers, 2: i64 count}
-
-////////// Scan need confirm transfers
-/* Q    */ struct QueryNeedConfirmCryptoCurrencyTransfer        {1: optional _Currency currency, 2: optional list<_CryptoCurrencyTransactionStatus> statuses}
-/* R    */ struct QueryNeedConfirmCryptoCurrencyTransferrResult {1: list<_CryptoCurrencyTransferItem> transfers, 2: i64 count}
 

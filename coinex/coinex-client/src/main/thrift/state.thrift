@@ -29,6 +29,7 @@ typedef data.Metrics                   Metrics
 typedef data.TRobot                    TRobot
 typedef data.BlockIndex                BlockIndex
 typedef data.CryptoCurrencyAddressType CryptoCurrencyAddressType
+typedef data.CryptoCurrencyTransactionPort CryptoCurrencyTransactionPort
 
 struct TUserState {
     1: map<i64, i64> idMap
@@ -65,7 +66,10 @@ struct TApiSecretState {
 
 struct TAccountTransferState {
     1: i64 lastTransferId
-    2: RedeliverFilters filters
+    2: i64 lastTransferItemId
+    3: i64 lastBlockHeight
+    4: map<string, map<CryptoCurrencyTransactionPort, i64>> depositSigId2TxPortIdMap
+    5: RedeliverFilters filters
 }
 
 struct TCandleDataState {

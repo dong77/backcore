@@ -12,7 +12,7 @@ import com.coinport.coinex.data.Implicits._
 class TransferBehaviorSpec extends EmbeddedMongoForTestWithBF {
 
   "AccountTransferWithdrawSpec" should {
-    val dw = new TransferBehavior {
+    val dw = new AccountTransferBehavior {
       val db = database
       val manager = new AccountTransferManager
     }

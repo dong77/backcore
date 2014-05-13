@@ -27,6 +27,8 @@ enum ErrorCode {
     LOCKED_A_CODE                    = 2004
     USED_B_CODE                      = 2005
     INVALID_B_CODE                   = 2006
+    UNSUPPORT_TRANSFER_TYPE          = 2007
+    BITWAY_PROCESS_FAIL             = 2008
 
     // Market related
     ORDER_NOT_EXIST                  = 3001
@@ -324,6 +326,8 @@ struct AccountTransfer {
     8:  optional i64 updated
     9:  optional ErrorCode reason
     10: optional Fee fee
+    11: optional string address
+    12: optional i64 confirm
 }
 
 struct ABCodeItem {
@@ -469,11 +473,15 @@ struct CryptoCurrencyTransferItem {
     1: optional i64 id
     2: optional string sigId
     3: optional string txid
-    4: optional Currency currency
-    5: optional CryptoCurrencyTransactionPort from
-    6: optional CryptoCurrencyTransactionPort to
-    7: optional BlockIndex includedBlock
-    8: optional CryptoCurrencyTransactionType txType
-    9: optional CryptoCurrencyTransactionStatus status
-    10: optional i64 userToHotMapedDepositId
+    4: optional i64 userId
+    5: optional Currency currency
+    6: optional CryptoCurrencyTransactionPort from
+    7: optional CryptoCurrencyTransactionPort to
+    8: optional BlockIndex includedBlock
+    9: optional CryptoCurrencyTransactionType txType
+    10: optional TransferStatus status
+    11: optional i64 userToHotMapedDepositId
+    12: optional i64 accountTransferId
+    13: optional i64 created
+    14: optional i64 updated
 }
