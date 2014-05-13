@@ -169,7 +169,11 @@ typedef data.CryptoCurrencyAddressType          _CryptoCurrencyAddressType
 ////////// Bitway nodejs
 /* C    */ struct GenerateAddresses                       {1: i32 num}
 /* C    */ struct GetMissedCryptoCurrencyBlocks           {1: list<_BlockIndex> startIndexs, 2: _BlockIndex endIndex} // returned (startIndex, endIndex]
-/* R    */ struct GenerateAddressesResult                 {1: _ErrorCode error, 2: set<string> addresses, 3: _CryptoCurrencyAddressType addressType}
+/* R    */ struct GenerateAddressesResult                 {
+                                                              1: _ErrorCode error,
+                                                              2: optional set<string> addresses,
+                                                              3: optional_CryptoCurrencyAddressType addressType
+                                                          }
 /* I    */ struct CryptoCurrencyBlocksMessage             {1: optional _BlockIndex startIndex, /* BlockIndex(None, None) means in another branch */ 2: list<_CryptoCurrencyBlock> blocks, 3: optional i64 timestamp}
 /* C    */ struct BitwayRequest                           {
                                                               1: _BitwayRequestType type

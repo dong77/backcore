@@ -12,6 +12,7 @@ var RedisProxy                      = require('./redis/redis_proxy').RedisProxy,
     CryptoCurrencyBlock             = require('../../../gen-nodejs/data_types').CryptoCurrencyBlock,
     CryptoCurrencyTransactionStatus = require('../../../gen-nodejs/data_types').CryptoCurrencyTransactionStatus,
     CryptoCurrencyTransactionType   = require('../../../gen-nodejs/data_types').CryptoCurrencyTransactionType,
+    CryptoCurrencyAddressType       = require('../../../gen-nodejs/data_types').CryptoCurrencyAddressType,
     Currency                        = require('../../../gen-nodejs/data_types').Currency,
     ErrorCode                       = require('../../../gen-nodejs/data_types').ErrorCode,
     BitwayMessage                   = require('../../../gen-nodejs/message_types').BitwayMessage,
@@ -77,7 +78,7 @@ proxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
                             console.log("addresses: " + addresses);
                             proxy.publish(new BitwayMessage({currency: Currency.BTC,
                             generateAddressResponse: new GenerateAddressesResult({error: ErrorCode.OK,
-                                addresses: addresses})}));
+                                addresses: addresses, addressType: CryptoCurrencyAddressType.UNUSED})}));
                             console.log("costTime: " + (new Date().getTime() - startTime) + "ms");
                        }
                     });
