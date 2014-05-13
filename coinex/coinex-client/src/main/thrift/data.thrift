@@ -45,6 +45,8 @@ enum ErrorCode {
 
     // Bitway
     NOT_ENOUGH_ADDRESS_IN_POOL       = 8001
+    INVALID_REQUEST_ADDRESS_NUM      = 8002
+    RPC_ERROR                        = 8003
 
     // Controller
     PARAM_EMPTY                      = 9001

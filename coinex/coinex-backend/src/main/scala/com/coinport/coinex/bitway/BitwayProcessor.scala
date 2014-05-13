@@ -135,8 +135,9 @@ trait BitwayManagerBehavior {
 
   def updateState: Receive = {
     case AllocateNewAddress(currency, Some(address)) => manager.addressAllocated(address)
-    case BitwayMessage(currency, Some(res), None, None) => manager.faucetAddress(
-      res.addressType, Set.empty[String] ++ res.addresses)
+    case BitwayMessage(currency, Some(res), None, None) =>
+      if (res.addressType.isDefined && res.addresses.isDefined && res.addresses.get.size > 0)
+        manager.faucetAddress(res.addressType.get, Set.empty[String] ++ res.addresses.get)
     case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlocksMessage(startIndex, blocks, Some(timestamp)))) =>
       manager.appendBlockChain(blocks.map(_.index).toList, startIndex)
       blocks foreach { block =>

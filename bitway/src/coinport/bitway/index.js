@@ -47,21 +47,21 @@ proxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
     console.log(RedisProxy.EventType.GENERATE_ADDRESS);
     console.log(currency);
     console.log(request);
-    if(request.num < MIN_GENERATE_ADDR_NUM || request.num > MAX_GENERATE_ADDR_NUM){
+    if (request.num < MIN_GENERATE_ADDR_NUM || request.num > MAX_GENERATE_ADDR_NUM) {
         proxy.publish(new BitwayMessage({currency: Currency.BTC,
-            generateAddressResponse: new GenerateAddressesResult({error: ErrorCode.ROBOT_DNA_EXIST})}));
-    }else{
+            generateAddressResponse: new GenerateAddressesResult({error: ErrorCode.INVALID_REQUEST_ADDRESS_NUM})}));
+    } else {
         var addresses = [];
-        for(var i = 0; i < request.num; i++){
+        for (var i = 0; i < request.num; i++) {
             rpc.getNewAddress(ACCOUNT, function(err, retAddress) {
-                var address = "";
                 if(err) {
                     console.error('An error occured generate address');
                     console.error(err);
                     proxy.publish(new BitwayMessage({currency: Currency.BTC,
-                        generateAddressResponse: new GenerateAddressesResult({error: ErrorCode.ROBOT_DNA_EXIST})}));
+                        generateAddressResponse: new GenerateAddressesResult({error: ErrorCode.RPC_ERROR})}));
                     return;
                 }
+                var address = "";
                 console.log(retAddress.result);
                 address = retAddress.result;
                 var addr = new Bitcore.Address(address);
