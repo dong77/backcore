@@ -281,7 +281,6 @@ struct CandleDataItem {
     5: double close
     6: double low
     7: double high
-    8: MarketSide side
 }
 
 struct CandleData {

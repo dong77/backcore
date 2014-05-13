@@ -81,19 +81,18 @@ package object model {
     duration.toMillis
   }
 
-  class CandleDataItemSerializer() extends CustomSerializer[CandleDataItem](
+  class CandleDataItemSerializer() extends CustomSerializer[ApiCandleItem](
     format => ({
       null // deserializer is not implemented
     }, {
-      case candleDataItem: CandleDataItem =>
-        val side = candleDataItem.side
+      case item: ApiCandleItem =>
         JArray(List(
-          JDecimal(candleDataItem.timestamp),
-          JDouble(candleDataItem.open.externalValue(side)),
-          JDouble(candleDataItem.high.externalValue(side)),
-          JDouble(candleDataItem.low.externalValue(side)),
-          JDouble(candleDataItem.close.externalValue(side)),
-          JDouble(candleDataItem.outAoumt.externalValue(side._1))
+          JDecimal(item.time),
+          JDouble(item.open.value),
+          JDouble(item.high.value),
+          JDouble(item.low.value),
+          JDouble(item.close.value),
+          JDouble(item.outAmount.value)
         ))
     })
   )

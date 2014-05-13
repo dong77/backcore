@@ -25,7 +25,9 @@ class CandleDataView(market: MarketSide) extends ExtendedView {
       txs.foreach(tx => manager.updateCandleItem(tx))
 
     case QueryCandleData(side, dimension, from, to) if side == market || side == market.reverse =>
-      sender ! QueryCandleDataResult(CandleData(manager.getCandleItems(dimension, from, to), side))
+      val items = manager.query(dimension, from, to)
+
+      sender ! QueryCandleDataResult(CandleData(items, side))
   }
 }
 
@@ -47,6 +49,14 @@ class CandleDataManager(marketSide: MarketSide) extends Manager[TCandleDataState
     }
   }
 
+  def query(d: ChartTimeDimension, from: Long, to: Long) = {
+    val start = Math.min(from, to)
+    val stop = Math.max(from, to)
+
+    fillEmptyCandle(stop)
+    getCandleItems(d, start, stop).toSeq
+  }
+
   def updateCandleItem(t: Transaction) {
     val tout = t.takerUpdate.previous.quantity - t.takerUpdate.current.quantity
     val tin = t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity
@@ -54,18 +64,18 @@ class CandleDataManager(marketSide: MarketSide) extends Manager[TCandleDataState
     val timestamp = t.timestamp
     val (price, out, in) = if (t.side == marketSide) ((1 / mprice).!!!, tout, tin) else (mprice, tin, tout)
 
-    ChartTimeDimension.list.foreach {
-      d =>
-        val key = timestamp / getTimeSkip(d)
-        val itemMap = candleMap.get(d).get
-        val item = itemMap.get(key) match {
-          case Some(item) =>
-            CandleDataItem(key, item.inAoumt + in, item.outAoumt + out,
-              item.open, price, Math.min(item.low, price), Math.max(item.high, price), marketSide)
-          case None =>
-            CandleDataItem(key, in, out, price, price, price, price, marketSide)
-        }
-        itemMap.put(key, item)
+    ChartTimeDimension.list.foreach { d =>
+      val key = timestamp / getTimeSkip(d)
+      val itemMap = candleMap.get(d).get
+      val item = itemMap.get(key) match {
+        case Some(item) =>
+          CandleDataItem(timestamp, item.inAoumt + in, item.outAoumt + out,
+            item.open, price, Math.min(item.low, price), Math.max(item.high, price))
+        case None =>
+          fillEmptyCandleByTimeDimension(timestamp, d)
+          CandleDataItem(timestamp, in, out, price, price, price, price)
+      }
+      itemMap.put(key, item)
     }
   }
 
@@ -73,6 +83,34 @@ class CandleDataManager(marketSide: MarketSide) extends Manager[TCandleDataState
     val timeSkiper = getTimeSkip(dimension)
     val itemMap = candleMap.get(dimension).get
     (from / timeSkiper to to / timeSkiper).map(itemMap.get).filter(_.isDefined).map(_.get)
+  }
+
+  def fillEmptyCandle(timestamp: Long) = {
+    ChartTimeDimension.list.foreach { d => fillEmptyCandleByTimeDimension(timestamp, d) }
+  }
+
+  private def fillEmptyCandleByTimeDimension(timestamp: Long, d: ChartTimeDimension) = {
+    var seq = Seq.empty[Long]
+    val itemMap = candleMap.get(d).get
+
+    if (itemMap.nonEmpty) {
+      var key = timestamp / getTimeSkip(d)
+      var flag = true
+      var candle: CandleDataItem = null
+
+      while (flag) {
+        itemMap.get(key) match {
+          case Some(item) =>
+            candle = CandleDataItem(item.timestamp, 0, 0, item.close, item.close, item.close, item.close)
+            flag = false
+          case None =>
+            seq = seq.+:(key)
+            key -= 1
+        }
+      }
+
+      seq.foreach(k => itemMap.put(k, candle))
+    }
   }
 
   private def getTimeSkip(dimension: ChartTimeDimension) = dimension match {

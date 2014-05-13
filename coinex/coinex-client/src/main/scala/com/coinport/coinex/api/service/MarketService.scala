@@ -25,19 +25,16 @@ object MarketService extends AkkaService {
     backend ? QueryCandleData(marketSide, timeDimension, from, to) map {
       case rv: QueryCandleDataResult =>
         val candles = rv.candleData
-        val map = candles.items.map(i => i.timestamp -> i).toMap
-        val timeSkip: Long = timeDimension
-        var open = 0.0
-        val data = (from / timeSkip to to / timeSkip).map {
-          key: Long =>
-            map.get(key) match {
-              case Some(item) =>
-                open = item.close
-                CandleDataItem(key * timeSkip, item.inAoumt, item.outAoumt, item.open, item.close, item.low, item.high, item.side)
-              case None =>
-                CandleDataItem(key * timeSkip, 0, 0, open, open, open, open, marketSide)
-            }
-        }.toSeq
+        val side = rv.candleData.side
+        val currency = side.outCurrency
+        val data = candles.items.map(item =>
+          ApiCandleItem(
+            item.timestamp,
+            PriceObject(side, item.open),
+            PriceObject(side, item.high),
+            PriceObject(side, item.low),
+            PriceObject(side, item.close),
+            CurrencyObject(currency, item.outAoumt)))
         ApiResult(data = Some(data))
       case x =>
         ApiResult(false)

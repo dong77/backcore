@@ -126,19 +126,6 @@ class RichCashAccount(raw: CashAccount) {
   def isValid = (raw.available >= 0 && raw.locked >= 0 && raw.pendingWithdrawal >= 0)
 }
 
-class RichCandleDataItem(raw: CandleDataItem) {
-  def mergeTo(another: CandleDataItem) =
-    CandleDataItem(
-      another.timestamp,
-      raw.inAoumt + another.inAoumt,
-      raw.outAoumt + another.outAoumt,
-      another.open,
-      raw.close,
-      Math.min(raw.low, another.low),
-      Math.max(raw.high, another.high),
-      raw.side)
-}
-
 class RichConstRole(v: ConstantRole.Value) {
   def << = v.toString.toLowerCase
 }
@@ -172,7 +159,6 @@ object Implicits {
   implicit def transaction2Rich(raw: Transaction) = new RichTransaction(raw)
   implicit def orderSubmitted2Rich(raw: OrderSubmitted) = new RichOrderSubmitted(raw)
   implicit def cashAccont2Rich(raw: CashAccount) = new RichCashAccount(raw)
-  implicit def candleDataItem2Rich(raw: CandleDataItem) = new RichCandleDataItem(raw)
 
   implicit def constantRole2Rich(raw: ConstantRole.Value) = new RichConstRole(raw)
   implicit def marketRole2Rich(raw: MarketRole.Value) = new RichMarketRole(raw)
