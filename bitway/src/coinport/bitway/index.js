@@ -565,7 +565,7 @@ var getBlockByIndex = function(index){
                     console.log("errBlock message: " + errBlock.message);
                 }else{
                     console.log("retBlock.result.hash: " + retBlock.result.hash);
-                    var index = new BlockIndex({id: retBlock.result.hash, height:retBlock.result.heigth});
+                    var index = new BlockIndex({id: retBlock.result.hash, height:retBlock.result.height});
                     console.log(index.id);
                     var prevIndex = new BlockIndex({id:retBlock.result.previousblockhash, height:retBlock.height - 1});
                     var txs = [];
