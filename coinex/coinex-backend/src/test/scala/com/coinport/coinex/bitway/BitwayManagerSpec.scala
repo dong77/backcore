@@ -16,7 +16,7 @@ import Currency._
 class BitwayManagerSpec extends Specification {
   import CryptoCurrencyAddressType._
   import CryptoCurrencyTransactionType._
-  import CryptoCurrencyTransactionStatus._
+  import TransferStatus._
 
   "BitwayManager" should {
     "address accocate test" in {
@@ -134,8 +134,8 @@ class BitwayManagerSpec extends Specification {
         txid = Some("t1"),
         inputs = Some(Set(CryptoCurrencyTransactionPort("u7", Some(1.1)))),
         outputs = Some(Set(CryptoCurrencyTransactionPort("h1", Some(0.9)))),
-        includedBlock = Some(bi1), status = Pending)
-      bwm.completeCryptoCurrencyTransaction(rawTx, None, None) mustEqual Some(CryptoCurrencyTransaction(None, Some("t1"), None, Some(Set(CryptoCurrencyTransactionPort("u7", Some(1.1), Some(1100), Some(1)))), Some(Set(CryptoCurrencyTransactionPort("h1", Some(0.9), Some(900)))), None, None, Some(UserToHot), Pending))
+        includedBlock = Some(bi1), status = Confirming)
+      bwm.completeCryptoCurrencyTransaction(rawTx, None, None) mustEqual Some(CryptoCurrencyTransaction(None, Some("t1"), None, Some(Set(CryptoCurrencyTransactionPort("u7", Some(1.1), Some(1100), Some(1)))), Some(Set(CryptoCurrencyTransactionPort("h1", Some(0.9), Some(900)))), None, None, Some(UserToHot), Confirming))
 
       val infos = Seq(
         CryptoCurrencyTransferInfo(1, "i1", Some(1000)),
@@ -146,22 +146,22 @@ class BitwayManagerSpec extends Specification {
         txid = Some("t1"),
         inputs = Some(Set(CryptoCurrencyTransactionPort("h1", Some(1.1)))),
         outputs = Some(Set(CryptoCurrencyTransactionPort("d1", Some(0.9)))),
-        includedBlock = Some(bi1), status = Pending)
+        includedBlock = Some(bi1), status = Confirming)
       val tx2 = CryptoCurrencyTransaction(
         txid = Some("t2"),
         inputs = Some(Set(CryptoCurrencyTransactionPort("h2", Some(2.1)))),
         outputs = Some(Set(CryptoCurrencyTransactionPort("d2", Some(2.9)))),
-        includedBlock = Some(bi1), status = Pending)
+        includedBlock = Some(bi1), status = Confirming)
       val tx3 = CryptoCurrencyTransaction(
         txid = Some("t3"),
         inputs = Some(Set(CryptoCurrencyTransactionPort("h3", Some(3.1)))),
         outputs = Some(Set(CryptoCurrencyTransactionPort("d3", Some(3.9)))),
-        includedBlock = Some(bi1), status = Pending)
+        includedBlock = Some(bi1), status = Confirming)
       val tx4 = CryptoCurrencyTransaction(
         txid = Some("t4"),
         inputs = Some(Set(CryptoCurrencyTransactionPort("h4", Some(4.1)))),
         outputs = Some(Set(CryptoCurrencyTransactionPort("d4", Some(4.9)))),
-        includedBlock = Some(bi1), status = Pending)
+        includedBlock = Some(bi1), status = Confirming)
       val blocks = List(
         CryptoCurrencyBlock(BlockIndex(Some("b10"), Some(10)), BlockIndex(Some("b9"), Some(9)), List(
           tx1, tx2)),
@@ -174,17 +174,17 @@ class BitwayManagerSpec extends Specification {
           Some(Set(CryptoCurrencyTransactionPort("h1", Some(1.1), Some(1100)))),
           Some(Set(CryptoCurrencyTransactionPort("d1", Some(0.9), Some(900)))),
           Some(BlockIndex(Some("b9"), Some(9))),
-          Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Pending),
+          Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Confirming),
         CryptoCurrencyTransaction(None, Some("t2"), None,
           Some(Set(CryptoCurrencyTransactionPort("h2", Some(2.1), Some(2100)))),
           Some(Set(CryptoCurrencyTransactionPort("d2", Some(2.9), Some(2900)))),
           Some(BlockIndex(Some("b9"), Some(9))),
-          Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Pending),
+          Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Confirming),
         CryptoCurrencyTransaction(None, Some("t3"), None,
           Some(Set(CryptoCurrencyTransactionPort("h3", Some(3.1), Some(3100)))),
           Some(Set(CryptoCurrencyTransactionPort("d3", Some(3.9), Some(3900)))),
           Some(BlockIndex(Some("b10"), Some(10))), Some(BlockIndex(Some("b11"), Some(11))),
-          Some(Withdrawal), Pending))
+          Some(Withdrawal), Confirming))
     }
 
     "lastTx/lastAlive test" in {
@@ -202,14 +202,14 @@ class BitwayManagerSpec extends Specification {
           inputs = Some(Set(CryptoCurrencyTransactionPort("h1"))),
           outputs = Some(Set(CryptoCurrencyTransactionPort("u1"))),
           includedBlock = Some(bi1),
-          status = Pending
+          status = Confirming
         ),
         CryptoCurrencyTransaction(
           txid = Some("t2"),
           inputs = Some(Set(CryptoCurrencyTransactionPort("h1"), CryptoCurrencyTransactionPort("h2"))),
           outputs = Some(Set(CryptoCurrencyTransactionPort("u2"), CryptoCurrencyTransactionPort("h1"), CryptoCurrencyTransactionPort("h2"))),
           includedBlock = Some(bi2),
-          status = Pending
+          status = Confirming
         )
       ))
       bwm.updateLastAlive(1234L)

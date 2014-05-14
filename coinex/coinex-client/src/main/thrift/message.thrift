@@ -40,7 +40,6 @@ typedef data.TransferType                       _TransferType
 typedef data.BitwayRequestType                  _BitwayRequestType
 typedef data.RechargeCodeStatus                 _RechargeCodeStatus
 typedef data.ABCodeItem                         _ABCodeItem
-typedef data.CryptoCurrencyTransactionStatus    _CryptoCurrencyTransactionStatus
 typedef data.CryptoCurrencyTransactionPort      _CryptoCurrencyTransactionPort
 typedef data.CryptoCurrencyTransactionType      _CryptoCurrencyTransactionType
 typedef data.CryptoCurrencyTransaction          _CryptoCurrencyTransaction

@@ -90,7 +90,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         log.error("error occur when fetch addresses: " + res)
       }
     case m @ BitwayMessage(currency, None, Some(tx), None) =>
-      if (tx.status == CryptoCurrencyTransactionStatus.Failed) {
+      if (tx.status == TransferStatus.Failed) {
         channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(
           currency, List(tx))), transferProcessor.path)
       } else {

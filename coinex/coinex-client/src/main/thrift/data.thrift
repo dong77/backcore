@@ -125,9 +125,13 @@ enum RechargeCodeStatus {
 }
 
 enum TransferStatus {
-    PENDING   = 0
-    SUCCEEDED = 1
-    FAILED    = 2
+    PENDING    = 0
+    ACCEPTED   = 1
+    CONFIRMING = 2
+    CONFIRMED  = 3
+    SUCCEEDED  = 4
+    FAILED     = 5 // this will happen when confirmation satisfied but can't spend it
+    REORGING   = 6
 }
 
 enum ExportedEventType {
@@ -140,14 +144,6 @@ enum RefundReason {
     HIT_TAKE_LIMIT = 1
     AUTO_CANCELLED = 2
     OVER_CHARGED   = 3
-}
-
-enum CryptoCurrencyTransactionStatus {
-    CONFIRMED = 0
-    PENDING   = 1
-    FAILED    = 2 // this will happen when confirmation satisfied but can't spend it
-    REORGING  = 3
-    SUCCESS   = 4
 }
 
 enum CryptoCurrencyAddressType {
@@ -454,7 +450,7 @@ struct CryptoCurrencyTransaction {
     6: optional BlockIndex prevBlock
     7: optional BlockIndex includedBlock
     8: optional CryptoCurrencyTransactionType txType
-    9: CryptoCurrencyTransactionStatus status
+    9: TransferStatus status
 }
 
 struct CryptoCurrencyBlock {
