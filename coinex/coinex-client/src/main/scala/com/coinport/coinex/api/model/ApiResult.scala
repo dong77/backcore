@@ -66,3 +66,7 @@ case class ApiTransferItem(id: String, uid: String, amount: CurrencyObject, stat
 case class ApiPagingWrapper(skip: Int, limit: Int, items: Any, count: Int)
 
 case class ApiCandleItem(time: Long, open: PriceObject, high: PriceObject, low: PriceObject, close: PriceObject, outAmount: CurrencyObject)
+
+case class ApiMAItem(time: Long, value: PriceObject)
+
+case class ApiHistory(candles: Seq[ApiCandleItem], ma7: Seq[ApiMAItem], ma30: Seq[ApiMAItem])
