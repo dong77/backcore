@@ -81,6 +81,12 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         BitwayRequestType.Transfer, currency, transferCryptoCurrency = Some(
           m.copy(transferInfos = manager.completeTransferInfos(infos))))))
 
+    // for test only
+    case m @ TransferCryptoCurrency(currency, infos, _) if client.isDefined =>
+      client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
+        BitwayRequestType.Transfer, currency, transferCryptoCurrency = Some(
+          m.copy(transferInfos = manager.completeTransferInfos(infos))))))
+
     case m @ BitwayMessage(currency, Some(res), None, None) =>
       if (res.error == ErrorCode.Ok) {
         persist(m) { event =>
@@ -95,7 +101,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
           currency, List(tx))), transferProcessor.path)
       } else {
         manager.completeCryptoCurrencyTransaction(tx) match {
-          case None => log.info("unrelated tx received")
+          case None => log.debug("unrelated tx received")
           case Some(completedTx) =>
             channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
               List(completedTx))), transferProcessor.path)

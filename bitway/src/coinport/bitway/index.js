@@ -121,7 +121,7 @@ proxy.on(RedisProxy.EventType.TRANSFER, function(currency, request) {
             txWithDefiniteFrom(request);
             break;
         default:
-            console("Invalid request type: " + request.type);
+            console.log("Invalid request type: " + request.type);
     }
 });
 
