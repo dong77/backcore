@@ -93,6 +93,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cLogin = BinaryScalaCodec(Login)
   lazy val _cLoginFailed = BinaryScalaCodec(LoginFailed)
   lazy val _cLoginSucceeded = BinaryScalaCodec(LoginSucceeded)
+  lazy val _cMessageArriveTime = BinaryScalaCodec(MessageArriveTime)
   lazy val _cMessageNotSupported = BinaryScalaCodec(MessageNotSupported)
   lazy val _cMultiCryptoCurrencyTransactionMessage = BinaryScalaCodec(MultiCryptoCurrencyTransactionMessage)
   lazy val _cOrderCancelled = BinaryScalaCodec(OrderCancelled)
@@ -114,6 +115,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cQueryMarketDepthResult = BinaryScalaCodec(QueryMarketDepthResult)
   lazy val _cQueryOrder = BinaryScalaCodec(QueryOrder)
   lazy val _cQueryOrderResult = BinaryScalaCodec(QueryOrderResult)
+  lazy val _cQueryProfile = BinaryScalaCodec(QueryProfile)
+  lazy val _cQueryProfileResult = BinaryScalaCodec(QueryProfileResult)
   lazy val _cQueryRCDepositRecord = BinaryScalaCodec(QueryRCDepositRecord)
   lazy val _cQueryRCDepositRecordResult = BinaryScalaCodec(QueryRCDepositRecordResult)
   lazy val _cQueryRCWithdrawalRecord = BinaryScalaCodec(QueryRCWithdrawalRecord)
@@ -242,6 +245,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: Login => _cLogin(m)
     case m: LoginFailed => _cLoginFailed(m)
     case m: LoginSucceeded => _cLoginSucceeded(m)
+    case m: MessageArriveTime => _cMessageArriveTime(m)
     case m: MessageNotSupported => _cMessageNotSupported(m)
     case m: MultiCryptoCurrencyTransactionMessage => _cMultiCryptoCurrencyTransactionMessage(m)
     case m: OrderCancelled => _cOrderCancelled(m)
@@ -263,6 +267,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: QueryMarketDepthResult => _cQueryMarketDepthResult(m)
     case m: QueryOrder => _cQueryOrder(m)
     case m: QueryOrderResult => _cQueryOrderResult(m)
+    case m: QueryProfile => _cQueryProfile(m)
+    case m: QueryProfileResult => _cQueryProfileResult(m)
     case m: QueryRCDepositRecord => _cQueryRCDepositRecord(m)
     case m: QueryRCDepositRecordResult => _cQueryRCDepositRecordResult(m)
     case m: QueryRCWithdrawalRecord => _cQueryRCWithdrawalRecord(m)
@@ -395,6 +401,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[Login.Immutable] => _cLogin.invert(bytes).get
     case Some(c) if c == classOf[LoginFailed.Immutable] => _cLoginFailed.invert(bytes).get
     case Some(c) if c == classOf[LoginSucceeded.Immutable] => _cLoginSucceeded.invert(bytes).get
+    case Some(c) if c == classOf[MessageArriveTime.Immutable] => _cMessageArriveTime.invert(bytes).get
     case Some(c) if c == classOf[MessageNotSupported.Immutable] => _cMessageNotSupported.invert(bytes).get
     case Some(c) if c == classOf[MultiCryptoCurrencyTransactionMessage.Immutable] => _cMultiCryptoCurrencyTransactionMessage.invert(bytes).get
     case Some(c) if c == classOf[OrderCancelled.Immutable] => _cOrderCancelled.invert(bytes).get
@@ -416,6 +423,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[QueryMarketDepthResult.Immutable] => _cQueryMarketDepthResult.invert(bytes).get
     case Some(c) if c == classOf[QueryOrder.Immutable] => _cQueryOrder.invert(bytes).get
     case Some(c) if c == classOf[QueryOrderResult.Immutable] => _cQueryOrderResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryProfile.Immutable] => _cQueryProfile.invert(bytes).get
+    case Some(c) if c == classOf[QueryProfileResult.Immutable] => _cQueryProfileResult.invert(bytes).get
     case Some(c) if c == classOf[QueryRCDepositRecord.Immutable] => _cQueryRCDepositRecord.invert(bytes).get
     case Some(c) if c == classOf[QueryRCDepositRecordResult.Immutable] => _cQueryRCDepositRecordResult.invert(bytes).get
     case Some(c) if c == classOf[QueryRCWithdrawalRecord.Immutable] => _cQueryRCWithdrawalRecord.invert(bytes).get

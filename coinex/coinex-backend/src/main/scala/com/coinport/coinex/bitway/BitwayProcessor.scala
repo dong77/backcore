@@ -88,6 +88,9 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
           m.copy(transferInfos = manager.completeTransferInfos(infos))))))
 
     case m @ BitwayMessage(currency, Some(res), None, None) =>
+      persist(MessageArriveTime(System.currentTimeMillis)) { event =>
+        updateState(event)
+      }
       if (res.error == ErrorCode.Ok) {
         persist(m) { event =>
           updateState(event)
@@ -96,6 +99,9 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         log.error("error occur when fetch addresses: " + res)
       }
     case m @ BitwayMessage(currency, None, Some(tx), None) =>
+      persist(MessageArriveTime(System.currentTimeMillis)) { event =>
+        updateState(event)
+      }
       if (tx.status == TransferStatus.Failed) {
         channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(
           currency, List(tx))), transferProcessor.path)
@@ -108,14 +114,16 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         }
       }
     case m @ BitwayMessage(currency, None, None, Some(blocksMsg)) =>
+      persist(MessageArriveTime(System.currentTimeMillis)) { event =>
+        updateState(event)
+      }
       val continuity = manager.getBlockContinuity(blocksMsg)
       continuity match {
         case DUP => log.info("receive block list which first block has seen: " + blocksMsg.blocks.head.index)
         case SUCCESSOR | REORG =>
           val relatedTxs = manager.extractTxsFromBlocks(blocksMsg.blocks.toList)
           if (relatedTxs.nonEmpty) {
-            val ts = if (blocksMsg.timestamp.isDefined) blocksMsg.timestamp.get else System.currentTimeMillis
-            persist(m.copy(blocksMsg = Some(blocksMsg.copy(timestamp = Some(ts))))) { event =>
+            persist(m) { event =>
               updateState(event)
               val reorgIndex = if (continuity == REORG) blocksMsg.startIndex else None
               channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
@@ -143,13 +151,13 @@ trait BitwayManagerBehavior {
 
   def updateState: Receive = {
     case AllocateNewAddress(currency, uid, Some(address)) => manager.addressAllocated(uid, address)
+    case MessageArriveTime(timestamp) => manager.updateLastAlive(timestamp)
     case BitwayMessage(currency, Some(res), None, None) =>
       if (res.addressType.isDefined && res.addresses.isDefined && res.addresses.get.size > 0)
         manager.faucetAddress(res.addressType.get, Set.empty[String] ++ res.addresses.get)
-    case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlocksMessage(startIndex, blocks, Some(timestamp)))) =>
+    case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlocksMessage(startIndex, blocks))) =>
       manager.appendBlockChain(blocks.map(_.index).toList, startIndex)
       blocks foreach { block =>
-        manager.updateLastAlive(timestamp)
         manager.updateLastTx(block.txs)
       }
   }
