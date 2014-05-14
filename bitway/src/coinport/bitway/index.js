@@ -4,20 +4,22 @@
  */
 
 var RedisProxy                      = require('./redis/redis_proxy').RedisProxy,
-    BitwayRequestType               = require('../../../gen-nodejs/data_types').BitwayRequestType,
-    GenerateAddressesResult         = require('../../../gen-nodejs/message_types').GenerateAddressesResult,
-    CryptoCurrencyTransaction       = require('../../../gen-nodejs/data_types').CryptoCurrencyTransaction,
-    CryptoCurrencyTransactionPort   = require('../../../gen-nodejs/data_types').CryptoCurrencyTransactionPort,
-    CryptoCurrencyBlock             = require('../../../gen-nodejs/data_types').CryptoCurrencyBlock,
-    CryptoCurrencyTransactionStatus = require('../../../gen-nodejs/data_types').CryptoCurrencyTransactionStatus,
-    CryptoCurrencyTransactionType   = require('../../../gen-nodejs/data_types').CryptoCurrencyTransactionType,
-    CryptoCurrencyAddressType       = require('../../../gen-nodejs/data_types').CryptoCurrencyAddressType,
-    Currency                        = require('../../../gen-nodejs/data_types').Currency,
-    BlockIndex                      = require('../../../gen-nodejs/data_types').BlockIndex,
-    CryptoCurrencyBlocksMessage     = require('../../../gen-nodejs/message_types').CryptoCurrencyBlocksMessage,
-    ErrorCode                       = require('../../../gen-nodejs/data_types').ErrorCode,
-    BitwayMessage                   = require('../../../gen-nodejs/message_types').BitwayMessage,
+    DataTypes                       = require('../../../gen-nodejs/data_types')
+    MessageTypes                    = require('../../../gen-nodejs/message_types')
     Bitcore                         = require('bitcore'),
+    BitwayRequestType               = DataTypes.BitwayRequestType,
+    GenerateAddressesResult         = MessageTypes.GenerateAddressesResult,
+    CryptoCurrencyTransaction       = DataTypes.CryptoCurrencyTransaction,
+    CryptoCurrencyTransactionPort   = DataTypes.CryptoCurrencyTransactionPort,
+    CryptoCurrencyBlock             = DataTypes.CryptoCurrencyBlock,
+    TransferStatus                  = DataTypes.TransferStatus,
+    CryptoCurrencyTransactionType   = DataTypes.CryptoCurrencyTransactionType,
+    CryptoCurrencyAddressType       = DataTypes.CryptoCurrencyAddressType,
+    Currency                        = DataTypes.Currency,
+    BlockIndex                      = DataTypes.BlockIndex,
+    CryptoCurrencyBlocksMessage     = MessageTypes.CryptoCurrencyBlocksMessage,
+    ErrorCode                       = DataTypes.ErrorCode,
+    BitwayMessage                   = MessageTypes.BitwayMessage,
     Peer                            = Bitcore.Peer,
     Networks                        = Bitcore.networks;
 
@@ -55,7 +57,7 @@ proxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
         var addresses = [];
         for (var i = 0; i < request.num; i++) {
             rpc.getNewAddress(ACCOUNT, function(err, retAddress) {
-                if(err) {
+                if (err) {
                     console.error('An error occured generate address');
                     console.error(err);
                     proxy.publish(new BitwayMessage({currency: Currency.BTC,
@@ -67,13 +69,13 @@ proxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
                 console.log(retAddress.result);
                 address = retAddress.result;
                 var addr = new Bitcore.Address(address);
-                if(addr.isValid()){
+                if (addr.isValid()) {
                     // TODO(yangli): not sure this is needed
                     rpc.dumpPrivKey(addr.data, function(err, retPrivKey) {
                         if (err) {
-                           console.error('An error occured dumpPrivKey', hash);
-                           console.error(err);
-                           return;
+                            console.error('An error occured dumpPrivKey', hash);
+                            console.error(err);
+                            return;
                         }
                         addresses.push(address);
                         if (addresses.length == request.num) {
@@ -244,7 +246,7 @@ var getTransactionInfo = function(txid){
             console.log("fail message: " + err.message);
         }else{
             var cctx = new CryptoCurrencyTransaction({inputs: [], outputs: [],
-                status: CryptoCurrencyTransactionStatus.PENDING});
+                status: TransferStatus.Confirming});
             cctx.txid = ret.result.txid;
             console.log("txid: " + ret.result.txid);
             getOutputAddresses(ret.result, cctx);
@@ -314,7 +316,7 @@ proxy.on(RedisProxy.EventType.GET_MISSED_BLOCKS, function(currency, request) {
                             }else{
                                 console.log("txid: " + retTx.result.txid);
                                 var cctx = new CryptoCurrencyTransaction({inputs: [], outputs: [],
-                                    status: CryptoCurrencyTransactionStatus.PENDING});
+                                    status: TransferStatus.Confirming});
                                 cctx.txid = retTx.result.txid;
                                 getOutputAddresses(retTx.result, cctx);
                                 for(var j = 0; j < retTx.result.vin.length; j++){
@@ -419,7 +421,7 @@ var handleTx = function(info) {
             console.log("fail message: " + err.message);
         }else{
             var cctx = new CryptoCurrencyTransaction({inputs: [], outputs: [],
-                status: CryptoCurrencyTransactionStatus.PENDING});
+                status: TransferStatus.Confirming});
             cctx.txid = ret.result.txid;
             console.log("txid: " + ret.result.txid);
             getOutputAddresses(ret.result, cctx);
@@ -536,7 +538,7 @@ var getBlockByIndex = function(index){
                             }else{
                                 console.log("txid: " + retTx.result.txid);
                                 var cctx = new CryptoCurrencyTransaction({inputs: [], outputs: [],
-                                    status: CryptoCurrencyTransactionStatus.PENDING});
+                                    status: TransferStatus.Confirming});
                                 cctx.txid = retTx.result.txid;
                                 getOutputAddresses(retTx.result, cctx);
                                 for(var j = 0; j < retTx.result.vin.length; j++){
