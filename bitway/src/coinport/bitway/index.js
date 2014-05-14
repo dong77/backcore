@@ -45,6 +45,8 @@ var needJson = 1;
 var AUTO_REPORT = 0;
 var tip = 0.000001;
 proxy.start();
+var redis = require("redis"),  
+    client = redis.createClient(6379, "127.0.0.1");
 
 var makeNormalResponse = function(type, currency, response){
     console.log("type: " + type);
@@ -57,6 +59,8 @@ var makeNormalResponse = function(type, currency, response){
         case BitwayResponseType.TRANSFER:
         case BitwayResponseType.TRANSACTION:
             console.log("TRANSACTION REPORT: " + currency);
+            console.log("Tx sigId: " + response.sigId);
+            console.log("Tx txid: " + response.txid);
             for(var m = 0; m < response.inputs.length; m++){
                 console.log("input address "+ m + ": " + response.inputs[m].address);
                 console.log("input amount "+ m + ": " + response.inputs[m].amount);
@@ -93,6 +97,8 @@ var displayBlocksContent = function(blockArray){
     for(var i = 0; i < blockArray.length; i++){
         console.log("index id: " + blockArray[i].index.id);
         console.log("index height: " + blockArray[i].index.height);
+        console.log("index id: " + blockArray[i].prevIndex.id);
+        console.log("index height: " + blockArray[i].prevIndex.height);
     }
 };
 
@@ -179,12 +185,14 @@ var txWithDefiniteFrom = function(request){
     var addresses = {};
     var transactions = [];
     var fromAddresses = [];
+    var ids = [];
     for(var i = 0; i < request.transferInfos.length; i++){
-        makeTransaction(request.transferInfos[i], request.transferInfos.length, fromAddresses,transactions, addresses);
+        makeTransaction(request.transferInfos[i], request.transferInfos.length,
+            fromAddresses, transactions, addresses, ids);
     }
 }
 
-var makeTransaction = function(transferInfo, finishLength, fromAddresses, transactions, addresses){
+var makeTransaction = function(transferInfo, finishLength, fromAddresses, transactions, addresses, ids){
     var from = transferInfo.from;
     var to = transferInfo.to;
     var amountPay = transferInfo.amount;
@@ -213,12 +221,13 @@ var makeTransaction = function(transferInfo, finishLength, fromAddresses, transa
                 }
             }
             fromAddresses.push(from);
+            ids.push(transferInfo.id);
             addresses[to] = amountPay;
             if(amountUnspent > amountPay){
                 addresses[from] = amountUnspent - amountPay;
             }
             if(fromAddresses.length == finishLength){
-                finishTransfer(transactions, addresses);
+                finishTransfer(transactions, addresses, ids);
             }
         }
     });
@@ -229,8 +238,10 @@ var txWithoutDefiniteFrom = function(request){
     var maxConfirmedNum = 9999999;
     var amountTotal = 0;
     var addresses = {};
+    var ids = [];
     for(var i = 0; i < request.transferInfos.length; i++){
         amountTotal += request.transferInfos[i].amount;
+        ids.push(request.transferInfos[i].id);
     }
     rpc.listUnspent(minConfirmedNum, maxConfirmedNum, function(err, ret){
         if(err){
@@ -274,7 +285,7 @@ var txWithoutDefiniteFrom = function(request){
                             }
                         }
                         if(i <= result.length){
-                            finishTransfer(transactions, addresses);
+                            finishTransfer(transactions, addresses, ids);
                         }
                     }
                 });
@@ -283,7 +294,7 @@ var txWithoutDefiniteFrom = function(request){
     });
 };
 
-var getTransactionInfo = function(txid){
+var getTransactionInfo = function(txid, ids){
     console.log("txid: " + txid);
     rpc.getRawTransaction(txid, needJson, function(err,ret){
         if(err){
@@ -297,13 +308,59 @@ var getTransactionInfo = function(txid){
             getOutputAddresses(ret.result, cctx);
             for(var i = 0; i < ret.result.vin.length; i++){
                 console.log("vout: " + ret.result.vin[i].vout);
-                getInputAddresses(ret.result.vin[i], cctx, ret.result.vin.length);
+                saveTransferIds(ret.result.vin[i], cctx, ret.result.vin.length, ids);
             }
         }
     });
 }
 
-var finishTransfer = function(transactions, addresses){
+var saveTransferIds = function(input, cctx, finishLength, ids){
+    console.log("saveTransferIds input-txid: " + input.txid);
+    console.log("finishLength: " + finishLength);
+    console.log("input-vout: " + input.vout);
+    var vout = input.vout;
+    rpc.getRawTransaction(input.txid, needJson, function(errIn,retIn){
+        if(errIn){
+            console.log("errIn code: " + errIn.code);
+            console.log("errIn message: " + errIn.message);
+        }else{
+            for(var j = 0; j < retIn.result.vout.length; j++){
+                if(vout == retIn.result.vout[j].n){
+                    console.log("success match: " + retIn.result.vout[j].n);
+                    var input = new CryptoCurrencyTransactionPort();
+                    input.address = retIn.result.vout[j].scriptPubKey.addresses.toString();
+                    input.amount = retIn.result.vout[j].value;
+                    console.log("input.address: " + input.address);
+                    cctx.inputs.push(input);
+                }
+            }
+            console.log("cctx.outputs.length: " + cctx.outputs.length);
+            if(cctx.inputs.length == finishLength){
+                var sigId = cctx.txid;
+                for(var m = 0; m < response.inputs.length; m++){
+                    sigId += response.inputs[m].address;
+                    sigId += response.inputs[m].amount;
+                }
+                for(var n = 0; n < response.outputs.length; n++){
+                    sigId += response.outputs[n].address;
+                    sigId += response.outputs[n].amount;
+                }
+                client.set(sigId, ids, function(errRdis, reply){
+                    if(errRedis){
+                        console.log("errRedis: " + errRedis);
+                    }else{
+                        cctx.sigId = sigId;
+                        console.log("cctx.sigId: " + cctx.sigId);
+                        makeNormalResponse(BitwayResponseType.TRANSACTION, Currency.BTC, cctx);
+                    }
+                });
+            }
+        }
+    });
+};
+
+
+var finishTransfer = function(transactions, addresses, ids){
     for(var i = 0; i < transactions.length; i++)
     {
         console.log("tx.txid: " + transactions[i].txid);
@@ -327,7 +384,7 @@ var finishTransfer = function(transactions, addresses){
                             console.log("errSend code: " + errSend.code);
                             console.log("errSend message: " + errSend.message);
                         }else{
-                            getTransactionInfo(retSend.result);
+                            getTransactionInfo(retSend.result, ids);
                         }
                     });
                 }
@@ -520,7 +577,24 @@ var getInputAddresses = function(input, cctx, finishLength) {
             }
             console.log("cctx.outputs.length: " + cctx.outputs.length);
             if(cctx.inputs.length == finishLength){
-                makeNormalResponse(BitwayResponseType.TRANSACTION, Currency.BTC, cctx);
+                var sigId = cctx.txid;
+                for(var m = 0; m < cctx.inputs.length; m++){
+                    sigId += cctx.inputs[m].address;
+                    sigId += cctx.inputs[m].amount;
+                }
+                for(var n = 0; n < cctx.outputs.length; n++){
+                    sigId += cctx.outputs[n].address;
+                    sigId += cctx.outputs[n].amount;
+                }
+                client.get(sigId, function(errRedis, reply){
+                    if(errRedis){
+                        console("errRedis: " + errRedis);
+                    }else{
+                        console.log("cctx.ids: " + reply);
+                        cctx.ids = reply;
+                        makeNormalResponse(BitwayResponseType.TRANSACTION, Currency.BTC, cctx);
+                    }
+                });
             }
         }
     });
@@ -567,7 +641,8 @@ var getBlockByIndex = function(index){
                     console.log("retBlock.result.hash: " + retBlock.result.hash);
                     var index = new BlockIndex({id: retBlock.result.hash, height:retBlock.result.height});
                     console.log(index.id);
-                    var prevIndex = new BlockIndex({id:retBlock.result.previousblockhash, height:retBlock.height - 1});
+                    var prevIndex = new BlockIndex({id:retBlock.result.previousblockhash,
+                        height:retBlock.result.height - 1});
                     var txs = [];
                     var block = new CryptoCurrencyBlock({index:index, prevIndex:prevIndex, txs:txs});
                     for(var i = 0; i < retBlock.result.tx.length; i++){
