@@ -121,10 +121,10 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       continuity match {
         case DUP => log.info("receive block list which first block has seen: " + blocksMsg.blocks.head.index)
         case SUCCESSOR | REORG =>
-          val relatedTxs = manager.extractTxsFromBlocks(blocksMsg.blocks.toList)
-          if (relatedTxs.nonEmpty) {
-            persist(m) { event =>
-              updateState(event)
+          persist(m) { event =>
+            updateState(event)
+            val relatedTxs = manager.extractTxsFromBlocks(blocksMsg.blocks.toList)
+            if (relatedTxs.nonEmpty) {
               val reorgIndex = if (continuity == REORG) blocksMsg.startIndex else None
               channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
                 relatedTxs, reorgIndex)), transferProcessor.path)
