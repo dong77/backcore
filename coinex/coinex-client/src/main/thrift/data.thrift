@@ -169,6 +169,14 @@ enum BitwayRequestType {
     GET_MISSED_BLOCKS       = 2
 }
 
+enum BitwayResponseType {
+    GENERATE_ADDRESS        = 0
+    TRANSACTION             = 1
+    TRANSFER                = 2
+    AUTO_REPORT_BLOCKS      = 3
+    GET_MISSED_BLOCKS       = 4
+}
+
 ///////////////////////////////////////////////////////////////////////
 ////////////////////////// PERSISTENT DATA ////////////////////////////
 ///////////////////////////////////////////////////////////////////////
