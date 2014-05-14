@@ -82,7 +82,7 @@ var makeNormalResponse = function(type, currency, response){
             console.log("BLOCK REPORT: " + currency);
             console.log("response.blocks.length:" + response.blocks.length);
             displayBlocksContent(response.blocks);
-            proxy.publish(new BitwayMessage({currency: currency, blocks: response}));
+            proxy.publish(new BitwayMessage({currency: currency, blocksMsg: response}));
             break;
         default:
             console.log("Inavalid Type!");
