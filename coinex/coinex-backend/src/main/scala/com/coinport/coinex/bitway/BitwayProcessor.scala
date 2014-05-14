@@ -95,7 +95,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
           currency, List(tx))), transferProcessor.path)
       } else {
         manager.completeCryptoCurrencyTransaction(tx) match {
-          case None => None
+          case None => log.info("unrelated tx received")
           case Some(completedTx) =>
             channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
               List(completedTx))), transferProcessor.path)
