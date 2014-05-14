@@ -17,7 +17,9 @@ import Implicits._
 
 object PerformanceTest {
 
-  implicit val timeout = Timeout(100 seconds)
+  implicit val timeout = Timeout(1000 seconds)
+  val btcSide = MarketSide(Btc, Cny)
+  val rmbSide = MarketSide(Cny, Btc)
 
   def before {
     // register users
@@ -36,8 +38,6 @@ object PerformanceTest {
 
     var count = 0L
     var errorCount = 0L
-    val btcSide = MarketSide(Btc, Cny)
-    val rmbSide = MarketSide(Cny, Btc)
 
     var startTime: Long = 0L
     var endTime: Long = 0L
@@ -144,6 +144,39 @@ object PerformanceTest {
           return
         }
       }
+    }
+  }
+
+  def marketDepthViewQpsTest(cycle: Int) = viewQpsTest(cycle, QueryMarketDepth(btcSide, 100))
+
+  def candleDataViewQpsTest(cycle: Int) = {
+    val from = System.currentTimeMillis - 10000000L
+    val to = from + 4000000L
+    viewQpsTest(cycle, QueryCandleData(btcSide, ChartTimeDimension.get(Random.nextInt(12) + 1).get, from, to))
+  }
+
+  def metricsViewQpsTest(cycle: Int) = viewQpsTest(cycle, QueryMetrics)
+
+  def viewQpsTest(cycle: Int, msg: Any) {
+    val startTime = System.currentTimeMillis
+    println("=" * 50)
+    println("startTime : " + startTime)
+    1 to cycle foreach { i =>
+      val f = Client.backend ? msg
+      f onSuccess {
+        case m => {
+
+          if (i % 1000 == 0) println(m)
+
+          if (i == (cycle - 1)) {
+            val endTime = System.currentTimeMillis
+            println("endTime : " + endTime)
+            println("qps = " + (cycle * 1000 / (endTime - startTime)))
+            println("=" * 50)
+          }
+        }
+      }
+      f onFailure { case m => println(m) }
     }
   }
 }
