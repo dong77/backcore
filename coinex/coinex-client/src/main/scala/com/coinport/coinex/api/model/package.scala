@@ -94,6 +94,11 @@ package object model {
           JDouble(item.close.value),
           JDouble(item.outAmount.value)
         ))
+      case item: ApiMAItem =>
+        JArray(List(
+          JDecimal(item.time),
+          JDouble(item.value.value)
+        ))
     })
   )
 
