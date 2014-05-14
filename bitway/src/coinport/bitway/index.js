@@ -361,7 +361,7 @@ proxy.on(RedisProxy.EventType.GET_MISSED_BLOCKS, function(currency, request) {
                     console.log(index.id);
                     var prevIndex = new BlockIndex({id:retBlock.result.previousblockhash, height:retBlock.height - 1});
                     var txs = [];
-                    var block = new CryptoCurrencyBlock({index:index, preIndex:prevIndex, txs:txs});
+                    var block = new CryptoCurrencyBlock({index:index, prevIndex:prevIndex, txs:txs});
                     for(var i = 0; i < retBlock.result.tx.length; i++){
                         rpc.getRawTransaction(retBlock.result.tx[i], needJson, function(errTx, retTx){
                             if(errTx){
@@ -569,7 +569,7 @@ var getBlockByIndex = function(index){
                     console.log(index.id);
                     var prevIndex = new BlockIndex({id:retBlock.result.previousblockhash, height:retBlock.height - 1});
                     var txs = [];
-                    var block = new CryptoCurrencyBlock({index:index, preIndex:prevIndex, txs:txs});
+                    var block = new CryptoCurrencyBlock({index:index, prevIndex:prevIndex, txs:txs});
                     for(var i = 0; i < retBlock.result.tx.length; i++){
                         rpc.getRawTransaction(retBlock.result.tx[i], needJson, function(errTx, retTx){
                             if(errTx){
