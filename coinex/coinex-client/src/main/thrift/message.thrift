@@ -193,7 +193,7 @@ typedef data.CryptoCurrencyAddressType          _CryptoCurrencyAddressType
 ////////////////////////////////////////////////////////////////
 
 ////////// AccountView
-/* Q    */ struct QueryProfile                        {1: optional i64 uid, optional string email}
+/* Q    */ struct QueryProfile                        {1: optional i64 uid, 2: optional string email}
 /* R    */ struct QueryProfileResult                  {1: optional _UserProfile userProfile}
 /* Q    */ struct QueryAccount                        {1: i64 userId}
 /* R    */ struct QueryAccountResult                  {1: _UserAccount userAccount}
