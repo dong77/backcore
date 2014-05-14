@@ -26,10 +26,11 @@ object MarketService extends AkkaService {
       case rv: QueryCandleDataResult =>
         val candles = rv.candleData
         val side = rv.candleData.side
+        val timeSkip: Long = timeDimension
         val currency = side.outCurrency
         val data = candles.items.map(item =>
           ApiCandleItem(
-            item.timestamp,
+            item.timestamp * timeSkip,
             PriceObject(side, item.open),
             PriceObject(side, item.high),
             PriceObject(side, item.low),
