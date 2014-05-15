@@ -29,7 +29,6 @@ import com.coinport.coinex.opendata._
 import com.coinport.coinex.robot._
 import com.coinport.coinex.ordertx._
 import com.coinport.coinex.users._
-import com.coinport.coinex.fee._
 import com.coinport.coinex.transfer._
 import com.coinport.coinex.util._
 import com.coinport.coinex.bitway._
@@ -71,7 +70,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
   }
 
   def deploy(): LocalRouters = {
-    val feeConfig = loadConfig[FeeConfig](config.getString("akka.exchange.fee-rules-path"))
+    val accountConfig = loadConfig[AccountConfig](config.getString("akka.exchange.account-config-path"))
 
     deployMailer(mailer <<)
 
@@ -82,7 +81,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     }
 
     deploy(Props(new UserWriter(dbForViews, userManagerSecret)), user_mongo_writer <<)
-    deploy(Props(new AccountView(feeConfig) with StackableView[TAccountState, AccountManager]), account_view <<)
+    deploy(Props(new AccountView(accountConfig) with StackableView[TAccountState, AccountManager]), account_view <<)
     deploy(Props(new AssetView with StackableView[TAssetState, AssetManager]), asset_view <<)
     deploy(Props(new MetricsView with StackableView[TMetricsState, MetricsManager]), metrics_view <<)
     deploy(Props(new ApiAuthView(apiAuthSecret) with StackableView[TApiSecretState, ApiAuthManager]), api_auth_view <<)
@@ -99,7 +98,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       routers.marketProcessors,
       routers.marketUpdateProcessor.path,
       routers.depositWithdrawProcessor.path,
-      feeConfig) with StackableEventsourced[TAccountState, AccountManager]), account_processor <<)
+      accountConfig) with StackableEventsourced[TAccountState, AccountManager]), account_processor <<)
 
     markets foreach { m =>
       def props = Props(new MarketProcessor(m,

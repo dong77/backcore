@@ -75,17 +75,16 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.NotEnoughAddressInPool, None)
       }
 
-    case p @ ConfirmablePersistent(m @ TransferCryptoCurrency(currency, infos, _)) if client.isDefined =>
+    case p @ ConfirmablePersistent(m @ TransferCryptoCurrency(currency, infos, t)) if client.isDefined =>
       confirm(p)
-      client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
-        BitwayRequestType.Transfer, currency, transferCryptoCurrency = Some(
-          m.copy(transferInfos = manager.completeTransferInfos(infos))))))
-
-    // for test only
-    case m @ TransferCryptoCurrency(currency, infos, _) if client.isDefined =>
-      client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
-        BitwayRequestType.Transfer, currency, transferCryptoCurrency = Some(
-          m.copy(transferInfos = manager.completeTransferInfos(infos))))))
+      val (completedInfos, isFail) = manager.completeTransferInfos(infos, t == TransferType.HotToCold)
+      if (isFail) {
+        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.NoAddressFound)
+      } else {
+        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.Ok)
+        client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
+          BitwayRequestType.Transfer, currency, transferCryptoCurrency = Some(m.copy(transferInfos = completedInfos)))))
+      }
 
     case m @ BitwayMessage(currency, Some(res), None, None) =>
       persist(MessageArriveTime(System.currentTimeMillis)) { event =>

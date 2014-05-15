@@ -176,9 +176,19 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     }
   }
 
-  def completeTransferInfos(infos: Seq[CryptoCurrencyTransferInfo]): Seq[CryptoCurrencyTransferInfo] = {
-    infos.map(info =>
-      info.copy(amount = info.internalAmount.map((new CurrencyWrapper(_).externalValue(supportedCurrency)))))
+  def completeTransferInfos(infos: Seq[CryptoCurrencyTransferInfo],
+    isHotToCold: Boolean = false): (Seq[CryptoCurrencyTransferInfo], Boolean /* isFail */ ) = {
+    if (isHotToCold) {
+      if (addresses(Cold).isEmpty) {
+        (Nil, true)
+      } else {
+        (infos.map(info => info.copy(amount = info.internalAmount.map((new CurrencyWrapper(_).externalValue(
+          supportedCurrency))), to = Some(addresses(Cold).head))), false)
+      }
+    } else {
+      (infos.map(info => info.copy(amount = info.internalAmount.map((new CurrencyWrapper(_).externalValue(
+        supportedCurrency))))), false)
+    }
   }
 
   def completeCryptoCurrencyTransaction(

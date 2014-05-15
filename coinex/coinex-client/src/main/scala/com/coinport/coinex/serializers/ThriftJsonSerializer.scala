@@ -151,6 +151,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cSubmitOrderFailed = JsonScalaCodec(SubmitOrderFailed)
   lazy val _cTakeSnapshotNow = JsonScalaCodec(TakeSnapshotNow)
   lazy val _cTransferCryptoCurrency = JsonScalaCodec(TransferCryptoCurrency)
+  lazy val _cTransferCryptoCurrencyResult = JsonScalaCodec(TransferCryptoCurrencyResult)
   lazy val _cUpdateUserProfileFailed = JsonScalaCodec(UpdateUserProfileFailed)
   lazy val _cUpdateUserProfileSucceeded = JsonScalaCodec(UpdateUserProfileSucceeded)
   lazy val _cValidatePasswordResetToken = JsonScalaCodec(ValidatePasswordResetToken)
@@ -308,6 +309,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: SubmitOrderFailed => _cSubmitOrderFailed(m)
     case m: TakeSnapshotNow => _cTakeSnapshotNow(m)
     case m: TransferCryptoCurrency => _cTransferCryptoCurrency(m)
+    case m: TransferCryptoCurrencyResult => _cTransferCryptoCurrencyResult(m)
     case m: UpdateUserProfileFailed => _cUpdateUserProfileFailed(m)
     case m: UpdateUserProfileSucceeded => _cUpdateUserProfileSucceeded(m)
     case m: ValidatePasswordResetToken => _cValidatePasswordResetToken(m)
@@ -469,6 +471,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[SubmitOrderFailed.Immutable] => _cSubmitOrderFailed.invert(bytes).get
     case Some(c) if c == classOf[TakeSnapshotNow.Immutable] => _cTakeSnapshotNow.invert(bytes).get
     case Some(c) if c == classOf[TransferCryptoCurrency.Immutable] => _cTransferCryptoCurrency.invert(bytes).get
+    case Some(c) if c == classOf[TransferCryptoCurrencyResult.Immutable] => _cTransferCryptoCurrencyResult.invert(bytes).get
     case Some(c) if c == classOf[UpdateUserProfileFailed.Immutable] => _cUpdateUserProfileFailed.invert(bytes).get
     case Some(c) if c == classOf[UpdateUserProfileSucceeded.Immutable] => _cUpdateUserProfileSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ValidatePasswordResetToken.Immutable] => _cValidatePasswordResetToken.invert(bytes).get

@@ -168,4 +168,11 @@ class AccountManagerSpec extends Specification {
       manager.getRCWithdrawalRecords(1003).size mustEqual 1
     }
   }
+
+  "hot cold transfer test" should {
+    "get corrent transfer amount as well as direction" in {
+      // val manager = AccountManager(0L, Map)
+      1 mustEqual 1
+    }
+  }
 }

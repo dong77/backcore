@@ -15,10 +15,11 @@ import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.fee.FeeConfig
 
-class AccountView(val feeConfig: FeeConfig) extends ExtendedView with AccountManagerBehavior {
+class AccountView(accountConfig: AccountConfig) extends ExtendedView with AccountManagerBehavior {
+  val feeConfig = accountConfig.feeConfig
   override val processorId = ACCOUNT_PROCESSOR <<
   override val viewId = ACCOUNT_VIEW<<
-  val manager = new AccountManager()
+  val manager = new AccountManager(0L, accountConfig.hotColdTransfer)
 
   def receive = LoggingReceive {
     case Persistent(msg, _) => updateState(msg)

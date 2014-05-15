@@ -16,6 +16,7 @@
 package com.coinport.coinex.accounts
 
 import scala.collection.mutable.Map
+import scala.collection.immutable.{ Map => IMap }
 
 import com.coinport.coinex.data._
 import com.coinport.coinex.common._
@@ -24,7 +25,9 @@ import ErrorCode._
 import com.sun.beans.decoder.FalseElementHandler
 import com.coinport.coinex.common.Constants._
 
-class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountState] {
+class AccountManager(initialLastOrderId: Long = 0L,
+  hotColdTransfer: IMap[Currency, HotColdTransferStrategy] = IMap.empty[Currency, HotColdTransferStrategy])
+    extends Manager[TAccountState] {
   // Internal mutable state ----------------------------------------------
   private val accountMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]
   var aggregation = UserAccount(-1L, Map.empty[Currency, CashAccount])
@@ -81,6 +84,14 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
     updateCashAccount(to, CashAccount(currency, amount, 0, 0))
   }
 
+  def updateHotCashAccount(adjustment: CashAccount) {
+    updateCashAccount(hotWalletAccount, adjustment)
+  }
+
+  def updateColdCashAccount(adjustment: CashAccount) {
+    updateCashAccount(coldWalletAccount, adjustment)
+  }
+
   def conditionalRefund(condition: Boolean)(currency: Currency, order: Order) = {
     if (condition && order.quantity > 0) refund(order.userId, currency, order.quantity)
   }
@@ -92,6 +103,13 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
   def canUpdateCashAccount(userId: Long, adjustment: CashAccount) = {
     val current = getUserCashAccount(userId, adjustment.currency)
     (current + adjustment).isValid
+  }
+
+  def updateCashAccount(accounts: Map[Currency, CashAccount], adjustment: CashAccount) = {
+    val current = accounts.getOrElse(adjustment.currency, CashAccount(adjustment.currency, 0, 0, 0))
+    val updated = current + adjustment
+    assert(updated.isValid)
+    accounts += (adjustment.currency -> updated)
   }
 
   def updateCashAccount(userId: Long, adjustment: CashAccount) = {
@@ -220,4 +238,26 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
     System.currentTimeMillis / 1000
   }
 
+  // for return value amount, +amount means transfer from hot to cold;
+  //                          -amount means transfer from cold to hot.
+  def needHotColdTransfer(currency: Currency): Option[Long] = {
+    if (!hotWalletAccount.contains(currency) || !coldWalletAccount.contains(currency))
+      return None
+    val hotAmount = hotWalletAccount(currency).available + coldWalletAccount(currency).pendingWithdrawal
+    val coldAmount = coldWalletAccount(currency).available + hotWalletAccount(currency).pendingWithdrawal
+    val HotColdTransferStrategy(highThreshold, lowThreshold) = hotColdTransfer.getOrElse(
+      currency, HotColdTransferStrategy(1, 0))
+    val mid = (highThreshold + lowThreshold) / 2
+    val allAmount = hotAmount + coldAmount
+    if (allAmount == 0) {
+      None
+    } else {
+      val hotPercent = hotAmount.toDouble / allAmount
+      if (hotPercent <= highThreshold && hotPercent >= lowThreshold) {
+        None
+      } else {
+        Some((hotAmount - allAmount * mid).toLong)
+      }
+    }
+  }
 }

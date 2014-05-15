@@ -140,7 +140,7 @@ class BitwayManagerSpec extends Specification {
       val infos = Seq(
         CryptoCurrencyTransferInfo(1, Some("i1"), Some(1000)),
         CryptoCurrencyTransferInfo(2, Some("i2"), Some(80)))
-      bwm.completeTransferInfos(infos) mustEqual List(CryptoCurrencyTransferInfo(1, Some("i1"), Some(1000), Some(1.0), None), CryptoCurrencyTransferInfo(2, Some("i2"), Some(80), Some(0.08), None))
+      bwm.completeTransferInfos(infos) mustEqual (List(CryptoCurrencyTransferInfo(1, Some("i1"), Some(1000), Some(1.0), None), CryptoCurrencyTransferInfo(2, Some("i2"), Some(80), Some(0.08), None)), false)
 
       val tx1 = CryptoCurrencyTransaction(
         txid = Some("t1"),

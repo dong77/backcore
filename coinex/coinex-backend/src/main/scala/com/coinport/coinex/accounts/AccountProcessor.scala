@@ -8,8 +8,10 @@ package com.coinport.coinex.accounts
 import akka.actor._
 import akka.actor.Actor.Receive
 import akka.event.LoggingReceive
+import akka.persistence.SnapshotOffer
 import akka.persistence._
 
+import com.coinport.coinex.common._
 import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.common.ExtendedProcessor
@@ -19,13 +21,16 @@ import com.coinport.coinex.fee._
 import ErrorCode._
 import Implicits._
 import TransferType._
+import Currency._
 
 class AccountProcessor(
   marketProcessors: Map[MarketSide, ActorRef],
   marketUpdateProcessoressorPath: ActorPath,
   depositWithdrawProcessorPath: ActorPath,
-  val feeConfig: FeeConfig) extends ExtendedProcessor with EventsourcedProcessor with ChannelSupport
+  accountConfig: AccountConfig) extends ExtendedProcessor with EventsourcedProcessor with ChannelSupport
     with AccountManagerBehavior with ActorLogging {
+
+  val feeConfig = accountConfig.feeConfig
 
   private val MAX_PRICE = 1E8.toDouble // 100000000.00000001 can be preserved by toDouble.
 
@@ -33,7 +38,7 @@ class AccountProcessor(
   val channelToMarketProcessors = createChannelTo(MARKET_PROCESSOR <<) // DO NOT CHANGE
   val channelToMarketUpdateProcessor = createChannelTo(MARKET_UPDATE_PROCESSOR<<) // DO NOT CHANGE
   val channelToDepositWithdrawalProcessor = createChannelTo(ACCOUNT_TRANSFER_PROCESSOR<<) // DO NOT CHANGE
-  val manager = new AccountManager(1E12.toLong)
+  val manager = new AccountManager(1E12.toLong, accountConfig.hotColdTransfer)
 
   override def identifyChannel: PartialFunction[Any, String] = {
     case r: AdminConfirmTransferSuccess => "tsf"
@@ -68,6 +73,19 @@ class AccountProcessor(
             channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
           }
         }
+
+      case HotToCold =>
+        persist(DoRequestTransfer(t)) { event =>
+          updateState(event)
+          channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
+        }
+
+      case ColdToHot =>
+        persist(DoRequestTransfer(t)) { event =>
+          updateState(event)
+          channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
+        }
+      case _ => // frontend can't send UserToHot
     }
 
     case p @ ConfirmablePersistent(m: AdminConfirmTransferSuccess, _, _) =>
@@ -202,7 +220,12 @@ trait AccountManagerBehavior extends CountFeeSupport {
       t.`type` match {
         case Withdrawal =>
           manager.updateCashAccount(t.userId, CashAccount(t.currency, -t.amount, 0, t.amount))
-        case Deposit =>
+          manager.updateHotCashAccount(CashAccount(t.currency, -t.amount, 0, t.amount))
+        case HotToCold =>
+          manager.updateHotCashAccount(CashAccount(t.currency, -t.amount, 0, t.amount))
+        case ColdToHot =>
+          manager.updateColdCashAccount(CashAccount(t.currency, -t.amount, 0, t.amount))
+        case _ =>
       }
 
     case AdminConfirmTransferSuccess(t) =>
@@ -259,16 +282,29 @@ trait AccountManagerBehavior extends CountFeeSupport {
           case Some(f) if (f.amount > 0) =>
             manager.transferFundFromPendingWithdrawal(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
             manager.updateCashAccount(t.userId, CashAccount(t.currency, 0, 0, f.amount - t.amount))
+            manager.updateHotCashAccount(CashAccount(t.currency, f.amount, 0, f.amount - t.amount))
           case _ =>
             manager.updateCashAccount(t.userId, CashAccount(t.currency, 0, 0, -t.amount))
+            manager.updateHotCashAccount(CashAccount(t.currency, 0, 0, -t.amount))
         }
+      case UserToHot =>
+        manager.updateHotCashAccount(CashAccount(t.currency, t.amount, 0, 0))
+      case HotToCold =>
+        manager.updateHotCashAccount(CashAccount(t.currency, 0, 0, -t.amount))
+        manager.updateColdCashAccount(CashAccount(t.currency, t.amount, 0, 0))
+      case ColdToHot =>
+        manager.updateColdCashAccount(CashAccount(t.currency, 0, 0, -t.amount))
+        manager.updateHotCashAccount(CashAccount(t.currency, t.amount, 0, 0))
+      case TransferType.Unknown =>
     }
   }
 
   private def failedTransfer(t: AccountTransfer) {
     t.`type` match {
       case Withdrawal => manager.updateCashAccount(t.userId, CashAccount(t.currency, t.amount, 0, -t.amount))
-      case Deposit =>
+      case HotToCold => manager.updateHotCashAccount(CashAccount(t.currency, t.amount, 0, -t.amount))
+      case ColdToHot => manager.updateColdCashAccount(CashAccount(t.currency, t.amount, 0, -t.amount))
+      case _ =>
     }
   }
 
