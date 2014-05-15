@@ -14,6 +14,7 @@ trait AccountTransferBehavior {
   val manager: AccountTransferManager
 
   var confirmableHeight: Long = 6L
+  var transferDebug: Boolean = false
 
   private val transferMap = Map.empty[Long, CryptoCurrencyTransferItem]
   // message need to send to processors
@@ -22,6 +23,8 @@ trait AccountTransferBehavior {
   private val mongoWriteList = ListBuffer.empty[CryptoCurrencyTransferItem]
 
   def setConfirmableHeight(heightConfig: Int) = { confirmableHeight = heightConfig }
+
+  def setTransferDebug(transferDebugConfig: Boolean) = { this.transferDebug = transferDebugConfig }
 
   def isCryptoCurrency(currency: Currency): Boolean = { currency.value >= Currency.Btc.value }
 
@@ -37,7 +40,7 @@ trait AccountTransferBehavior {
   def updateState: Receive = {
 
     case DoRequestTransfer(t) =>
-      if (isCryptoCurrency(t.currency)) {
+      if (isCryptoCurrency(t.currency) && !transferDebug) {
         t.`type` match {
           case TransferType.Deposit => //Do nothing
           case TransferType.Withdrawal =>
@@ -51,7 +54,7 @@ trait AccountTransferBehavior {
     case AdminConfirmTransferFailure(t, _) => transferHandler.put(t)
 
     case AdminConfirmTransferSuccess(t) => {
-      if (isCryptoCurrency(t.currency)) {
+      if (isCryptoCurrency(t.currency) && !transferDebug) {
         t.`type` match {
           case TransferType.Deposit =>
           case TransferType.Withdrawal =>

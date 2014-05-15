@@ -20,7 +20,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   override def processorId = ACCOUNT_TRANSFER_PROCESSOR <<
 
   val manager = new AccountTransferManager()
-
+  val transferDebugConfig = context.system.settings.config.getBoolean("akka.exchange.account-transfer-debug")
   private val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
   private val bitwayChannels =
     Map(bitwayProcessors.keys.toSeq map (
@@ -31,7 +31,8 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   private val bitwayBatchSize = 1
   private val userToHotMessages = Set.empty[CryptoCurrencyTransferItem]
 
-  setConfirmableHeight(6)
+  setConfirmableHeight(1)
+  setTransferDebug(transferDebugConfig)
 
   override def identifyChannel: PartialFunction[Any, String] = {
     case DoRequestTransfer => "account"
@@ -46,7 +47,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
         event =>
           confirm(p)
           updateState(event)
-          if (isCryptoCurrency(w.currency)) {
+          if (isCryptoCurrency(w.currency) && !transferDebugConfig) {
             w.`type` match {
               case TransferType.Deposit =>
                 sender ! RequestTransferFailed(UnsupportTransferType)
@@ -73,7 +74,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
     case AdminConfirmTransferSuccess(transfer) =>
       transferHandler.get(transfer.id) match {
         case Some(tranfer) if transfer.status == Pending =>
-          if (isCryptoCurrency(transfer.currency)) {
+          if (isCryptoCurrency(transfer.currency) && !transferDebugConfig) {
             transfer.`type` match {
               case TransferType.Deposit => sender ! RequestTransferFailed(UnsupportTransferType)
               case TransferType.Withdrawal =>
@@ -110,7 +111,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   private def handleResList() {
     getMessagesBox foreach {
       item =>
-//        println(s"MessagesBox got item => ${item.toString}")
+        //        println(s"MessagesBox got item => ${item.toString}")
         item.txType.get match {
           case Deposit if item.status.get == Succeeded =>
             deliverToAccountManager(CryptoTransferSucceeded(transferHandler.get(item.accountTransferId.get).get))
@@ -132,7 +133,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
     }
     getMongoWriteList foreach {
       item =>
-//        println(s"MessagesBox got item => ${item.toString}")
+        //        println(s"MessagesBox got item => ${item.toString}")
         transferItemHandler.put(item)
     }
   }

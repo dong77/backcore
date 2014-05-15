@@ -73,6 +73,9 @@ class AccountProcessor(
     case p @ ConfirmablePersistent(m: AdminConfirmTransferSuccess, _, _) =>
       persist(m) { event => confirm(p); updateState(event) }
 
+    case p @ ConfirmablePersistent(m: CryptoTransferSucceeded, _, _) =>
+      persist(m) { event => confirm(p); updateState(event) }
+
     case DoRequestGenerateABCode(userId, amount, _, _) => {
       val adjustment = CashAccount(Currency.Cny, -amount, amount, 0)
       if (!manager.canUpdateCashAccount(userId, adjustment)) {
@@ -127,6 +130,9 @@ class AccountProcessor(
     }
 
     case p @ ConfirmablePersistent(m: AdminConfirmTransferFailure, _, _) =>
+      persist(m) { event => confirm(p); updateState(event) }
+
+    case p @ ConfirmablePersistent(m: CryptoTransferFailed, _, _) =>
       persist(m) { event => confirm(p); updateState(event) }
 
     case DoSubmitOrder(side, order) =>
@@ -206,12 +212,12 @@ trait AccountManagerBehavior extends CountFeeSupport {
       failedTransfer(t)
 
     case CryptoTransferSucceeded(t) => {
-//      println(s"AccountProcessor got success accountTransfer => ${t.toString}")
+      //      println(s"AccountProcessor got success accountTransfer => ${t.toString}")
       succeededTransfer(t)
     }
 
     case CryptoTransferFailed(t, _) => {
-//      println(s"AccountProcessor got failed accountTransfer => ${t.toString}")
+      //      println(s"AccountProcessor got failed accountTransfer => ${t.toString}")
       failedTransfer(t)
     }
 
