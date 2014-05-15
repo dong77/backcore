@@ -114,8 +114,12 @@ enum Direction {
 }
 
 enum TransferType {
-    DEPOSIT    = 0
-    WITHDRAWAL = 1
+    DEPOSIT     = 0
+    WITHDRAWAL  = 1
+    USER_TO_HOT = 2
+    HOT_TO_COLD = 3
+    COLD_TO_HOT = 4
+    UNKNOWN     = 5
 }
 
 enum RechargeCodeStatus {
@@ -152,15 +156,6 @@ enum CryptoCurrencyAddressType {
     UNUSED    = 1
     HOT       = 2
     COLD      = 3
-}
-
-enum CryptoCurrencyTransactionType {
-    DEPOSIT     = 0
-    WITHDRAWAL  = 1
-    USER_TO_HOT = 2
-    HOT_TO_COLD = 3
-    COLD_TO_HOT = 4
-    UNKNOWN     = 5
 }
 
 enum BitwayRequestType {
@@ -460,7 +455,7 @@ struct CryptoCurrencyTransaction {
     5: optional set<CryptoCurrencyTransactionPort> outputs
     6: optional BlockIndex prevBlock
     7: optional BlockIndex includedBlock
-    8: optional CryptoCurrencyTransactionType txType
+    8: optional TransferType txType
     9: TransferStatus status
 }
 

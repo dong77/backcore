@@ -15,7 +15,7 @@ import Currency._
 
 class BitwayManagerSpec extends Specification {
   import CryptoCurrencyAddressType._
-  import CryptoCurrencyTransactionType._
+  import TransferType._
   import TransferStatus._
 
   "BitwayManager" should {
@@ -64,14 +64,14 @@ class BitwayManagerSpec extends Specification {
       bwm.faucetAddress(Hot, Set("h1", "h2"))
       bwm.faucetAddress(Cold, Set("c1"))
 
-      bwm.getCryptoCurrencyTransactionType(Set("d1"), Set("d2")) mustEqual None
-      bwm.getCryptoCurrencyTransactionType(Set("u1", "d1"), Set("h1", "u1")) mustEqual Some(UserToHot)
-      bwm.getCryptoCurrencyTransactionType(Set("u1", "d1"), Set("h1")) mustEqual Some(UserToHot)
-      bwm.getCryptoCurrencyTransactionType(Set("h1"), Set("c1", "h1")) mustEqual Some(HotToCold)
-      bwm.getCryptoCurrencyTransactionType(Set("c1"), Set("h1", "c1")) mustEqual Some(ColdToHot)
-      bwm.getCryptoCurrencyTransactionType(Set("d1"), Set("u1", "d1")) mustEqual Some(Deposit)
-      bwm.getCryptoCurrencyTransactionType(Set("h1"), Set("d1", "h1")) mustEqual Some(Withdrawal)
-      bwm.getCryptoCurrencyTransactionType(Set("u1"), Set("d1")) mustEqual Some(Unknown)
+      bwm.getTransferType(Set("d1"), Set("d2")) mustEqual None
+      bwm.getTransferType(Set("u1", "d1"), Set("h1", "u1")) mustEqual Some(UserToHot)
+      bwm.getTransferType(Set("u1", "d1"), Set("h1")) mustEqual Some(UserToHot)
+      bwm.getTransferType(Set("h1"), Set("c1", "h1")) mustEqual Some(HotToCold)
+      bwm.getTransferType(Set("c1"), Set("h1", "c1")) mustEqual Some(ColdToHot)
+      bwm.getTransferType(Set("d1"), Set("u1", "d1")) mustEqual Some(Deposit)
+      bwm.getTransferType(Set("h1"), Set("d1", "h1")) mustEqual Some(Withdrawal)
+      bwm.getTransferType(Set("u1"), Set("d1")) mustEqual Some(Unknown)
     }
 
     "block chain test" in {

@@ -32,9 +32,20 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
   val abCodeMap: Map[Long, ABCodeItem] = Map.empty[Long, ABCodeItem]
   val codeAIndexMap: Map[String, Long] = Map.empty[String, Long]
   val codeBIndexMap: Map[String, Long] = Map.empty[String, Long]
+  val hotWalletAccount = Map.empty[Currency, CashAccount]
+  val coldWalletAccount = Map.empty[Currency, CashAccount]
 
   // Thrift conversions     ----------------------------------------------
-  def getSnapshot = TAccountState(accountMap.clone, getFiltersSnapshot, aggregation, lastOrderId, abCodeMap, codeAIndexMap, codeBIndexMap)
+  def getSnapshot = TAccountState(
+    accountMap.clone,
+    getFiltersSnapshot,
+    aggregation,
+    lastOrderId,
+    abCodeMap,
+    codeAIndexMap,
+    codeBIndexMap,
+    hotWalletAccount,
+    coldWalletAccount)
 
   def loadSnapshot(snapshot: TAccountState) = {
     accountMap.clear
@@ -48,6 +59,10 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
     codeAIndexMap ++= snapshot.codeAIndexMap
     codeBIndexMap ++= snapshot.codeBIndexMap
     loadFiltersSnapshot(snapshot.filters)
+    hotWalletAccount.clear
+    hotWalletAccount ++= snapshot.hotWalletAccount
+    coldWalletAccount.clear
+    coldWalletAccount ++= snapshot.coldWalletAccount
   }
 
   // Business logics      ----------------------------------------------

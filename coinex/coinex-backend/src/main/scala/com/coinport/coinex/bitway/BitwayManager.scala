@@ -107,8 +107,8 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     else None
   }
 
-  def getCryptoCurrencyTransactionType(inputs: Set[String],
-    outputs: Set[String]): Option[CryptoCurrencyTransactionType] = {
+  def getTransferType(inputs: Set[String],
+    outputs: Set[String]): Option[TransferType] = {
     object AddressSetEnum extends Enumeration {
       type AddressSet = Value
       val UNUSED, USED, HOT, COLD = Value
@@ -134,20 +134,20 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     val inputsMatched = getIntersectSet(inputs)
     val outputsMatched = getIntersectSet(outputs)
     if (inputsMatched.contains(USED) && outputsMatched.contains(HOT)) {
-      Some(CryptoCurrencyTransactionType.UserToHot)
+      Some(TransferType.UserToHot)
     } else if (inputsMatched.contains(HOT)) {
       assert(!outputsMatched.contains(USED))
       if (outputsMatched.contains(COLD)) {
-        Some(CryptoCurrencyTransactionType.HotToCold)
+        Some(TransferType.HotToCold)
       } else {
-        Some(CryptoCurrencyTransactionType.Withdrawal)
+        Some(TransferType.Withdrawal)
       }
     } else if (inputsMatched.contains(COLD) && outputsMatched.contains(HOT)) {
-      Some(CryptoCurrencyTransactionType.ColdToHot)
+      Some(TransferType.ColdToHot)
     } else if (outputsMatched.contains(USED)) {
-      Some(CryptoCurrencyTransactionType.Deposit)
+      Some(TransferType.Deposit)
     } else if (inputsMatched.nonEmpty || outputsMatched.nonEmpty) {
-      Some(CryptoCurrencyTransactionType.Unknown)
+      Some(TransferType.Unknown)
     } else {
       None
     }
@@ -189,7 +189,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     if (!inputs.isDefined || !outputs.isDefined) {
       None
     } else {
-      val txType = getCryptoCurrencyTransactionType(Set.empty[String] ++ inputs.get.map(_.address),
+      val txType = getTransferType(Set.empty[String] ++ inputs.get.map(_.address),
         Set.empty[String] ++ outputs.get.map(_.address))
       if (txType.isDefined) {
         val regularizeInputs = inputs.map(_.map(i => i.copy(
