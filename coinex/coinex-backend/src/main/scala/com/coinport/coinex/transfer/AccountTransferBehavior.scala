@@ -65,7 +65,8 @@ trait AccountTransferBehavior {
       transferHandler.put(t)
     }
 
-    case MultiCryptoCurrencyTransactionMessage(currency, txs, newIndex: Option[BlockIndex]) =>
+    case m @ MultiCryptoCurrencyTransactionMessage(currency, txs, newIndex: Option[BlockIndex]) =>
+      // println(s">>>>>>>>>>>>>>>>>>>>> updateState  => MultiCryptoCurrencyTransactionMessage = ${m.toString}")
       clearResList
       newIndex foreach (index => reOrgnize(index))
       txs foreach {
@@ -96,31 +97,33 @@ trait AccountTransferBehavior {
         tx.outputs.get foreach {
           //every output corresponds to one tx
           outputPort =>
-            tx.status match {
-              case Failed =>
-                manager.getDepositTxId(tx.sigId.get, outputPort) match {
-                  case Some(id) =>
-                    val depositItem = transferMap(id).copy(status = Some(Failed))
-                    manager.removeDepositTxid(depositItem.sigId.get, depositItem.to.get)
-                    setAccountTransferStatus(id, Failed)
-                    setResState(Updator.copy(item = depositItem, addMongo = true, putItem = true))
-                  case _ =>
-                }
-              case _ =>
-                val toSaveDepositItem =
+            if (outputPort.userId.isDefined) {
+              tx.status match {
+                case Failed =>
                   manager.getDepositTxId(tx.sigId.get, outputPort) match {
                     case Some(id) =>
-                      transferMap(id).copy(includedBlock = tx.includedBlock)
-                    case None =>
-                      val transferId = manager.getTransferId
-                      manager.setLastTransferId(transferId)
-                      transferHandler.put(AccountTransfer(transferId, outputPort.userId.get, TransferType.Deposit, currency, outputPort.internalAmount.get, Confirming, Some(System.currentTimeMillis())))
-                      val newTransferItemId = manager.getNewTransferItemId
-                      manager.saveDepositTxId(tx.sigId.get, outputPort, newTransferItemId)
-                      // id, sigId, txid, userId, currency, from, to(user's internal address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
-                      CryptoCurrencyTransferItem(Some(newTransferItemId), tx.sigId, tx.txid, None, Some(currency), None, Some(outputPort), tx.includedBlock, tx.txType, Some(Confirming), None, Some(transferId), Some(System.currentTimeMillis()))
+                      val depositItem = transferMap(id).copy(status = Some(Failed))
+                      manager.removeDepositTxid(depositItem.sigId.get, depositItem.to.get)
+                      setAccountTransferStatus(id, Failed)
+                      setResState(Updator.copy(item = depositItem, addMongo = true, putItem = true))
+                    case _ =>
                   }
-                setResState(Updator.copy(item = toSaveDepositItem, addMongo = true, putItem = true))
+                case _ =>
+                  val toSaveDepositItem =
+                    manager.getDepositTxId(tx.sigId.get, outputPort) match {
+                      case Some(id) =>
+                        transferMap(id).copy(includedBlock = tx.includedBlock)
+                      case None =>
+                        val transferId = manager.getTransferId
+                        manager.setLastTransferId(transferId)
+                        transferHandler.put(AccountTransfer(transferId, outputPort.userId.get, TransferType.Deposit, currency, outputPort.internalAmount.get, Confirming, Some(System.currentTimeMillis())))
+                        val newTransferItemId = manager.getNewTransferItemId
+                        manager.saveDepositTxId(tx.sigId.get, outputPort, newTransferItemId)
+                        // id, sigId, txid, userId, currency, from, to(user's internal address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
+                        CryptoCurrencyTransferItem(Some(newTransferItemId), tx.sigId, tx.txid, None, Some(currency), None, Some(outputPort), tx.includedBlock, tx.txType, Some(Confirming), None, Some(transferId), Some(System.currentTimeMillis()))
+                    }
+                  setResState(Updator.copy(item = toSaveDepositItem, addMongo = true, putItem = true))
+              }
             }
         }
       case UserToHot =>
