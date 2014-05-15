@@ -15,5 +15,5 @@ new OpenDataConfig {
   override val exportSnapshotHdfsDir = "/export/snapshot/"
   override val exportMessagesHdfsDir = "/export/messages/"
   override val hdfsHost = "hdfs://hadoop:54310"
-  override val scheduleInterval = 900 second
+  override val scheduleInterval = (60 * 15) second
 }

@@ -89,7 +89,7 @@ object Generator {
       case x: %s => JString(x.name)
     }))
 """
-  val ENUM_IN_MAP_CASE = "\n          case ks: %s => ks.name"
+  val ENUM_IN_MAP_CASE = "\n          case ks: %s => ks.name.toUpperCase"
 
   val ENUM_SERIALIZER2 = " +\n    new %sSerializer"
 

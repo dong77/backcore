@@ -175,12 +175,14 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
         builder ++= "{"
         for (column <- row.asScala) {
           if (java.util.Arrays.equals(column.qualifier, Message) || java.util.Arrays.equals(column.qualifier, SequenceNr)) {
-            builder ++= "\"" ++= Bytes.toString(column.qualifier) ++= "\":"
+
             if (java.util.Arrays.equals(column.qualifier, Message)) {
               // will throw an exception if failed
               val msg = serialization.deserialize(column.value(), classOf[PersistentRepr])
+              builder ++= "\"" ++= msg.payload.getClass.getSimpleName ++= "\":"
               builder ++= PrettyJsonSerializer.toJson(msg.payload)
             } else {
+              builder ++= "\"" ++= Bytes.toString(column.qualifier) ++= "\":"
               builder ++= Bytes.toLong(column.value()).toString
             }
             builder ++= ","

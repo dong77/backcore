@@ -19,22 +19,22 @@ object MapSerializer extends Serializer[Map[Any, Any]] {
       case (k, v) => JField(
         k match {
           case ks: String => ks
-          case ks: BitwayRequestType => ks.name
-          case ks: BitwayResponseType => ks.name
-          case ks: ChartTimeDimension => ks.name
-          case ks: CryptoCurrencyAddressType => ks.name
-          case ks: CryptoCurrencyTransactionType => ks.name
-          case ks: Currency => ks.name
-          case ks: Direction => ks.name
-          case ks: EmailType => ks.name
-          case ks: ErrorCode => ks.name
-          case ks: ExportedEventType => ks.name
-          case ks: OrderStatus => ks.name
-          case ks: RechargeCodeStatus => ks.name
-          case ks: RefundReason => ks.name
-          case ks: TransferStatus => ks.name
-          case ks: TransferType => ks.name
-          case ks: UserStatus => ks.name
+          case ks: BitwayRequestType => ks.name.toUpperCase
+          case ks: BitwayResponseType => ks.name.toUpperCase
+          case ks: ChartTimeDimension => ks.name.toUpperCase
+          case ks: CryptoCurrencyAddressType => ks.name.toUpperCase
+          case ks: CryptoCurrencyTransactionType => ks.name.toUpperCase
+          case ks: Currency => ks.name.toUpperCase
+          case ks: Direction => ks.name.toUpperCase
+          case ks: EmailType => ks.name.toUpperCase
+          case ks: ErrorCode => ks.name.toUpperCase
+          case ks: ExportedEventType => ks.name.toUpperCase
+          case ks: OrderStatus => ks.name.toUpperCase
+          case ks: RechargeCodeStatus => ks.name.toUpperCase
+          case ks: RefundReason => ks.name.toUpperCase
+          case ks: TransferStatus => ks.name.toUpperCase
+          case ks: TransferType => ks.name.toUpperCase
+          case ks: UserStatus => ks.name.toUpperCase
           case ks: Any => ks.toString
         },
         Extraction.decompose(v))
