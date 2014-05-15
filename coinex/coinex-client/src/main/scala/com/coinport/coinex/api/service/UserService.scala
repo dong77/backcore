@@ -33,8 +33,8 @@ object UserService extends AkkaService {
       loginToken = None,
       googleAuthenticatorSecret = None,
       status = UserStatus.Normal,
-      depositAddresses = null,
-      withdrawalAddresses = null
+      depositAddresses = None,
+      withdrawalAddresses = None
     )
 
     val command = DoRegisterUser(profile, password)
