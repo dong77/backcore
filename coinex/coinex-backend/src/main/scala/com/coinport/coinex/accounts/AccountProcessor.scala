@@ -8,10 +8,8 @@ package com.coinport.coinex.accounts
 import akka.actor._
 import akka.actor.Actor.Receive
 import akka.event.LoggingReceive
-import akka.persistence.SnapshotOffer
 import akka.persistence._
 
-import com.coinport.coinex.common._
 import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.common.ExtendedProcessor
@@ -21,7 +19,6 @@ import com.coinport.coinex.fee._
 import ErrorCode._
 import Implicits._
 import TransferType._
-import Currency._
 
 class AccountProcessor(
   marketProcessors: Map[MarketSide, ActorRef],
@@ -209,12 +206,12 @@ trait AccountManagerBehavior extends CountFeeSupport {
       failedTransfer(t)
 
     case CryptoTransferSucceeded(t) => {
-      //      println(s"AccountProcessor got success accountTransfer => ${t.toString}")
+      println(s"AccountProcessor got success accountTransfer => ${t.toString}")
       succeededTransfer(t)
     }
 
     case CryptoTransferFailed(t, _) => {
-      //      println(s"AccountProcessor got failed accountTransfer => ${t.toString}")
+      println(s"AccountProcessor got failed accountTransfer => ${t.toString}")
       failedTransfer(t)
     }
 

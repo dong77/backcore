@@ -240,7 +240,7 @@ typedef data.CryptoCurrencyTransferItem         _CryptoCurrencyTransferItem
                                                             2: optional string sigId,
                                                             3: optional string txid,
                                                             4: optional _Currency currency,
-                                                            5: optional _CryptoCurrencyTransactionType txType,
+                                                            5: optional _TransferType txType,
                                                             6: optional _TransferStatus status
                                                             7: optional _SpanCursor spanCur
                                                             8:  _Cursor cur

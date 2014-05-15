@@ -7,13 +7,13 @@ import com.coinport.coinex.common.{ ExtendedProcessor, Manager }
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.common.support.ChannelSupport
 import com.coinport.coinex.data._
-import com.coinport.coinex.data.{ CryptoCurrencyTransactionType => CryptoTxType }
 import com.mongodb.casbah.Imports._
 import scala.collection.mutable.{ ListBuffer, Map, Set }
 
 import ErrorCode._
 import Implicits._
 import TransferStatus._
+import TransferType._
 
 class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath, bitwayProcessors: collection.immutable.Map[Currency, ActorRef]) extends ExtendedProcessor
     with EventsourcedProcessor with AccountTransferBehavior with ChannelSupport with ActorLogging {
@@ -110,17 +110,17 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   private def handleResList() {
     getMessagesBox foreach {
       item =>
-        //        println(s"MessagesBox got item => ${item.toString}")
+        println(s"MessagesBox got item => ${item.toString}")
         item.txType.get match {
-          case CryptoTxType.Deposit if item.status.get == Succeeded =>
+          case Deposit if item.status.get == Succeeded =>
             deliverToAccountManager(CryptoTransferSucceeded(transferHandler.get(item.accountTransferId.get).get))
-          case CryptoTxType.UserToHot if item.status.get == Confirming =>
+          case UserToHot if item.status.get == Confirming =>
             batchSendBitwayMessage(item)
-          case CryptoTxType.Withdrawal =>
+          case Withdrawal =>
             item.status.get match {
               case Confirming =>
                 val info = CryptoCurrencyTransferInfo(item.id.get, Some(item.to.get.address), item.to.get.internalAmount, item.to.get.amount, None)
-                deliverToBitwayProcessor(item.currency.get, TransferCryptoCurrency(item.currency.get, List(info), CryptoTxType.Withdrawal))
+                deliverToBitwayProcessor(item.currency.get, TransferCryptoCurrency(item.currency.get, List(info), Withdrawal))
               case Succeeded =>
                 deliverToAccountManager(CryptoTransferSucceeded(transferHandler.get(item.accountTransferId.get).get))
               case Failed =>
@@ -132,7 +132,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
     }
     getMongoWriteList foreach {
       item =>
-        //        println(s"MessagesBox got item => ${item.toString}")
+        println(s"MessagesBox got item => ${item.toString}")
         transferItemHandler.put(item)
     }
   }
@@ -145,7 +145,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
         item =>
           transferInfos.append(CryptoCurrencyTransferInfo(item.id.get, None, item.from.get.internalAmount, item.from.get.amount, Some(item.from.get.address)))
       }
-      deliverToBitwayProcessor(item.currency.get, TransferCryptoCurrency(item.currency.get, transferInfos.toList, CryptoTxType.UserToHot))
+      deliverToBitwayProcessor(item.currency.get, TransferCryptoCurrency(item.currency.get, transferInfos.toList, UserToHot))
       userToHotMessages.clear()
     }
   }

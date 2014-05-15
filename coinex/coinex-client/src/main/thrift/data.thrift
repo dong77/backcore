@@ -478,7 +478,7 @@ struct CryptoCurrencyTransferItem {
     6: optional CryptoCurrencyTransactionPort from
     7: optional CryptoCurrencyTransactionPort to
     8: optional BlockIndex includedBlock
-    9: optional CryptoCurrencyTransactionType txType
+    9: optional TransferType txType
     10: optional TransferStatus status
     11: optional i64 userToHotMapedDepositId
     12: optional i64 accountTransferId

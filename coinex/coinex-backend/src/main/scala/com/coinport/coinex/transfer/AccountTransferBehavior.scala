@@ -6,8 +6,8 @@ import com.coinport.coinex.common.mongo.SimpleJsonMongoCollection
 import com.mongodb.casbah.Imports._
 import scala.collection.mutable.{ Map, ListBuffer }
 
-import CryptoCurrencyTransactionType._
 import TransferStatus._
+import TransferType._
 
 trait AccountTransferBehavior {
   val db: MongoDB
