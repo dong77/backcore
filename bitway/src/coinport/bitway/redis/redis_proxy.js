@@ -27,10 +27,11 @@ var RedisProxy = module.exports.RedisProxy = function(currency, ip, port) {
     Events.EventEmitter.call(this);
 
     RedisProxy.REQUEST_CHANNEL = 'creq_' + currency.toLowerCase();
-
     RedisProxy.RESPONSE_CHANNEL = 'cres_' + currency.toLowerCase();
+
     this.pollClient = Redis.createClient(port, ip, { return_buffers: true });
     this.pushClient = Redis.createClient(port, ip, { return_buffers: true });
+    this.innerClient = Redis.createClient(port, ip, { return_buffers: true });
     this.serializer = new Serializer();
 };
 Util.inherits(RedisProxy, Events.EventEmitter);

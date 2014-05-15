@@ -14,7 +14,7 @@ var RedisProxy                      = require('./redis/redis_proxy').RedisProxy,
     CryptoCurrencyTransactionPort   = DataTypes.CryptoCurrencyTransactionPort,
     CryptoCurrencyBlock             = DataTypes.CryptoCurrencyBlock,
     TransferStatus                  = DataTypes.TransferStatus,
-    CryptoCurrencyTransactionType   = DataTypes.CryptoCurrencyTransactionType,
+    TransferType                    = DataTypes.TransferType,
     CryptoCurrencyAddressType       = DataTypes.CryptoCurrencyAddressType,
     Currency                        = DataTypes.Currency,
     BlockIndex                      = DataTypes.BlockIndex,
@@ -45,8 +45,6 @@ var needJson = 1;
 var AUTO_REPORT = 0;
 var tip = 0.000001;
 proxy.start();
-var redis = require("redis"),  
-    client = redis.createClient(6379, "127.0.0.1");
 
 var makeNormalResponse = function(type, currency, response){
     console.log("type: " + type);
@@ -169,15 +167,15 @@ proxy.on(RedisProxy.EventType.TRANSFER, function(currency, request) {
     var maxConfirmedNum = 9999999;
     var addresses = {};
     //var request = new TransferCryptoCurrency({currency: Currency.BTC,
-    //    transferInfos: transferInfos, type:CryptoCurrencyTransactionType.WITHDRAWAL});
+    //    transferInfos: transferInfos, type:TransferType.WITHDRAWAL});
     var request = new TransferCryptoCurrency({currency: Currency.BTC,
-        transferInfos: transferInfos, type:CryptoCurrencyTransactionType.USER_TO_HOT});*/
+        transferInfos: transferInfos, type:TransferType.USER_TO_HOT});*/
     switch(request.type){
-        case CryptoCurrencyTransactionType.WITHDRAWAL:
-        case CryptoCurrencyTransactionType.HOT_TO_COLD:
+        case TransferType.WITHDRAWAL:
+        case TransferType.HOT_TO_COLD:
             txWithDefiniteTo(request);
             break;
-        case CryptoCurrencyTransactionType.USER_TO_HOT:
+        case TransferType.USER_TO_HOT:
             txWithDefiniteFrom(request);
             break;
         default:
@@ -365,16 +363,8 @@ var saveTransferIds = function(input, cctx, finishLength, ids){
             }
             console.log("cctx.outputs.length: " + cctx.outputs.length);
             if(cctx.inputs.length == finishLength){
-                var sigId = cctx.txid;
-                for(var m = 0; m < response.inputs.length; m++){
-                    sigId += response.inputs[m].address;
-                    sigId += response.inputs[m].amount;
-                }
-                for(var n = 0; n < response.outputs.length; n++){
-                    sigId += response.outputs[n].address;
-                    sigId += response.outputs[n].amount;
-                }
-                client.set(sigId, ids, function(errRdis, reply){
+                var sigId = getSigId(cctx); 
+                proxy.innerClient.set(sigId, ids, function(errRdis, reply){
                     if(errRedis){
                         console.log("errRedis: " + errRedis);
                     }else{
@@ -503,7 +493,7 @@ var constructBlocks = function(input, txFinishLength, blockFinishLength, blocksF
                     console.log("block.txs.length: " + block.txs.length);
                     console.log("blockFinishLength: " + blockFinishLength);
                     var sigId = getSigId(cctx);
-                    client.get(sigId, function(errRedis, reply){
+                    proxy.innerClient.get(sigId, function(errRedis, reply){
                         if(errRedis){
                             console("errRedis: " + errRedis);
                         }else{
@@ -530,7 +520,7 @@ var constructBlocks = function(input, txFinishLength, blockFinishLength, blocksF
             console.log("block.txs.length: " + block.txs.length);
             console.log("blockFinishLength: " + blockFinishLength);
             var sigId = getSigId(cctx);
-            client.get(sigId, function(errRedis, reply){
+            proxy.innerClient.get(sigId, function(errRedis, reply){
                 if(errRedis){
                     console("errRedis: " + errRedis);
                 }else{
@@ -622,7 +612,7 @@ var getInputAddresses = function(input, cctx, finishLength) {
             console.log("cctx.outputs.length: " + cctx.outputs.length);
             if(cctx.inputs.length == finishLength){
                 var sigId = getSigId(cctx);
-                client.get(sigId, function(errRedis, reply){
+                proxy.innerClient.get(sigId, function(errRedis, reply){
                     if(errRedis){
                         console("errRedis: " + errRedis);
                     }else{
@@ -732,7 +722,7 @@ var getAllTxsInBlock = function(input, txFinishLength, blockFinishLength, cctx, 
                 if(cctx.inputs.length == txFinishLength){
                     //console.log("block.txs.length: " + block.txs.length);
                     var sigId = getSigId(cctx);
-                    client.get(sigId, function(errRedis, reply){
+                    proxy.innerClient.get(sigId, function(errRedis, reply){
                         if(errRedis){
                             console("errRedis: " + errRedis);
                         }else{
@@ -757,7 +747,7 @@ var getAllTxsInBlock = function(input, txFinishLength, blockFinishLength, cctx, 
         cctx.inputs.push(input);
         if(cctx.inputs.length == txFinishLength){
             var sigId = getSigId(cctx);
-            client.get(sigId, function(errRedis, reply){
+            proxy.innerClient.get(sigId, function(errRedis, reply){
                 if(errRedis){
                     console("errRedis: " + errRedis);
                 }else{
