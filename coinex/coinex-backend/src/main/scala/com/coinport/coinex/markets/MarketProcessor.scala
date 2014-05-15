@@ -44,7 +44,9 @@ class MarketProcessor(
         val unfrozen = OrderCancelled(side, order)
         channelToAccountProcessor forward Deliver(p.withPayload(unfrozen), accountProcessorPath)
       } else {
-        persist(m)(updateState)
+        // Update timestamp again
+        val updated = m.copy(order = m.order.copy(timestamp = Some(System.currentTimeMillis)))
+        persist(updated)(updateState)
       }
   }
 
@@ -57,15 +59,5 @@ class MarketProcessor(
     case OrderFundFrozen(side, order: Order) =>
       val orderSubmitted = manager.addOrderToMarket(side, order)
       channelToAccountProcessor forward Deliver(Persistent(orderSubmitted), accountProcessorPath)
-    /*
-      val sb = new StringBuilder()
-      sb.append("\n" + "~" * 100 + "\n")
-      sb.append("%s:\n%s\n\n".format(if (manager.headSide == side) "卖单" else "买单",
-        Debugger.prettyOutput(order, manager.headSide == side)))
-      sb.append(Debugger.prettyOutput(manager.headSide, manager.getSnapshot) + "\n\n")
-      sb.append(Debugger.prettyOutput(manager.headSide, orderSubmitted))
-      sb.append("~" * 100 + "\n")
-      println(sb.toString)
-      */
   }
 }

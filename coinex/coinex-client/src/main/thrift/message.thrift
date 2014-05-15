@@ -59,7 +59,7 @@ typedef data.CryptoCurrencyAddressType          _CryptoCurrencyAddressType
 
 // WARNING: please avoid using map in event definitation, if you do, please
 // make sure all map keys are either i64, i32, double, float, or string;
-// do not use enum, struct as map keys so our serialization can still work.
+// do not struct as map keys so our serialization can still work.
 
 ////////// General
 /* R-   */ struct MessageNotSupported                     {1: string event}
