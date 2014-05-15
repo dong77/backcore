@@ -54,7 +54,7 @@ var makeNormalResponse = function(type, currency, response){
     switch(type){
         case BitwayResponseType.GENERATE_ADDRESS:
             console.log("GENERATE_ADDRESS");
-            proxy.publish(new BitwayMessage({currency: currency, tx: response}));
+            proxy.publish(new BitwayMessage({currency: currency, generateAddressResponse: response}));
             break;
         case BitwayResponseType.TRANSFER:
         case BitwayResponseType.TRANSACTION:
