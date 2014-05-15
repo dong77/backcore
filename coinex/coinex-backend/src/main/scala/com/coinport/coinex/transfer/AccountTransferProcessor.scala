@@ -110,7 +110,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   private def handleResList() {
     getMessagesBox foreach {
       item =>
-        println(s"MessagesBox got item => ${item.toString}")
+//        println(s"MessagesBox got item => ${item.toString}")
         item.txType.get match {
           case Deposit if item.status.get == Succeeded =>
             deliverToAccountManager(CryptoTransferSucceeded(transferHandler.get(item.accountTransferId.get).get))
@@ -132,7 +132,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
     }
     getMongoWriteList foreach {
       item =>
-        println(s"MessagesBox got item => ${item.toString}")
+//        println(s"MessagesBox got item => ${item.toString}")
         transferItemHandler.put(item)
     }
   }
