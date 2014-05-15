@@ -8,7 +8,7 @@ var RedisProxy                      = require('./redis/redis_proxy').RedisProxy,
     MessageTypes                    = require('../../../gen-nodejs/message_types')
     Bitcore                         = require('bitcore'),
     BitwayRequestType               = DataTypes.BitwayRequestType,
-    BitwayResponseType               = DataTypes.BitwayResponseType,
+    BitwayResponseType              = DataTypes.BitwayResponseType,
     GenerateAddressesResult         = MessageTypes.GenerateAddressesResult,
     CryptoCurrencyTransaction       = DataTypes.CryptoCurrencyTransaction,
     CryptoCurrencyTransactionPort   = DataTypes.CryptoCurrencyTransactionPort,
@@ -59,18 +59,8 @@ var makeNormalResponse = function(type, currency, response){
         case BitwayResponseType.TRANSFER:
         case BitwayResponseType.TRANSACTION:
             console.log("TRANSACTION REPORT: " + currency);
-            console.log("Tx sigId: " + response.sigId);
-            console.log("Tx txid: " + response.txid);
-            for(var m = 0; m < response.inputs.length; m++){
-                console.log("input address "+ m + ": " + response.inputs[m].address);
-                console.log("input amount "+ m + ": " + response.inputs[m].amount);
-            }
-            for(var n = 0; n < response.outputs.length; n++){
-                console.log("output address "+ n + ": " + response.outputs[n].address);
-                console.log("output amount "+ n + ": " + response.outputs[n].amount);
-            }
+            displayTxContent(response);
             proxy.publish(new BitwayMessage({currency: currency, tx: response}));
-
 //            rpc.getBlockCount(function(errCount,retCount){
 //                if(errCount){
 //                console.log("errCount code: " + errCount.code);
@@ -93,12 +83,26 @@ var makeNormalResponse = function(type, currency, response){
     }
 };
 
+var displayTxContent = function(cctx){
+    console.log("Tx txid: " + cctx.txid);
+    console.log("Tx sigId: " + cctx.sigId);
+    console.log("Tx ids: " + cctx.ids);
+    for(var m = 0; m < cctx.inputs.length; m++){
+        console.log("input address "+ m + ": " + cctx.inputs[m].address);
+        console.log("input amount "+ m + ": " + cctx.inputs[m].amount);
+    }
+    for(var n = 0; n < cctx.outputs.length; n++){
+        console.log("output address "+ n + ": " + cctx.outputs[n].address);
+        console.log("output amount "+ n + ": " + cctx.outputs[n].amount);
+    }
+};
+
 var displayBlocksContent = function(blockArray){
     for(var i = 0; i < blockArray.length; i++){
         console.log("index id: " + blockArray[i].index.id);
         console.log("index height: " + blockArray[i].index.height);
-        console.log("index id: " + blockArray[i].prevIndex.id);
-        console.log("index height: " + blockArray[i].prevIndex.height);
+        console.log("prevIndex id: " + blockArray[i].prevIndex.id);
+        console.log("prevIndex height: " + blockArray[i].prevIndex.height);
     }
 };
 
@@ -114,10 +118,10 @@ proxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
     } else {
         var addresses = [];
         for (var i = 0; i < request.num; i++) {
-            rpc.getNewAddress(ACCOUNT, function(err, retAddress) {
-                if (err) {
+            rpc.getNewAddress(ACCOUNT, function(errAddress, retAddress) {
+                if (errAddress) {
                     console.error('An error occured generate address');
-                    console.error(err);
+                    console.error(errAddress);
                     var generateAddressResponse = new GenerateAddressesResult({error: ErrorCode.RPC_ERROR});
                     makeNormalResponse(BitwayResponseType.GENERATE_ADDRESS, Currency.BTC, generateAddressResponse);
                     return;
@@ -170,7 +174,8 @@ proxy.on(RedisProxy.EventType.TRANSFER, function(currency, request) {
         transferInfos: transferInfos, type:CryptoCurrencyTransactionType.USER_TO_HOT});*/
     switch(request.type){
         case CryptoCurrencyTransactionType.WITHDRAWAL:
-            txWithoutDefiniteFrom(request);
+        case CryptoCurrencyTransactionType.HOT_TO_COLD:
+            txWithDefiniteTo(request);
             break;
         case CryptoCurrencyTransactionType.USER_TO_HOT:
             txWithDefiniteFrom(request);
@@ -186,10 +191,34 @@ var txWithDefiniteFrom = function(request){
     var transactions = [];
     var fromAddresses = [];
     var ids = [];
-    for(var i = 0; i < request.transferInfos.length; i++){
-        makeTransaction(request.transferInfos[i], request.transferInfos.length,
-            fromAddresses, transactions, addresses, ids);
-    }
+    rpc.getAddressesByAccount(HOT_ACCOUNT, function(errAddr, retAddr){
+        if(errAddr){
+        }else{
+            if(ret.result.length == 0){
+                rpc.getNewAddress(HOT_ACCOUNT, function(errAddress, retAddress) {
+                    if (errAddress) {
+                        console.error('An error occured generate address');
+                        console.error(errAddress);
+                    }else{
+                        for(var i = 0; i < request.transferInfos.length; i++){
+                            transferInfo[i].to = retAddress.result;
+                            makeTransaction(request.transferInfos[i], request.transferInfos.length,
+                                fromAddresses, transactions, addresses, ids);
+                        }
+                    }
+                });
+            }else{
+                var toPos = Math.floor(Math.random()*ret.result.length);
+                var toAddress = ret.result[toPos];
+                console.log("toPos: " + toPos + " toAddr: " + toAddress);
+                for(var i = 0; i < request.transferInfos.length; i++){
+                    transferInfo[i].to = toAddress;
+                    makeTransaction(request.transferInfos[i], request.transferInfos.length,
+                        fromAddresses, transactions, addresses, ids);
+                }
+            }
+        }
+    });
 }
 
 var makeTransaction = function(transferInfo, finishLength, fromAddresses, transactions, addresses, ids){
@@ -233,7 +262,7 @@ var makeTransaction = function(transferInfo, finishLength, fromAddresses, transa
     });
 };
 
-var txWithoutDefiniteFrom = function(request){
+var txWithDefiniteTo = function(request){
     var minConfirmedNum = 6;
     var maxConfirmedNum = 9999999;
     var amountTotal = 0;
@@ -473,14 +502,21 @@ var constructBlocks = function(input, txFinishLength, blockFinishLength, blocksF
                 if(cctx.inputs.length == txFinishLength){
                     console.log("block.txs.length: " + block.txs.length);
                     console.log("blockFinishLength: " + blockFinishLength);
-                    block.txs.push(cctx);
-                    if(block.txs.length == blockFinishLength){
-                        console.log("*****blocksMsg.blocks.length: " + blocksMsg.blocks.length);
-                        blocksMsg.blocks.push(block);
-                        if(blocksMsg.blocks.length == blocksFinishLength){
-                            makeFinalBlocksResponse(request, blocksMsg);
+                    var sigId = getSigId(cctx);
+                    client.get(sigId, function(errRedis, reply){
+                        if(errRedis){
+                            console("errRedis: " + errRedis);
+                        }else{
+                            block.txs.push(cctx);
+                            if(block.txs.length == blockFinishLength){
+                                console.log("*****blocksMsg.blocks.length: " + blocksMsg.blocks.length);
+                                blocksMsg.blocks.push(block);
+                                if(blocksMsg.blocks.length == blocksFinishLength){
+                                    makeFinalBlocksResponse(request, blocksMsg);
+                                }
+                            }
                         }
-                    }
+                    });
                 }
             }
         });
@@ -493,13 +529,21 @@ var constructBlocks = function(input, txFinishLength, blockFinishLength, blocksF
         if(cctx.inputs.length == txFinishLength){
             console.log("block.txs.length: " + block.txs.length);
             console.log("blockFinishLength: " + blockFinishLength);
-            block.txs.push(cctx);
-            if(block.txs.length == blockFinishLength){
-                blocksMsg.blocks.push(block);
-                if(blocksMsg.blocks.length == blocksFinishLength){
-                    makeFinalBlocksResponse(request, blocksMsg);
+            var sigId = getSigId(cctx);
+            client.get(sigId, function(errRedis, reply){
+                if(errRedis){
+                    console("errRedis: " + errRedis);
+                }else{
+                    block.txs.push(cctx);
+                    if(block.txs.length == blockFinishLength){
+                        console.log("*****blocksMsg.blocks.length: " + blocksMsg.blocks.length);
+                        blocksMsg.blocks.push(block);
+                        if(blocksMsg.blocks.length == blocksFinishLength){
+                            makeFinalBlocksResponse(request, blocksMsg);
+                        }
+                    }
                 }
-            }
+            });
         }
     }
 };
@@ -523,7 +567,7 @@ var makeFinalBlocksResponse = function(request, blocksMsg){
             break;
         }
     }
-    var startIndex = new BlockIndex({id: blocksMsg.blocks[i].id, height: blocksMsg.blocks[i].height});
+    var startIndex = new BlockIndex({id: blocksMsg.blocks[i].index.id, height: blocksMsg.blocks[i].index.height});
     var blocks = [];
     for(var j = i; j < blocksMsg.blocks.length; j++){
         blocks.push(blocksMsg.blocks[j]);
@@ -577,15 +621,7 @@ var getInputAddresses = function(input, cctx, finishLength) {
             }
             console.log("cctx.outputs.length: " + cctx.outputs.length);
             if(cctx.inputs.length == finishLength){
-                var sigId = cctx.txid;
-                for(var m = 0; m < cctx.inputs.length; m++){
-                    sigId += cctx.inputs[m].address;
-                    sigId += cctx.inputs[m].amount;
-                }
-                for(var n = 0; n < cctx.outputs.length; n++){
-                    sigId += cctx.outputs[n].address;
-                    sigId += cctx.outputs[n].amount;
-                }
+                var sigId = getSigId(cctx);
                 client.get(sigId, function(errRedis, reply){
                     if(errRedis){
                         console("errRedis: " + errRedis);
@@ -695,12 +731,21 @@ var getAllTxsInBlock = function(input, txFinishLength, blockFinishLength, cctx, 
                 //console.log("cctx.inputs.length: " + cctx.inputs.length);
                 if(cctx.inputs.length == txFinishLength){
                     //console.log("block.txs.length: " + block.txs.length);
-                    block.txs.push(cctx);
-                    if(block.txs.length == blockFinishLength){
-                        var blocksMsg = new CryptoCurrencyBlocksMessage({blocks:[]});
-                        blocksMsg.blocks.push(block);
-                        makeNormalResponse(BitwayResponseType.AUTO_REPORT_BLOCKS, Currency.BTC, blocksMsg);
-                    }
+                    var sigId = getSigId(cctx);
+                    client.get(sigId, function(errRedis, reply){
+                        if(errRedis){
+                            console("errRedis: " + errRedis);
+                        }else{
+                            console.log("cctx.ids: " + reply);
+                            cctx.ids = reply;
+                            block.txs.push(cctx);
+                            if(block.txs.length == blockFinishLength){
+                                var blocksMsg = new CryptoCurrencyBlocksMessage({blocks:[]});
+                                blocksMsg.blocks.push(block);
+                                makeNormalResponse(BitwayResponseType.AUTO_REPORT_BLOCKS, Currency.BTC, blocksMsg);
+                            }
+                        }
+                    });
                 }
             }
         });
@@ -711,17 +756,38 @@ var getAllTxsInBlock = function(input, txFinishLength, blockFinishLength, cctx, 
         console.log("input.address: " + input.address);
         cctx.inputs.push(input);
         if(cctx.inputs.length == txFinishLength){
-            console.log("block.txs.length: " + block.txs.length);
-            block.txs.push(cctx);
-            if(block.txs.length == blockFinishLength){
-                var blocksMsg = new CryptoCurrencyBlocksMessage({blocks:[]});
-                blocksMsg.blocks.push(block);
-                makeNormalResponse(BitwayResponseType.AUTO_REPORT_BLOCKS, Currency.BTC, blocksMsg);
-            }
+            var sigId = getSigId(cctx);
+            client.get(sigId, function(errRedis, reply){
+                if(errRedis){
+                    console("errRedis: " + errRedis);
+                }else{
+                    console.log("cctx.ids: " + reply);
+                    cctx.ids = reply;
+                    block.txs.push(cctx);
+                    if(block.txs.length == blockFinishLength){
+                        var blocksMsg = new CryptoCurrencyBlocksMessage({blocks:[]});
+                        blocksMsg.blocks.push(block);
+                        makeNormalResponse(BitwayResponseType.AUTO_REPORT_BLOCKS, Currency.BTC, blocksMsg);
+                    }
+                }
+            });
         }
     }
 }
 
+var getSigId = function(cctx){
+    var sigId = cctx.txid;
+    for(var m = 0; m < cctx.inputs.length; m++){
+        sigId += cctx.inputs[m].address;
+        sigId += cctx.inputs[m].amount;
+    }
+    for(var n = 0; n < cctx.outputs.length; n++){
+        sigId += cctx.outputs[n].address;
+        sigId += cctx.outputs[n].amount;
+    }
+    cctx.sigId = sigId;
+    return sigId;
+};
 
 var getOutputAddresses = function(tx, cctx){
     for(var k = 0; k < tx.vout.length; k++){
