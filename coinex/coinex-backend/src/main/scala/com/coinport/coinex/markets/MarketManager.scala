@@ -60,7 +60,7 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
 
     // Transaction ids are derived from order ids.  The first transaction id = orderId * 1000000 + 1,
     // The system will fail if one taker order matches more than 999999 maker orders. This is a safe
-    // assumption in normal cases. If many maker orders were matched against one taker order, the 
+    // assumption in normal cases. If many maker orders were matched against one taker order, the
     // OrderSutmitted message will probably hit Akka's limit and cause the system to fail. Therefore the
     // 999999 transactions per order limit will not easily happen.
     def getTxId() = { lastTxId += 1; lastTxId }
@@ -100,7 +100,9 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
     def recursivelyMatchOrder(state: TakerState): TakerState = {
       val takerOrder = state.takerOrder
       val makerOrderOption = orderPool(makerSide).headOption
-      if (makerOrderOption.isEmpty || makerOrderOption.get.vprice * takerOrder.vprice > 1) {
+      // we use a scale() method so ask price 300.1 will match with bid price 0.003332222592469177.
+      // Note (1/0.003332222592469177).!!! == 300.1
+      if (makerOrderOption.isEmpty || (makerOrderOption.get.vprice * takerOrder.vprice).scaled(12) > 1) {
         state
       } else {
         // We get the top maker order, the one with the lowest price, and we know for sure
@@ -160,7 +162,7 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
             case Some(makerOrder) =>
               addOrder(makerSide, makerOrder)
 
-              // Make sure both updatedMakerWithRefund (in transaction) and makerOrder (in memory) are the 
+              // Make sure both updatedMakerWithRefund (in transaction) and makerOrder (in memory) are the
               // same in terms of being able to become a maker order. We need to have this guarantee so in
               // Market depth view, we can do the right math.
               assert(updatedMakerWithRefund.canBecomeMaker == true)
