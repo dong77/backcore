@@ -220,7 +220,14 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
   def extractTxsFromBlocks(blocks: List[CryptoCurrencyBlock]): List[CryptoCurrencyTransaction] = {
     blocks.flatMap { block =>
       val CryptoCurrencyBlock(index, prevIndex, txsInBlock) = block
-      txsInBlock.map(completeCryptoCurrencyTransaction(_, Some(prevIndex), Some(index))).filter(_.isDefined).map(_.get)
+      val filteredTxs = txsInBlock.map(completeCryptoCurrencyTransaction(_, Some(prevIndex), Some(index))).filter(
+        _.isDefined).map(_.get)
+      if (filteredTxs.isEmpty) {
+        List(CryptoCurrencyTransaction(prevBlock = Some(prevIndex), includedBlock = Some(index),
+          status = TransferStatus.Confirming))
+      } else {
+        filteredTxs
+      }
     }
   }
 
