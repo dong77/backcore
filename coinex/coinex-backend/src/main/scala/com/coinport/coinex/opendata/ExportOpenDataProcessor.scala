@@ -149,7 +149,9 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
             }, classOf[Snapshot])
         val exportSnapshotPath = new Path(exportSnapshotHdfsDir,
           s"coinport_snapshot_${pFileMap(processorId)}_${String.valueOf(seqNum).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase)
-        val jsonSnapshot = s"""{"timestamp": ${System.currentTimeMillis()},\n"snapshot": ${PrettyJsonSerializer.toJson(snapshot)}}"""
+
+        val className = snapshot.data.getClass.getEnclosingClass.getSimpleName
+        val jsonSnapshot = s"""{"timestamp": ${System.currentTimeMillis()},\n"${className}": ${PrettyJsonSerializer.toJson(snapshot.data)}}"""
         withStream(new BufferedWriter(new OutputStreamWriter(fs.create(exportSnapshotPath, true)), BUFFER_SIZE))(IOUtils.write(jsonSnapshot, _))
         seqNum
 
