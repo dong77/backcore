@@ -25,6 +25,7 @@ class AssetView extends ExtendedView {
       t.`type` match {
         case Deposit => manager.updateAsset(t.userId, t.updated.get, t.currency, t.amount)
         case Withdrawal => manager.updateAsset(t.userId, t.updated.get, t.currency, -t.amount)
+        case _ =>
       }
 
     case e @ Persistent(OrderSubmitted(originOrderInfo, txs), _) =>

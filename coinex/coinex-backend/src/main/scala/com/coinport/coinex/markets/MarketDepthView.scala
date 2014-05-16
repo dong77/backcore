@@ -12,7 +12,7 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.common._
 import Implicits._
 import scala.collection.SortedSet
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ ListBuffer, Map }
 
 class MarketDepthView(market: MarketSide) extends ExtendedView {
   override val processorId = MARKET_PROCESSOR << market
@@ -21,22 +21,23 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
   case class Cached(depth: Int, asks: Seq[MarketDepthItem], bids: Seq[MarketDepthItem])
 
   val manager = new MarketManager(market)
-  private var cache: Option[Cached] = None
+  private var cacheMap = Map.empty[MarketSide, Cached]
 
   def receive = LoggingReceive {
     case Persistent(DoCancelOrder(_, orderId, userId), _) =>
       manager.removeOrder(orderId, userId)
-      cache = None
+      cacheMap = Map.empty[MarketSide, Cached]
 
     case Persistent(OrderFundFrozen(side, order: Order), _) =>
       manager.addOrderToMarket(side, order)
-      cache = None
+      cacheMap = Map.empty[MarketSide, Cached]
 
     case QueryMarketDepth(side, depth) =>
-      assert(side == market)
-      if (cache.isEmpty || cache.get.depth < depth) cache = Some(getDepthData(depth))
-      val cached = cache.get
-      sender ! QueryMarketDepthResult(MarketDepth(market, cached.asks.take(depth), cached.bids.take(depth)))
+      cacheMap.get(side) match {
+        case Some(cached) if cached.depth >= depth =>
+        case _ => cacheMap += side -> getDepthData(side, depth)
+      }
+      sender ! QueryMarketDepthResult(MarketDepth(side, cacheMap(side).asks.take(depth), cacheMap(side).bids.take(depth)))
 
     case DoSimulateOrderSubmission(DoSubmitOrder(side, order)) =>
       val state = manager.getState()
@@ -45,11 +46,11 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
       sender ! OrderSubmissionSimulated(orderSubmitted)
   }
 
-  private def getDepthData(depth: Int) = {
-    def takeN(orders: SortedSet[Order], isAskOrder: Boolean) = {
+  private def getDepthData(side: MarketSide, depth: Int) = {
+    def takeN(orders: SortedSet[Order], isAsk: Boolean) = {
 
       def convert(order: Order) =
-        if (isAskOrder) MarketDepthItem(order.price.get, order.maxOutAmount(order.price.get))
+        if (isAsk) MarketDepthItem(order.price.get, order.maxOutAmount(order.price.get))
         else /* bid */ MarketDepthItem((1 / order.price.get).!!!, order.maxInAmount(order.price.get))
 
       val buffer = new ListBuffer[MarketDepthItem]
@@ -57,7 +58,7 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
       while (buffer.size < depth && index < orders.size) {
         val order = orders.view(index, index + 1).head
         val item = convert(order)
-        if (buffer.isEmpty || buffer.last.price != order.price.get) buffer += item
+        if (buffer.isEmpty || buffer.last.price != item.price) buffer += item
         else {
           val last = buffer.last
           buffer.trimEnd(1)
@@ -68,8 +69,9 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
       buffer.toSeq
     }
 
-    val asks = takeN(manager.orderPool(market), true)
-    val bids = takeN(manager.orderPool(market.reverse), false)
+    val asks = takeN(manager.orderPool(side), true)
+    val bids = takeN(manager.orderPool(side.reverse), false)
+
     Cached(depth, asks, bids)
   }
 }
