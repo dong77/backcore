@@ -7,9 +7,18 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object NotificationService extends AkkaService {
-  // TODO: ask admin for notifications
+  // TODO: store notifications in actors
+  val notifications = collection.mutable.HashMap[Long, Notification]()
+
   def getNotifications() = {
-    val notifications = List(Notification(NotificationType.Warning, "Welcome to Coinport"))
-    ApiResult(data = Some(notifications))
+    ApiResult(data = Some(notifications.values.toSeq))
+  }
+
+  def addNotification(notification: Notification) = {
+    notifications.put(notification.id, notification)
+  }
+
+  def removeNotification(id: Long) = {
+    notifications.remove(id)
   }
 }
