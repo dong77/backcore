@@ -148,7 +148,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
               IOUtils.toByteArray
             }, classOf[Snapshot])
         val exportSnapshotPath = new Path(exportSnapshotHdfsDir,
-          s"coinport_${pFileMap(processorId)}_snapshot_${String.valueOf(seqNum).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase)
+          s"coinport_snapshot_${pFileMap(processorId)}_${String.valueOf(seqNum).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase)
         val jsonSnapshot = s"""{"timestamp": ${System.currentTimeMillis()},\n"snapshot": ${PrettyJsonSerializer.toJson(snapshot)}}"""
         withStream(new BufferedWriter(new OutputStreamWriter(fs.create(exportSnapshotPath, true)), BUFFER_SIZE))(IOUtils.write(jsonSnapshot, _))
         seqNum
@@ -179,7 +179,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
             if (java.util.Arrays.equals(column.qualifier, Message)) {
               // will throw an exception if failed
               val msg = serialization.deserialize(column.value(), classOf[PersistentRepr])
-              builder ++= "\"" ++= msg.payload.getClass.getSimpleName ++= "\":"
+              builder ++= "\"" ++= msg.payload.getClass.getEnclosingClass.getSimpleName ++= "\":"
               builder ++= PrettyJsonSerializer.toJson(msg.payload)
             } else {
               builder ++= "\"" ++= Bytes.toString(column.qualifier) ++= "\":"
@@ -212,7 +212,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
     handleRows() map {
       case data if !data.isEmpty =>
         val writer = new BufferedWriter(new OutputStreamWriter(fs.create(
-          new Path(exportMessagesHdfsDir, s"coinport_${pFileMap(processorId)}_events_${String.valueOf(toSeqNum - 1).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase))))
+          new Path(exportMessagesHdfsDir, s"coinport_events_${pFileMap(processorId)}_${String.valueOf(toSeqNum - 1).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase))))
         writer.write(s"""{"timestamp": ${System.currentTimeMillis()},\n"events": [""")
         writer.write(data.substring(0, data.length - 1).toString())
         writer.write("]}")

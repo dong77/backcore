@@ -20,9 +20,9 @@ class MetricsManager extends Manager[TMetricsState] {
     loadFiltersSnapshot(s.filters)
   }
 
-  def update(side: MarketSide, price: Double, volume: Long, reverseVolume: Long, tick: Long) {
-    state = state.pushEvent(side, MarketEvent(Some(price), Some(volume), Some(tick)), tick)
-    state = state.pushEvent(side.reverse, MarketEvent(Some((1 / price).!!!), Some(reverseVolume), Some(tick)), tick)
+  def update(side: MarketSide, price: RDouble, volume: Long, reverseVolume: Long, tick: Long) {
+    state = state.pushEvent(side, MarketEvent(Some(price.value), Some(volume), Some(tick)), tick)
+    state = state.pushEvent(side.reverse, MarketEvent(Some(price.reciprocal.value), Some(reverseVolume), Some(tick)), tick)
   }
 
   def getMetrics: Metrics = {

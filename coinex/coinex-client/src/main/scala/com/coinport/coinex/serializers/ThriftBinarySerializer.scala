@@ -43,6 +43,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cOrderInfo = BinaryScalaCodec(OrderInfo)
   lazy val _cOrderUpdate = BinaryScalaCodec(OrderUpdate)
   lazy val _cQueryMarketSide = BinaryScalaCodec(QueryMarketSide)
+  lazy val _cRDouble = BinaryScalaCodec(RDouble)
   lazy val _cRedeliverFilterData = BinaryScalaCodec(RedeliverFilterData)
   lazy val _cRedeliverFilters = BinaryScalaCodec(RedeliverFilters)
   lazy val _cRefund = BinaryScalaCodec(Refund)
@@ -201,6 +202,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: OrderInfo => _cOrderInfo(m)
     case m: OrderUpdate => _cOrderUpdate(m)
     case m: QueryMarketSide => _cQueryMarketSide(m)
+    case m: RDouble => _cRDouble(m)
     case m: RedeliverFilterData => _cRedeliverFilterData(m)
     case m: RedeliverFilters => _cRedeliverFilters(m)
     case m: Refund => _cRefund(m)
@@ -363,6 +365,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[OrderInfo.Immutable] => _cOrderInfo.invert(bytes).get
     case Some(c) if c == classOf[OrderUpdate.Immutable] => _cOrderUpdate.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketSide.Immutable] => _cQueryMarketSide.invert(bytes).get
+    case Some(c) if c == classOf[RDouble.Immutable] => _cRDouble.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilterData.Immutable] => _cRedeliverFilterData.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilters.Immutable] => _cRedeliverFilters.invert(bytes).get
     case Some(c) if c == classOf[Refund.Immutable] => _cRefund.invert(bytes).get

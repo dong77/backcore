@@ -60,9 +60,9 @@ class CandleDataManager(marketSide: MarketSide) extends Manager[TCandleDataState
   def updateCandleItem(t: Transaction) {
     val tout = t.takerUpdate.previous.quantity - t.takerUpdate.current.quantity
     val tin = t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity
-    val mprice = t.makerUpdate.current.price.get
+    val mprice = t.makerUpdate.current.price.get.value
     val timestamp = t.timestamp
-    val (price, out, in) = if (t.side == marketSide) ((1 / mprice).!!!, tout, tin) else (mprice, tin, tout)
+    val (price, out, in) = if (t.side == marketSide) (mprice.reciprocal.value, tout, tin) else (mprice, tin, tout)
 
     ChartTimeDimension.list.foreach { d =>
       val skipper = getTimeSkip(d)

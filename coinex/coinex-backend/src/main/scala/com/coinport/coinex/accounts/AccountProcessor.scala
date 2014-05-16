@@ -168,7 +168,6 @@ class AccountProcessor(
         } else {
           val updated = order.copy(
             id = manager.getOrderId,
-            price = order.price.map(_.!!!),
             timestamp = Some(System.currentTimeMillis))
 
           if (updated.price.isDefined && (updated.price.get == 0.0 || updated.price.get > MAX_PRICE)) {

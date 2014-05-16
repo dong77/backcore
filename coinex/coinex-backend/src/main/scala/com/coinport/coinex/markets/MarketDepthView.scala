@@ -50,8 +50,8 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
     def takeN(orders: SortedSet[Order], isAsk: Boolean) = {
 
       def convert(order: Order) =
-        if (isAsk) MarketDepthItem(order.price.get, order.maxOutAmount(order.price.get))
-        else /* bid */ MarketDepthItem((1 / order.price.get).!!!, order.maxInAmount(order.price.get))
+        if (isAsk) MarketDepthItem(order.price.get.value, order.maxOutAmount(order.price.get))
+        else /* bid */ MarketDepthItem(order.price.get.reciprocal.value, order.maxInAmount(order.price.get))
 
       val buffer = new ListBuffer[MarketDepthItem]
       var index = 0

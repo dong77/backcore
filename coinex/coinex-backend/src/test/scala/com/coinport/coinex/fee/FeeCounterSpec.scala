@@ -34,8 +34,8 @@ class FeeCounterSpec extends Specification {
 
   "FeeCounter" should {
     val takerSide = Btc ~> Cny
-    val taker = Order(userId = 5, id = 5, price = Some(2000), quantity = 100000, timestamp = Some(0))
-    val maker = Order(userId = 3, id = 3, price = Some(1.0 / 5000), quantity = 10000000, timestamp = Some(0))
+    val taker = Order(userId = 5, id = 5, price = Some(2000.0), quantity = 100000, timestamp = Some(0))
+    val maker = Order(userId = 3, id = 3, price = Some(5000 reciprocal), quantity = 10000000, timestamp = Some(0))
     val updatedMaker = maker.copy(quantity = 0) // buy 2
 
     "transaction btc-rmb with 0.1% fee" in {

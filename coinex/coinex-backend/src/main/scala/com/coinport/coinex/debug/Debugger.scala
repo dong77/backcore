@@ -30,7 +30,7 @@ object Debugger {
   def prettyOutput(order: Order, isSell: Boolean): String = {
     val sb = new StringBuilder()
     sb.append("user: %d; price: %f; quantity: %d   ----   Order: %s\n".format(order.userId,
-      if (isSell) order.price.get else 1 / order.price.get,
+      if (isSell) order.price.get.value else order.price.get.reciprocal.value,
       if (isSell) order.quantity else (order.price.get * order.quantity).toLong, order))
     sb.toString
   }
@@ -46,7 +46,7 @@ object Debugger {
         if (isSell) takerUpdate.previous.quantity - takerUpdate.current.quantity else
           (takerUpdate.current.inAmount - takerUpdate.previous.inAmount).toLong,
         if (isSell) "to" else "from",
-        makerUpdate.previous.userId, if (isSell) 1 / price else price,
+        makerUpdate.previous.userId, if (isSell) price.reciprocal.value else price.value,
         if (isSell) "received" else "paid",
         if (isSell) makerUpdate.previous.quantity - makerUpdate.current.quantity else
           (makerUpdate.current.inAmount - makerUpdate.previous.inAmount).toLong))

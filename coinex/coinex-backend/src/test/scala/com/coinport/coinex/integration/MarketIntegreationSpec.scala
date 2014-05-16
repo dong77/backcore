@@ -5,6 +5,7 @@ import com.coinport.coinex.data.Currency._
 import scala.concurrent.duration._
 import akka.actor.actorRef2Scala
 import org.junit.Before
+import Implicits._
 
 object MarketIntegrationSpec {
   var id = 0L
@@ -51,7 +52,7 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
     "confirm correct exchange when takeLimit < quantity * price(include refund condition of hit limit)" in {
 
       // submit a sell order(takeLimit < quantity * price)
-      val sellBtc = Order(userId = user2, id = 0L, quantity = 10000, price = Some(500), takeLimit = Some(4500000))
+      val sellBtc = Order(userId = user2, id = 0L, quantity = 10000, price = Some(500.0), takeLimit = Some(4500000))
       client ! DoSubmitOrder(market, sellBtc)
 
       val resultSellBtc = receiveOne(4 seconds)
@@ -64,7 +65,7 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
       receiveOne(4 seconds) should be(QueryAccountResult(UserAccount(2000, Map(Btc -> CashAccount(Btc, 1000, 9000, 0)))))
 
       // submit a buy order
-      val buyBtc = Order(userId = user1, id = 0L, quantity = 6000000, price = Some(1.0 / 600), takeLimit = Some(10000))
+      val buyBtc = Order(userId = user1, id = 0L, quantity = 6000000, price = Some(600 reciprocal), takeLimit = Some(10000))
       client ! DoSubmitOrder(reverse, buyBtc)
 
       val resultBuyBtc = receiveOne(4 seconds)
@@ -79,14 +80,14 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
 
     "confirm correct exchange when takeLimit > quantity * price" in {
       // submit a sell order(takeLimit > quantity * price)
-      val sellBtc2 = Order(userId = user1, id = 0L, quantity = 2000, price = Some(700), takeLimit = Some(1500000))
+      val sellBtc2 = Order(userId = user1, id = 0L, quantity = 2000, price = Some(700.0), takeLimit = Some(1500000))
       client ! DoSubmitOrder(market, sellBtc2)
 
       val resultSellBtc2 = receiveOne(4 seconds)
       Thread.sleep(500)
 
       // submit a buy order(takeLimit < quantity * price)
-      val buyBtc2 = Order(userId = user2, id = 0L, quantity = 2000000, price = Some(1.0 / 700), takeLimit = Some(10000))
+      val buyBtc2 = Order(userId = user2, id = 0L, quantity = 2000000, price = Some(700 reciprocal), takeLimit = Some(10000))
       client ! DoSubmitOrder(reverse, buyBtc2)
 
       val resultBuyBtc2 = receiveOne(4 seconds)
@@ -100,19 +101,19 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
     }
 
     "confirm correct exchange when taker takes multiple pending orders" in {
-      val buyBtc3_1 = Order(userId = user3, id = 0L, quantity = 2000000, price = Some(1.0 / 700), takeLimit = Some(2000))
+      val buyBtc3_1 = Order(userId = user3, id = 0L, quantity = 2000000, price = Some(700 reciprocal), takeLimit = Some(2000))
       client ! DoSubmitOrder(reverse, buyBtc3_1)
       val resultBuyBtc3_1 = receiveOne(4 seconds)
       Thread.sleep(500)
-      val buyBtc3_2 = Order(userId = user3, id = 0L, quantity = 2000000, price = Some(1.0 / 800), takeLimit = Some(2500))
+      val buyBtc3_2 = Order(userId = user3, id = 0L, quantity = 2000000, price = Some(800 reciprocal), takeLimit = Some(2500))
       client ! DoSubmitOrder(reverse, buyBtc3_2)
       val resultBuyBtc3_2 = receiveOne(4 seconds)
       Thread.sleep(500)
-      val buyBtc3_3 = Order(userId = user3, id = 0L, quantity = 2000000, price = Some(1.0 / 1000), takeLimit = Some(3000))
+      val buyBtc3_3 = Order(userId = user3, id = 0L, quantity = 2000000, price = Some(1000 reciprocal), takeLimit = Some(3000))
       client ! DoSubmitOrder(reverse, buyBtc3_3)
       val resultBuyBtc3_3 = receiveOne(4 seconds)
       Thread.sleep(500)
-      val sellBtc3_1 = Order(userId = user1, id = 0L, quantity = 6000, price = Some(800), takeLimit = Some(4800000))
+      val sellBtc3_1 = Order(userId = user1, id = 0L, quantity = 6000, price = Some(800.0), takeLimit = Some(4800000))
       client ! DoSubmitOrder(market, sellBtc3_1)
       val resultSellBtc3_1 = receiveOne(4 seconds)
       Thread.sleep(500)
@@ -128,12 +129,12 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
     }
 
     "confirm exchange and refund is right when onlyTaker is true(include refund condition of auto cancelled)" in {
-      val buyBtc4_1 = Order(userId = user4, id = 0L, quantity = 4000000, price = Some(1.0 / 1000), takeLimit = Some(2000))
+      val buyBtc4_1 = Order(userId = user4, id = 0L, quantity = 4000000, price = Some(1000 reciprocal), takeLimit = Some(2000))
       client ! DoSubmitOrder(reverse, buyBtc4_1)
       val resultBuyBtc4_1 = receiveOne(4 seconds)
       Thread.sleep(500)
 
-      val sellBtc4_1 = Order(userId = user5, id = 0L, quantity = 6000, price = Some(1000), takeLimit = Some(6000000), onlyTaker = Some(true))
+      val sellBtc4_1 = Order(userId = user5, id = 0L, quantity = 6000, price = Some(1000.0), takeLimit = Some(6000000), onlyTaker = Some(true))
       client ! DoSubmitOrder(market, sellBtc4_1)
       val resultSellBtc4_1 = receiveOne(4 seconds)
       Thread.sleep(500)
@@ -151,12 +152,12 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
     }
 
     "confirm the dust is refunded to user(include refund condition of dust)" in {
-      val buyBtc5_1 = Order(userId = user4, id = 0L, quantity = 2000000, price = Some(1.0 / 700), takeLimit = Some(10000))
+      val buyBtc5_1 = Order(userId = user4, id = 0L, quantity = 2000000, price = Some(700 reciprocal), takeLimit = Some(10000))
       client ! DoSubmitOrder(reverse, buyBtc5_1)
       val resultBuyBtc5_1 = receiveOne(4 seconds)
       Thread.sleep(500)
 
-      val sellBtc5_1 = Order(userId = user5, id = 0L, quantity = 6000, price = Some(700), takeLimit = Some(4200000))
+      val sellBtc5_1 = Order(userId = user5, id = 0L, quantity = 6000, price = Some(700.0), takeLimit = Some(4200000))
       client ! DoSubmitOrder(market, sellBtc5_1)
       val resultSellBtc5_1 = receiveOne(4 seconds)
       Thread.sleep(500)
@@ -174,12 +175,12 @@ class MarketIntegrationSpec extends IntegrationSpec(new Environment) {
     }
 
     "confirm the over charged amount is refunded to user(include refund condition of over charge)" in {
-      val buyBtc6_1 = Order(userId = user1, id = 0L, quantity = 4000000, price = Some(1.0 / 2000), takeLimit = Some(2000))
+      val buyBtc6_1 = Order(userId = user1, id = 0L, quantity = 4000000, price = Some(2000 reciprocal), takeLimit = Some(2000))
       client ! DoSubmitOrder(reverse, buyBtc6_1)
       val resultBuyBtc6_1 = receiveOne(4 seconds)
       Thread.sleep(500)
 
-      val sellBtc6_1 = Order(userId = user3, id = 0L, quantity = 2000, price = Some(1900), takeLimit = Some(3800000))
+      val sellBtc6_1 = Order(userId = user3, id = 0L, quantity = 2000, price = Some(1900.0), takeLimit = Some(3800000))
       client ! DoSubmitOrder(market, sellBtc6_1)
       val resultSellBtc6_1 = receiveOne(4 seconds)
       Thread.sleep(500)

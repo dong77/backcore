@@ -13,6 +13,7 @@ import akka.cluster.Cluster
 import akka.util.Timeout
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import Implicits._
 
 object PerformanceTest {
 

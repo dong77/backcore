@@ -34,9 +34,7 @@ class CurrencyConversionTest extends Specification {
       78900.externalValue(Cny) mustEqual 789.0
 
       3456.0.internalValue(Btc ~> Cny) mustEqual 345.6
-      (1.0 / 3456.0).internalValue(Cny ~> Btc) mustEqual (1.0 / 345.6)
       345.6.externalValue(Btc ~> Cny) mustEqual 3456.0
-      (1.0 / 345.6).externalValue(Cny ~> Btc) mustEqual (1.0 / 3456.0)
     }
   }
 }

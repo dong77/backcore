@@ -178,6 +178,14 @@ enum BitwayResponseType {
 ///////////////////////////////////////////////////////////////////////
 ////////////////////////// PERSISTENT DATA ////////////////////////////
 ///////////////////////////////////////////////////////////////////////
+
+// RD stands reciprocal Double
+// RDouble(12.3, true) == 1/12.3, RDouble(12.3, false) == 12.3
+struct RDouble {
+    1: double input
+    2: bool rm // reciprocal mark
+}
+
 struct UserProfile {
     1:  i64 id
     2:  string email
@@ -218,7 +226,7 @@ struct Order {
     1: i64 userId
     2: i64 id
     3: i64 quantity
-    4: optional double price
+    4: optional RDouble price
     5: optional i64 takeLimit
     6: optional i64 timestamp
     7: optional i32 robotType
@@ -368,6 +376,7 @@ struct QueryMarketSide {
     2: bool bothSide
 }
 
+//TODO(?): need a better name
 struct MarketEvent {
     1: optional double price
     2: optional i64 volume
@@ -410,10 +419,12 @@ struct HistoryAsset {
     1: map<i64, map<Currency, i64>> currencyMap
 }
 
+//TODO(?): need a better name
 struct CurrentPrice {
     1: map<MarketSide, double> priceMap
 }
 
+//TODO(?): need a better name
 struct HistoryPrice {
     1: map<MarketSide, map<i64, double>> priceMap
 }

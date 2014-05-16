@@ -7,7 +7,6 @@ package com.coinport.coinex.api.model
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Implicits._
 import scala.Some
-import com.coinport.coinex.data.Currency._
 
 object Operations extends Enumeration {
   type Operation = Value
@@ -49,7 +48,7 @@ case class UserOrder(
       case Buy =>
         // convert price
         val newPrice = price map {
-          value => value.internalValue(marketSide.reverse).reverse
+          value => value.internalValue(marketSide.reverse) reciprocal
         }
         // regard total as quantity
         val quantity: Long = total match {
@@ -60,12 +59,12 @@ case class UserOrder(
         DoSubmitOrder(marketSide, Order(uid.toLong, id.toLong, quantity, newPrice, limit))
       case Sell =>
         // TODO: handle None total or price
-        val newPrice = price.map(p => p.internalValue(marketSide))
+        val newPrice: Option[RDouble] = price.map(p => p.internalValue(marketSide))
         val quantity: Long = amount match {
           case Some(a) => a.internalValue(currency1)
           case None =>
             if (total.isDefined && price.isDefined) {
-              val totalValue = price.get.reverse * total.get
+              val totalValue = total.get / price.get
               totalValue.internalValue(currency1)
             } else 0
         }
@@ -88,7 +87,7 @@ object UserOrder {
     if (marketSide.ordered) {
       // sell
       val price: Option[Double] = order.price.map {
-        p => p.externalValue(marketSide)
+        p: RDouble => p.value.externalValue(marketSide)
       }
       val amount: Option[Double] = Some(order.quantity.externalValue(unit1))
       val total: Option[Double] = order.takeLimit.map(t => t.externalValue(unit2))
@@ -107,7 +106,7 @@ object UserOrder {
     } else {
       // buy
       val price: Option[Double] = order.price.map {
-        p => p.reverse.externalValue(marketSide.reverse)
+        p: RDouble => p.reciprocal.value.externalValue(marketSide.reverse)
       }
 
       val amount = order.takeLimit.map(t => t.externalValue(unit2))

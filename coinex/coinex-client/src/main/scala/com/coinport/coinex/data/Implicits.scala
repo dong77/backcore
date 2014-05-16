@@ -11,15 +11,26 @@ package com.coinport.coinex.data
 import com.coinport.coinex.common._
 import com.coinport.coinex.common.Constants
 
-class RichDouble(raw: Double) {
-  def !!! = {
-    if (raw <= 0.0) raw
-    else if (raw < 1.0) scaled(26)
-    else if (raw > 1.0) scaled(8)
-    else 1.0
-  }
+class RichDouble(d: Double) {
+  def reciprocal = RDouble(d, true)
+}
 
-  def scaled(s: Int) = BigDecimal(raw).setScale(s, BigDecimal.RoundingMode.HALF_UP).toDouble
+class RichRDouble(raw: RDouble) {
+  def value = valueOf(raw)
+  def reciprocal = raw.copy(rm = !raw.rm)
+
+  def >(another: RDouble) = value > valueOf(another)
+  def ==(another: RDouble) = value == valueOf(another)
+  def <(another: RDouble) = value < valueOf(another)
+
+  def *(another: RDouble): Double =
+    if (raw.rm) {
+      if (another.rm) 1 / (raw.input * another.input) else another.input / raw.input
+    } else {
+      if (another.rm) raw.input / another.input else another.input * raw.input
+    }
+
+  private def valueOf(rd: RDouble): Double = if (rd.rm) 1 / rd.input else rd.input
 }
 
 class RichCurrency(raw: Currency) {
@@ -36,14 +47,11 @@ class RichMarketSide(raw: MarketSide) {
 }
 
 class RichOrder(raw: Order) {
-  def inversePrice: Order = raw.price match {
-    case Some(p) if p > 0 => raw.copy(price = Some(new RichDouble(1 / p).!!!))
-    case _ => raw
-  }
+  implicit def rdouble2Rich(raw: RDouble) = new RichRDouble(raw)
 
-  def vprice = raw.price.getOrElse(.0)
+  def vprice = raw.price.getOrElse(RDouble(0.0, false))
 
-  def maxOutAmount(price: Double): Long = {
+  def maxOutAmount(price: RDouble): Long = {
     val quantity = raw.refund match {
       case Some(refund) => raw.quantity - refund.amount
       case None => raw.quantity
@@ -53,31 +61,32 @@ class RichOrder(raw: Order) {
       // we need sell taker's 1 BTC in price 10000 even the limit quantity is 2000 / 10000 = 0.2
       // so need using "ceil"
       case Some(limit) if limit <= 0 => 0
-      case Some(limit) if new RichDouble(limit / price).!!! < quantity => Math.ceil(limit / price).toLong
+      case Some(limit) if price.reciprocal.value * limit < quantity =>
+        Math.ceil(price.reciprocal.value * limit).toLong
       case _ => quantity
     }
   }
 
-  def maxInAmount(price: Double): Long = {
+  def maxInAmount(price: RDouble): Long = {
     val quantity = raw.refund match {
       case Some(refund) => raw.quantity - refund.amount
       case None => raw.quantity
     }
     raw.takeLimit match {
       case Some(limit) if limit <= 0 => 0
-      case Some(limit) if limit > 0 && limit < quantity * price => limit
+      case Some(limit) if limit > 0 && limit < price.value * quantity => limit
       case _ =>
         // this check ensure that the amount couldn't buyed definately be a dust in future check
-        val rounded = Math.round(quantity * price)
-        if ((rounded / price).toLong > quantity) rounded.toLong - 1 else rounded.toLong
+        val rounded = Math.round(quantity * price.value)
+        if ((price.reciprocal.value * rounded).toLong > quantity) rounded.toLong - 1 else rounded.toLong
     }
   }
 
   def hitTakeLimit = raw.takeLimit != None && raw.takeLimit.get <= 0
 
-  def soldOut = if (raw.price.isDefined) raw.quantity * vprice < 1 else raw.quantity == 0
+  def soldOut = if (raw.price.isDefined) raw.quantity * vprice.value < 1 else raw.quantity == 0
 
-  def isDust = raw.price.isDefined && raw.quantity != 0 && raw.quantity * vprice < 1
+  def isDust = raw.price.isDefined && raw.quantity != 0 && raw.quantity * vprice.value < 1
 
   def canBecomeMaker = !soldOut && !hitTakeLimit && raw.price.isDefined && !raw.onlyTaker.getOrElse(false)
 
@@ -131,7 +140,9 @@ class RichConstRole(v: ConstantRole.Value) {
 }
 
 class RichMarketRole(v: MarketRole.Value) {
-  def <<(side: MarketSide) = v.toString.toLowerCase + "_" + new RichMarketSide(side).s
+  implicit def marketSide2Rich(raw: MarketSide) = new RichMarketSide(raw)
+
+  def <<(side: MarketSide) = v.toString.toLowerCase + "_" + side.s
 }
 
 class RichBitwayRole(v: BitwayRole.Value) {
@@ -139,8 +150,10 @@ class RichBitwayRole(v: BitwayRole.Value) {
 }
 
 class RichPersistentId(v: PersistentId.Value) {
+  implicit def marketSide2Rich(raw: MarketSide) = new RichMarketSide(raw)
+
   def << : String = v.toString.toLowerCase
-  def <<(side: MarketSide): String = << + "_" + new RichMarketSide(side).s
+  def <<(side: MarketSide): String = << + "_" + side.s
   def <<(currency: Currency): String = << + "_" + currency.toString.toLowerCase
 }
 
@@ -150,7 +163,10 @@ class RichMarketSideList(markets: Seq[MarketSide]) {
 }
 
 object Implicits {
-  implicit def double2Rich(raw: Double) = new RichDouble(raw)
+  implicit def double2RDouble(d: Double) = RDouble(d, false)
+  implicit def double2Rich(d: Double) = new RichDouble(d)
+
+  implicit def rdouble2Rich(raw: RDouble) = new RichRDouble(raw)
   implicit def currency2Rich(raw: Currency) = new RichCurrency(raw)
   implicit def marketSide2Rich(raw: MarketSide) = new RichMarketSide(raw)
   implicit def order2Rich(raw: Order) = new RichOrder(raw)

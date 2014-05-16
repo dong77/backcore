@@ -53,8 +53,8 @@ class MarketManagerSpec extends Specification {
 
     "take limit can't block the current transaction" in {
       val manager = new MarketManager(Btc ~> Cny)
-      val maker1 = Order(userId = 1, id = 1, price = Some(1.0 / 2000), quantity = 20000)
-      val maker2 = Order(userId = 2, id = 2, price = Some(1.0 / 5000), quantity = 50000)
+      val maker1 = Order(userId = 1, id = 1, price = Some(2000 reciprocal), quantity = 20000)
+      val maker2 = Order(userId = 2, id = 2, price = Some(5000 reciprocal), quantity = 50000)
       val taker = Order(userId = 3, id = 3, price = Some(2000), quantity = 1, takeLimit = Some(2000))
 
       manager.addOrderToMarket(makerSide, maker1)
@@ -68,32 +68,32 @@ class MarketManagerSpec extends Specification {
             Order(3, 3, 1, Some(2000.0), Some(2000), None, None, None, None, 0, None),
             Order(3, 3, 0, Some(2000.0), Some(0), None, None, None, None, 5000, None)),
           OrderUpdate(
-            Order(2, 2, 50000, Some(2.0E-4), None, None, None, None, None, 0, None),
-            Order(2, 2, 45000, Some(2.0E-4), None, None, None, None, None, 1, None)), None)))
+            Order(2, 2, 50000, Some(5000 reciprocal), None, None, None, None, None, 0, None),
+            Order(2, 2, 45000, Some(5000 reciprocal), None, None, None, None, None, 1, None)), None)))
     }
 
     "refund first dust taker" in {
       val manager = new MarketManager(Btc ~> Cny)
-      val taker = Order(userId = 1, id = 1, price = Some(1.0 / 2000), quantity = 200)
+      val taker = Order(userId = 1, id = 1, price = Some(2000 reciprocal), quantity = 200)
 
       manager.addOrderToMarket(makerSide, taker) mustEqual OrderSubmitted(OrderInfo(MarketSide(Cny, Btc),
-        Order(1, 1, 200, Some(5.0E-4), None, None, None, None, None, 0, Some(Refund(Dust, 200))), 0, 0, FullyExecuted, None), List())
+        Order(1, 1, 200, Some(2000 reciprocal), None, None, None, None, None, 0, Some(Refund(Dust, 200))), 0, 0, FullyExecuted, None), List())
     }
 
     "change the last taker order in tx" in {
       val manager = new MarketManager(Btc ~> Cny)
       val maker = Order(userId = 0, id = 0, price = Some(2000), quantity = 1)
-      val taker = Order(userId = 1, id = 1, price = Some(1.0 / 2000), quantity = 2200)
+      val taker = Order(userId = 1, id = 1, price = Some(2000 reciprocal), quantity = 2200)
 
       manager.addOrderToMarket(makerSide, maker)
 
       manager.addOrderToMarket(takerSide, taker) mustEqual OrderSubmitted(
         OrderInfo(MarketSide(Btc, Cny),
-          Order(1, 1, 2200, Some(5.0E-4), None, None, None, None, None, 0, None), 2000, 1, FullyExecuted, Some(0)),
+          Order(1, 1, 2200, Some(2000 reciprocal), None, None, None, None, None, 0, None), 2000, 1, FullyExecuted, Some(0)),
         List(Transaction(1000001, 0, MarketSide(Btc, Cny),
           OrderUpdate(
-            Order(1, 1, 2200, Some(5.0E-4), None, None, None, None, None, 0, None),
-            Order(1, 1, 200, Some(5.0E-4), None, None, None, None, None, 1, Some(Refund(Dust, 200)))),
+            Order(1, 1, 2200, Some(2000 reciprocal), None, None, None, None, None, 0, None),
+            Order(1, 1, 200, Some(2000 reciprocal), None, None, None, None, None, 1, Some(Refund(Dust, 200)))),
           OrderUpdate(
             Order(0, 0, 1, Some(2000.0), None, None, None, None, None, 0, None),
             Order(0, 0, 0, Some(2000.0), None, None, None, None, None, 2000, None)), None)))
@@ -124,8 +124,8 @@ class MarketManagerSpec extends Specification {
       val manager = new MarketManager(Btc ~> Cny)
       val mpo1 = Order(userId = 1, id = 1, price = None, quantity = 30000) // higher priority
       val mpo2 = Order(userId = 2, id = 2, price = None, quantity = 60000)
-      val lpo1 = Order(userId = 3, id = 3, price = Some(1.0 / 5000), quantity = 10000) // higher priority
-      val lpo2 = Order(userId = 4, id = 4, price = Some(1.0 / 4000), quantity = 40000)
+      val lpo1 = Order(userId = 3, id = 3, price = Some(RDouble(5000, true)), quantity = 10000) // higher priority
+      val lpo2 = Order(userId = 4, id = 4, price = Some(RDouble(4000, true)), quantity = 40000)
       val taker = Order(userId = 5, id = 5, price = Some(2000), quantity = 100)
 
       manager.addOrderToMarket(makerSide, mpo1)
@@ -154,7 +154,7 @@ class MarketManagerSpec extends Specification {
   "MarketManager" should {
     "match limit-price order against existing limit-price order with take-limit and update take-limit" in {
       val manager = new MarketManager(Btc ~> Cny)
-      val maker = Order(userId = 666, id = 1, price = Some(1.0 / 4500), quantity = 45099, takeLimit = Some(11))
+      val maker = Order(userId = 666, id = 1, price = Some(4500 reciprocal), quantity = 45099, takeLimit = Some(11))
       val taker = Order(userId = 888, id = 2, price = Some(4000), quantity = 10)
 
       manager.addOrderToMarket(makerSide, maker)
@@ -174,8 +174,8 @@ class MarketManagerSpec extends Specification {
 
     "match limit-price order with as many existing limit-price order, market should refund over-charged quantity" in {
       val manager = new MarketManager(Btc ~> Cny)
-      val maker1 = Order(userId = 666, id = 1, price = Some(1.0 / 4500), quantity = 10000, takeLimit = Some(1))
-      val maker2 = Order(userId = 777, id = 2, price = Some(1.0 / 5000), quantity = 15000, takeLimit = Some(3))
+      val maker1 = Order(userId = 666, id = 1, price = Some(4500 reciprocal), quantity = 10000, takeLimit = Some(1))
+      val maker2 = Order(userId = 777, id = 2, price = Some(5000 reciprocal), quantity = 15000, takeLimit = Some(3))
       val taker = Order(userId = 888, id = 3, price = Some(4000), quantity = 10, timestamp = Some(0))
 
       val result1 = manager.addOrderToMarket(makerSide, maker1)
@@ -541,7 +541,7 @@ class MarketManagerSpec extends Specification {
     "drop order which has onlyTaker flag after match" in {
       val side = (Btc ~> Cny)
       val manager = new MarketManager(side)
-      val maker = Order(userId = 888L, id = 1, price = Some(1.0 / 5000), quantity = 100 * 5000)
+      val maker = Order(userId = 888L, id = 1, price = Some(5000 reciprocal), quantity = 100 * 5000)
       val taker = Order(userId = 888L, id = 2, price = Some(3000), quantity = 1000, onlyTaker = Some(true))
 
       manager.addOrderToMarket(makerSide, maker)

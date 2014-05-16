@@ -53,8 +53,8 @@ class AssetView extends ExtendedView {
             manager.updateAsset(maker, timestamp2, tinCurrency, -mout)
         }
 
-        manager.updatePrice(side, timestamp, (1 / txs.last.makerUpdate.current.price.get).!!!)
-        manager.updatePrice(side.reverse, timestamp, txs.last.makerUpdate.current.price.get)
+        manager.updatePrice(side, timestamp, txs.last.makerUpdate.current.price.get.reciprocal.value)
+        manager.updatePrice(side.reverse, timestamp, txs.last.makerUpdate.current.price.get.value)
       }
 
     case q: QueryAsset =>

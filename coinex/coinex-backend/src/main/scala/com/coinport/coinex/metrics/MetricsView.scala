@@ -26,7 +26,7 @@ class MetricsView extends ExtendedView {
       txs foreach { tx =>
         val Transaction(_, _, _, _, makerOrderUpdate, _) = tx
         makerOrderUpdate.current.price foreach { price =>
-          manager.update(orderInfo.side, (1 / price).!!!, orderInfo.outAmount, orderInfo.inAmount, tx.timestamp)
+          manager.update(orderInfo.side, price.reciprocal, orderInfo.outAmount, orderInfo.inAmount, tx.timestamp)
         }
       }
     case QueryMetrics =>

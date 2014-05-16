@@ -15,8 +15,8 @@ class CandleDataManagerSpec extends Specification {
     val market = Btc ~> Cny
 
     "save data from order submitted" in {
-      val makerPrevious = Order(userId = 555, id = 1, price = Some(1.0 / 3000), quantity = 3000, takeLimit = None, timestamp = Some(0))
-      val makerCurrent = Order(userId = 555, id = 2, price = Some(1.0 / 3000), quantity = 0, takeLimit = None, timestamp = Some(0))
+      val makerPrevious = Order(userId = 555, id = 1, price = Some(3000 reciprocal), quantity = 3000, takeLimit = None, timestamp = Some(0))
+      val makerCurrent = Order(userId = 555, id = 2, price = Some(3000 reciprocal), quantity = 0, takeLimit = None, timestamp = Some(0))
       val takerPrevious = Order(userId = 888, id = 3, price = Some(3000), quantity = 1, timestamp = Some(0))
       val takerCurrent = Order(userId = 888, id = 4, price = Some(3000), quantity = 0, timestamp = Some(0))
 
@@ -31,13 +31,13 @@ class CandleDataManagerSpec extends Specification {
     }
 
     "can fill empty candle by transaction" in {
-      val makerPrevious = Order(userId = 555, id = 1, price = Some(1.0 / 3000), quantity = 3000, takeLimit = None, timestamp = Some(0))
-      val makerCurrent = Order(userId = 555, id = 2, price = Some(1.0 / 3000), quantity = 0, takeLimit = None, timestamp = Some(0))
+      val makerPrevious = Order(userId = 555, id = 1, price = Some(3000 reciprocal), quantity = 3000, takeLimit = None, timestamp = Some(0))
+      val makerCurrent = Order(userId = 555, id = 2, price = Some(3000 reciprocal), quantity = 0, takeLimit = None, timestamp = Some(0))
       val takerPrevious = Order(userId = 888, id = 3, price = Some(3000), quantity = 1, timestamp = Some(0))
       val takerCurrent = Order(userId = 888, id = 4, price = Some(3000), quantity = 0, timestamp = Some(0))
 
-      val makerPrevious2 = Order(userId = 555, id = 1, price = Some(2.0 / 4000), quantity = 4000, takeLimit = None, timestamp = Some(0))
-      val makerCurrent2 = Order(userId = 555, id = 2, price = Some(2.0 / 4000), quantity = 0, takeLimit = None, timestamp = Some(0))
+      val makerPrevious2 = Order(userId = 555, id = 1, price = Some(2000 reciprocal), quantity = 4000, takeLimit = None, timestamp = Some(0))
+      val makerCurrent2 = Order(userId = 555, id = 2, price = Some(2000 reciprocal), quantity = 0, takeLimit = None, timestamp = Some(0))
       val takerPrevious2 = Order(userId = 888, id = 3, price = Some(2000), quantity = 2, timestamp = Some(0))
       val takerCurrent2 = Order(userId = 888, id = 4, price = Some(2000), quantity = 0, timestamp = Some(0))
 
@@ -65,13 +65,13 @@ class CandleDataManagerSpec extends Specification {
 
     "can fill empty candle by query" in {
       val manager = new CandleDataManager(market)
-      val makerPrevious = Order(userId = 555, id = 1, price = Some(1.0 / 3000), quantity = 3000, takeLimit = None, timestamp = Some(0))
-      val makerCurrent = Order(userId = 555, id = 2, price = Some(1.0 / 3000), quantity = 0, takeLimit = None, timestamp = Some(0))
+      val makerPrevious = Order(userId = 555, id = 1, price = Some(3000 reciprocal), quantity = 3000, takeLimit = None, timestamp = Some(0))
+      val makerCurrent = Order(userId = 555, id = 2, price = Some(3000 reciprocal), quantity = 0, takeLimit = None, timestamp = Some(0))
       val takerPrevious = Order(userId = 888, id = 3, price = Some(3000), quantity = 1, timestamp = Some(0))
       val takerCurrent = Order(userId = 888, id = 4, price = Some(3000), quantity = 0, timestamp = Some(0))
 
-      val makerPrevious2 = Order(userId = 555, id = 1, price = Some(2.0 / 4000), quantity = 4000, takeLimit = None, timestamp = Some(0))
-      val makerCurrent2 = Order(userId = 555, id = 2, price = Some(2.0 / 4000), quantity = 0, takeLimit = None, timestamp = Some(0))
+      val makerPrevious2 = Order(userId = 555, id = 1, price = Some(2000 reciprocal), quantity = 4000, takeLimit = None, timestamp = Some(0))
+      val makerCurrent2 = Order(userId = 555, id = 2, price = Some(2000 reciprocal), quantity = 0, takeLimit = None, timestamp = Some(0))
       val takerPrevious2 = Order(userId = 888, id = 3, price = Some(2000), quantity = 2, timestamp = Some(0))
       val takerCurrent2 = Order(userId = 888, id = 4, price = Some(2000), quantity = 0, timestamp = Some(0))
 

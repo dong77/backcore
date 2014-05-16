@@ -45,6 +45,7 @@ trait AccountTransferBehavior {
           case TransferType.Deposit => //Do nothing
           case TransferType.Withdrawal =>
             transferHandler.put(t)
+          case _ =>
         }
       } else {
         transferHandler.put(t)
@@ -63,6 +64,7 @@ trait AccountTransferBehavior {
             // id, sigId, txid, userId, currency, from, to(external address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
             val withdrawItem = CryptoCurrencyTransferItem(Some(manager.getNewTransferItemId), None, None, Some(t.userId), Some(t.currency), None, Some(to), None, Some(Withdrawal), Some(Confirming), None, Some(t.id), Some(System.currentTimeMillis()))
             setResState(Updator.copy(item = withdrawItem, addMsgBox = true, putItem = true)) //send message to bitway
+          case _ =>
         }
       }
       transferHandler.put(t)
