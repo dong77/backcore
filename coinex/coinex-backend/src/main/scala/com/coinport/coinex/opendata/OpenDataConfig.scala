@@ -9,5 +9,5 @@ class OpenDataConfig() {
   val exportSnapshotHdfsDir: String = "/export/snapshot"
   val exportMessagesHdfsDir: String = "/export/messages"
   val hdfsHost: String = "hdfs://hadoop:54310"
-  val scheduleInterval = 900 seconds
+  val scheduleInterval = 60 seconds // check if there are data to export every 1 minute.
 }

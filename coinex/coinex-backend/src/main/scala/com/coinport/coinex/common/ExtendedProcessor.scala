@@ -16,7 +16,7 @@ trait ExtendedProcessor extends Actor with ActorLogging with SnapshotSupport wit
 
   def identifyChannel: PartialFunction[Any, String] = PartialFunction.empty
 
-  val snapshotIntervalSec = 900
+  val snapshotIntervalSec = 60 * 60 * 6 // default to 6 hours.
 
   override def preStart() = {
     log.info("============ processorId: {}", processorId)

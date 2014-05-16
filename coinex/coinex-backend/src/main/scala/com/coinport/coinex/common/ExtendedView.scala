@@ -11,7 +11,7 @@ import com.coinport.coinex.common.support.SnapshotSupport
 
 trait ExtendedView extends View with ActorLogging with SnapshotSupport {
 
-  val snapshotIntervalSec = 9000000
+  val snapshotIntervalSec = 60 * 60 * 24 // defalut to 24 hour
 
   override def preStart() = {
     log.info("------------  processorId: {}, viewId: {}", processorId, viewId)

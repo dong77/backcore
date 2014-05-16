@@ -61,8 +61,6 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
   val dbForEventExport = mongoForEventExport(mongoUriForEventExport.database.get)
   val asyncHBaseClient = new AsyncHBaseClient()
 
-  val snapshotIntervalSec = config.getInt("akka.exchange.opendata.export-interval-seconds")
-
   def shutdown() {
     mongoForViews.close()
     mongoForEventExport.close()
