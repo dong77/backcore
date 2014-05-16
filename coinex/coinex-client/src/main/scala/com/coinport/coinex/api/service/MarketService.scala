@@ -196,5 +196,4 @@ object MarketService extends AkkaService {
       (key, seqSum.sum / seqSum.size)
     }
   }
-
 }

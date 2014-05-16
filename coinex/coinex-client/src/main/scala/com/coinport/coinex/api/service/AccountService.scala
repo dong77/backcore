@@ -16,7 +16,7 @@ object AccountService extends AkkaService {
   def getAccount(uid: Long): Future[ApiResult] = {
     backend ? QueryAccount(uid) map {
       case result: QueryAccountResult =>
-        val userAccount: com.coinport.coinex.api.model.ApiUserAccount = result.userAccount
+        val userAccount: ApiUserAccount = result.userAccount
         ApiResult(true, 0, "", Some(userAccount))
     }
   }
@@ -37,14 +37,31 @@ object AccountService extends AkkaService {
     }
   }
 
-  def withdrawal(uid: Long, currency: Currency, amount: Double): Future[ApiResult] = {
+  def withdrawal(uid: Long, currency: Currency, amount: Double, address: String): Future[ApiResult] = {
     val internalAmount: Long = amount.internalValue(currency)
 
-    val withdrawal = AccountTransfer(0L, uid.toLong, TransferType.Withdrawal, currency, internalAmount, TransferStatus.Pending)
+    val withdrawal = AccountTransfer(0L, uid.toLong, TransferType.Withdrawal, currency, internalAmount, TransferStatus.Pending, address = Some(address))
     backend ? DoRequestTransfer(withdrawal) map {
       case result: RequestTransferSucceeded =>
         // TODO: confirm by admin dashboard
         backend ! AdminConfirmTransferSuccess(result.transfer)
+
+        //update withdrawal address of user profile
+        backend ? QueryProfile(Some(uid)) map {
+          case qpr: QueryProfileResult =>
+            val addr = qpr.userProfile match {
+              case Some(profile) =>
+                val addrMap = profile.withdrawalAddresses match {
+                  case Some(withdrawalMap) => withdrawalMap ++ Map(currency -> address)
+                  case None => Map(currency -> address)
+                }
+                val newProfile = profile.copy(withdrawalAddresses = Some(addrMap))
+                backend ! DoUpdateUserProfile(newProfile)
+              case None =>
+            }
+            ApiResult(true, 0, "", Some(addr))
+          case x => ApiResult(false, -1, x.toString)
+        }
 
         ApiResult(true, 0, "提现申请已提交", Some(result))
       case failed: RequestTransferFailed =>

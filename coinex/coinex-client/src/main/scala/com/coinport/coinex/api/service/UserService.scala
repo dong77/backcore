@@ -8,6 +8,8 @@ import com.coinport.coinex.api.model._
 import com.coinport.coinex.data._
 import akka.pattern.ask
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.Await.result
 
 object UserService extends AkkaService {
   override def hashCode(): Int = super.hashCode()
@@ -20,7 +22,7 @@ object UserService extends AkkaService {
     val password = user.password
 
     val profile = UserProfile(
-      id = -1L,
+      id = id,
       email = email,
       realName = realName,
       nationalId = nationalId,
@@ -58,22 +60,104 @@ object UserService extends AkkaService {
     }
   }
 
+  def getProfile(userId: Long) = {
+    val command = QueryProfile(uid = Some(userId))
+    backend ? command map {
+      case result: QueryProfileResult =>
+        result.userProfile match {
+          case Some(profile) =>
+            val user = User(
+              id = profile.id,
+              email = profile.email,
+              realName = profile.realName,
+              password = "",
+              nationalId = profile.nationalId,
+              mobile = profile.mobile,
+              depositAddress = profile.depositAddresses.map(_.toMap),
+              withdrawalAddress = profile.withdrawalAddresses.map(_.toMap)
+            )
+
+            ApiResult(true, 0, "", Some(user))
+          case None =>
+            ApiResult(false, -1, "用户不存在", None)
+        }
+      case e =>
+        ApiResult(false, -1, e.toString)
+    }
+  }
+
+  def getDepositAddress(currency: Currency, userId: Long) = {
+    backend ? QueryProfile(Some(userId)) map {
+      case qpr: QueryProfileResult =>
+        val addr = qpr.userProfile match {
+          case Some(profile) =>
+            if (!profile.depositAddresses.isDefined || !profile.depositAddresses.get.get(currency).isDefined) {
+              // allocate new address
+              val future =
+                backend ? AllocateNewAddress(currency, userId, None) map {
+                  case result: AllocateNewAddressResult =>
+                    val ana = result.address.get
+
+                    // update profile with updated deposit address
+                    val addrMap = profile.depositAddresses match {
+                      case Some(depositMap) => depositMap ++ Map(currency -> ana)
+                      case None => Map(currency -> ana)
+                    }
+
+                    val newProfile = profile.copy(depositAddresses = Some(addrMap))
+                    backend ! DoUpdateUserProfile(newProfile)
+                    ana
+                  case x => x.toString
+                }
+              result[String](future, (2 seconds))
+            } else profile.depositAddresses.get.get(currency).get
+          case None =>
+        }
+        ApiResult(true, 0, "", Some(addr))
+      case x => ApiResult(false, -1, x.toString)
+    }
+  }
+
+  def getWithdrawalAddress(currency: Currency, userId: Long) = {
+    backend ? QueryProfile(Some(userId)) map {
+      case qpr: QueryProfileResult =>
+        val addr = qpr.userProfile match {
+          case Some(profile) =>
+            profile.withdrawalAddresses match {
+              case Some(addressMap) =>
+                addressMap.get(currency) match {
+                  case Some(address) => address
+                  case None => ""
+                }
+              case None => ""
+            }
+          case None => ""
+        }
+        ApiResult(true, 0, "", Some(addr))
+      case None => ApiResult(false, 1, "", Some(""))
+    }
+  }
+
   def updateProfile(user: User) = {
     val id = user.id
     val email = user.email
     val realName = user.realName
     val nationalId = user.nationalId
     val mobile = user.mobile
+    val depositAddr = user.depositAddress
+    val withdrawalAddr = user.withdrawalAddress
 
     val profile = UserProfile(
-      id = id.get,
+      id = id,
       email = email,
       realName = realName,
       nationalId = nationalId,
       emailVerified = false,
       mobile = mobile,
       mobileVerified = true,
-      status = UserStatus.Normal)
+      status = UserStatus.Normal,
+      depositAddresses = depositAddr,
+      withdrawalAddresses = withdrawalAddr)
 
     val command = DoUpdateUserProfile(profile)
     backend ? command map {

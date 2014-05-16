@@ -100,7 +100,6 @@ typedef data.CryptoCurrencyTransferItem         _CryptoCurrencyTransferItem
 /* Q    */ struct VerifyGoogleAuthCode                    {1: string email, 2: i32 code}
 /* R    */ struct GoogleAuthCodeVerificationResult        {1: optional _UserProfile userProfile}
 
-
 /* C,P  */ struct DoRequestTransfer                       {1: _AccountTransfer transfer}
 /* R-   */ struct RequestTransferFailed                   {1: _ErrorCode error}
 /* R+   */ struct RequestTransferSucceeded                {1: _AccountTransfer transfer}
