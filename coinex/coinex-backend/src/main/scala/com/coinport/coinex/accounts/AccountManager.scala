@@ -241,10 +241,10 @@ class AccountManager(initialLastOrderId: Long = 0L,
   // for return value amount, +amount means transfer from hot to cold;
   //                          -amount means transfer from cold to hot.
   def needHotColdTransfer(currency: Currency): Option[Long] = {
-    if (!hotWalletAccount.contains(currency) || !coldWalletAccount.contains(currency))
-      return None
-    val hotAmount = hotWalletAccount(currency).available + coldWalletAccount(currency).pendingWithdrawal
-    val coldAmount = coldWalletAccount(currency).available + hotWalletAccount(currency).pendingWithdrawal
+    val hot = hotWalletAccount.getOrElse(currency, CashAccount(currency, 0, 0, 0))
+    val cold = coldWalletAccount.getOrElse(currency, CashAccount(currency, 0, 0, 0))
+    val hotAmount = hot.available + cold.pendingWithdrawal
+    val coldAmount = cold.available + hot.pendingWithdrawal
     val HotColdTransferStrategy(highThreshold, lowThreshold) = hotColdTransfer.getOrElse(
       currency, HotColdTransferStrategy(1, 0))
     val mid = (highThreshold + lowThreshold) / 2

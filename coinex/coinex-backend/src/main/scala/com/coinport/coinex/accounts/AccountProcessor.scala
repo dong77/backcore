@@ -89,7 +89,12 @@ class AccountProcessor(
     }
 
     case p @ ConfirmablePersistent(m: AdminConfirmTransferSuccess, _, _) =>
-      persist(m) { event => confirm(p); updateState(event) }
+      persist(m) { event =>
+        confirm(p)
+        updateState(event)
+        if (m.transfer.`type` == Withdrawal || m.transfer.`type` == UserToHot)
+          transferHotColdIfNeed(m.transfer.currency)
+      }
 
     case p @ ConfirmablePersistent(m: CryptoTransferSucceeded, _, _) =>
       persist(m) { event => confirm(p); updateState(event) }
@@ -192,6 +197,17 @@ class AccountProcessor(
         updateState(event)
         channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)
       }
+  }
+
+  private def transferHotColdIfNeed(currency: Currency) {
+    manager.needHotColdTransfer(currency) match {
+      case None =>
+      case Some(amount) if amount == 0 =>
+      case Some(amount) if amount > 0 =>
+        self ! DoRequestTransfer(AccountTransfer(0, 0, HotToCold, currency, amount, created = Some(System.currentTimeMillis)))
+      case Some(amount) if amount < 0 =>
+        self ! DoRequestTransfer(AccountTransfer(0, 0, ColdToHot, currency, -amount, created = Some(System.currentTimeMillis)))
+    }
   }
 
   private def getProcessorPath(side: MarketSide): ActorPath = {
