@@ -23,10 +23,10 @@ trait SnapshotSupport extends Actor with ActorLogging {
 
   abstract override def preStart() = {
     super.preStart()
-    val initialDelaySec = timeInSecondsToNextHour
+    val initialDelaySec = timeInSecondsToNextHalfHour()
     // val initialDelaySec = 60
     scheduleSnapshot(initialDelaySec, TakeSnapshotNow("auto", Some(snapshotIntervalSec)))
-    log.info(s"the first snapshot will be taken in ${initialDelaySec} seconds, then every ${snapshotIntervalSec} seconds")
+    log.info(s"next snapshot will be taken in ${initialDelaySec} seconds, then every ${snapshotIntervalSec} seconds")
   }
 
   def takeSnapshot(cmd: TakeSnapshotNow)(action: => Unit) = {
@@ -47,9 +47,9 @@ trait SnapshotSupport extends Actor with ActorLogging {
   protected def scheduleSnapshot(delayinSeconds: Int, cmd: TakeSnapshotNow) =
     cancellable = context.system.scheduler.scheduleOnce(delayinSeconds seconds, self, cmd)(context.system.dispatcher)
 
-  private def timeInSecondsToNextHour() = {
+  private def timeInSecondsToNextHalfHour() = {
     val time = System.currentTimeMillis()
-    (((time / 3600000 + 1) * 3600000 - time) / 1000).toInt
+    (((time / 1800000 + 1) * 1800000 - time) / 1000).toInt
   }
 
   def dumpToFile(state: AnyRef, actorPath: ActorPath): String = {
