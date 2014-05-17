@@ -12,6 +12,7 @@ import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import com.coinport.coinex.common._
 import scala.collection.mutable.Map
+import scala.concurrent.duration._
 import Implicits._
 
 class CandleDataView(market: MarketSide) extends ExtendedView {
@@ -32,10 +33,6 @@ class CandleDataView(market: MarketSide) extends ExtendedView {
 }
 
 class CandleDataManager(marketSide: MarketSide) extends Manager[TCandleDataState] {
-  val minute = 60 * 1000
-  val hour = 60 * 60 * 1000
-  val day = 24 * 60 * 60 * 1000
-  val week = 7 * 24 * 60 * 60 * 1000
 
   var candleMap = Map.empty[ChartTimeDimension, Map[Long, CandleDataItem]]
   ChartTimeDimension.list.foreach(d => candleMap.put(d, Map.empty[Long, CandleDataItem]))
@@ -86,12 +83,17 @@ class CandleDataManager(marketSide: MarketSide) extends Manager[TCandleDataState
 
     val tickBegin = from / timeSkiper
     val tickEnd = to / timeSkiper
-    var items = (tickBegin to tickEnd).map(itemMap.get).filter(_.isDefined).map(_.get)
+    val items = (tickBegin to tickEnd - 1).map(t => (t -> itemMap.get(t))).map {
+      case (time, item) =>
+        item.getOrElse(CandleDataItem(time, 0, 0, 0.0, 0.0, 0.0, 0.0))
+    }
     //if the latest candle does not exist, then will fake one
-    if (itemMap.nonEmpty && !itemMap.get(tickEnd).isDefined)
-      items :+ CandleDataItem(tickEnd, 0, 0, items.last.close, items.last.close, items.last.close, items.last.close)
+    val lastItem = itemMap.get(tickEnd) match {
+      case Some(item) => item
+      case None => CandleDataItem(tickEnd, 0, 0, items.last.close, items.last.close, items.last.close, items.last.close)
+    }
 
-    items
+    items :+ lastItem
   }
 
   private def fillEmptyCandleByTimeDimension(timestamp: Long, d: ChartTimeDimension) = {
@@ -118,19 +120,22 @@ class CandleDataManager(marketSide: MarketSide) extends Manager[TCandleDataState
     }
   }
 
-  private def getTimeSkip(dimension: ChartTimeDimension) = dimension match {
-    case OneMinute => minute
-    case ThreeMinutes => 3 * minute
-    case FiveMinutes => 5 * minute
-    case FifteenMinutes => 15 * minute
-    case ThirtyMinutes => 30 * minute
-    case OneHour => hour
-    case TwoHours => 2 * hour
-    case FourHours => 4 * hour
-    case SixHours => 6 * hour
-    case TwelveHours => 12 * hour
-    case OneDay => day
-    case ThreeDays => 3 * day
-    case OneWeek => week
+  def getTimeSkip(dimension: ChartTimeDimension) = {
+    val duration = dimension match {
+      case OneMinute => 1 minute
+      case ThreeMinutes => 3 minutes
+      case FiveMinutes => 5 minutes
+      case FifteenMinutes => 15 minutes
+      case ThirtyMinutes => 30 minutes
+      case OneHour => 1 hour
+      case TwoHours => 2 hours
+      case FourHours => 4 hours
+      case SixHours => 6 hours
+      case TwelveHours => 12 hours
+      case OneDay => 1 day
+      case ThreeDays => 3 days
+      case OneWeek => 7 days
+    }
+    duration.toMillis
   }
 }

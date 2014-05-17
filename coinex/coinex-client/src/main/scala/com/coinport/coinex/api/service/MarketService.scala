@@ -28,6 +28,7 @@ object MarketService extends AkkaService {
         val side = rv.candleData.side
         val timeSkip: Long = timeDimension
         val currency = side.outCurrency
+
         val ma7Seq = getMA(candles.items, 7).map(ma => ApiMAItem(ma._1 * timeSkip, PriceObject(side, ma._2)))
         val ma30Seq = getMA(candles.items, 30).map(ma => ApiMAItem(ma._1 * timeSkip, PriceObject(side, ma._2)))
         val candleSeq = candles.items.map(item =>
@@ -192,7 +193,7 @@ object MarketService extends AkkaService {
     val map = items.map(i => i.timestamp -> i.close).toMap
     items.map { item =>
       val key = item.timestamp
-      val seqSum = (0 until count).map(j => map.get(key - j).getOrElse(-1.0)).filter(_ > 0)
+      val seqSum = (0 until count).map(j => map.get(key - j).getOrElse(-1.0)).filter(_ >= 0)
       (key, seqSum.sum / seqSum.size)
     }
   }
