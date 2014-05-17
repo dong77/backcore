@@ -42,7 +42,7 @@ struct TUserState {
 struct TAccountState {
     1: map<i64, UserAccount> userAccountsMap
     2: RedeliverFilters filters
-    3: map<Currency, CashAccount> aggregation
+    3: map<Currency, CashAccount> aggregationAccount
     4: i64 lastOrderId
     5: map<i64, ABCodeItem> abCodeMap
     6: map<string, i64> codeAIndexMap

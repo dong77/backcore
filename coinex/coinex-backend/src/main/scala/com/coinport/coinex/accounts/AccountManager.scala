@@ -30,7 +30,7 @@ class AccountManager(initialLastOrderId: Long = 0L,
     extends Manager[TAccountState] {
   // Internal mutable state ----------------------------------------------
   private val accountMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]
-  var aggregation = Map.empty[Currency, CashAccount]
+  var aggregationAccount = Map.empty[Currency, CashAccount]
   var lastOrderId = initialLastOrderId
   val abCodeMap: Map[Long, ABCodeItem] = Map.empty[Long, ABCodeItem]
   val codeAIndexMap: Map[String, Long] = Map.empty[String, Long]
@@ -42,7 +42,7 @@ class AccountManager(initialLastOrderId: Long = 0L,
   def getSnapshot = TAccountState(
     accountMap.clone,
     getFiltersSnapshot,
-    aggregation.clone,
+    aggregationAccount.clone,
     lastOrderId,
     abCodeMap.clone,
     codeAIndexMap.clone,
@@ -53,8 +53,8 @@ class AccountManager(initialLastOrderId: Long = 0L,
   def loadSnapshot(snapshot: TAccountState) = {
     accountMap.clear
     accountMap ++= snapshot.userAccountsMap
-    aggregation.clear
-    aggregation ++= snapshot.aggregation
+    aggregationAccount.clear
+    aggregationAccount ++= snapshot.aggregationAccount
     lastOrderId = snapshot.lastOrderId
     abCodeMap.clear
     codeAIndexMap.clear
@@ -119,9 +119,9 @@ class AccountManager(initialLastOrderId: Long = 0L,
     assert(updated.isValid)
     setUserCashAccount(userId, updated)
 
-    val updateAggregation = aggregation.getOrElse(adjustment.currency, CashAccount(adjustment.currency, 0, 0, 0)) + adjustment
+    val updateAggregation = aggregationAccount.getOrElse(adjustment.currency, CashAccount(adjustment.currency, 0, 0, 0)) + adjustment
     assert(updateAggregation.isValid)
-    aggregation += (adjustment.currency -> updateAggregation)
+    aggregationAccount += (adjustment.currency -> updateAggregation)
   }
 
   def getUserAccounts(userId: Long): UserAccount =

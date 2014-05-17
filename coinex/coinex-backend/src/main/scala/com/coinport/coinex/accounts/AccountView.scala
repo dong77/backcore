@@ -23,19 +23,24 @@ class AccountView(accountConfig: AccountConfig) extends ExtendedView with Accoun
 
   def receive = LoggingReceive {
     case Persistent(msg, _) => updateState(msg)
+
     case QueryAccount(userId) => sender ! QueryAccountResult(manager.getUserAccounts(userId))
+
     case QueryAccountStatistics(currency) =>
-      val (aggregation, hotWallet, coldWallet) = (manager.aggregation.get(currency),
+      val (aggregation, hotWallet, coldWallet) = (manager.aggregationAccount.get(currency),
         manager.hotWalletAccount.get(currency), manager.coldWalletAccount.get(currency))
-      val guarantyPercentage = if (aggregation.isDefined && hotWallet.isDefined && coldWallet.isDefined) {
+
+      val reserveRatio = if (aggregation.isDefined && hotWallet.isDefined && coldWallet.isDefined) {
         Some((hotWallet.get.available + hotWallet.get.locked + hotWallet.get.pendingWithdrawal +
           coldWallet.get.available + coldWallet.get.locked + coldWallet.get.pendingWithdrawal).toDouble /
           (aggregation.get.available + aggregation.get.locked + aggregation.get.pendingWithdrawal))
       } else {
         None
       }
-      sender ! QueryAccountStatisticsResult(aggregation, hotWallet, coldWallet, guarantyPercentage)
+      sender ! QueryAccountStatisticsResult(aggregation, hotWallet, coldWallet, reserveRatio)
+
     case QueryRCDepositRecord(userId) => sender ! QueryRCDepositRecordResult(manager.getRCDepositRecords(userId))
+
     case QueryRCWithdrawalRecord(userId) => sender ! QueryRCWithdrawalRecordResult(manager.getRCWithdrawalRecords(userId))
   }
 }
