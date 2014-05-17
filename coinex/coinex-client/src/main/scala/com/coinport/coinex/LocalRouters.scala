@@ -63,6 +63,8 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
     c -> routerFor(bitway_view << c)
   ): _*)
 
+  val notification = routerFor(notification_mongo <<)
+
   val metricsView = routerFor(metrics_view<<)
 
   private def routerForSingleton(name: String) = system.actorOf(

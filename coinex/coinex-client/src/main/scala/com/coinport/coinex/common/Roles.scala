@@ -28,6 +28,8 @@ object ConstantRole extends Enumeration {
   val account_transfer_mongo_reader = Value
 
   val opendata_exporter = Value
+
+  val notification_mongo = Value
 }
 
 object MarketRole extends Enumeration {

@@ -39,6 +39,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cMarketSide = JsonScalaCodec(MarketSide)
   lazy val _cMetrics = JsonScalaCodec(Metrics)
   lazy val _cMetricsByMarket = JsonScalaCodec(MetricsByMarket)
+  lazy val _cNotification = JsonScalaCodec(Notification)
   lazy val _cOrder = JsonScalaCodec(Order)
   lazy val _cOrderInfo = JsonScalaCodec(OrderInfo)
   lazy val _cOrderUpdate = JsonScalaCodec(OrderUpdate)
@@ -121,6 +122,8 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cQueryLatestCryptoCurrencyStatusResult = JsonScalaCodec(QueryLatestCryptoCurrencyStatusResult)
   lazy val _cQueryMarketDepth = JsonScalaCodec(QueryMarketDepth)
   lazy val _cQueryMarketDepthResult = JsonScalaCodec(QueryMarketDepthResult)
+  lazy val _cQueryNotification = JsonScalaCodec(QueryNotification)
+  lazy val _cQueryNotificationResult = JsonScalaCodec(QueryNotificationResult)
   lazy val _cQueryOrder = JsonScalaCodec(QueryOrder)
   lazy val _cQueryOrderResult = JsonScalaCodec(QueryOrderResult)
   lazy val _cQueryProfile = JsonScalaCodec(QueryProfile)
@@ -151,6 +154,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cRequestTransferSucceeded = JsonScalaCodec(RequestTransferSucceeded)
   lazy val _cResetPasswordFailed = JsonScalaCodec(ResetPasswordFailed)
   lazy val _cResetPasswordSucceeded = JsonScalaCodec(ResetPasswordSucceeded)
+  lazy val _cSetNotification = JsonScalaCodec(SetNotification)
   lazy val _cSubmitOrderFailed = JsonScalaCodec(SubmitOrderFailed)
   lazy val _cTakeSnapshotNow = JsonScalaCodec(TakeSnapshotNow)
   lazy val _cTransferCryptoCurrency = JsonScalaCodec(TransferCryptoCurrency)
@@ -200,6 +204,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: MarketSide => _cMarketSide(m)
     case m: Metrics => _cMetrics(m)
     case m: MetricsByMarket => _cMetricsByMarket(m)
+    case m: Notification => _cNotification(m)
     case m: Order => _cOrder(m)
     case m: OrderInfo => _cOrderInfo(m)
     case m: OrderUpdate => _cOrderUpdate(m)
@@ -282,6 +287,8 @@ class ThriftJsonSerializer extends Serializer {
     case m: QueryLatestCryptoCurrencyStatusResult => _cQueryLatestCryptoCurrencyStatusResult(m)
     case m: QueryMarketDepth => _cQueryMarketDepth(m)
     case m: QueryMarketDepthResult => _cQueryMarketDepthResult(m)
+    case m: QueryNotification => _cQueryNotification(m)
+    case m: QueryNotificationResult => _cQueryNotificationResult(m)
     case m: QueryOrder => _cQueryOrder(m)
     case m: QueryOrderResult => _cQueryOrderResult(m)
     case m: QueryProfile => _cQueryProfile(m)
@@ -312,6 +319,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: RequestTransferSucceeded => _cRequestTransferSucceeded(m)
     case m: ResetPasswordFailed => _cResetPasswordFailed(m)
     case m: ResetPasswordSucceeded => _cResetPasswordSucceeded(m)
+    case m: SetNotification => _cSetNotification(m)
     case m: SubmitOrderFailed => _cSubmitOrderFailed(m)
     case m: TakeSnapshotNow => _cTakeSnapshotNow(m)
     case m: TransferCryptoCurrency => _cTransferCryptoCurrency(m)
@@ -365,6 +373,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[MarketSide.Immutable] => _cMarketSide.invert(bytes).get
     case Some(c) if c == classOf[Metrics.Immutable] => _cMetrics.invert(bytes).get
     case Some(c) if c == classOf[MetricsByMarket.Immutable] => _cMetricsByMarket.invert(bytes).get
+    case Some(c) if c == classOf[Notification.Immutable] => _cNotification.invert(bytes).get
     case Some(c) if c == classOf[Order.Immutable] => _cOrder.invert(bytes).get
     case Some(c) if c == classOf[OrderInfo.Immutable] => _cOrderInfo.invert(bytes).get
     case Some(c) if c == classOf[OrderUpdate.Immutable] => _cOrderUpdate.invert(bytes).get
@@ -447,6 +456,8 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[QueryLatestCryptoCurrencyStatusResult.Immutable] => _cQueryLatestCryptoCurrencyStatusResult.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepth.Immutable] => _cQueryMarketDepth.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepthResult.Immutable] => _cQueryMarketDepthResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryNotification.Immutable] => _cQueryNotification.invert(bytes).get
+    case Some(c) if c == classOf[QueryNotificationResult.Immutable] => _cQueryNotificationResult.invert(bytes).get
     case Some(c) if c == classOf[QueryOrder.Immutable] => _cQueryOrder.invert(bytes).get
     case Some(c) if c == classOf[QueryOrderResult.Immutable] => _cQueryOrderResult.invert(bytes).get
     case Some(c) if c == classOf[QueryProfile.Immutable] => _cQueryProfile.invert(bytes).get
@@ -477,6 +488,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[RequestTransferSucceeded.Immutable] => _cRequestTransferSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ResetPasswordFailed.Immutable] => _cResetPasswordFailed.invert(bytes).get
     case Some(c) if c == classOf[ResetPasswordSucceeded.Immutable] => _cResetPasswordSucceeded.invert(bytes).get
+    case Some(c) if c == classOf[SetNotification.Immutable] => _cSetNotification.invert(bytes).get
     case Some(c) if c == classOf[SubmitOrderFailed.Immutable] => _cSubmitOrderFailed.invert(bytes).get
     case Some(c) if c == classOf[TakeSnapshotNow.Immutable] => _cTakeSnapshotNow.invert(bytes).get
     case Some(c) if c == classOf[TransferCryptoCurrency.Immutable] => _cTransferCryptoCurrency.invert(bytes).get

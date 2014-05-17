@@ -28,6 +28,7 @@ object MapSerializer extends Serializer[Map[Any, Any]] {
           case ks: EmailType => ks.name.toUpperCase
           case ks: ErrorCode => ks.name.toUpperCase
           case ks: ExportedEventType => ks.name.toUpperCase
+          case ks: NotificationType => ks.name.toUpperCase
           case ks: OrderStatus => ks.name.toUpperCase
           case ks: RechargeCodeStatus => ks.name.toUpperCase
           case ks: RefundReason => ks.name.toUpperCase
@@ -93,6 +94,11 @@ object ThriftEnumJson4sSerialization {
       case x: ExportedEventType => JString(x.name)
     }))
 
+  class NotificationTypeSerializer extends CustomSerializer[NotificationType](format => (
+    { case JString(s) => NotificationType.valueOf(s).get }, {
+      case x: NotificationType => JString(x.name)
+    }))
+
   class OrderStatusSerializer extends CustomSerializer[OrderStatus](format => (
     { case JString(s) => OrderStatus.valueOf(s).get }, {
       case x: OrderStatus => JString(x.name)
@@ -133,6 +139,7 @@ object ThriftEnumJson4sSerialization {
     new EmailTypeSerializer +
     new ErrorCodeSerializer +
     new ExportedEventTypeSerializer +
+    new NotificationTypeSerializer +
     new OrderStatusSerializer +
     new RechargeCodeStatusSerializer +
     new RefundReasonSerializer +

@@ -177,6 +177,13 @@ enum BitwayResponseType {
     GET_MISSED_BLOCKS       = 4
 }
 
+enum NotificationType {
+    SUCCEED = 0
+    INFO    = 1
+    WARNING = 2
+    DANGER  = 3
+}
+
 ///////////////////////////////////////////////////////////////////////
 ////////////////////////// PERSISTENT DATA ////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -498,4 +505,14 @@ struct CryptoCurrencyTransferItem {
     12: optional i64 accountTransferId
     13: optional i64 created
     14: optional i64 updated
+}
+
+struct Notification {
+    1: i64 id
+    2: i64 uid
+    3: NotificationType nType
+    4: string title
+    5: string content
+    6: i64 created
+    7: i64 updated
 }

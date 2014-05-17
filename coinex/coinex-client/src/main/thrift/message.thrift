@@ -48,6 +48,8 @@ typedef data.CryptoCurrencyBlock                _CryptoCurrencyBlock
 typedef data.CryptoCurrencyAddressType          _CryptoCurrencyAddressType
 typedef data.CryptoCurrencyTransferItem         _CryptoCurrencyTransferItem
 typedef data.CashAccount                        _CashAccount
+typedef data.Notification                       _Notification
+typedef data.NotificationType                   _NotificationType
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -250,3 +252,7 @@ typedef data.CashAccount                        _CashAccount
                                                           }
 /* R    */ struct QueryCryptoCurrencyTransferResult       {1: list<_CryptoCurrencyTransferItem> transfers, 2: i64 count}
 
+////////// notification
+/* C    */ struct SetNotification                           {1: _Notification notification}
+/* Q    */ struct QueryNotification                         {1: optional i64 id, 2: optional i64 uid, 3: optional _NotificationType ntype, 4: _Cursor cur}
+/* R    */ struct QueryNotificationResult                   {1: list<_Notification> notifications, 2: i64 count}

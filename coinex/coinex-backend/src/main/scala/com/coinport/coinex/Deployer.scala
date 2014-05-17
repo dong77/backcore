@@ -43,6 +43,7 @@ import com.mongodb.casbah._
 import com.twitter.util.Eval
 import java.io.File
 import java.io.InputStream
+import com.coinport.coinex.admin.NotificationReaderWriter
 
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
@@ -87,6 +88,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploy(Props(new TransactionReader(dbForViews)), transaction_mongo_reader <<)
     deploy(Props(new OrderReader(dbForViews)), order_mongo_reader <<)
     deploy(Props(new AccountTransferReader(dbForViews)), account_transfer_mongo_reader <<)
+    deploy(Props(new NotificationReaderWriter(dbForViews)), notification_mongo <<)
 
     // Then deploy routers
     val routers = new LocalRouters(markets)

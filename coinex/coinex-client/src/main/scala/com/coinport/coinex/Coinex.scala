@@ -89,6 +89,10 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: TransferCryptoCurrency => routers.bitwayProcessors(m.currency) forward m
       case m: BitwayMessage => routers.bitwayProcessors(m.currency) forward m
 
+      // Notification
+      case m: SetNotification => routers.notification forward m
+      case m: QueryNotification => routers.notification forward m
+
       //-------------------------------------------------------------------------
       case m =>
         log.error("Coinex received unsupported event: " + m.toString)

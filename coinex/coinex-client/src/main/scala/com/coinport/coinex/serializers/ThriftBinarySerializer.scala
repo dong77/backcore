@@ -39,6 +39,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cMarketSide = BinaryScalaCodec(MarketSide)
   lazy val _cMetrics = BinaryScalaCodec(Metrics)
   lazy val _cMetricsByMarket = BinaryScalaCodec(MetricsByMarket)
+  lazy val _cNotification = BinaryScalaCodec(Notification)
   lazy val _cOrder = BinaryScalaCodec(Order)
   lazy val _cOrderInfo = BinaryScalaCodec(OrderInfo)
   lazy val _cOrderUpdate = BinaryScalaCodec(OrderUpdate)
@@ -121,6 +122,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cQueryLatestCryptoCurrencyStatusResult = BinaryScalaCodec(QueryLatestCryptoCurrencyStatusResult)
   lazy val _cQueryMarketDepth = BinaryScalaCodec(QueryMarketDepth)
   lazy val _cQueryMarketDepthResult = BinaryScalaCodec(QueryMarketDepthResult)
+  lazy val _cQueryNotification = BinaryScalaCodec(QueryNotification)
+  lazy val _cQueryNotificationResult = BinaryScalaCodec(QueryNotificationResult)
   lazy val _cQueryOrder = BinaryScalaCodec(QueryOrder)
   lazy val _cQueryOrderResult = BinaryScalaCodec(QueryOrderResult)
   lazy val _cQueryProfile = BinaryScalaCodec(QueryProfile)
@@ -151,6 +154,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cRequestTransferSucceeded = BinaryScalaCodec(RequestTransferSucceeded)
   lazy val _cResetPasswordFailed = BinaryScalaCodec(ResetPasswordFailed)
   lazy val _cResetPasswordSucceeded = BinaryScalaCodec(ResetPasswordSucceeded)
+  lazy val _cSetNotification = BinaryScalaCodec(SetNotification)
   lazy val _cSubmitOrderFailed = BinaryScalaCodec(SubmitOrderFailed)
   lazy val _cTakeSnapshotNow = BinaryScalaCodec(TakeSnapshotNow)
   lazy val _cTransferCryptoCurrency = BinaryScalaCodec(TransferCryptoCurrency)
@@ -200,6 +204,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: MarketSide => _cMarketSide(m)
     case m: Metrics => _cMetrics(m)
     case m: MetricsByMarket => _cMetricsByMarket(m)
+    case m: Notification => _cNotification(m)
     case m: Order => _cOrder(m)
     case m: OrderInfo => _cOrderInfo(m)
     case m: OrderUpdate => _cOrderUpdate(m)
@@ -282,6 +287,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: QueryLatestCryptoCurrencyStatusResult => _cQueryLatestCryptoCurrencyStatusResult(m)
     case m: QueryMarketDepth => _cQueryMarketDepth(m)
     case m: QueryMarketDepthResult => _cQueryMarketDepthResult(m)
+    case m: QueryNotification => _cQueryNotification(m)
+    case m: QueryNotificationResult => _cQueryNotificationResult(m)
     case m: QueryOrder => _cQueryOrder(m)
     case m: QueryOrderResult => _cQueryOrderResult(m)
     case m: QueryProfile => _cQueryProfile(m)
@@ -312,6 +319,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: RequestTransferSucceeded => _cRequestTransferSucceeded(m)
     case m: ResetPasswordFailed => _cResetPasswordFailed(m)
     case m: ResetPasswordSucceeded => _cResetPasswordSucceeded(m)
+    case m: SetNotification => _cSetNotification(m)
     case m: SubmitOrderFailed => _cSubmitOrderFailed(m)
     case m: TakeSnapshotNow => _cTakeSnapshotNow(m)
     case m: TransferCryptoCurrency => _cTransferCryptoCurrency(m)
@@ -365,6 +373,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[MarketSide.Immutable] => _cMarketSide.invert(bytes).get
     case Some(c) if c == classOf[Metrics.Immutable] => _cMetrics.invert(bytes).get
     case Some(c) if c == classOf[MetricsByMarket.Immutable] => _cMetricsByMarket.invert(bytes).get
+    case Some(c) if c == classOf[Notification.Immutable] => _cNotification.invert(bytes).get
     case Some(c) if c == classOf[Order.Immutable] => _cOrder.invert(bytes).get
     case Some(c) if c == classOf[OrderInfo.Immutable] => _cOrderInfo.invert(bytes).get
     case Some(c) if c == classOf[OrderUpdate.Immutable] => _cOrderUpdate.invert(bytes).get
@@ -447,6 +456,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[QueryLatestCryptoCurrencyStatusResult.Immutable] => _cQueryLatestCryptoCurrencyStatusResult.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepth.Immutable] => _cQueryMarketDepth.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepthResult.Immutable] => _cQueryMarketDepthResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryNotification.Immutable] => _cQueryNotification.invert(bytes).get
+    case Some(c) if c == classOf[QueryNotificationResult.Immutable] => _cQueryNotificationResult.invert(bytes).get
     case Some(c) if c == classOf[QueryOrder.Immutable] => _cQueryOrder.invert(bytes).get
     case Some(c) if c == classOf[QueryOrderResult.Immutable] => _cQueryOrderResult.invert(bytes).get
     case Some(c) if c == classOf[QueryProfile.Immutable] => _cQueryProfile.invert(bytes).get
@@ -477,6 +488,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[RequestTransferSucceeded.Immutable] => _cRequestTransferSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ResetPasswordFailed.Immutable] => _cResetPasswordFailed.invert(bytes).get
     case Some(c) if c == classOf[ResetPasswordSucceeded.Immutable] => _cResetPasswordSucceeded.invert(bytes).get
+    case Some(c) if c == classOf[SetNotification.Immutable] => _cSetNotification.invert(bytes).get
     case Some(c) if c == classOf[SubmitOrderFailed.Immutable] => _cSubmitOrderFailed.invert(bytes).get
     case Some(c) if c == classOf[TakeSnapshotNow.Immutable] => _cTakeSnapshotNow.invert(bytes).get
     case Some(c) if c == classOf[TransferCryptoCurrency.Immutable] => _cTransferCryptoCurrency.invert(bytes).get
