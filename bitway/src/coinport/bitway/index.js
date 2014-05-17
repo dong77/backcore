@@ -364,7 +364,7 @@ var saveTransferIds = function(input, cctx, finishLength, ids){
             console.log("cctx.outputs.length: " + cctx.outputs.length);
             if(cctx.inputs.length == finishLength){
                 var sigId = getSigId(cctx); 
-                proxy.innerClient.set(sigId, ids, function(errRdis, reply){
+                proxy.innerClient.set(sigId, ids, function(errRedis, reply){
                     if(errRedis){
                         console.log("errRedis: " + errRedis);
                     }else{
