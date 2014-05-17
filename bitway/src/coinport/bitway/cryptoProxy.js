@@ -499,19 +499,27 @@ var compare = function(blockA, blockB){
 
 var makeFinalBlocksResponse = function(redisProxy, request, blocksMsg){
     blocksMsg.blocks.sort(compare);
+    var diffPos = 0;
+    var reorgIndex = new BlockIndex({id: null, height: null});
     for(var i = 0; i < request.startIndexs.length; i++){
+        diffPos = i;
         if(request.startIndexs[i].id == blocksMsg.blocks[i].index.id &&
            request.startIndexs[i].height == blocksMsg.blocks[i].index.height){
         }else{
             break;
         }
     }
-    var startIndex = new BlockIndex({id: blocksMsg.blocks[i].index.id, height: blocksMsg.blocks[i].index.height});
+    if(diffPos == 0){
+        console.log("block chain fork!");
+    }else{
+        reorgIndex.id = blocksMsg.blocks[diffPos].index.id;
+        reorgIndex.height =  blocksMsg.blocks[diffPos].index.height;
+    }
     var blocks = [];
-    for(var j = i; j < blocksMsg.blocks.length; j++){
+    for(var j = diffPos; j < blocksMsg.blocks.length; j++){
         blocks.push(blocksMsg.blocks[j]);
     }
-    var blocksFinal = new CryptoCurrencyBlocksMessage({startIndex: startIndex, blocks:blocks});
+    var blocksFinal = new CryptoCurrencyBlocksMessage({reorgIndex: reorgIndex, blocks:blocks});
     makeNormalResponse(BitwayResponseType.GET_MISSED_BLOCKS, cryptoProxy.currency, blocksFinal, redisProxy);
 };
 
