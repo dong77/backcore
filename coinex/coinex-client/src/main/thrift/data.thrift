@@ -133,13 +133,14 @@ enum RechargeCodeStatus {
 }
 
 enum TransferStatus {
-    PENDING    = 0
-    ACCEPTED   = 1
-    CONFIRMING = 2
-    CONFIRMED  = 3
-    SUCCEEDED  = 4
-    FAILED     = 5 // this will happen when confirmation satisfied but can't spend it
-    REORGING   = 6
+    PENDING              = 0
+    ACCEPTED             = 1
+    CONFIRMING           = 2
+    CONFIRMED            = 3
+    SUCCEEDED            = 4
+    FAILED               = 5 // this will happen when confirmation satisfied but can't spend it
+    REORGING             = 6
+    REORGING_SUCCEEDED   = 7
 }
 
 enum ExportedEventType {

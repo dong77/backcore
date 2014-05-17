@@ -22,11 +22,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   val manager = new AccountTransferManager()
   val transferDebugConfig = context.system.settings.config.getBoolean("akka.exchange.account-transfer-debug")
   private val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
-  private val bitwayChannels =
-    Map(bitwayProcessors.keys.toSeq map (
-      currency =>
-        currency -> createChannelTo(BITWAY_PROCESSOR << currency)
-    ): _*)
+  private val bitwayChannels = bitwayProcessors.map(kv => kv._1 -> createChannelTo(BITWAY_PROCESSOR << kv._1))
 
   private val bitwayBatchSize = 1
   private val userToHotMessages = Set.empty[CryptoCurrencyTransferItem]
@@ -52,6 +48,10 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
               case TransferType.Deposit =>
                 sender ! RequestTransferFailed(UnsupportTransferType)
               case TransferType.Withdrawal => // accept wait for admin accept
+              case TransferType.ColdToHot => // accept wait for admin accept
+              case TransferType.HotToCold => // accept wait for admin accept
+              case TransferType.Unknown => // accept wait for admin accept
+                sender ! RequestTransferFailed(UnsupportTransferType)
               case _ =>
             }
           } else {
@@ -63,10 +63,11 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
       transferHandler.get(transfer.id) match {
         case Some(transfer) if transfer.status == Pending =>
           val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Failed, reason = Some(error))
-          persist(AdminConfirmTransferFailure(updated, error)) { event =>
-            sender ! AdminCommandResult(Ok)
-            deliverToAccountManager(event)
-            updateState(event)
+          persist(AdminConfirmTransferFailure(updated, error)) {
+            event =>
+              sender ! AdminCommandResult(Ok)
+              deliverToAccountManager(event)
+              updateState(event)
           }
         case Some(_) => sender ! AdminCommandResult(AlreadyConfirmed)
         case None => sender ! AdminCommandResult(DepositNotExist)
@@ -113,7 +114,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   private def handleResList() {
     getMessagesBox foreach {
       item =>
-        //        println(s"MessagesBox got item => ${item.toString}")
+        //      println(s" ---------------------------- MessagesBox got item => ${item.toString}")
         item.txType.get match {
           case Deposit if item.status.get == Succeeded =>
             deliverToAccountManager(CryptoTransferSucceeded(transferHandler.get(item.accountTransferId.get).get))
@@ -135,7 +136,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
     }
     getMongoWriteList foreach {
       item =>
-        //        println(s"MessagesBox got item => ${item.toString}")
+        //    println(s" =========================== getMongoWriteList got item => ${item.toString}")
         transferItemHandler.put(item)
     }
   }
@@ -153,26 +154,44 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
     }
   }
 
-  private def deliverToAccountManager(event: Any) =
+  private def deliverToAccountManager(event: Any) = {
+    // println(s">>>>>>>>>>>>>>>>>>>>> deliverToAccountManager => event = ${event.toString}")
     channelToAccountProcessor forward Deliver(Persistent(event), accountProcessorPath)
+  }
 
-  private def deliverToBitwayProcessor(currency: Currency, event: Any) =
+  private def deliverToBitwayProcessor(currency: Currency, event: Any) = {
+    //  println(s">>>>>>>>>>>>>>>>>>>>> deliverToBitwayProcessor => currency = ${currency.toString}, event = ${event.toString}, path = ${bitwayProcessors(currency).path.toString}")
     bitwayChannels(currency) forward Deliver(Persistent(event), bitwayProcessors(currency).path)
+  }
 }
 
-final class AccountTransferManager extends Manager[TAccountTransferState] {
+final class AccountTransferManager() extends Manager[TAccountTransferState] {
   private var lastTransferId = 1E12.toLong
   private var lastTransferItemId = 1E12.toLong
   private var lastBlockHeight = 0L
   private val depositSigId2TxPortIdMap = Map.empty[String, Map[CryptoCurrencyTransactionPort, Long]]
+  private val transferMapInnner = Map.empty[Long, CryptoCurrencyTransferItem]
+  private val succeededMapInnner = Map.empty[Long, CryptoCurrencyTransferItem]
 
-  def getSnapshot = TAccountTransferState(lastTransferId, lastTransferItemId, lastBlockHeight, depositSigId2TxPortIdMap, getFiltersSnapshot)
+  def getSnapshot = {
+    TAccountTransferState(
+      lastTransferId,
+      lastTransferItemId,
+      lastBlockHeight,
+      depositSigId2TxPortIdMap.clone,
+      transferMapInnner.clone(),
+      succeededMapInnner.clone(),
+      getFiltersSnapshot)
+  }
 
   override def loadSnapshot(s: TAccountTransferState) {
+    println(">>>>>>>>>>>>>>> loadsnapshot =>" + s.toString)
     lastTransferId = s.lastTransferId
     lastTransferItemId = s.lastTransferItemId
     lastBlockHeight = s.lastBlockHeight
-    depositSigId2TxPortIdMap.putAll(s.depositSigId2TxPortIdMap)
+    transferMapInnner ++= s.transferMap
+    succeededMapInnner ++= s.succeededMap
+    depositSigId2TxPortIdMap ++= s.depositSigId2TxPortIdMap map { kv => (kv._1 -> (Map.empty ++ kv._2)) }
     loadFiltersSnapshot(s.filters)
   }
 
@@ -186,6 +205,10 @@ final class AccountTransferManager extends Manager[TAccountTransferState] {
     lastTransferItemId += 1
     lastTransferItemId
   }
+
+  def transferMap = transferMapInnner
+
+  def succeededMap = succeededMapInnner
 
   def getLastBlockHeight = lastBlockHeight
 
