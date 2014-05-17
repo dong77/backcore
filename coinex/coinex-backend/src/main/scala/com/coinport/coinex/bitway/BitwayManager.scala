@@ -160,7 +160,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
       case None => SUCCESSOR
       case Some(indexList) if indexList.size > 0 =>
         assert(blocksMsg.blocks.size > 0)
-        blocksMsg.startIndex match {
+        blocksMsg.reorgIndex match {
           case None =>
             if (blocksMsg.blocks.head.prevIndex.id == indexList.last.id)
               SUCCESSOR

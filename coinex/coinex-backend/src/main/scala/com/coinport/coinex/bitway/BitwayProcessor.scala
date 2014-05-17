@@ -124,7 +124,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
             updateState(event)
             val relatedTxs = manager.extractTxsFromBlocks(blocksMsg.blocks.toList)
             if (relatedTxs.nonEmpty) {
-              val reorgIndex = if (continuity == REORG) blocksMsg.startIndex else None
+              val reorgIndex = if (continuity == REORG) blocksMsg.reorgIndex else None
               channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
                 relatedTxs, reorgIndex)), transferProcessor.path)
             }

@@ -179,7 +179,7 @@ typedef data.CashAccount                        _CashAccount
                                                               2: optional set<string> addresses,
                                                               3: optional _CryptoCurrencyAddressType addressType
                                                           }
-/* I    */ struct CryptoCurrencyBlocksMessage             {1: optional _BlockIndex startIndex, /* BlockIndex(None, None) means in another branch */ 2: list<_CryptoCurrencyBlock> blocks}
+/* I    */ struct CryptoCurrencyBlocksMessage             {1: optional _BlockIndex reorgIndex, /* BlockIndex(None, None) means in another branch */ 2: list<_CryptoCurrencyBlock> blocks}
 /* C    */ struct BitwayRequest                           {
                                                               1: _BitwayRequestType type
                                                               2: _Currency currency
