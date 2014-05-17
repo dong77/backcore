@@ -26,7 +26,7 @@ var RedisProxy                      = require('./redis/redis_proxy').RedisProxy,
 
 var PeerManager = Bitcore.PeerManager;
 
-var proxy = new RedisProxy("btc", "127.0.0.1", "6379");
+var proxy = new RedisProxy("BTC", "127.0.0.1", "6379");
 var RpcClient = Bitcore.RpcClient;
 // TODO(yangli): make CryptoProxy and config following params
 var config = {
@@ -192,25 +192,25 @@ var txWithDefiniteFrom = function(request){
     rpc.getAddressesByAccount(HOT_ACCOUNT, function(errAddr, retAddr){
         if(errAddr){
         }else{
-            if(ret.result.length == 0){
+            if(retAddr.result.length == 0){
                 rpc.getNewAddress(HOT_ACCOUNT, function(errAddress, retAddress) {
                     if (errAddress) {
                         console.error('An error occured generate address');
                         console.error(errAddress);
                     }else{
                         for(var i = 0; i < request.transferInfos.length; i++){
-                            transferInfo[i].to = retAddress.result;
+                            request.transferInfos[i].to = retAddress.result;
                             makeTransaction(request.transferInfos[i], request.transferInfos.length,
                                 fromAddresses, transactions, addresses, ids);
                         }
                     }
                 });
             }else{
-                var toPos = Math.floor(Math.random()*ret.result.length);
-                var toAddress = ret.result[toPos];
+                var toPos = Math.floor(Math.random()*retAddr.result.length);
+                var toAddress = retAddr.result[toPos];
                 console.log("toPos: " + toPos + " toAddr: " + toAddress);
                 for(var i = 0; i < request.transferInfos.length; i++){
-                    transferInfo[i].to = toAddress;
+                    request.transferInfos[i].to = toAddress;
                     makeTransaction(request.transferInfos[i], request.transferInfos.length,
                         fromAddresses, transactions, addresses, ids);
                 }
