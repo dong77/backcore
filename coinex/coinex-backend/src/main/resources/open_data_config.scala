@@ -6,7 +6,7 @@ import scala.concurrent.duration._
 import Implicits._
 
 new OpenDataConfig {
-  override val enableExportData = true
+  override val enableExportData = false
   override val pFileMap = scala.collection.mutable.Map((MARKET_UPDATE_PROCESSOR <<) -> "market", (ACCOUNT_PROCESSOR <<) -> "account")
   com.coinport.coinex.CoinexApp.markets foreach { marketSide =>
     pFileMap += (MARKET_PROCESSOR << marketSide) -> ("market_" + marketSide.s)
