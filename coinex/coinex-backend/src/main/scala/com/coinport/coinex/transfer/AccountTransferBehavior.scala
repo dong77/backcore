@@ -45,7 +45,7 @@ trait AccountTransferBehavior {
           case TransferType.Deposit => //Do nothing
           case TransferType.Withdrawal =>
             transferHandler.put(t)
-          case _ =>
+          case _ => //Just handle other type
         }
       } else {
         transferHandler.put(t)
@@ -64,7 +64,7 @@ trait AccountTransferBehavior {
             // id, sigId, txid, userId, currency, from, to(external address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
             val withdrawItem = CryptoCurrencyTransferItem(Some(manager.getNewTransferItemId), None, None, Some(t.userId), Some(t.currency), None, Some(to), None, Some(Withdrawal), Some(Confirming), None, Some(t.id), Some(System.currentTimeMillis()))
             setResState(Updator.copy(item = withdrawItem, addMsgBox = true, putItem = true)) //send message to bitway
-          case _ =>
+          case _ => // Just handle other type, do nothing
         }
       }
       transferHandler.put(t)
@@ -77,13 +77,14 @@ trait AccountTransferBehavior {
       txs foreach {
         tx =>
           refreshLastBlockHeight(tx)
-          tx.txType.get match {
-            case Deposit =>
+          tx.txType match {
+            case Some(Deposit) =>
               splitAndHandleTxs(currency, tx)
-            case UserToHot =>
+            case Some(UserToHot) =>
               splitAndHandleTxs(currency, tx)
-            case Withdrawal =>
+            case Some(Withdrawal) =>
               splitAndHandleTxs(currency, tx)
+            case None =>
             case _ =>
           }
       }
@@ -125,7 +126,7 @@ trait AccountTransferBehavior {
                         val newTransferItemId = manager.getNewTransferItemId
                         manager.saveDepositTxId(tx.sigId.get, outputPort, newTransferItemId)
                         // id, sigId, txid, userId, currency, from, to(user's internal address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
-                        CryptoCurrencyTransferItem(Some(newTransferItemId), tx.sigId, tx.txid, None, Some(currency), None, Some(outputPort), tx.includedBlock, tx.txType, Some(Confirming), None, Some(transferId), Some(System.currentTimeMillis()))
+                        CryptoCurrencyTransferItem(Some(newTransferItemId), tx.sigId, tx.txid, outputPort.userId, Some(currency), None, Some(outputPort), tx.includedBlock, tx.txType, Some(Confirming), None, Some(transferId), Some(System.currentTimeMillis()))
                     }
                   setResState(Updator.copy(item = toSaveDepositItem, addMongo = true, putItem = true))
               }
@@ -184,7 +185,7 @@ trait AccountTransferBehavior {
     transferMap.values foreach {
       item =>
         item.txType.get match {
-          case Deposit if item.includedBlock.isDefined =>
+          case Deposit if item.includedBlock.isDefined && item.status != Confirmed =>
             if (lastBlockHeight - item.includedBlock.get.height.getOrElse(Long.MaxValue) >= confirmableHeight) {
               setResState(Updator.copy(item = item.copy(status = Some(Confirmed)), addMongo = true, putItem = true))
               val user2HotItem =
