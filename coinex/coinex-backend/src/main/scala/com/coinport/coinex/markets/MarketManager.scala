@@ -47,29 +47,29 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
   // The following are not part of persistent state.
   private val tailSide = headSide.reverse
   private val bothSides = Seq(headSide, tailSide)
+  private val MAX_NUM_TX_PER_ORDER = 500
 
   import MarketManager._
 
   def addOrderToMarket(takerSide: MarketSide, order: Order): OrderSubmitted = {
     val txsBuffer = new ListBuffer[Transaction]
     val makerSide = takerSide.reverse
-    var lastTxId = order.id * 1000000
+    var lastTxId = order.id * 1000 // keep a range that is greter than MAX_NUM_TX_PER_ORDER
 
     // START of internal matching logic.
     case class TakerState(takerOrder: Order, totalOutAmount: Long, totalInAmount: Long)
 
-    // Transaction ids are derived from order ids.  The first transaction id = orderId * 1000000 + 1,
-    // The system will fail if one taker order matches more than 999999 maker orders. This is a safe
-    // assumption in normal cases. If many maker orders were matched against one taker order, the
-    // OrderSutmitted message will probably hit Akka's limit and cause the system to fail. Therefore the
-    // 999999 transactions per order limit will not easily happen.
+    // Transaction ids are derived from order ids.  The first transaction id = orderId * 1000 + 1,
+    // If more than 1000 maker orders are matched, we will refund the taker order's remaining
+    // money.
     def getTxId() = { lastTxId += 1; lastTxId }
 
     // Returns a tuple, the first element will be defined if and only if the order after
     // being refunded shall still be put back to the market.
-    def calculateRefund(order: Order): (Option[Order], Option[Refund]) = {
+    def calculateRefund(order: Order, hitTransactionLimit: Boolean): (Option[Order], Option[Refund]) = {
       val result =
         if (order.quantity == 0) (None, None)
+        else if (hitTransactionLimit) (None, Some(Refund(HitTransactionLimit, order.quantity)))
         else if (order.hitTakeLimit) (None, Some(Refund(HitTakeLimit, order.quantity)))
         else if (order.isDust) (None, Some(Refund(Dust, order.quantity)))
         else if (order.price.isEmpty || order.onlyTaker.getOrElse(false)) (None, Some(Refund(AutoCancelled, order.quantity)))
@@ -100,7 +100,7 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
     def recursivelyMatchOrder(state: TakerState): TakerState = {
       val takerOrder = state.takerOrder
       val makerOrderOption = orderPool(makerSide).headOption
-      if (makerOrderOption.isEmpty || makerOrderOption.get.vprice * takerOrder.vprice > 1) {
+      if (txsBuffer.size >= MAX_NUM_TX_PER_ORDER || makerOrderOption.isEmpty || makerOrderOption.get.vprice * takerOrder.vprice > 1) {
         state
       } else {
         // We get the top maker order, the one with the lowest price, and we know for sure
@@ -146,7 +146,7 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
           // Note: updatedMakerWithRefund is the updated maker order after the transaction, it is the one
           // that will be put into OrderSubmitted event; while updatedMakerToAddBack is the transction
           // that will be put back to the market.
-          val (updatedMakerToAddBack, refund) = calculateRefund(updatedMaker)
+          val (updatedMakerToAddBack, refund) = calculateRefund(updatedMaker, false)
           val updatedMakerWithRefund = updatedMaker.copy(refund = refund)
 
           txsBuffer += Transaction(
@@ -187,7 +187,7 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
 
     val TakerState(takerOrder, totalOutAmount, totalInAmount) = recursivelyMatchOrder(TakerState(order, 0, 0))
 
-    val (updatedTakerToAdd, refund) = calculateRefund(takerOrder)
+    val (updatedTakerToAdd, refund) = calculateRefund(takerOrder, txsBuffer.size == MAX_NUM_TX_PER_ORDER)
     updatedTakerToAdd foreach { addOrder(takerSide, _) }
 
     val status = updatedTakerToAdd match {
@@ -203,7 +203,6 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
     }
 
     val updatedOriginalOrder =
-
       if (txsBuffer.nonEmpty && refund.isDefined) {
         val lastTx = txsBuffer.last
         val updatedTaker = lastTx.takerUpdate.current.copy(refund = refund)

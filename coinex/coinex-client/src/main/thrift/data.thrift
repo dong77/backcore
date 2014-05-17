@@ -148,10 +148,11 @@ enum ExportedEventType {
 }
 
 enum RefundReason {
-    DUST           = 0
-    HIT_TAKE_LIMIT = 1
-    AUTO_CANCELLED = 2
-    OVER_CHARGED   = 3
+    DUST                   = 0
+    HIT_TAKE_LIMIT         = 1
+    AUTO_CANCELLED         = 2
+    OVER_CHARGED           = 3
+    HIT_TRANSACTION_LIMIT  = 4
 }
 
 enum CryptoCurrencyAddressType {

@@ -26,7 +26,7 @@ import com.sun.beans.decoder.FalseElementHandler
 import com.coinport.coinex.common.Constants._
 
 class AccountManager(initialLastOrderId: Long = 0L,
-  hotColdTransfer: IMap[Currency, HotColdTransferStrategy] = IMap.empty[Currency, HotColdTransferStrategy])
+  hotColdTransfer: IMap[Currency, HotColdTransferStrategy] = IMap.empty)
     extends Manager[TAccountState] {
   // Internal mutable state ----------------------------------------------
   private val accountMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]
