@@ -47,6 +47,7 @@ typedef data.CryptoCurrencyTransferInfo         _CryptoCurrencyTransferInfo
 typedef data.CryptoCurrencyBlock                _CryptoCurrencyBlock
 typedef data.CryptoCurrencyAddressType          _CryptoCurrencyAddressType
 typedef data.CryptoCurrencyTransferItem         _CryptoCurrencyTransferItem
+typedef data.CashAccount                        _CashAccount
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -202,6 +203,8 @@ typedef data.CryptoCurrencyTransferItem         _CryptoCurrencyTransferItem
 /* R    */ struct QueryProfileResult                  {1: optional _UserProfile userProfile}
 /* Q    */ struct QueryAccount                        {1: i64 userId}
 /* R    */ struct QueryAccountResult                  {1: _UserAccount userAccount}
+/* Q    */ struct QueryAccountStatistics              {1: _Currency currency}
+/* R    */ struct QueryAccountStatisticsResult        {1: optional _CashAccount aggregation, 2: optional _CashAccount hotWallet, 3: optional _CashAccount coldWallet, 4: optional double guarantyPercentage}
 /* Q    */ struct QueryRCDepositRecord                {1: i64 userId}
 /* R    */ struct QueryRCDepositRecordResult          {1: list<_ABCodeItem> items}
 /* Q    */ struct QueryRCWithdrawalRecord             {1: i64 userId}
