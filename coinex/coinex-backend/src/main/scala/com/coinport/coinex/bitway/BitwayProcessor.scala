@@ -75,7 +75,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.NotEnoughAddressInPool, None)
       }
 
-    case p @ ConfirmablePersistent(m @ TransferCryptoCurrency(currency, infos, t)) if client.isDefined =>
+    case p @ ConfirmablePersistent(m @ TransferCryptoCurrency(currency, infos, t), _, _) if client.isDefined =>
       confirm(p)
       val (completedInfos, isFail) = manager.completeTransferInfos(infos, t == TransferType.HotToCold)
       if (isFail) {
