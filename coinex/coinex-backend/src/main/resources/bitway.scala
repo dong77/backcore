@@ -12,7 +12,7 @@ import Implicits._
 
 BitwayConfigs(Map(
   Btc -> BitwayConfig(
-    ip = "192.168.0.105",
+    ip = "127.0.0.1",
     port = 6379,
     batchFetchAddressNum = 10,
     maintainedChainLength = 10
