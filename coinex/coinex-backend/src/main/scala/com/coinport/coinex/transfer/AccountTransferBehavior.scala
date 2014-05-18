@@ -168,7 +168,7 @@ trait AccountTransferBehavior {
                 setAccountTransferStatus(manager.transferMap, depositId, userToHotItem.status.get)
                 val depositItem = manager.transferMap(depositId).copy(status = Some(userToHotItem.status.get))
                 manager.removeDepositTxid(depositItem.sigId.get, depositItem.to.get)
-                setResState(Updator.copy(item = depositItem, addMongo = true, addMsgBox = depositItem.status == Succeeded, rmItem = true))
+                setResState(Updator.copy(item = depositItem, addMongo = true, addMsgBox = depositItem.status.get == Succeeded, rmItem = true))
             }
         }
       case Withdrawal =>
@@ -219,7 +219,7 @@ trait AccountTransferBehavior {
     manager.transferMap.values foreach {
       item =>
         item.txType.get match {
-          case Deposit if item.includedBlock.isDefined && item.status != Confirmed && item.status != Reorging => //Reorging item will not confirm again to avoid resend UserToHot message
+          case Deposit if item.includedBlock.isDefined && item.status.get != Confirmed && item.status.get != Reorging => //Reorging item will not confirm again to avoid resend UserToHot message
             if (lastBlockHeight - item.includedBlock.get.height.getOrElse(Long.MaxValue) >= confirmableHeight) {
               setResState(Updator.copy(item = item.copy(status = Some(Confirmed)), addMongo = true, putItem = true))
               val user2HotItem =
@@ -308,7 +308,7 @@ trait AccountTransferBehavior {
     if (up.addMsgBox) messageBox.append(up.item)
     if (up.rmItem) {
       manager.transferMap.remove(up.item.id.get)
-      if (up.item.status == Succeeded) {
+      if (up.item.status.get == Succeeded) {
         up.item.txType.get match {
           case Deposit => manager.succeededMap.put(up.item.id.get, up.item)
           case Withdrawal => manager.succeededMap.put(up.item.id.get, up.item)
