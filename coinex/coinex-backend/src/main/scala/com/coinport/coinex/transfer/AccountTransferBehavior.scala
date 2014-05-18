@@ -8,7 +8,6 @@ import scala.collection.mutable.{ Map, ListBuffer }
 
 import TransferStatus._
 import TransferType._
-import akka.actor.ActorLogging
 
 trait AccountTransferBehavior {
 
@@ -26,7 +25,7 @@ trait AccountTransferBehavior {
 
   def setConfirmableHeight(heightConfig: Int) = { confirmableHeight = heightConfig }
 
-  def setTransferDebug(transferDebugConfig: Boolean) = { this.transferDebug = transferDebugConfig }
+  def setTransferDebug(transferDebugConfig: Boolean) = { transferDebug = transferDebugConfig }
 
   def isCryptoCurrency(currency: Currency): Boolean = { currency.value >= Currency.Btc.value }
 
@@ -43,11 +42,24 @@ trait AccountTransferBehavior {
 
     case DoRequestTransfer(t) =>
       if (isCryptoCurrency(t.currency) && !transferDebug) {
+        clearResList
         t.`type` match {
           case TransferType.Deposit => //Do nothing
           case TransferType.Withdrawal =>
             transferHandler.put(t)
-          case _ => //Just handle other type
+          case TransferType.ColdToHot =>
+            transferHandler.put(t)
+            val from = CryptoCurrencyTransactionPort("", None, Some(t.amount), Some(t.userId))
+            val to = CryptoCurrencyTransactionPort("", None, Some(t.amount), Some(t.userId))
+            prepareItemSendToBitway(t, Some(from), Some(to))
+          case TransferType.HotToCold =>
+            transferHandler.put(t)
+            val from = CryptoCurrencyTransactionPort("", None, Some(t.amount), Some(t.userId))
+            val to = CryptoCurrencyTransactionPort("", None, Some(t.amount), Some(t.userId))
+            prepareItemSendToBitway(t, Some(from), Some(to))
+          case TransferType.UserToHot =>
+          case TransferType.Unknown =>
+            transferHandler.put(t)
         }
       } else {
         transferHandler.put(t)
@@ -61,11 +73,8 @@ trait AccountTransferBehavior {
         t.`type` match {
           case TransferType.Deposit =>
           case TransferType.Withdrawal =>
-            clearResList
             val to = CryptoCurrencyTransactionPort(t.address.get, None, Some(t.amount), Some(t.userId))
-            // id, sigId, txid, userId, currency, from, to(external address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
-            val withdrawItem = CryptoCurrencyTransferItem(Some(manager.getNewTransferItemId), None, None, Some(t.userId), Some(t.currency), None, Some(to), None, Some(Withdrawal), Some(Confirming), None, Some(t.id), Some(System.currentTimeMillis()))
-            setResState(Updator.copy(item = withdrawItem, addMsgBox = true, putItem = true)) //send message to bitway
+            prepareItemSendToBitway(t, None, Some(to))
           case _ => // Just handle other type, do nothing
         }
       }
@@ -73,7 +82,7 @@ trait AccountTransferBehavior {
     }
 
     case m @ MultiCryptoCurrencyTransactionMessage(currency, txs, newIndex: Option[BlockIndex]) =>
-      // println(s">>>>>>>>>>>>>>>>>>>>> updateState  => MultiCryptoCurrencyTransactionMessage = ${m.toString}")
+//      println(s">>>>>>>>>>>>>>>>>>>>> updateState  => MultiCryptoCurrencyTransactionMessage = ${m.toString}")
       clearResList
       if (manager.getLastBlockHeight > 0) newIndex foreach (index => reOrgnize(index))
       txs foreach {
@@ -86,12 +95,23 @@ trait AccountTransferBehavior {
               splitAndHandleTxs(currency, tx)
             case Some(Withdrawal) =>
               splitAndHandleTxs(currency, tx)
+            case Some(ColdToHot) =>
+              splitAndHandleTxs(currency, tx)
+            case Some(HotToCold) =>
+              splitAndHandleTxs(currency, tx)
             case None =>
             case _ =>
           }
       }
       handleNeedConfirmTransfer(currency)
     case _ =>
+  }
+
+  private def prepareItemSendToBitway(t: AccountTransfer, from: Option[CryptoCurrencyTransactionPort], to: Option[CryptoCurrencyTransactionPort]) {
+    clearResList
+    // id, sigId, txid, userId, currency, from, to(external address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
+    val cryptoCurrencyTransferItem = CryptoCurrencyTransferItem(Some(manager.getNewTransferItemId), None, None, Some(t.userId), Some(t.currency), from, to, None, Some(t.`type`), Some(Confirming), None, Some(t.id), Some(System.currentTimeMillis()))
+    setResState(Updator.copy(item = cryptoCurrencyTransferItem, addMsgBox = true, putItem = true)) //send message to bitway
   }
 
   private def refreshLastBlockHeight(tx: CryptoCurrencyTransaction) {
@@ -152,21 +172,29 @@ trait AccountTransferBehavior {
             }
         }
       case Withdrawal =>
-        tx.ids.get foreach {
-          //every input corresponds to one tx
-          id =>
-            assert(manager.transferMap.contains(id))
-            tx.status match {
-              case Failed =>
-                setAccountTransferStatus(manager.transferMap, id, Failed)
-                setResState(Updator.copy(item = manager.transferMap(id).copy(status = Some(Failed)), addMongo = true, addMsgBox = true, rmItem = true))
-              case _ =>
-                val withdrawItem = manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock)
-                setAccountTransferStatus(manager.transferMap, id, Confirming)
-                setResState(Updator.copy(item = withdrawItem, addMongo = true, putItem = true))
-            }
-        }
+        prepareSplitedTx(tx)
+      case ColdToHot =>
+        prepareSplitedTx(tx)
+      case HotToCold =>
+        prepareSplitedTx(tx)
       case _ =>
+    }
+  }
+
+  private def prepareSplitedTx(tx: CryptoCurrencyTransaction) {
+    tx.ids.get foreach {
+      //every input corresponds to one tx
+      id =>
+        assert(manager.transferMap.contains(id))
+        tx.status match {
+          case Failed =>
+            setAccountTransferStatus(manager.transferMap, id, Failed)
+            setResState(Updator.copy(item = manager.transferMap(id).copy(status = Some(Failed)), addMongo = true, addMsgBox = true, rmItem = true))
+          case _ =>
+            val item = manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock)
+            setAccountTransferStatus(manager.transferMap, id, Confirming)
+            setResState(Updator.copy(item = item, addMongo = true, putItem = true))
+        }
     }
   }
 
@@ -198,15 +226,15 @@ trait AccountTransferBehavior {
                 // id, sigId, txid, userId, currency, from, to(hot address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
                 CryptoCurrencyTransferItem(Some(manager.getNewTransferItemId), None, None, item.userId, Some(currency), item.to, None, None, Some(UserToHot), Some(Confirming), item.id, None, Some(System.currentTimeMillis()))
               setResState(Updator.copy(item = user2HotItem, addMongo = true, addMsgBox = true, putItem = true))
-            } else {
-              updateAccountTransferConfirmNum(item, lastBlockHeight)
             }
+            updateAccountTransferConfirmNum(item, lastBlockHeight)
           case Withdrawal if item.includedBlock.isDefined =>
-            if (lastBlockHeight - item.includedBlock.get.height.getOrElse(Long.MaxValue) >= confirmableHeight) {
-              setResState(Updator.copy(item = item.copy(status = Some(Succeeded)), addMongo = true, addMsgBox = true, rmItem = true))
-            } else {
-              updateAccountTransferConfirmNum(item, lastBlockHeight)
-            }
+            checkConfirm(item, lastBlockHeight)
+            updateAccountTransferConfirmNum(item, lastBlockHeight)
+          case ColdToHot if item.includedBlock.isDefined =>
+            checkConfirm(item, lastBlockHeight)
+          case HotToCold if item.includedBlock.isDefined =>
+            checkConfirm(item, lastBlockHeight)
           case _ =>
         }
     }
@@ -215,6 +243,12 @@ trait AccountTransferBehavior {
         if (lastBlockHeight - item.includedBlock.get.height.get > succeededRetainHeight) {
           manager.succeededMap.remove(item.id.get)
         }
+    }
+  }
+
+  private def checkConfirm(item: CryptoCurrencyTransferItem, lastBlockHeight: Long) {
+    if (lastBlockHeight - item.includedBlock.get.height.getOrElse(Long.MaxValue) >= confirmableHeight) {
+      setResState(Updator.copy(item = item.copy(status = Some(Succeeded)), addMongo = true, addMsgBox = true, rmItem = true))
     }
   }
 

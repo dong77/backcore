@@ -31,7 +31,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   setTransferDebug(transferDebugConfig)
 
   override def identifyChannel: PartialFunction[Any, String] = {
-    case DoRequestTransfer => "account"
+    case r: DoRequestTransfer => "account"
     case MultiCryptoCurrencyTransactionMessage(currency, _, _) => "bitway_" + currency.toString
   }
 
@@ -48,11 +48,12 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
               case TransferType.Deposit =>
                 sender ! RequestTransferFailed(UnsupportTransferType)
               case TransferType.Withdrawal => // accept wait for admin accept
-              case TransferType.ColdToHot => // accept wait for admin accept
-              case TransferType.HotToCold => // accept wait for admin accept
+              case TransferType.ColdToHot => // accept, save request to map
+              case TransferType.HotToCold => // accept, save request to map
+              case TransferType.UserToHot =>
+                sender ! RequestTransferFailed(UnsupportTransferType)
               case TransferType.Unknown => // accept wait for admin accept
                 sender ! RequestTransferFailed(UnsupportTransferType)
-              case _ =>
             }
           } else {
             sender ! RequestTransferSucceeded(event.transfer) // wait for admin confirm
@@ -88,6 +89,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                     sender ! AdminCommandResult(Ok)
                 }
               case _ =>
+                sender ! RequestTransferFailed(UnsupportTransferType)
             }
           } else {
             val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Succeeded)
@@ -103,8 +105,12 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
       }
 
     case p @ ConfirmablePersistent(msg: MultiCryptoCurrencyTransactionMessage, _, _) =>
+      //      println(s"----------------------------------persist ConfirmablePersistent start")
+      //println("-" * 60 + manager.getSnapshot)
+      val start = System.currentTimeMillis()
       persist(msg) {
         event =>
+//          println(s"----------------------------------persist ConfirmablePersistent cost ${System.currentTimeMillis() - start}")
           confirm(p)
           updateState(event)
           handleResList()
@@ -114,30 +120,41 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   private def handleResList() {
     getMessagesBox foreach {
       item =>
-        //      println(s" ---------------------------- MessagesBox got item => ${item.toString}")
+//        println(s" ---------------------------- MessagesBox got item => ${item.toString}")
         item.txType.get match {
           case Deposit if item.status.get == Succeeded =>
             deliverToAccountManager(CryptoTransferSucceeded(transferHandler.get(item.accountTransferId.get).get))
           case UserToHot if item.status.get == Confirming =>
             batchSendBitwayMessage(item)
           case Withdrawal =>
-            item.status.get match {
-              case Confirming =>
-                val info = CryptoCurrencyTransferInfo(item.id.get, Some(item.to.get.address), item.to.get.internalAmount, item.to.get.amount, None)
-                deliverToBitwayProcessor(item.currency.get, TransferCryptoCurrency(item.currency.get, List(info), Withdrawal))
-              case Succeeded =>
-                deliverToAccountManager(CryptoTransferSucceeded(transferHandler.get(item.accountTransferId.get).get))
-              case Failed =>
-                deliverToAccountManager(CryptoTransferFailed(transferHandler.get(item.accountTransferId.get).get, ErrorCode.BitwayProcessFail))
-              case _ =>
-            }
+            val info = CryptoCurrencyTransferInfo(item.id.get, Some(item.to.get.address), item.to.get.internalAmount, item.to.get.amount, None)
+            handleMessage(info, item)
+          case ColdToHot =>
+            val info = CryptoCurrencyTransferInfo(item.id.get, None, item.to.get.internalAmount, None, None)
+            handleMessage(info, item)
+          case HotToCold =>
+            val info = CryptoCurrencyTransferInfo(item.id.get, None, item.to.get.internalAmount, None, None)
+            handleMessage(info, item)
+            deliverToBitwayProcessor(item.currency.get, TransferCryptoCurrency(item.currency.get, List(info), HotToCold))
           case _ => // TODO handle ColdToHot and HotToCold message
         }
     }
     getMongoWriteList foreach {
       item =>
-        //    println(s" =========================== getMongoWriteList got item => ${item.toString}")
+//        println(s" =========================== getMongoWriteList got item => ${item.toString}")
         transferItemHandler.put(item)
+    }
+  }
+
+  def handleMessage(info: CryptoCurrencyTransferInfo, item: CryptoCurrencyTransferItem) {
+    item.status.get match {
+      case Confirming =>
+        deliverToBitwayProcessor(item.currency.get, TransferCryptoCurrency(item.currency.get, List(info), item.txType.get))
+      case Succeeded =>
+        deliverToAccountManager(CryptoTransferSucceeded(transferHandler.get(item.accountTransferId.get).get))
+      case Failed =>
+        deliverToAccountManager(CryptoTransferFailed(transferHandler.get(item.accountTransferId.get).get, ErrorCode.BitwayProcessFail))
+      case _ =>
     }
   }
 
@@ -155,12 +172,12 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   }
 
   private def deliverToAccountManager(event: Any) = {
-    // println(s">>>>>>>>>>>>>>>>>>>>> deliverToAccountManager => event = ${event.toString}")
+//    println(s">>>>>>>>>>>>>>>>>>>>> deliverToAccountManager => event = ${event.toString}")
     channelToAccountProcessor forward Deliver(Persistent(event), accountProcessorPath)
   }
 
   private def deliverToBitwayProcessor(currency: Currency, event: Any) = {
-    //  println(s">>>>>>>>>>>>>>>>>>>>> deliverToBitwayProcessor => currency = ${currency.toString}, event = ${event.toString}, path = ${bitwayProcessors(currency).path.toString}")
+//    println(s">>>>>>>>>>>>>>>>>>>>> deliverToBitwayProcessor => currency = ${currency.toString}, event = ${event.toString}, path = ${bitwayProcessors(currency).path.toString}")
     bitwayChannels(currency) forward Deliver(Persistent(event), bitwayProcessors(currency).path)
   }
 }
@@ -185,7 +202,7 @@ final class AccountTransferManager() extends Manager[TAccountTransferState] {
   }
 
   override def loadSnapshot(s: TAccountTransferState) {
-    println(">>>>>>>>>>>>>>> loadsnapshot =>" + s.toString)
+//    println(">>>>>>>>>>>>>>> loadsnapshot =>" + s.toString)
     lastTransferId = s.lastTransferId
     lastTransferItemId = s.lastTransferItemId
     lastBlockHeight = s.lastBlockHeight
