@@ -58,10 +58,12 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       } else {
         scheduleTryPour()
       }
-    case FetchAddresses(currency) if client.isDefined =>
-      client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
-        BitwayRequestType.GenerateAddress, currency, generateAddresses = Some(
-          GenerateAddresses(config.batchFetchAddressNum)))))
+    case FetchAddresses(currency) =>
+      if (client.isDefined) {
+        client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
+          BitwayRequestType.GenerateAddress, currency, generateAddresses = Some(
+            GenerateAddresses(config.batchFetchAddressNum)))))
+      }
 
     case m @ AllocateNewAddress(currency, _, _) =>
       val (address, needFetch) = manager.allocateAddress
@@ -75,21 +77,20 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.NotEnoughAddressInPool, None)
       }
 
-    case p @ ConfirmablePersistent(m @ TransferCryptoCurrency(currency, infos, t), _, _) if client.isDefined =>
-      confirm(p)
-      val (completedInfos, isFail) = manager.completeTransferInfos(infos, t == TransferType.HotToCold)
-      if (isFail) {
-        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.NoAddressFound)
-      } else {
-        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.Ok)
-        client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
-          BitwayRequestType.Transfer, currency, transferCryptoCurrency = Some(m.copy(transferInfos = completedInfos)))))
+    case p @ ConfirmablePersistent(m @ TransferCryptoCurrency(currency, infos, t), _, _) =>
+      if (client.isDefined) {
+        confirm(p)
+        val (completedInfos, isFail) = manager.completeTransferInfos(infos, t == TransferType.HotToCold)
+        if (isFail) {
+          sender ! TransferCryptoCurrencyResult(currency, ErrorCode.NoAddressFound)
+        } else {
+          sender ! TransferCryptoCurrencyResult(currency, ErrorCode.Ok)
+          client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
+            BitwayRequestType.Transfer, currency, transferCryptoCurrency = Some(m.copy(transferInfos = completedInfos)))))
+        }
       }
 
     case m @ BitwayMessage(currency, Some(res), None, None) =>
-      persist(MessageArriveTime(System.currentTimeMillis)) { event =>
-        updateState(event)
-      }
       if (res.error == ErrorCode.Ok) {
         persist(m) { event =>
           updateState(event)
@@ -98,29 +99,29 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         log.error("error occur when fetch addresses: " + res)
       }
     case m @ BitwayMessage(currency, None, Some(tx), None) =>
-      persist(MessageArriveTime(System.currentTimeMillis)) { event =>
-        updateState(event)
-      }
+      val txWithTime = if (tx.timestamp.isDefined) tx else tx.copy(timestamp = Some(System.currentTimeMillis))
       if (tx.status == TransferStatus.Failed) {
-        channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(
-          currency, List(tx))), transferProcessor.path)
+        persist(m.copy(tx = Some(txWithTime))) { event =>
+          channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(
+            currency, List(tx))), transferProcessor.path)
+        }
       } else {
         manager.completeCryptoCurrencyTransaction(tx) match {
           case None => log.debug("unrelated tx received")
-          case Some(completedTx) =>
+          case Some(completedTx) => persist(m.copy(tx = Some(txWithTime))) { event =>
             channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
               List(completedTx))), transferProcessor.path)
+          }
         }
       }
     case m @ BitwayMessage(currency, None, None, Some(blocksMsg)) =>
-      persist(MessageArriveTime(System.currentTimeMillis)) { event =>
-        updateState(event)
-      }
       val continuity = manager.getBlockContinuity(blocksMsg)
       continuity match {
         case DUP => log.info("receive block list which first block has seen: " + blocksMsg.blocks.head.index)
         case SUCCESSOR | REORG =>
-          persist(m) { event =>
+          val blocksMsgWithTime = if (blocksMsg.timestamp.isDefined)
+            blocksMsg else blocksMsg.copy(timestamp = Some(System.currentTimeMillis))
+          persist(m.copy(blocksMsg = Some(blocksMsgWithTime))) { event =>
             updateState(event)
             val relatedTxs = manager.extractTxsFromBlocks(blocksMsg.blocks.toList)
             if (relatedTxs.nonEmpty) {
@@ -129,10 +130,12 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
                 relatedTxs, reorgIndex)), transferProcessor.path)
             }
           }
-        case GAP if client.isDefined =>
-          client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
-            BitwayRequestType.GetMissedBlocks, currency, getMissedCryptoCurrencyBlocksRequest = Some(
-              GetMissedCryptoCurrencyBlocks(manager.getBlockIndexes.get, blocksMsg.blocks.head.index)))))
+        case GAP =>
+          if (client.isDefined) {
+            client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
+              BitwayRequestType.GetMissedBlocks, currency, getMissedCryptoCurrencyBlocksRequest = Some(
+                GetMissedCryptoCurrencyBlocks(manager.getBlockIndexes.get, blocksMsg.blocks.head.index)))))
+          }
         case OTHER_BRANCH =>
           throw new RuntimeException("The crypto currency seems has multi branches: " + currency)
       }
@@ -150,15 +153,18 @@ trait BitwayManagerBehavior {
 
   def updateState: Receive = {
     case AllocateNewAddress(currency, uid, Some(address)) => manager.addressAllocated(uid, address)
-    case MessageArriveTime(timestamp) => manager.updateLastAlive(timestamp)
     case BitwayMessage(currency, Some(res), None, None) =>
       if (res.addressType.isDefined && res.addresses.isDefined && res.addresses.get.size > 0)
         manager.faucetAddress(res.addressType.get, Set.empty[String] ++ res.addresses.get)
-    case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlocksMessage(startIndex, blocks))) =>
+    case BitwayMessage(currency, None, Some(tx), None) =>
+      if (tx.timestamp.isDefined) manager.updateLastAlive(tx.timestamp.get)
+    case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlocksMessage(startIndex, blocks, timestamp))) =>
+      if (timestamp.isDefined) manager.updateLastAlive(timestamp.get)
       manager.appendBlockChain(blocks.map(_.index).toList, startIndex)
       blocks foreach { block =>
         manager.updateLastTx(block.txs)
       }
+    case e => println("bitway updateState doesn't handle the message: ", e)
   }
 }
 
@@ -179,14 +185,16 @@ class BitwayReceiver(bitwayProcessor: ActorRef, supportedCurrency: Currency, con
   }
 
   def receive = LoggingReceive {
-    case ListenAtRedis if client.isDefined =>
-      client.get.blpop[String, Array[Byte]](1, getResponseChannel) match {
-        case Some(s) =>
-          val response = serializer.fromBinary(s._2, classOf[BitwayMessage.Immutable])
-          bitwayProcessor ! response
-        case None => None
+    case ListenAtRedis =>
+      if (client.isDefined) {
+        client.get.blpop[String, Array[Byte]](1, getResponseChannel) match {
+          case Some(s) =>
+            val response = serializer.fromBinary(s._2, classOf[BitwayMessage.Immutable])
+            bitwayProcessor ! response
+          case None => None
+        }
+        listenAtRedis()
       }
-      listenAtRedis()
   }
 
   private def listenAtRedis() {

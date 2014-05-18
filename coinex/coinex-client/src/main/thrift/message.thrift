@@ -171,7 +171,6 @@ typedef data.NotificationType                   _NotificationType
 /* I    */ struct MultiCryptoCurrencyTransactionMessage   {1: _Currency currency, 2: list<_CryptoCurrencyTransaction> txs, 3: optional _BlockIndex reorgIndex}
 /* C    */ struct QueryLatestCryptoCurrencyStatus         {1: _Currency currency, 2: _CryptoCurrencyAddressType addressType}
 /* R    */ struct QueryLatestCryptoCurrencyStatusResult   {1: _Currency currency, 2: map<string, _BlockIndex> lastTxs, 3: i64 lastAlive}
-/* P    */ struct MessageArriveTime                       {1: i64 timestamp}
 
 ////////// Bitway nodejs
 /* C    */ struct GenerateAddresses                       {1: i32 num}
@@ -181,7 +180,7 @@ typedef data.NotificationType                   _NotificationType
                                                               2: optional set<string> addresses,
                                                               3: optional _CryptoCurrencyAddressType addressType
                                                           }
-/* I    */ struct CryptoCurrencyBlocksMessage             {1: optional _BlockIndex reorgIndex, /* BlockIndex(None, None) means in another branch */ 2: list<_CryptoCurrencyBlock> blocks}
+/* I    */ struct CryptoCurrencyBlocksMessage             {1: optional _BlockIndex reorgIndex, /* BlockIndex(None, None) means in another branch */ 2: list<_CryptoCurrencyBlock> blocks, 3: optional i64 timestamp}
 /* C    */ struct BitwayRequest                           {
                                                               1: _BitwayRequestType type
                                                               2: _Currency currency

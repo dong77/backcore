@@ -48,17 +48,20 @@ object Client {
 
   var robotMap: Map[String, Long] = Map.empty[String, Long]
 
-  // register default user and deposit
-  userMap.map(kv => registerUser(kv._2, kv._1 + "@coinport.com", kv._1))
-  userMap foreach { kv =>
-    AccountService.deposit(kv._2, Btc, 10000 * 1000)
-    AccountService.deposit(kv._2, Cny, 1000000 * 100)
-  }
-
   var basicRisk = 10.0
   val risk = userMap.map(kv => { basicRisk += 10.0; (kv._2 -> basicRisk) })
 
   var did = -1
+
+  def registerDepositUsers = {
+    // register default user and deposit
+    userMap.map(kv => registerUser(kv._2, kv._1 + "@coinport.com", kv._1))
+    userMap foreach { kv =>
+      AccountService.deposit(kv._2, Btc, 10000 * 1000)
+      AccountService.deposit(kv._2, Cny, 1000000 * 100)
+    }
+  }
+
   def addGofvRobots(num: Int) {
 
     1 to num foreach { i =>
@@ -215,9 +218,40 @@ object Client {
     userMap.map(kv => registerUser(kv._2, kv._1 + "@coinport.com", kv._1))
   }
 
+  def getBtcAddress = {
+    Client.backend ? AllocateNewAddress(Btc, 1425L) map { i =>
+      println(i)
+    }
+  }
+
+  // mpb25Ct6QLc2qctSTKxsaeQUWkPLLChyE5
+  def sendTxMessage(address: String) = {
+    Client.backend ! BitwayMessage(Btc, tx = Some(CryptoCurrencyTransaction(
+      sigId = Some("mockSigId1"),
+      ids = Some(List(1425L)),
+      inputs = Some(Set(CryptoCurrencyTransactionPort("inputAddr1", Some(1.0)))),
+      outputs = Some(Set(CryptoCurrencyTransactionPort(address, Some(1.0), userId = Some(1425L)))),
+      prevBlock = Some(BlockIndex(Some("blockId1"), Some(1))),
+      includedBlock = Some(BlockIndex(Some("blockId2"), Some(2))),
+      status = TransferStatus.Confirming
+    )))
+  }
+
+  def sendHeartBlockMessage(prevId: String, prevH: Int, id: String, h: Int) = {
+    Client.backend ! BitwayMessage(Btc, blocksMsg = Some(CryptoCurrencyBlocksMessage(
+      blocks = List(CryptoCurrencyBlock(BlockIndex(Some(id), Some(h)), BlockIndex(Some(prevId), Some(prevH)),
+        txs = List(CryptoCurrencyTransaction(
+          inputs = Some(Set(CryptoCurrencyTransactionPort("inputAddr1", Some(1.0)))),
+          outputs = Some(Set(CryptoCurrencyTransactionPort("outputAddr1", Some(1.0)))),
+          status = TransferStatus.Confirming
+        ))))
+    )))
+  }
+
   def main(args: Array[String]) {
 
     args(0) match {
+      case "reg" => registerDepositUsers
       case "add" => addGofvRobots(args(1).toInt)
       case "rm" => removeGofvRobots
       case _ => println("usage: \nClient add 100    -- add 100 robots\nrm    -- remove all robots")

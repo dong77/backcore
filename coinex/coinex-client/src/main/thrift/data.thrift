@@ -473,15 +473,16 @@ struct CryptoCurrencyTransferInfo {
 }
 
 struct CryptoCurrencyTransaction {
-    1: optional string sigId
-    2: optional string txid
-    3: optional list<i64> ids
-    4: optional set<CryptoCurrencyTransactionPort> inputs
-    5: optional set<CryptoCurrencyTransactionPort> outputs
-    6: optional BlockIndex prevBlock
-    7: optional BlockIndex includedBlock
-    8: optional TransferType txType
-    9: TransferStatus status
+    1:  optional string sigId
+    2:  optional string txid
+    3:  optional list<i64> ids
+    4:  optional set<CryptoCurrencyTransactionPort> inputs
+    5:  optional set<CryptoCurrencyTransactionPort> outputs
+    6:  optional BlockIndex prevBlock
+    7:  optional BlockIndex includedBlock
+    8:  optional TransferType txType
+    9:  TransferStatus status
+    10: optional i64 timestamp
 }
 
 struct CryptoCurrencyBlock {

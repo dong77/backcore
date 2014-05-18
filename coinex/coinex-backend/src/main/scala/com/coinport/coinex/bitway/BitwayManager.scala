@@ -84,7 +84,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
 
   def updateLastTx(txs: Seq[CryptoCurrencyTransaction]) {
     txs.foreach {
-      case CryptoCurrencyTransaction(_, Some(txid), _, Some(inputs), Some(outputs), _, Some(includedBlock), _, _) =>
+      case CryptoCurrencyTransaction(_, Some(txid), _, Some(inputs), Some(outputs), _, Some(includedBlock), _, _, _) =>
         (inputs ++ outputs).filter(port => addressLastTx.contains(port.address)).foreach { port =>
           if (includedBlock.height.isDefined)
             addressLastTx += (port.address -> BlockIndex(Some(txid), includedBlock.height))
@@ -195,7 +195,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     tx: CryptoCurrencyTransaction,
     prevBlock: Option[BlockIndex] = None,
     includedBlock: Option[BlockIndex] = None): Option[CryptoCurrencyTransaction] = {
-    val CryptoCurrencyTransaction(_, _, _, inputs, outputs, _, _, _, status) = tx
+    val CryptoCurrencyTransaction(_, _, _, inputs, outputs, _, _, _, status, _) = tx
     if (!inputs.isDefined || !outputs.isDefined) {
       None
     } else {

@@ -98,7 +98,6 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cLogin = JsonScalaCodec(Login)
   lazy val _cLoginFailed = JsonScalaCodec(LoginFailed)
   lazy val _cLoginSucceeded = JsonScalaCodec(LoginSucceeded)
-  lazy val _cMessageArriveTime = JsonScalaCodec(MessageArriveTime)
   lazy val _cMessageNotSupported = JsonScalaCodec(MessageNotSupported)
   lazy val _cMultiCryptoCurrencyTransactionMessage = JsonScalaCodec(MultiCryptoCurrencyTransactionMessage)
   lazy val _cOrderCancelled = JsonScalaCodec(OrderCancelled)
@@ -263,7 +262,6 @@ class ThriftJsonSerializer extends Serializer {
     case m: Login => _cLogin(m)
     case m: LoginFailed => _cLoginFailed(m)
     case m: LoginSucceeded => _cLoginSucceeded(m)
-    case m: MessageArriveTime => _cMessageArriveTime(m)
     case m: MessageNotSupported => _cMessageNotSupported(m)
     case m: MultiCryptoCurrencyTransactionMessage => _cMultiCryptoCurrencyTransactionMessage(m)
     case m: OrderCancelled => _cOrderCancelled(m)
@@ -432,7 +430,6 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[Login.Immutable] => _cLogin.invert(bytes).get
     case Some(c) if c == classOf[LoginFailed.Immutable] => _cLoginFailed.invert(bytes).get
     case Some(c) if c == classOf[LoginSucceeded.Immutable] => _cLoginSucceeded.invert(bytes).get
-    case Some(c) if c == classOf[MessageArriveTime.Immutable] => _cMessageArriveTime.invert(bytes).get
     case Some(c) if c == classOf[MessageNotSupported.Immutable] => _cMessageNotSupported.invert(bytes).get
     case Some(c) if c == classOf[MultiCryptoCurrencyTransactionMessage.Immutable] => _cMultiCryptoCurrencyTransactionMessage.invert(bytes).get
     case Some(c) if c == classOf[OrderCancelled.Immutable] => _cOrderCancelled.invert(bytes).get
