@@ -48,11 +48,7 @@ CryptoProxy.MAX_CONFIRM_NUM = 9999999;
 
 CryptoProxy.prototype.generateOneAddress = function(unusedIndex, callback) {
     this.rpc.getNewAddress(CryptoProxy.ACCOUNT, function(error, address) {
-        if (error) {
-            callback(error);
-        } else {
-            callback(null, address.result);
-        }
+        CryptoProxy.invokeCallback(error, address, callback);
     });
 };
 
@@ -74,6 +70,24 @@ CryptoProxy.prototype.generateUserAddress = function(request, callback) {
             }
         });
     }
+};
+
+
+CryptoProxy.prototype.getBlockHash = function(index, callback) {
+    this.rpc.getBlockHash(index, function(error, hash) {
+        CryptoProxy.invokeCallback(error, hash, callback);
+    });
+};
+
+CryptoProxy.prototype.getBlock = function(hash, callback) {
+    this.rpc.getBlock(hash, function(error, block) {
+        CryptoProxy.invokeCallback(error, block, callback);
+    });
+};
+
+CryptoProxy.prototype.getBlockByIndex = function(index, callback) {
+    var self = this;
+    Async.compose(self.getBlock.bind(self), self.getBlockHash.bind(self))(index, callback);
 };
 
 CryptoProxy.prototype.makeNormalResponse = function(type, currency, response) {
@@ -98,5 +112,13 @@ CryptoProxy.prototype.makeNormalResponse = function(type, currency, response) {
         default:
             console.log("Inavalid Type!");
             return null
+    }
+};
+
+CryptoProxy.invokeCallback = function(error, result, callback) {
+    if (error) {
+        callback(error);
+    } else {
+        callback(null, result.result);
     }
 };
