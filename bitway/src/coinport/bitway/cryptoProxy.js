@@ -572,9 +572,9 @@ var getInputAddresses = function(cryptoProxy, input, cctx, finishLength) {
     console.log("getInputAddresses input-txid: " + input.txid);
     console.log("finishLength: " + finishLength);
     console.log("input-vout: " + input.vout);
-    var vout = input.vout;A
+    var vout = input.vout;
     var rpc = cryptoProxy.rpc;
-    rpc.getRawTransaction(input.txid, needJson, function(errIn,retIn){
+    rpc.getRawTransaction(input.txid, cryptoProxy.needJson, function(errIn,retIn){
         if(errIn){
             console.log("errIn code: " + errIn.code);
             console.log("errIn message: " + errIn.message);
@@ -592,7 +592,7 @@ var getInputAddresses = function(cryptoProxy, input, cctx, finishLength) {
             console.log("cctx.outputs.length: " + cctx.outputs.length);
             if(cctx.inputs.length == finishLength){
                 var sigId = getSigId(cctx);
-                proxy.innerClient.get(sigId, function(errRedis, reply){
+                cryptoProxy.innerRedis.get(sigId, function(errRedis, reply){
                     if(errRedis){
                         console("errRedis: " + errRedis);
                     }else{
@@ -611,13 +611,13 @@ var getTxsSinceBlock = function(cryptoProxy, index) {
     var rpc = cryptoProxy.rpc;
     rpc.getBlockHash(index, function(errHash, retHash){
         if(!errHash && retHash){
-            console.log('** TX Received **');
+            console.log('** TX Received **: ' + retHash.result);
             rpc.listSinceBlock(retHash.result, function(errSinceBlock, retSinceBlock){
                 if(!errSinceBlock && retSinceBlock){
                     console.log("transactions.length: " + retSinceBlock.result.transactions.length);
                     for(var i = 0; i < retSinceBlock.result.transactions.length; i++){
-                        var txid = retSinceBlock.result.transactions[i];
-                        console.log("txid: " + txid);
+                        var txid = retSinceBlock.result.transactions[i].txid;
+                        console.log("account: " + txid + " txid: " + txid);
                         rpc.getRawTransaction(txid, cryptoProxy.needJson, function(errTx,retTx){
                             if(errTx){
                                 console.log("errTx code: " + errTx.code);
