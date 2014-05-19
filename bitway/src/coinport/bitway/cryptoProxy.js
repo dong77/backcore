@@ -48,14 +48,14 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, rpcConfig, min
 };
 
 CryptoProxy.prototype.checkTx = function(cryptoProxy){
-    console.log('** CHECK TX **' + cryptoProxy.currency + " begin time: " + (new Date().getTime()));
+    console.log('** CHECK TX **' + cryptoProxy.currency + " begin time: " + (new Date().toLocaleString()));
     var rpc = cryptoProxy.rpc;
     rpc.getBlockCount(function(errCount,retCount){
         if(errCount){
             console.log("errCount code: " + errCount.code);
             console.log("errCount message: " + errCount.message);
         }else{
-            console.log("current block index: " + retCount.result);
+            console.log("check tx in block: " + retCount.result);
             getTxsSinceBlock(cryptoProxy, retCount.result);
         }
     });
@@ -596,7 +596,11 @@ var getInputAddresses = function(cryptoProxy, input, cctx, finishLength) {
                 if(vout == retIn.result.vout[j].n){
                     console.log("success match: " + retIn.result.vout[j].n);
                     var input = new CryptoCurrencyTransactionPort();
-                    input.address = retIn.result.vout[j].scriptPubKey.addresses.toString();
+                    if(retIn.result.vout[j].scriptPubKey.addresses != null){
+                        input.address = retIn.result.vout[j].scriptPubKey.addresses.toString();
+                    }else{
+                        input.address = "";
+                    }
                     input.amount = retIn.result.vout[j].value;
                     console.log("input.address: " + input.address);
                     cctx.inputs.push(input);
@@ -626,7 +630,7 @@ var getTxsSinceBlock = function(cryptoProxy, index) {
     var rpc = cryptoProxy.rpc;
     rpc.getBlockHash(index, function(errHash, retHash){
         if(!errHash && retHash){
-            console.log('** TX Received **: ' + retHash.result);
+            console.log('check tx in block: ' + index);
             rpc.listSinceBlock(retHash.result, function(errSinceBlock, retSinceBlock){
                 if(!errSinceBlock && retSinceBlock){
                     console.log("transactions.length: " + retSinceBlock.result.transactions.length);
@@ -673,8 +677,7 @@ var getBlockByIndex = function(cryptoProxy, index) {
                     console.log("errBlock message: " + errBlock.message);
                 }else{
                     var index = new BlockIndex({id: retBlock.result.hash, height:retBlock.result.height});
-                    console.log("height: " + index.height + "index,hash: " + index.id);
-                    console.log(index.id);
+                    console.log("height: " + index.height + "hash: " + index.id);
                     var prevIndex = new BlockIndex({id:retBlock.result.previousblockhash,
                         height:retBlock.result.height - 1});
                     var txs = [];
@@ -722,8 +725,11 @@ var getAllTxsInBlock = function(cryptoProxy, input, txFinishLength, blockFinishL
                     if(vout == retIn.result.vout[j].n){
                         var input = new CryptoCurrencyTransactionPort();
                         //TODO:scriptPubKey.addresses maybe null?
-                        if(input.address = retIn.result.vout[j].scriptPubKey.type == "pubkeyhash"){
+                        if(input.address = retIn.result.vout[j].scriptPubKey.addresses != null){
                             input.address = retIn.result.vout[j].scriptPubKey.addresses.toString();
+                        }else{
+                            console.log("addresses == null");
+                            input.address = "";
                         }
                         input.amount = retIn.result.vout[j].value;
                         //console.log("succsess match input.address: " + input.address);
@@ -819,9 +825,9 @@ var displayBlocksContent = function(blockArray){
         console.log("index height: " + blockArray[i].index.height);
         console.log("prevIndex id: " + blockArray[i].prevIndex.id);
         console.log("prevIndex height: " + blockArray[i].prevIndex.height);
-//        for(var j =0; j < blockArray[i].txs.length; j++){
-//            displayTxContent(blockArray[i].txs[j]);
-//        }
+        for(var j =0; j < blockArray[i].txs.length; j++){
+            displayTxContent(blockArray[i].txs[j]);
+        }
     }
 };
 
