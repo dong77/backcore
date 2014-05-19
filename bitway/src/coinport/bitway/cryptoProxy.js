@@ -72,14 +72,16 @@ CryptoProxy.prototype.checkBlock = function(cryptoProxy){
             }else{
                 console.log("current block index: " + retCount.result);
                 console.log("last report block index: " + retLastIndex);
-                if(!isNaN(retLastIndex) && retLastIndex < retCount.result){
-                    console.log("Behind the newest: " + (retCount.result - retLastIndex));
-                    var checkBlockIndex = Number(retLastIndex) + Number(1);
-                    getBlockByIndex(cryptoProxy, checkBlockIndex);
-                }else if(!isNaN(retLastIndex) && retLastIndex == retCount.result){
-                    console.log("The newest block has already been reported!");
-                }else{
+                if(retLastIndex == null){
                     getBlockByIndex(cryptoProxy, retCount.result);
+                }else{
+                    if(!isNaN(retLastIndex) && retLastIndex < retCount.result){
+                        console.log("Behind the newest: " + (retCount.result - retLastIndex));
+                        var checkBlockIndex = Number(retLastIndex) + Number(1);
+                        getBlockByIndex(cryptoProxy, checkBlockIndex);
+                    }else{
+                        console.log("The newest block has already been reported!");
+                    }
                 }
             }
         });
