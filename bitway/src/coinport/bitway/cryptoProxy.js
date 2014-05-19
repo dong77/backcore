@@ -197,18 +197,27 @@ var txWithDefiniteFrom = function(cryptoProxy, request, redisProxy){
         if(errAddr){
         }else{
             if(retAddr.result.length == 0){
-                rpc.getNewAddress(HOT_ACCOUNT, function(errAddress, retAddress) {
-                    if (errAddress) {
-                        console.error('An error occured generate address');
-                        console.error(errAddress);
-                    }else{
-                        for(var i = 0; i < request.transferInfos.length; i++){
-                            request.transferInfos[i].to = retAddress.result;
-                            makeTransaction(cryptoProxy, request.transferInfos[i], request.transferInfos.length,
-                                fromAddresses, transactions, addresses, ids, redisProxy);
+                for(var m = 0; m < 10; m++)
+                {
+                    rpc.getNewAddress(cryptoProxy.HOT_ACCOUNT, function(errAddress, retAddress) {
+                        if (errAddress) {
+                            console.error('An error occured generate hot address');
+                            console.error(errAddress);
+                        }else{
+                            var addresses = [];
+                            addresses.push(retAddress.result);
+                            var generateAddressResponse = new GenerateAddressesResult({error: ErrorCode.OK,
+                                    addresses: addresses, addressType: CryptoCurrencyAddressType.HOT});
+                            makeNormalResponse(BitwayResponseType.GENERATE_ADDRESS, cryptoProxy.currency, 
+                                generateAddressResponse, redisProxy);
+                            for(var i = 0; i < request.transferInfos.length; i++){
+                                request.transferInfos[i].to = retAddress.result;
+                                makeTransaction(cryptoProxy, request.transferInfos[i], request.transferInfos.length,
+                                    fromAddresses, transactions, addresses, ids, redisProxy);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }else{
                 var toPos = Math.floor(Math.random()*retAddr.result.length);
                 var toAddress = retAddr.result[toPos];
@@ -663,8 +672,8 @@ var getBlockByIndex = function(cryptoProxy, index) {
                     console.log("errBlock code: " + errBlock.code);
                     console.log("errBlock message: " + errBlock.message);
                 }else{
-                    console.log("retBlock.result.hash: " + retBlock.result.hash);
                     var index = new BlockIndex({id: retBlock.result.hash, height:retBlock.result.height});
+                    console.log("height: " + index.height + "index,hash: " + index.id);
                     console.log(index.id);
                     var prevIndex = new BlockIndex({id:retBlock.result.previousblockhash,
                         height:retBlock.result.height - 1});
