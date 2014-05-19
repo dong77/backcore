@@ -39,15 +39,10 @@ class MarketProcessor(
 
     case p @ ConfirmablePersistent(m @ OrderFundFrozen(side, order: Order), seq, _) =>
       confirm(p)
-      if (!manager.isOrderPriceInGoodRange(side, order.price)) {
-        sender ! SubmitOrderFailed(side, order, PriceOutOfRange)
-        val unfrozen = OrderCancelled(side, order)
-        channelToAccountProcessor forward Deliver(p.withPayload(unfrozen), accountProcessorPath)
-      } else {
-        // Update timestamp again
-        val updated = m.copy(order = m.order.copy(timestamp = Some(System.currentTimeMillis)))
-        persist(updated)(updateState)
-      }
+
+      // Update timestamp again
+      val updated = m.copy(order = m.order.copy(timestamp = Some(System.currentTimeMillis)))
+      persist(updated)(updateState)
   }
 
   def updateState: Receive = {
@@ -57,7 +52,13 @@ class MarketProcessor(
       channelToAccountProcessor forward Deliver(Persistent(cancelled), accountProcessorPath)
 
     case OrderFundFrozen(side, order: Order) =>
-      val orderSubmitted = manager.addOrderToMarket(side, order)
-      channelToAccountProcessor forward Deliver(Persistent(orderSubmitted), accountProcessorPath)
+      if (!manager.isOrderPriceInGoodRange(side, order.price)) {
+        sender ! SubmitOrderFailed(side, order, PriceOutOfRange)
+        val unfrozen = OrderCancelled(side, order)
+        channelToAccountProcessor forward Deliver(Persistent(unfrozen), accountProcessorPath)
+      } else {
+        val orderSubmitted = manager.addOrderToMarket(side, order)
+        channelToAccountProcessor forward Deliver(Persistent(orderSubmitted), accountProcessorPath)
+      }
   }
 }
