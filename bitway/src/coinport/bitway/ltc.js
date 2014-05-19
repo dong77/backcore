@@ -40,7 +40,7 @@ var ltcRedisProxy = new RedisProxy("LTC", "127.0.0.1", "6379");
 ltcRedisProxy.start();
 
 var minConfirmNum = 6;
-var ltcProxy = new CryptoProxy("ltc", ltcRpcConfig, minConfirmNum,  ltcRedisProxy);
+var ltcProxy = new CryptoProxy(Currency.LTC, ltcRpcConfig, minConfirmNum,  ltcRedisProxy);
 
 ltcRedisProxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
    ltcProxy.generateUserAddress(ltcProxy, request, ltcRedisProxy);

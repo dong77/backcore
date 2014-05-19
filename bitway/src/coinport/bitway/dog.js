@@ -40,7 +40,7 @@ var dogRedisProxy = new RedisProxy("dog", "127.0.0.1", "6379");
 dogRedisProxy.start();
 
 var minConfirmNum = 6;
-var dogProxy = new CryptoProxy("dog", dogRpcConfig, minConfirmNum,  dogRedisProxy);
+var dogProxy = new CryptoProxy(Currency.DOG, dogRpcConfig, minConfirmNum,  dogRedisProxy);
 
 dogRedisProxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
    dogProxy.generateUserAddress(dogProxy, request, dogRedisProxy);

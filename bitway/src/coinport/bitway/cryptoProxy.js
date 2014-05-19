@@ -40,7 +40,7 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, rpcConfig, min
     this.MIN_GENERATE_ADDR_NUM = 1;
     this.MAX_GENERATE_ADDR_NUM = 1000;
     this.needJson = 1;
-    this.lastReportBlockIndex = currency.toLowerCase() + "lastReportBlockIndex";
+    this.lastReportBlockIndex = currency + "lastReportBlockIndex";
     this.MIN_CONFIRM_NUM = minConfirmNum;
     this.MAX_CONFIRM_NUM = 9999999;
     this.innerRedis = Redis.createClient('6379', '127.0.0.1', { return_buffers: true });
@@ -643,7 +643,7 @@ var getTxsSinceBlock = function(cryptoProxy, index) {
 };
 
 var getBlockByIndex = function(cryptoProxy, index) {
-    console.log("current block index: " + index);
+    console.log("block index: " + index);
     var rpc = cryptoProxy.rpc;
     rpc.getBlockHash(index, function(errHash,retHash){
         if(errHash){
@@ -688,11 +688,11 @@ var getBlockByIndex = function(cryptoProxy, index) {
 };
 
 var getAllTxsInBlock = function(cryptoProxy, input, txFinishLength, blockFinishLength, cctx, block){
-    /*console.log("input-txid: " + input.txid);
+    console.log("input-txid: " + input.txid);
     console.log("txFinishLength: " + txFinishLength);
     console.log("blockFinishLength: " + blockFinishLength);
     console.log("input-vout: " + input.vout);
-    console.log("block.index: " + block.index.id);*/
+    console.log("block.index: " + block.index.id);
     var rpc = cryptoProxy.rpc;
     var vout = input.vout;
     if(input.txid != undefined){
@@ -704,7 +704,10 @@ var getAllTxsInBlock = function(cryptoProxy, input, txFinishLength, blockFinishL
                 for(var j = 0; j < retIn.result.vout.length; j++){
                     if(vout == retIn.result.vout[j].n){
                         var input = new CryptoCurrencyTransactionPort();
-                        input.address = retIn.result.vout[j].scriptPubKey.addresses.toString();
+                        //TODO:scriptPubKey.addresses maybe null?
+                        if(input.address = retIn.result.vout[j].scriptPubKey.type == "pubkeyhash"){
+                            input.address = retIn.result.vout[j].scriptPubKey.addresses.toString();
+                        }
                         input.amount = retIn.result.vout[j].value;
                         //console.log("succsess match input.address: " + input.address);
                         cctx.inputs.push(input);
