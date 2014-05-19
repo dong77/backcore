@@ -566,7 +566,7 @@ var getSigId = function(cctx){
     sha256.update(sigId);
     cctx.sigId = sha256.digest('hex');
     console.log('sha256 sigId: ' + cctx.sigId);
-    return sigId;
+    return cctx.sigId;
 };
 
 var getOutputAddresses = function(tx, cctx){
