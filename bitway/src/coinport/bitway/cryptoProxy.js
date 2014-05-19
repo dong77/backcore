@@ -487,7 +487,7 @@ var constructBlocks = function(cryptoProxy, redisProxy, input, txFinishLength, b
                 if(errRedis){
                     console("errRedis: " + errRedis);
                 }else{
-                    cctx.ids = relpy;
+                    cctx.ids = reply;
                     block.txs.push(cctx);
                     if(block.txs.length == blockFinishLength){
                         console.log("*****blocksMsg.blocks.length: " + blocksMsg.blocks.length);
