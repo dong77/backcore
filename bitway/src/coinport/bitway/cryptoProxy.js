@@ -476,7 +476,7 @@ var constructBlocks = function(cryptoProxy, redisProxy, input, txFinishLength, b
                                 console.log("*****blocksMsg.blocks.length: " + blocksMsg.blocks.length);
                                 blocksMsg.blocks.push(block);
                                 if(blocksMsg.blocks.length == blocksFinishLength){
-                                    makeFinalBlocksResponse(redisProxy, request, blocksMsg);
+                                    makeFinalBlocksResponse(cryptoProxy, redisProxy, request, blocksMsg);
                                 }
                             }
                         }
@@ -506,7 +506,7 @@ var constructBlocks = function(cryptoProxy, redisProxy, input, txFinishLength, b
                         console.log("*****blocksMsg.blocks.length: " + blocksMsg.blocks.length);
                         blocksMsg.blocks.push(block);
                         if(blocksMsg.blocks.length == blocksFinishLength){
-                            makeFinalBlocksResponse(redisProxy, request, blocksMsg);
+                            makeFinalBlocksResponse(cryptoProxy, redisProxy, request, blocksMsg);
                         }
                     }
                 }
@@ -525,7 +525,7 @@ var compare = function(blockA, blockB){
    }
 };
 
-var makeFinalBlocksResponse = function(redisProxy, request, blocksMsg){
+var makeFinalBlocksResponse = function(cryptoProxy, redisProxy, request, blocksMsg){
     blocksMsg.blocks.sort(compare);
     var diffPos = 0;
     var reorgIndex = new BlockIndex({id: null, height: null});
