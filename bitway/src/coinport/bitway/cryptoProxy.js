@@ -34,13 +34,13 @@ var RedisProxy                      = require('./redis/redis_proxy').RedisProxy,
 var CryptoProxy = module.exports.CryptoProxy = function(currency, rpcConfig, minConfirmNum, redisProxy) {
     this.currency = currency;
     this.rpc = new Bitcore.RpcClient(rpcConfig);
-    console.log("rpc" + this.rpc);
     this.ACCOUNT = "customers";
     this.HOT_ACCOUNT = "coinportTest";
     this.tip = 0.0001;
     this.MIN_GENERATE_ADDR_NUM = 1;
     this.MAX_GENERATE_ADDR_NUM = 1000;
     this.needJson = 1;
+    this.lastReportBlockIndex = currency.toLowerCase() + "lastReportBlockIndex";
     this.MIN_CONFIRM_NUM = minConfirmNum;
     this.MAX_CONFIRM_NUM = 9999999;
     this.innerRedis = Redis.createClient('6379', '127.0.0.1', { return_buffers: true });
@@ -64,14 +64,25 @@ CryptoProxy.prototype.checkTx = function(cryptoProxy){
 CryptoProxy.prototype.checkBlock = function(cryptoProxy){
     console.log('** CHECK_BLOCK **' + "begin Time: " + (new Date().toLocaleString()));
     var rpc = cryptoProxy.rpc;
-    rpc.getBlockCount(function(errCount,retCount){
-        if(errCount){
-            console.log("errCount code: " + errCount.code);
-            console.log("errCount message: " + errCount.message);
-        }else{
-            console.log("current block index: " + retCount.result);
-            getBlockByIndex(cryptoProxy, retCount.result);
-        }
+    cryptoProxy.innerRedis.get(cryptoProxy.lastReportBlockIndex, function(errLastIndex, retLastIndex){
+        rpc.getBlockCount(function(errCount,retCount){
+            if(errCount){
+                console.log("errCount code: " + errCount.code);
+                console.log("errCount message: " + errCount.message);
+            }else{
+                console.log("current block index: " + retCount.result);
+                console.log("last report block index: " + retLastIndex);
+                if(!isNaN(retLastIndex) && retLastIndex < retCount.result){
+                    console.log("Behind the newest: " + (retCount.result - retLastIndex));
+                    var checkBlockIndex = Number(retLastIndex) + Number(1);
+                    getBlockByIndex(cryptoProxy, checkBlockIndex);
+                }else if(!isNaN(retLastIndex) && retLastIndex == retCount.result){
+                    console.log("The newest block has already been reported!");
+                }else{
+                    getBlockByIndex(cryptoProxy, retCount.result);
+                }
+            }
+        });
     });
 };
 
@@ -446,6 +457,7 @@ var constructBlocks = function(cryptoProxy, redisProxy, input, txFinishLength, b
                         if(errRedis){
                             console("errRedis: " + errRedis);
                         }else{
+                            cctx.ids = reply;
                             block.txs.push(cctx);
                             if(block.txs.length == blockFinishLength){
                                 console.log("*****blocksMsg.blocks.length: " + blocksMsg.blocks.length);
@@ -473,6 +485,7 @@ var constructBlocks = function(cryptoProxy, redisProxy, input, txFinishLength, b
                 if(errRedis){
                     console("errRedis: " + errRedis);
                 }else{
+                    cctx.ids = relpy;
                     block.txs.push(cctx);
                     if(block.txs.length == blockFinishLength){
                         console.log("*****blocksMsg.blocks.length: " + blocksMsg.blocks.length);
@@ -711,6 +724,15 @@ var getAllTxsInBlock = function(cryptoProxy, input, txFinishLength, blockFinishL
                             if(block.txs.length == blockFinishLength){
                                 var blocksMsg = new CryptoCurrencyBlocksMessage({blocks:[]});
                                 blocksMsg.blocks.push(block);
+                                console.log("cryptoProxy.lastReportBlockIndex: ", cryptoProxy.lastReportBlockIndex);
+                                cryptoProxy.innerRedis.set(cryptoProxy.lastReportBlockIndex,
+                                    block.index.height, function(err, reply) {  
+                                    if (err) {  
+                                        console.log(err);  
+                                        return;  
+                                    } 
+                                });
+                                console.log("##########################################################");
                                 makeNormalResponse(BitwayResponseType.AUTO_REPORT_BLOCKS, cryptoProxy.currency, 
                                     blocksMsg, cryptoProxy.redisProxy);
                             }
@@ -737,6 +759,13 @@ var getAllTxsInBlock = function(cryptoProxy, input, txFinishLength, blockFinishL
                     if(block.txs.length == blockFinishLength){
                         var blocksMsg = new CryptoCurrencyBlocksMessage({blocks:[]});
                         blocksMsg.blocks.push(block);
+                        cryptoProxy.innerRedis.set(cryptoProxy.lastReportBlockIndex, 
+                            block.index.height, function(err, reply){
+                            if (err) {  
+                                console.log(err);  
+                                return;  
+                            } 
+                        });
                         makeNormalResponse(BitwayResponseType.AUTO_REPORT_BLOCKS, cryptoProxy.currency, 
                             blocksMsg, cryptoProxy.redisProxy);
                     }
