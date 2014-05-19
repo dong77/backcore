@@ -224,10 +224,14 @@ object Client {
     }
   }
 
-  // mpb25Ct6QLc2qctSTKxsaeQUWkPLLChyE5
-  def sendTxMessage(address: String) = {
+  def faucetBtcUserAddress = {
+    Client.backend ! BitwayMessage(Btc, generateAddressResponse = Some(GenerateAddressesResult(ErrorCode.Ok, Some(Set("userAddress1")), Some(CryptoCurrencyAddressType.Unused))))
+  }
+
+  // userAddress1
+  def sendTxMessage(address: String, sigId: String = "mockSigId1") = {
     Client.backend ! BitwayMessage(Btc, tx = Some(CryptoCurrencyTransaction(
-      sigId = Some("mockSigId1"),
+      sigId = Some(sigId),
       ids = Some(List(1425L)),
       inputs = Some(Set(CryptoCurrencyTransactionPort("inputAddr1", Some(1.0)))),
       outputs = Some(Set(CryptoCurrencyTransactionPort(address, Some(1.0), userId = Some(1425L)))),
@@ -237,12 +241,14 @@ object Client {
     )))
   }
 
-  def sendHeartBlockMessage(prevId: String, prevH: Int, id: String, h: Int) = {
+  def sendHeartBlockMessage(prevId: String, prevH: Int, id: String, h: Int, address: String = "outputAddr1", sigId: String = "mockSigId1") = {
     Client.backend ! BitwayMessage(Btc, blocksMsg = Some(CryptoCurrencyBlocksMessage(
       blocks = List(CryptoCurrencyBlock(BlockIndex(Some(id), Some(h)), BlockIndex(Some(prevId), Some(prevH)),
         txs = List(CryptoCurrencyTransaction(
+          sigId = Some(sigId),
+          ids = Some(List(1425L)),
           inputs = Some(Set(CryptoCurrencyTransactionPort("inputAddr1", Some(1.0)))),
-          outputs = Some(Set(CryptoCurrencyTransactionPort("outputAddr1", Some(1.0)))),
+          outputs = Some(Set(CryptoCurrencyTransactionPort(address, Some(1.0)))),
           status = TransferStatus.Confirming
         ))))
     )))
