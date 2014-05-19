@@ -459,7 +459,9 @@ var constructBlocks = function(cryptoProxy, redisProxy, input, txFinishLength, b
                         if(errRedis){
                             console("errRedis: " + errRedis);
                         }else{
-                            cctx.ids = reply;
+                            if(reply != null){
+                                cctx.ids = reply;
+                            }
                             block.txs.push(cctx);
                             if(block.txs.length == blockFinishLength){
                                 console.log("*****blocksMsg.blocks.length: " + blocksMsg.blocks.length);
@@ -487,7 +489,9 @@ var constructBlocks = function(cryptoProxy, redisProxy, input, txFinishLength, b
                 if(errRedis){
                     console("errRedis: " + errRedis);
                 }else{
-                    cctx.ids = reply;
+                    if(reply != null){
+                        cctx.ids = reply;
+                    }
                     block.txs.push(cctx);
                     if(block.txs.length == blockFinishLength){
                         console.log("*****blocksMsg.blocks.length: " + blocksMsg.blocks.length);
@@ -597,7 +601,9 @@ var getInputAddresses = function(cryptoProxy, input, cctx, finishLength) {
                         console("errRedis: " + errRedis);
                     }else{
                         console.log("cctx.ids: " + reply);
-                        cctx.ids = reply;
+                        if(reply != null){
+                            cctx.ids = reply;
+                        }
                         makeNormalResponse(BitwayResponseType.TRANSACTION, cryptoProxy.currency,
                             cctx, cryptoProxy.redisProxy);
                     }
@@ -724,7 +730,9 @@ var getAllTxsInBlock = function(cryptoProxy, input, txFinishLength, blockFinishL
                             console("errRedis: " + errRedis);
                         }else{
                             console.log("cctx.ids: " + reply);
-                            cctx.ids = reply;
+                            if(reply != null){
+                                cctx.ids = reply;
+                            }
                             block.txs.push(cctx);
                             if(block.txs.length == blockFinishLength){
                                 var blocksMsg = new CryptoCurrencyBlocksMessage({blocks:[]});
@@ -759,7 +767,9 @@ var getAllTxsInBlock = function(cryptoProxy, input, txFinishLength, blockFinishL
                     console("errRedis: " + errRedis);
                 }else{
                     console.log("cctx.ids: " + reply);
-                    cctx.ids = reply;
+                    if(reply != null){
+                        cctx.ids = reply;
+                    }
                     block.txs.push(cctx);
                     if(block.txs.length == blockFinishLength){
                         var blocksMsg = new CryptoCurrencyBlocksMessage({blocks:[]});
