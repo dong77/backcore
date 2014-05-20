@@ -37,9 +37,9 @@ var RedisProxy = module.exports.RedisProxy = function(currency, ip, port) {
 Util.inherits(RedisProxy, Events.EventEmitter);
 
 RedisProxy.EventType = {
-    GENERATE_ADDRESS: 'generate_address',
+    GENERATE_ADDRESS : 'generate_address',
     TRANSFER : 'transfer',
-    GET_MISSED_BLOCKS: 'get_missed_blocks'
+    GET_MISSED_BLOCKS : 'get_missed_blocks'
 };
 
 

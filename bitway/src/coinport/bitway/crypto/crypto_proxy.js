@@ -10,6 +10,7 @@ var Async                     = require('async'),
     Events                    = require('events'),
     Util                      = require("util"),
     Crypto                    = require('crypto'),
+    Redis                     = require('redis'),
     DataTypes                 = require('../../../../gen-nodejs/data_types'),
     MessageTypes              = require('../../../../gen-nodejs/message_types'),
     BitwayMessage             = MessageTypes.BitwayMessage,
@@ -22,7 +23,7 @@ var Async                     = require('async'),
 /**
  * Handle the crypto currency network event
  * @param {Currency} currency The handled currency type
- * @param {Map{...}} config The config for CryptoProxy
+ * @param {Map{...}} opt_config The config for CryptoProxy
  *     {
  *       cryptoRpc: xxx,
  *       checkInterval: 5000,
@@ -32,23 +33,42 @@ var Async                     = require('async'),
  * @constructor
  * @extends {Events.EventEmitter}
  */
-var CryptoProxy = module.exports.CryptoProxy = function(currency, config) {
+var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
     Events.EventEmitter.call(this);
 
     this.currency = currency;
-    this.minConfirm = config.minConfirm;
-    this.rpc = config.cryptoRpc;
-    this.redis = config.redis;
+    this.minConfirm = 1;
+    this.rpc = new Bitcore.RpcClient({
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: '127.0.0.1',
+        port: '18332',
+    });
+    this.redis = Redis.createClient('6379', '127.0.0.1');
+    this.checkInterval = 5000;
+
+    if (opt_config) {
+        opt_config.cryptoRpc && (this.rpc = opt_config.cryptoRpc);
+        opt_config.redis && (this.redis = opt_config.redis);
+        opt_config.minConfirm && (this.minConfirm = opt_config.minConfirm);
+        opt_config.checkInterval && (this.checkInterval = opt_config.checkInterval);
+    }
 };
 Util.inherits(CryptoProxy, Events.EventEmitter);
 
 CryptoProxy.ACCOUNT = 'customers';
 CryptoProxy.HOT_ACCOUNT = "hot";
+CryptoProxy.PROCESSED_SIGIDS = "processed_sigids";
 CryptoProxy.TIP = 0.0001;
 CryptoProxy.MIN_GENERATE_ADDR_NUM = 1;
 CryptoProxy.MAX_GENERATE_ADDR_NUM = 1000;
-CryptoProxy.MIN_CONFIRM_NUM = 0;
 CryptoProxy.MAX_CONFIRM_NUM = 9999999;
+
+CryptoProxy.EventType = {
+    TX_ARRIVED : 'tx_arrived',
+    BLOCKS_ARRIVED : 'blocks_arrived'
+};
 
 CryptoProxy.prototype.generateUserAddress = function(request, callback) {
     var self = this;
@@ -68,10 +88,80 @@ CryptoProxy.prototype.generateUserAddress = function(request, callback) {
     }
 };
 
+CryptoProxy.prototype.start = function() {
+    var self = this;
+    setInterval(self.checkEvent_.bind(self), self.checkInterval);
+};
+
+CryptoProxy.prototype.checkEvent_ = function() {
+    this.checkTx_();
+    this.checkBlock_();
+};
+
+CryptoProxy.prototype.checkTx_ = function() {
+    var self = this;
+    Async.compose(self.getNewCCTXsFromTxids_.bind(self), self.getTxidsSinceBlockHash_.bind(self),
+        self.getBlockHash_.bind(self), self.getBlockCount_.bind(self))(function(error, newCCTXs) {
+        if (!error && newCCTXs.length != 0) {
+            for (var i = 0; i < newCCTXs.length; ++i) {
+                self.emit(CryptoProxy.EventType.TX_ARRIVED, newCCTXs[i]);
+            }
+        }
+    });
+};
+
+CryptoProxy.prototype.checkBlock_ = function() {
+    console.log('checkBlock called!');
+};
+
+CryptoProxy.prototype.getBlockCount_ = function(callback) {
+    this.rpc.getBlockCount(function(error, count) {
+        CryptoProxy.invokeCallback(error, function() {return count.result}, callback);
+    });
+};
+
 CryptoProxy.prototype.generateOneAddress_ = function(unusedIndex, callback) {
     this.rpc.getNewAddress(CryptoProxy.ACCOUNT, function(error, address) {
         CryptoProxy.invokeCallback(error, function() {return address.result}, callback);
     });
+};
+
+CryptoProxy.prototype.getNewCCTXsFromTxids_ = function(txids, callback) {
+    var self = this;
+    Async.map(txids, self.getCCTXFromTxid_.bind(self), function(error, cctxs) {
+        if (error) {
+            callback(error);
+        } else {
+            self.redis.smembers(CryptoProxy.PROCESSED_SIGIDS, function(error, sigIds) {
+                if (error) {
+                    callback(error);
+                } else {
+                    var sigStrIds = sigIds.map(function(element) {return String(element)});
+                    var newCCTXs = cctxs.filter(function(element) {return sigStrIds.indexOf(element.sigId) == -1;});
+                    callback(null, newCCTXs);
+                    self.redis.sadd(CryptoProxy.PROCESSED_SIGIDS,
+                        newCCTXs.map(function(element) {return element.sigId}), function() {});
+                }
+            });
+        }
+    });
+};
+
+CryptoProxy.prototype.getTxidsSinceBlockHash_ = function(hash, callback) {
+    var self = this;
+    this.rpc.listSinceBlock(hash, function(error, txs) {
+        if (error) {
+            callback(error);
+        } else {
+            var txids = txs.result.transactions.map(function(element) {return element.txid});
+            callback(null, txids);
+        }
+    });
+};
+
+CryptoProxy.prototype.getCCBlockByIndex_ = function(index, callback) {
+    var self = this;
+    Async.compose(self.getCCBlockFromBlockInfo_.bind(self), self.getBlockByIndex_.bind(self))(index, callback);
 };
 
 CryptoProxy.prototype.getBlockHash_ = function(index, callback) {
@@ -184,11 +274,6 @@ CryptoProxy.prototype.getCCBlockFromBlockInfo_ = function(block, callback) {
     });
 };
 
-CryptoProxy.prototype.getCCBlockByIndex_ = function(index, callback) {
-    var self = this;
-    Async.compose(self.getCCBlockFromBlockInfo_.bind(self), self.getBlockByIndex_.bind(self))(index, callback);
-};
-
 CryptoProxy.prototype.makeNormalResponse_ = function(type, currency, response) {
     switch (type) {
         case BitwayResponseType.GENERATE_ADDRESS:
@@ -200,14 +285,10 @@ CryptoProxy.prototype.makeNormalResponse_ = function(type, currency, response) {
             displayTxContent(response);
             redisProxy.publish(new BitwayMessage({currency: currency, tx: response}));
             break;
+        */
         case BitwayResponseType.GET_MISSED_BLOCKS:
         case BitwayResponseType.AUTO_REPORT_BLOCKS:
-            console.log("BLOCK REPORT: " + currency);
-            console.log("response.blocks.length:" + response.blocks.length);
-            displayBlocksContent(response.blocks);
-            redisProxy.publish(new BitwayMessage({currency: currency, blocksMsg: response}));
-            break;
-        */
+            return new BitwayMessage({currency: currency, blocksMsg: response});
         default:
             console.log("Inavalid Type!");
             return null

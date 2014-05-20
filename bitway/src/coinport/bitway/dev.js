@@ -26,7 +26,8 @@ var cryptoProxy = new CryptoProxy(Currency.BTC, {
         port: '18332',
     }),
     redis: Redis.createClient('6379', '127.0.0.1', { return_buffers: true }),
-    minConfirm: 1
+    minConfirm: 1,
+    checkInterval: 1000
 });
 
 
@@ -41,6 +42,16 @@ cryptoProxy.getBlockByIndex_(1, function(error, response) {
 });
 */
 
+/*
 cryptoProxy.getCCBlockByIndex_(244378, function(error, response) {
     console.log('getCCBlockByIndex_ : %j', response);
 });
+
+cryptoProxy.getCCBlockByIndex_(123, function(error, response) {
+    console.log('getCCBlockByIndex_ : %j', response);
+});
+*/
+cryptoProxy.on(CryptoProxy.EventType.TX_ARRIVED, function(cctx) {
+    console.log('%j', cctx);
+});
+cryptoProxy.start();
