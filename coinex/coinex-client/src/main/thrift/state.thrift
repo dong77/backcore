@@ -70,9 +70,10 @@ struct TAccountTransferState {
     2: i64 lastTransferItemId
     3: i64 lastBlockHeight
     4: map<string, map<CryptoCurrencyTransactionPort, i64>> depositSigId2TxPortIdMap
-    5: map<i64, CryptoCurrencyTransferItem> transferMap
-    6: map<i64, CryptoCurrencyTransferItem> succeededMap
-    7: RedeliverFilters filters
+    5: map<string, map<CryptoCurrencyTransactionPort, i64>> coldToHotSigId2IdMap
+    6: map<i64, CryptoCurrencyTransferItem> transferMap
+    7: map<i64, CryptoCurrencyTransferItem> succeededMap
+    8: RedeliverFilters filters
 }
 
 struct TCandleDataState {

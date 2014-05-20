@@ -1,11 +1,14 @@
 package com.coinport.coinex.transfer
 
 import akka.actor.{ ActorLogging, Actor }
-import akka.event.LoggingReceive
+import akka.event.{ LoggingAdapter, LoggingReceive }
 import com.coinport.coinex.data._
 import com.mongodb.casbah.Imports._
 
 class AccountTransferReader(val db: MongoDB) extends Actor with AccountTransferBehavior with ActorLogging {
+
+  lazy implicit val logger: LoggingAdapter = log
+
   val manager = new AccountTransferManager()
 
   def receive = LoggingReceive {
