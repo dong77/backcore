@@ -20,7 +20,8 @@ describe('crypto proxy', function() {
         it('get 4 addresses', function(done) {
             var cryptoProxy = new CryptoProxy(Currency.BTC, {
                 cryptoRpc: new MockRpc({fail: 'none'}),
-                minConfirm: 1
+                minConfirm: 1,
+                redis: 'noredis'
             });
             cryptoProxy.generateUserAddress(new GenerateAddresses({num: 4}), function(response) {
                 var expectRes = new BitwayMessage({currency: Currency.BTC, generateAddressResponse:
@@ -33,7 +34,8 @@ describe('crypto proxy', function() {
         it('rpc error occur while generating user addresses', function(done) {
             var cryptoProxy = new CryptoProxy(Currency.BTC, {
                 cryptoRpc: new MockRpc({fail: 'all'}),
-                minConfirm: 1
+                minConfirm: 1,
+                redis: 'noredis'
             });
             cryptoProxy.generateUserAddress(new GenerateAddresses({num: 4}), function(response) {
                 var expectRes = new BitwayMessage({currency: Currency.BTC, generateAddressResponse:
@@ -47,7 +49,8 @@ describe('crypto proxy', function() {
         it('partial fail while generating user addresses', function(done) {
             var cryptoProxy = new CryptoProxy(Currency.BTC, {
                 cryptoRpc: new MockRpc({fail: 'partial'}),
-                minConfirm: 1
+                minConfirm: 1,
+                redis: 'noredis'
             });
             cryptoProxy.generateUserAddress(new GenerateAddresses({num: 4}), function(response) {
                 var expectRes = new BitwayMessage({currency: Currency.BTC, generateAddressResponse:

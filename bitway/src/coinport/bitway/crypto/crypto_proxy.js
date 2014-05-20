@@ -36,24 +36,25 @@ var Async                     = require('async'),
 var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
     Events.EventEmitter.call(this);
 
-    this.currency = currency;
-    this.minConfirm = 1;
-    this.rpc = new Bitcore.RpcClient({
-        protocol: 'http',
-        user: 'user',
-        pass: 'pass',
-        host: '127.0.0.1',
-        port: '18332',
-    });
-    this.redis = Redis.createClient('6379', '127.0.0.1');
-    this.checkInterval = 5000;
-
     if (opt_config) {
         opt_config.cryptoRpc && (this.rpc = opt_config.cryptoRpc);
         opt_config.redis && (this.redis = opt_config.redis);
         opt_config.minConfirm && (this.minConfirm = opt_config.minConfirm);
         opt_config.checkInterval && (this.checkInterval = opt_config.checkInterval);
     }
+
+    this.currency || (this.currency = currency);
+    this.minConfirm || (this.minConfirm = 1);
+    this.rpc || (this.rpc = new Bitcore.RpcClient({
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: '127.0.0.1',
+        port: '18332',
+    }));
+    this.redis || (this.redis = Redis.createClient('6379', '127.0.0.1'));
+    this.checkInterval || (this.checkInterval = 5000);
+
 };
 Util.inherits(CryptoProxy, Events.EventEmitter);
 
