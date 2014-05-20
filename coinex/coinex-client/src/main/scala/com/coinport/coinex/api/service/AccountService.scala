@@ -16,8 +16,7 @@ object AccountService extends AkkaService {
   def getAccount(uid: Long): Future[ApiResult] = {
     backend ? QueryAccount(uid) map {
       case result: QueryAccountResult =>
-        val userAccount: ApiUserAccount = result.userAccount
-        ApiResult(true, 0, "", Some(userAccount))
+        ApiResult(true, 0, "", Some(fromUserAccount(result.userAccount)))
     }
   }
 

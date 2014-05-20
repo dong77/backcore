@@ -31,36 +31,6 @@ package object model {
     currency.name.toUpperCase
   }
 
-  // user account conversions
-  implicit def fromUserAccount(backendObj: com.coinport.coinex.data.UserAccount): com.coinport.coinex.api.model.ApiUserAccount = {
-    val uid = backendObj.userId
-    val map: Map[String, ApiAccountItem] = backendObj.cashAccounts.map {
-      case (k: Currency, v: CashAccount) =>
-        val currency: String = k
-        currency -> ApiAccountItem(
-          currency,
-          CurrencyObject(k, v.available),
-          CurrencyObject(k, v.locked),
-          CurrencyObject(k, v.pendingWithdrawal)
-        )
-    }.toMap
-
-    com.coinport.coinex.api.model.ApiUserAccount(uid.toString, accounts = map)
-  }
-
-  // market depth conversions
-  implicit def fromMarketDepth(backendObj: com.coinport.coinex.data.MarketDepth): com.coinport.coinex.api.model.ApiMarketDepth = {
-    val side = backendObj.side
-    val subject = side._1
-    val mapper = {
-      item: com.coinport.coinex.data.MarketDepthItem =>
-        com.coinport.coinex.api.model.ApiMarketDepthItem(item.price.externalValue(side), item.quantity.externalValue(subject))
-    }
-    val bids = backendObj.bids.map(mapper).toSeq
-    val asks = backendObj.asks.map(mapper).toSeq
-    com.coinport.coinex.api.model.ApiMarketDepth(bids = bids, asks = asks)
-  }
-
   // candle data conversions
   implicit def timeDimension2MilliSeconds(dimension: ChartTimeDimension): Long = {
     val duration = dimension match {
@@ -94,11 +64,6 @@ package object model {
           JDouble(item.close.value),
           JDouble(item.outAmount.value)
         ))
-      case item: ApiMAItem =>
-        JArray(List(
-          JDecimal(item.time),
-          JDouble(item.value.value)
-        ))
     })
   )
 
@@ -123,4 +88,104 @@ package object model {
     val order = UserOrder.fromOrderInfo(orderInfo)
     ApiSubmitOrderResult(order)
   }
+
+  def fromUserAccount(account: UserAccount): ApiUserAccount = {
+    val userId = account.userId.toString
+    val accounts = account.cashAccounts.map {
+      case (k: Currency, v: CashAccount) =>
+        val currency: String = k
+        currency -> ApiAccountItem(
+          currency,
+          CurrencyObject(k, v.available),
+          CurrencyObject(k, v.locked),
+          CurrencyObject(k, v.pendingWithdrawal))
+
+    }.toMap
+    ApiUserAccount(userId, accounts)
+  }
+
+  def fromTransaction(t: Transaction, marketSide: MarketSide) = {
+    val sell = marketSide == t.side
+
+    val (tOrder, mOrder, price, subjectAmount, currencyAmount) = {
+      val subject = marketSide.outCurrency
+      val currency = marketSide.inCurrency
+
+      val takerAmount = t.takerUpdate.previous.quantity - t.takerUpdate.current.quantity
+      val makerAmount = t.makerUpdate.previous.quantity - t.makerUpdate.current.quantity
+      val (sAmount, cAmount) = if (sell) (takerAmount, makerAmount) else (makerAmount, takerAmount)
+      val (takerPreAmount, takeCurAmount, makerPreAmount, makerCurAmount) =
+        if (sell)
+          (CurrencyObject(subject, t.takerUpdate.previous.quantity),
+            CurrencyObject(subject, t.takerUpdate.current.quantity),
+            CurrencyObject(currency, t.makerUpdate.previous.quantity),
+            CurrencyObject(currency, t.makerUpdate.current.quantity))
+        else
+          (CurrencyObject(currency, t.takerUpdate.previous.quantity),
+            CurrencyObject(currency, t.takerUpdate.current.quantity),
+            CurrencyObject(subject, t.makerUpdate.previous.quantity),
+            CurrencyObject(subject, t.makerUpdate.current.quantity))
+
+      (ApiOrderState(t.takerUpdate.current.id.toString, t.takerUpdate.current.userId.toString, takerPreAmount, takeCurAmount),
+        ApiOrderState(t.makerUpdate.current.id.toString, t.makerUpdate.current.userId.toString, makerPreAmount, makerCurAmount),
+        PriceObject(marketSide, cAmount.toDouble / sAmount.toDouble),
+        CurrencyObject(subject, sAmount),
+        CurrencyObject(currency, cAmount))
+    }
+
+    val id = t.id.toString
+    val timestamp = t.timestamp
+    val taker = tOrder.uid
+    val maker = mOrder.uid
+    ApiTransaction(id, timestamp, price, subjectAmount, currencyAmount, maker, taker, sell, tOrder, mOrder)
+  }
+
+  def fromTicker(metrics: MetricsByMarket, side: MarketSide, currency: Currency) = {
+    val market = side.S
+    val price = PriceObject(side, metrics.price)
+    val volume = CurrencyObject(currency, metrics.volume)
+    val high = PriceObject(side, metrics.high.getOrElse(0.0))
+    val low = PriceObject(side, metrics.low.getOrElse(0.0))
+    val gain = metrics.gain
+    val trend = Some(metrics.direction.toString.toLowerCase)
+
+    ApiTicker(market, price, high, low, volume, gain, trend)
+  }
+
+  def fromTransferItem(t: AccountTransfer) = {
+    val id = t.id.toString
+    val uid = t.userId.toString
+    val amount = CurrencyObject(t.currency, t.amount)
+    val status = t.status.value
+    val created = t.created.getOrElse(0L)
+    val updated = t.created.getOrElse(0L)
+    val operation = t.`type`.getValue
+
+    ApiTransferItem(id, uid, amount, status, created, updated, operation)
+  }
+
+  def fromMarketDepth(depth: MarketDepth) = {
+    val bids = depth.bids.map(item => ApiMarketDepthItem(item.price.externalValue(depth.side), item.quantity.externalValue(depth.side.outCurrency)))
+    val asks = depth.asks.map(item => ApiMarketDepthItem(item.price.externalValue(depth.side), item.quantity.externalValue(depth.side.outCurrency)))
+
+    ApiMarketDepth(bids, asks)
+  }
+
+  def fromCandleItem(item: CandleDataItem, side: MarketSide, currency: Currency, timeSkip: Long) = {
+    val time = item.timestamp * timeSkip
+    val open = PriceObject(side, item.open)
+    val high = PriceObject(side, item.high)
+    val low = PriceObject(side, item.low)
+    val close = PriceObject(side, item.close)
+    val outAmount = CurrencyObject(currency, item.outAoumt)
+
+    ApiCandleItem(time, open, high, low, close, outAmount)
+  }
+
+  def fromProfile(u: UserProfile) = {
+    val dmap = u.depositAddresses.map(_.toMap)
+    val wmap = u.depositAddresses.map(_.toMap)
+    User(u.id, u.email, u.realName, u.passwordHash.getOrElse(""), u.nationalId, u.mobile, dmap, wmap)
+  }
+
 }

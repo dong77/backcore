@@ -48,7 +48,7 @@ object UserService extends AkkaService {
       case failed: RegisterUserFailed =>
         failed.error match {
           case ErrorCode.EmailAlreadyRegistered =>
-            ApiResult(false, 1, "用户 " + email + " 已存在")
+            ApiResult(false, 1, "用户 " + user.email + " 已存在")
           case ErrorCode.MissingInformation =>
             ApiResult(false, 2, "缺少必填字段")
           case _ =>
@@ -66,18 +66,7 @@ object UserService extends AkkaService {
       case result: QueryProfileResult =>
         result.userProfile match {
           case Some(profile) =>
-            val user = User(
-              id = profile.id,
-              email = profile.email,
-              realName = profile.realName,
-              password = "",
-              nationalId = profile.nationalId,
-              mobile = profile.mobile,
-              depositAddress = profile.depositAddresses.map(_.toMap),
-              withdrawalAddress = profile.withdrawalAddresses.map(_.toMap)
-            )
-
-            ApiResult(true, 0, "", Some(user))
+            ApiResult(true, 0, "", Some(fromProfile(profile)))
           case None =>
             ApiResult(false, -1, "用户不存在", None)
         }

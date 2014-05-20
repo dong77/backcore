@@ -5,6 +5,7 @@
 package com.coinport.coinex.api.model
 
 import com.coinport.coinex.data._
+import com.coinport.coinex.data.Implicits._
 
 case class ApiResult(success: Boolean = true, code: Int = 0, message: String = "", data: Option[Any] = None)
 
@@ -69,4 +70,5 @@ case class ApiCandleItem(time: Long, open: PriceObject, high: PriceObject, low: 
 
 case class ApiMAItem(time: Long, value: PriceObject)
 
-case class ApiHistory(candles: Seq[ApiCandleItem], ma7: Seq[ApiMAItem], ma30: Seq[ApiMAItem])
+case class ApiHistory(candles: Seq[ApiCandleItem])
+

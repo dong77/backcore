@@ -12,23 +12,21 @@ class MarketConversionTest extends Specification {
   "market conversions" should {
     "market depth conversion" in {
       val bids = List(
-        com.coinport.coinex.data.MarketDepthItem(450, 1500),
-        com.coinport.coinex.data.MarketDepthItem(300, 2000),
-        com.coinport.coinex.data.MarketDepthItem(200, 3000)
+        MarketDepthItem(450, 1500),
+        MarketDepthItem(300, 2000),
+        MarketDepthItem(200, 3000)
       )
       val asks = List(
-        com.coinport.coinex.data.MarketDepthItem(550, 4500),
-        com.coinport.coinex.data.MarketDepthItem(600, 5000),
-        com.coinport.coinex.data.MarketDepthItem(700, 6000)
-      )
-      val backendObj = com.coinport.coinex.data.MarketDepth(Btc ~> Cny, asks = asks, bids = bids)
-      val marketDepth: com.coinport.coinex.api.model.ApiMarketDepth = backendObj
-      val expect = com.coinport.coinex.api.model.ApiMarketDepth(
-        bids = List(ApiMarketDepthItem(4500.0, 1.5), ApiMarketDepthItem(3000.0, 2.0), ApiMarketDepthItem(2000.0, 3.0)),
-        asks = List(ApiMarketDepthItem(5500.0, 4.5), ApiMarketDepthItem(6000.0, 5.0), ApiMarketDepthItem(7000.0, 6.0))
+        MarketDepthItem(550, 4500),
+        MarketDepthItem(600, 5000),
+        MarketDepthItem(700, 6000)
       )
 
-      marketDepth mustEqual expect
+      val backendObj = MarketDepth(Btc ~> Cny, asks = asks, bids = bids)
+      val marketDepth = fromMarketDepth(backendObj)
+
+      marketDepth.asks mustEqual List(ApiMarketDepthItem(5500.0, 4.5), ApiMarketDepthItem(6000.0, 5.0), ApiMarketDepthItem(7000.0, 6.0))
+      marketDepth.bids mustEqual List(ApiMarketDepthItem(4500.0, 1.5), ApiMarketDepthItem(3000.0, 2.0), ApiMarketDepthItem(2000.0, 3.0))
     }
 
     "market conversion" in {
