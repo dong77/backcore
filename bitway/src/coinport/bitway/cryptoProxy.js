@@ -635,16 +635,16 @@ var getTxsSinceBlock = function(cryptoProxy, index) {
                 if(!errSinceBlock && retSinceBlock){
                     console.log("transactions.length: " + retSinceBlock.result.transactions.length);
                     for(var i = 0; i < retSinceBlock.result.transactions.length; i++){
-                        var txid = retSinceBlock.result.transactions[i].txid;
-                        console.log("account: " + txid + " txid: " + txid);
-                        rpc.getRawTransaction(txid, cryptoProxy.needJson, function(errTx,retTx){
+                        rpc.getRawTransaction(retSinceBlock.result.transactions[i].txid,
+                            cryptoProxy.needJson, function(errTx,retTx){
                             if(errTx){
                                 console.log("errTx code: " + errTx.code);
                                 console.log("errTx message: " + errTx.message);
                             }else{
                                 var cctx = new CryptoCurrencyTransaction({inputs: [], outputs: [],
                                     status: TransferStatus.Confirming});
-                                cctx.txid = txid;
+                                cctx.txid = retTx.result.txid;
+                                console.log("txid: " + cctx.txid + " comfirmation: " + retTx.result.comfirmations);
                                 getOutputAddresses(retTx.result, cctx);
                                 for(var i = 0; i < retTx.result.vin.length; i++){
                                     console.log("vout: " + retTx.result.vin[i].vout);

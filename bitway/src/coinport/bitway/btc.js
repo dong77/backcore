@@ -39,7 +39,7 @@ var btcRpcConfig = {
 var btcRedisProxy = new RedisProxy("BTC", "127.0.0.1", "6379");
 btcRedisProxy.start();
 
-var minConfirmNum = 6;
+var minConfirmNum = 1;
 var btcProxy = new CryptoProxy(Currency.BTC, btcRpcConfig, minConfirmNum,  btcRedisProxy);
 
 btcRedisProxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
