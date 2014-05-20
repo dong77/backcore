@@ -172,12 +172,12 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   }
 
   private def deliverToAccountManager(event: Any) = {
-//    println(s">>>>>>>>>>>>>>>>>>>>> deliverToAccountManager => event = ${event.toString}")
+    //    println(s">>>>>>>>>>>>>>>>>>>>> deliverToAccountManager => event = ${event.toString}")
     channelToAccountProcessor forward Deliver(Persistent(event), accountProcessorPath)
   }
 
   private def deliverToBitwayProcessor(currency: Currency, event: Any) = {
-//    println(s">>>>>>>>>>>>>>>>>>>>> deliverToBitwayProcessor => currency = ${currency.toString}, event = ${event.toString}, path = ${bitwayProcessors(currency).path.toString}")
+    //    println(s">>>>>>>>>>>>>>>>>>>>> deliverToBitwayProcessor => currency = ${currency.toString}, event = ${event.toString}, path = ${bitwayProcessors(currency).path.toString}")
     bitwayChannels(currency) forward Deliver(Persistent(event), bitwayProcessors(currency).path)
   }
 }
@@ -202,7 +202,7 @@ final class AccountTransferManager() extends Manager[TAccountTransferState] {
   }
 
   override def loadSnapshot(s: TAccountTransferState) {
-//    println(">>>>>>>>>>>>>>> loadsnapshot =>" + s.toString)
+    //    println(">>>>>>>>>>>>>>> loadsnapshot =>" + s.toString)
     lastTransferId = s.lastTransferId
     lastTransferItemId = s.lastTransferItemId
     lastBlockHeight = s.lastBlockHeight

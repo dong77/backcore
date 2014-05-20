@@ -100,11 +100,12 @@ class CandleDataManagerSpec extends Specification {
       manager.candleMap.get(OneMinute).get.size mustEqual 31
 
       val rv = manager.query(OneMinute, c1, c1 + 30 * 60 * 1000 * 2)
-      manager.candleMap.get(OneMinute).get.size mustEqual 61
+      manager.candleMap.get(OneMinute).get.size mustEqual 60
 
-      (0 until rv.size).foreach { i =>
-        if (i < 30) rv.apply(i).open mustEqual (1.0 / 3000)
-        else if (i >= 30) rv.apply(i).open mustEqual (1.0 / 2000)
+      (0 until rv.size).foreach {
+        i =>
+          if (i < 30) rv.apply(i).open mustEqual (1.0 / 3000)
+          else if (i >= 30) rv.apply(i).open mustEqual (1.0 / 2000)
       }
       rv.size mustEqual 61
     }

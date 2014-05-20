@@ -77,6 +77,7 @@ struct TAccountTransferState {
 
 struct TCandleDataState {
     1: map<ChartTimeDimension, map<i64, CandleDataItem>> candleMap
+    2: i64 firstTimestmap
 }
 
 struct TAssetState {
