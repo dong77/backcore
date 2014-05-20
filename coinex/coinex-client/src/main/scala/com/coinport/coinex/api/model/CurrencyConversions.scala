@@ -5,6 +5,7 @@
 package com.coinport.coinex.api.model
 
 import com.coinport.coinex.data.Currency._
+import com.coinport.coinex.data.Implicits._
 import com.coinport.coinex.data.{ MarketSide, Currency }
 
 object CurrencyConversion {
@@ -41,16 +42,14 @@ class CurrencyWrapper(val value: Double) {
 
 class PriceWrapper(val value: Double) {
   def externalValue(marketSide: MarketSide): Double = {
-    val subjectFactor = CurrencyConversion.multipliers(marketSide._1)
-    val currencyFactor = CurrencyConversion.multipliers(marketSide._2)
+    val exp = CurrencyConversion.exponents(marketSide._1) - CurrencyConversion.exponents(marketSide._2)
 
-    value * subjectFactor / currencyFactor
+    (value * math.pow(10, exp)).!!!
   }
 
   def internalValue(marketSide: MarketSide): Double = {
-    val subjectFactor = CurrencyConversion.multipliers(marketSide._1)
-    val currencyFactor = CurrencyConversion.multipliers(marketSide._2)
+    val exp = CurrencyConversion.exponents(marketSide._2) - CurrencyConversion.exponents(marketSide._1)
 
-    value * currencyFactor / subjectFactor
+    (value * math.pow(10, exp)).!!!
   }
 }

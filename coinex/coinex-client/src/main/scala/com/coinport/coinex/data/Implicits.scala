@@ -13,6 +13,13 @@ import com.coinport.coinex.common.Constants
 
 class RichDouble(d: Double) {
   def reciprocal = RDouble(d, true)
+  def !!! = {
+    if (d < 1.0) scaled(26)
+    else if (d > 1.0) scaled(8)
+    else d
+  }
+
+  def scaled(s: Int) = BigDecimal(d).setScale(s, BigDecimal.RoundingMode.HALF_UP).toDouble
 }
 
 class RichRDouble(raw: RDouble) {
