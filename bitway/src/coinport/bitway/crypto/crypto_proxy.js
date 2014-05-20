@@ -57,15 +57,13 @@ CryptoProxy.prototype.generateUserAddress = function(request, callback) {
             new GenerateAddressesResult({error: ErrorCode.INVALID_REQUEST_ADDRESS_NUM})));
     } else {
         Async.times(request.num, self.generateOneAddress_.bind(self), function(error, results) {
+            var gar = new GenerateAddressesResult({error: ErrorCode.OK, addressType: CryptoCurrencyAddressType.UNUSED})
             if (error || results.length != request.num) {
-                callback(self.makeNormalResponse_(BitwayResponseType.GENERATE_ADDRESS, self.currency,
-                    new GenerateAddressesResult({error: ErrorCode.RPC_ERROR,
-                        addressType: CryptoCurrencyAddressType.UNUSED})));
+                gar.error = ErrorCode.RPC_ERROR;
             } else {
-                callback(self.makeNormalResponse_(BitwayResponseType.GENERATE_ADDRESS, self.currency,
-                    new GenerateAddressesResult({error: ErrorCode.OK,
-                        addresses: results, addressType: CryptoCurrencyAddressType.UNUSED})));
+                gar.addresses = results;
             }
+            callback(self.makeNormalResponse_(BitwayResponseType.GENERATE_ADDRESS, self.currency, gar));
         });
     }
 };
