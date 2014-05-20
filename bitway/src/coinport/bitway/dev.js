@@ -6,6 +6,7 @@
 'use strict'
 
 var Bitcore                   = require('bitcore'),
+    Redis                     = require('redis'),
     CryptoProxy               = require('./crypto/crypto_proxy').CryptoProxy,
     DataTypes                 = require('../../../gen-nodejs/data_types'),
     MessageTypes              = require('../../../gen-nodejs/message_types'),
@@ -24,15 +25,22 @@ var cryptoProxy = new CryptoProxy(Currency.BTC, {
         host: '127.0.0.1',
         port: '18332',
     }),
+    redis: Redis.createClient('6379', '127.0.0.1', { return_buffers: true }),
     minConfirm: 1
 });
 
 
+/*
 cryptoProxy.generateUserAddress(new GenerateAddresses({num: 6}), function(response) {
     console.log('generateUserAddress: %j', response);
 });
 
 
-cryptoProxy.getBlockByIndex(1, function(error, response) {
-    console.log('getBlockByIndex : %j', response);
+cryptoProxy.getBlockByIndex_(1, function(error, response) {
+    console.log('getBlockByIndex_ : %j', response);
+});
+*/
+
+cryptoProxy.getCCBlockByIndex_(244378, function(error, response) {
+    console.log('getCCBlockByIndex_ : %j', response);
 });
