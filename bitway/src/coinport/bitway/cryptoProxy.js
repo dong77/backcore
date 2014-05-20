@@ -389,6 +389,7 @@ var saveTransferIds = function(cryptoProxy, input, cctx, finishLength, ids, redi
                         console.log("errRedis: " + errRedis);
                     }else{
                         console.log("cctx.sigId: " + cctx.sigId);
+                        cctx.ids = ids;
                         makeNormalResponse(BitwayResponseType.TRANSACTION, cryptoProxy.currency, cctx, redisProxy);
                     }
                 });

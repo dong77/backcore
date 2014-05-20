@@ -39,7 +39,7 @@ var dogRpcConfig = {
 var dogRedisProxy = new RedisProxy("dog", "127.0.0.1", "6379");
 dogRedisProxy.start();
 
-var minConfirmNum = 6;
+var minConfirmNum = 1;
 var dogProxy = new CryptoProxy(Currency.DOG, dogRpcConfig, minConfirmNum,  dogRedisProxy);
 
 dogRedisProxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
@@ -81,18 +81,9 @@ function checkTxAndBlock () {
     //ltcProxy.getMissedBlocks(ltcProxy, request, ltcRedisProxy);
 
     //var transferInfos = [];
-    //var transfer1 = new CryptoCurrencyTransferInfo({id: 0, to: 'mhzTpgNvVSnwesA9MgzcWD6gVEwfpZqZQB',
-    //    amount: 0.01, from: 'mqvyjzCuV873EZ3vd3FTkUN1KoopSXmdog'});
-    //var transfer2 = new CryptoCurrencyTransferInfo({id: 0, to: 'mqWs5kNcb6W2oiogTWXYXHBip8E4S6NzA5',
-    //    amount: 0.01, from: 'n3vJJnkJBRQfwfoN7miz1FfYknk382DCaw'});
+    //var transfer1 = new CryptoCurrencyTransferInfo({id: 311, to: '',
+    //    amount: 5, from: 'nqisaGbdUjQuvQCYKky6KMMaGJJ8FA2bt7'});
     //transferInfos.push(transfer1);
-    //transferInfos.push(transfer2);
-    //var fromAddresses = [];
-    //var toAddress = 'mqWs5kNcb6W2oiogTWXYXHBip8E4S6NzA5';
-    //var amount = 0.01;
-    //var minConfirmedNum = 6;
-    //var maxConfirmedNum = 9999999;
-    //var addresses = {};
     //var request = new TransferCryptoCurrency({currency: Currency.dog,
     //    transferInfos: transferInfos, type:TransferType.WITHDRAWAL});
     //var request = new TransferCryptoCurrency({currency: Currency.dog,
