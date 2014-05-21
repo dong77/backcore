@@ -69,8 +69,8 @@ struct TAccountTransferState {
     1: i64 lastTransferId
     2: i64 lastTransferItemId
     3: i64 lastBlockHeight
-    4: map<string, map<CryptoCurrencyTransactionPort, i64>> depositSigId2TxPortIdMap
-    5: map<string, map<CryptoCurrencyTransactionPort, i64>> coldToHotSigId2IdMap
+    4: map<string, map<CryptoCurrencyTransactionPort, i64>> depositSigId2TxPortIdMapInner
+    5: map<string, map<CryptoCurrencyTransactionPort, i64>> coldToHotSigId2TxPortIdMapInner
     6: map<i64, CryptoCurrencyTransferItem> transferMap
     7: map<i64, CryptoCurrencyTransferItem> succeededMap
     8: RedeliverFilters filters

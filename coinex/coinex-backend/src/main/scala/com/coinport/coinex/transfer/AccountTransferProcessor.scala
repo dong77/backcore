@@ -125,7 +125,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   private def handleResList() {
     getMessagesBox foreach {
       item =>
-        println(s" ---------------------------- MessagesBox got item => ${item.toString}")
+        //        println(s" ---------------------------- MessagesBox got item => ${item.toString}")
         item.txType.get match {
           case Deposit if item.status.get == Succeeded =>
             deliverToAccountManager(CryptoTransferSucceeded(transferHandler.get(item.accountTransferId.get).get))
@@ -142,7 +142,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
     }
     getMongoWriteList foreach {
       item =>
-        println(s" =========================== getMongoWriteList got item => ${item.toString}")
+        //        println(s" =========================== getMongoWriteList got item => ${item.toString}")
         transferItemHandler.put(item)
     }
   }
@@ -160,12 +160,12 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   }
 
   private def deliverToAccountManager(event: Any) = {
-    println(s">>>>>>>>>>>>>>>>>>>>> deliverToAccountManager => event = ${event.toString}")
+    //    println(s">>>>>>>>>>>>>>>>>>>>> deliverToAccountManager => event = ${event.toString}")
     channelToAccountProcessor forward Deliver(Persistent(event), accountProcessorPath)
   }
 
   private def deliverToBitwayProcessor(currency: Currency, event: Any) = {
-    println(s">>>>>>>>>>>>>>>>>>>>> deliverToBitwayProcessor => currency = ${currency.toString}, event = ${event.toString}, path = ${bitwayProcessors(currency).path.toString}")
+    //    println(s">>>>>>>>>>>>>>>>>>>>> deliverToBitwayProcessor => currency = ${currency.toString}, event = ${event.toString}, path = ${bitwayProcessors(currency).path.toString}")
     bitwayChannels(currency) forward Deliver(Persistent(event), bitwayProcessors(currency).path)
   }
 }
@@ -174,8 +174,8 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
   private var lastTransferId = 1E12.toLong
   private var lastTransferItemId = 6E12.toLong
   private var lastBlockHeight = 0L
-  private val depositSigId2TxPortIdMap = Map.empty[String, Map[CryptoCurrencyTransactionPort, Long]]
-  private val coldToHotSigId2IdMap = Map.empty[String, Map[CryptoCurrencyTransactionPort, Long]]
+  private val depositSigId2TxPortIdMapInner = Map.empty[String, Map[CryptoCurrencyTransactionPort, Long]]
+  private val coldToHotSigId2TxPortIdMapInner = Map.empty[String, Map[CryptoCurrencyTransactionPort, Long]]
   private val transferMapInnner = Map.empty[Long, CryptoCurrencyTransferItem]
   private val succeededMapInnner = Map.empty[Long, CryptoCurrencyTransferItem]
 
@@ -183,8 +183,8 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
     lastTransferId,
     lastTransferItemId,
     lastBlockHeight,
-    depositSigId2TxPortIdMap.clone,
-    coldToHotSigId2IdMap.clone(),
+    depositSigId2TxPortIdMapInner.clone,
+    coldToHotSigId2TxPortIdMapInner.clone(),
     transferMapInnner.clone(),
     succeededMapInnner.clone(),
     getFiltersSnapshot)
@@ -193,8 +193,8 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
     lastTransferId = s.lastTransferId
     lastTransferItemId = s.lastTransferItemId
     lastBlockHeight = s.lastBlockHeight
-    depositSigId2TxPortIdMap ++= s.depositSigId2TxPortIdMap map { kv => (kv._1 -> (Map.empty ++ kv._2)) }
-    coldToHotSigId2IdMap ++= s.coldToHotSigId2IdMap map { kv => (kv._1 -> (Map.empty ++ kv._2)) }
+    depositSigId2TxPortIdMapInner ++= s.depositSigId2TxPortIdMapInner map { kv => (kv._1 -> (Map.empty ++ kv._2)) }
+    coldToHotSigId2TxPortIdMapInner ++= s.coldToHotSigId2TxPortIdMapInner map { kv => (kv._1 -> (Map.empty ++ kv._2)) }
     transferMapInnner ++= s.transferMap
     succeededMapInnner ++= s.succeededMap
     loadFiltersSnapshot(s.filters)
@@ -219,45 +219,25 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
 
   def setLastBlockHeight(height: Long) = { lastBlockHeight = height }
 
-  def getDepositTxId(sigId: String, port: CryptoCurrencyTransactionPort): Option[Long] = {
-    getIdFromMap(depositSigId2TxPortIdMap, sigId, port)
-  }
+  def depositSigId2TxPortIdMap = depositSigId2TxPortIdMapInner
 
-  def getColdTxId(sigId: String, port: CryptoCurrencyTransactionPort): Option[Long] = {
-    getIdFromMap(coldToHotSigId2IdMap, sigId, port)
-  }
+  def coldToHotSigId2TxPortIdMap = coldToHotSigId2TxPortIdMapInner
 
-  def getIdFromMap(operateMap: Map[String, Map[CryptoCurrencyTransactionPort, Long]], sigId: String, port: CryptoCurrencyTransactionPort): Option[Long] = {
+  def getItemIdFromMap(operateMap: Map[String, Map[CryptoCurrencyTransactionPort, Long]], sigId: String, port: CryptoCurrencyTransactionPort): Option[Long] = {
     if (operateMap.contains(sigId) && operateMap(sigId).contains(port))
       Some(operateMap(sigId)(port))
     else
       None
   }
 
-  def saveDepositTxId(sigId: String, port: CryptoCurrencyTransactionPort, id: Long) {
-    saveIdToMap(depositSigId2TxPortIdMap, sigId, port, id)
-  }
-
-  def saveColdTxId(sigId: String, port: CryptoCurrencyTransactionPort, id: Long) {
-    saveIdToMap(coldToHotSigId2IdMap, sigId, port, id)
-  }
-
-  def saveIdToMap(operateMap: Map[String, Map[CryptoCurrencyTransactionPort, Long]], sigId: String, port: CryptoCurrencyTransactionPort, id: Long) {
+  def saveItemIdTomap(operateMap: Map[String, Map[CryptoCurrencyTransactionPort, Long]], sigId: String, port: CryptoCurrencyTransactionPort, id: Long) {
     if (!operateMap.contains(sigId)) {
       operateMap.put(sigId, Map.empty[CryptoCurrencyTransactionPort, Long])
     }
     operateMap(sigId).put(port, id)
   }
 
-  def removeDepositTxid(sigId: String, port: CryptoCurrencyTransactionPort) {
-    removeIdFromMap(depositSigId2TxPortIdMap, sigId, port)
-  }
-
-  def removeColdTxId(sigId: String, port: CryptoCurrencyTransactionPort) {
-    removeIdFromMap(coldToHotSigId2IdMap, sigId, port)
-  }
-
-  def removeIdFromMap(operateMap: Map[String, Map[CryptoCurrencyTransactionPort, Long]], sigId: String, port: CryptoCurrencyTransactionPort) {
+  def removeItemIdFromMap(operateMap: Map[String, Map[CryptoCurrencyTransactionPort, Long]], sigId: String, port: CryptoCurrencyTransactionPort) {
     if (operateMap.contains(sigId)) {
       operateMap(sigId).remove(port)
       if (operateMap(sigId).isEmpty) {

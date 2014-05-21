@@ -88,7 +88,7 @@ trait AccountTransferBehavior {
     }
 
     case m @ MultiCryptoCurrencyTransactionMessage(currency, txs, newIndex: Option[BlockIndex]) =>
-      println(s">>>>>>>>>>>>>>>>>>>>> updateState  => MultiCryptoCurrencyTransactionMessage = ${m.toString}")
+      //      println(s">>>>>>>>>>>>>>>>>>>>> updateState  => MultiCryptoCurrencyTransactionMessage = ${m.toString}")
       clearResList
       if (manager.getLastBlockHeight > 0) newIndex foreach (index => reOrgnize(index))
       txs foreach {
@@ -105,8 +105,10 @@ trait AccountTransferBehavior {
               splitAndHandleTxs(currency, tx)
             case Some(HotToCold) =>
               splitAndHandleTxs(currency, tx)
-            case None =>
+            case Some(Unknown) =>
+              logger.warning(s"Unknow tx meet : ${tx.toString}")
             case _ =>
+              logger.warning(s"Unexcepted tx meet : ${tx.toString}")
           }
       }
       handleNeedConfirmTransfer(currency)
@@ -127,116 +129,105 @@ trait AccountTransferBehavior {
 
   private def splitAndHandleTxs(currency: Currency, tx: CryptoCurrencyTransaction) {
     tx.txType.get match {
-      case Deposit if tx.outputs.isDefined =>
+      case Deposit =>
+        handleDepositLikeTx(currency, tx, manager.depositSigId2TxPortIdMap)
+      case UserToHot =>
+        tx.ids match {
+          case Some(_) =>
+            tx.ids.get foreach {
+              id =>
+                assert(manager.transferMap.contains(id))
+                val userToHotItem = tx.status match {
+                  case Failed =>
+                    setAccountTransferStatus(manager.transferMap, id, Failed)
+                    manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock, status = Some(Failed))
+                  case _ => manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock) // need only one tx
+                }
+                setResState(Updator.copy(item = userToHotItem, addMongo = true, putItem = true))
+                userToHotItem.userToHotMapedDepositId foreach {
+                  depositId =>
+                    if (manager.transferMap.contains(depositId)) {
+                      // check coresponded deposit item has not been removed from map
+                      val depositStatus = if (userToHotItem.status.get != Failed) Succeeded else Failed
+                      setAccountTransferStatus(manager.transferMap, depositId, depositStatus)
+                      val depositItem = manager.transferMap(depositId).copy(status = Some(depositStatus))
+                      manager.removeItemIdFromMap(manager.depositSigId2TxPortIdMap, depositItem.sigId.get, depositItem.to.get)
+                      setResState(Updator.copy(item = depositItem, addMongo = true, addMsgBox = (depositItem.status.get == Succeeded), rmItem = true))
+                    }
+                }
+            }
+          case None =>
+            logger.warning(s"UserToHot tx not define ids : ${tx.toString}")
+        }
+      case Withdrawal =>
+        handleWithdrawlLikeTx(tx)
+      case ColdToHot =>
+        handleDepositLikeTx(currency, tx, manager.coldToHotSigId2TxPortIdMap)
+      case HotToCold =>
+        handleWithdrawlLikeTx(tx)
+      case Unknown =>
+        logger.warning(s"Got Unkown TransferType message from bitway: ${tx.toString}")
+    }
+  }
+
+  def handleDepositLikeTx(currency: Currency, tx: CryptoCurrencyTransaction, sigIdToItemMap: Map[String, Map[CryptoCurrencyTransactionPort, Long]]) {
+    tx.outputs match {
+      case Some(_) =>
         tx.outputs.get foreach {
           //every output corresponds to one tx
           outputPort =>
             if (outputPort.userId.isDefined) {
               tx.status match {
                 case Failed =>
-                  manager.getDepositTxId(tx.sigId.get, outputPort) match {
+                  manager.getItemIdFromMap(sigIdToItemMap, tx.sigId.get, outputPort) match {
                     case Some(id) =>
-                      val depositItem = manager.transferMap(id).copy(status = Some(Failed))
-                      manager.removeDepositTxid(depositItem.sigId.get, depositItem.to.get)
+                      val depositLikeItem = manager.transferMap(id).copy(status = Some(Failed))
+                      manager.removeItemIdFromMap(sigIdToItemMap, depositLikeItem.sigId.get, depositLikeItem.to.get)
                       setAccountTransferStatus(manager.transferMap, id, Failed)
-                      setResState(Updator.copy(item = depositItem, addMongo = true, putItem = true))
+                      setResState(Updator.copy(item = depositLikeItem, addMongo = true, putItem = true))
                     case _ =>
                   }
                 case _ =>
-                  val toSaveDepositItem =
-                    manager.getDepositTxId(tx.sigId.get, outputPort) match {
+                  val toSaveDepositLikeItem =
+                    manager.getItemIdFromMap(sigIdToItemMap, tx.sigId.get, outputPort) match {
                       case Some(id) =>
                         manager.transferMap(id).copy(includedBlock = tx.includedBlock)
                       case None =>
                         val transferId = manager.getTransferId
                         manager.setLastTransferId(transferId)
-                        transferHandler.put(AccountTransfer(transferId, outputPort.userId.get, TransferType.Deposit, currency, outputPort.internalAmount.get, Confirming, Some(System.currentTimeMillis())))
+                        transferHandler.put(AccountTransfer(transferId, outputPort.userId.get, tx.txType.get, currency, outputPort.internalAmount.get, Confirming, Some(System.currentTimeMillis())))
                         val newTransferItemId = manager.getNewTransferItemId
-                        manager.saveDepositTxId(tx.sigId.get, outputPort, newTransferItemId)
+                        manager.saveItemIdTomap(sigIdToItemMap, tx.sigId.get, outputPort, newTransferItemId)
                         // id, sigId, txid, userId, currency, from, to(user's internal address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
                         CryptoCurrencyTransferItem(Some(newTransferItemId), tx.sigId, tx.txid, outputPort.userId, Some(currency), None, Some(outputPort), tx.includedBlock, tx.txType, Some(Confirming), None, Some(transferId), Some(System.currentTimeMillis()))
                     }
-                  setResState(Updator.copy(item = toSaveDepositItem, addMongo = true, putItem = true))
+                  setResState(Updator.copy(item = toSaveDepositLikeItem, addMongo = true, putItem = true))
               }
             }
         }
-      case UserToHot if tx.ids.isDefined =>
-        tx.ids.get foreach {
-          id =>
-            assert(manager.transferMap.contains(id))
-            val userToHotItem = tx.status match {
-              case Failed =>
-                setAccountTransferStatus(manager.transferMap, id, Failed)
-                manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock, status = Some(Failed))
-              case _ => manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock) // need only one tx
-            }
-            setResState(Updator.copy(item = userToHotItem, addMongo = true, putItem = true))
-            userToHotItem.userToHotMapedDepositId foreach {
-              depositId =>
-                if (manager.transferMap.contains(depositId)) { // check coresponded deposit item has not been removed from map
-                  val depositStatus = if (userToHotItem.status.get != Failed) Succeeded else Failed
-                  setAccountTransferStatus(manager.transferMap, depositId, depositStatus)
-                  val depositItem = manager.transferMap(depositId).copy(status = Some(depositStatus))
-                  manager.removeDepositTxid(depositItem.sigId.get, depositItem.to.get)
-                  setResState(Updator.copy(item = depositItem, addMongo = true, addMsgBox = (depositItem.status == Succeeded), rmItem = true))
-                }
-            }
-        }
-      case Withdrawal if tx.ids.isDefined =>
-        handleSplitedTx(tx)
-      case ColdToHot if tx.outputs.isDefined =>
-        tx.outputs.get foreach {
-          //every output corresponds to one tx
-          outputPort =>
-            if (outputPort.hotId.isDefined) {
-              tx.status match {
-                case Failed =>
-                  manager.getColdTxId(tx.sigId.get, outputPort) match {
-                    case Some(id) =>
-                      val coldToHotItem = manager.transferMap(id).copy(status = Some(Failed))
-                      manager.removeColdTxId(coldToHotItem.sigId.get, coldToHotItem.to.get)
-                      setAccountTransferStatus(manager.transferMap, id, Failed)
-                      setResState(Updator.copy(item = coldToHotItem, addMongo = true, putItem = true))
-                    case _ =>
-                  }
-                case _ =>
-                  val toSaveColdToHotItem =
-                    manager.getColdTxId(tx.sigId.get, outputPort) match {
-                      case Some(id) =>
-                        manager.transferMap(id).copy(includedBlock = tx.includedBlock)
-                      case None =>
-                        val transferId = manager.getTransferId
-                        manager.setLastTransferId(transferId)
-                        transferHandler.put(AccountTransfer(transferId, internalUserId, tx.txType.get, currency, outputPort.internalAmount.get, Confirming, Some(System.currentTimeMillis())))
-                        val newTransferItemId = manager.getNewTransferItemId
-                        manager.saveColdTxId(tx.sigId.get, outputPort, newTransferItemId)
-                        // id, sigId, txid, userId, currency, from, to(user's internal address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
-                        CryptoCurrencyTransferItem(Some(newTransferItemId), tx.sigId, tx.txid, None, Some(currency), None, Some(outputPort), tx.includedBlock, tx.txType, Some(Confirming), None, Some(transferId), Some(System.currentTimeMillis()))
-                    }
-                  setResState(Updator.copy(item = toSaveColdToHotItem, addMongo = true, putItem = true))
-              }
-            }
-        }
-      case HotToCold if tx.ids.isDefined =>
-        handleSplitedTx(tx)
-      case Unknown =>
-        logger.warning(s"Got Unkown TransferType message from bitway: ${tx.toString}")
+      case None =>
+        logger.warning(s"${tx.txType.get.toString} tx not define outputs : ${tx.toString}")
     }
   }
 
-  private def handleSplitedTx(tx: CryptoCurrencyTransaction) {
-    tx.ids.get foreach {
-      //every input corresponds to one tx
-      id =>
-        assert(manager.transferMap.contains(id))
-        tx.status match {
-          case Failed =>
-            setAccountTransferStatus(manager.transferMap, id, Failed)
-            setResState(Updator.copy(item = manager.transferMap(id).copy(status = Some(Failed)), addMongo = true, addMsgBox = true, rmItem = true))
-          case _ =>
-            val item = manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock)
-            setResState(Updator.copy(item = item, addMongo = true, putItem = true))
+  private def handleWithdrawlLikeTx(tx: CryptoCurrencyTransaction) {
+    tx.ids match {
+      case Some(_) =>
+        tx.ids.get foreach {
+          //every input corresponds to one tx
+          id =>
+            assert(manager.transferMap.contains(id))
+            tx.status match {
+              case Failed =>
+                setAccountTransferStatus(manager.transferMap, id, Failed)
+                setResState(Updator.copy(item = manager.transferMap(id).copy(status = Some(Failed)), addMongo = true, addMsgBox = true, rmItem = true))
+              case _ =>
+                val item = manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock)
+                setResState(Updator.copy(item = item, addMongo = true, putItem = true))
+            }
         }
+      case None =>
+        logger.warning(s"${tx.txType.get.toString} tx not define ids : ${tx.toString}")
     }
   }
 
@@ -281,6 +272,9 @@ trait AccountTransferBehavior {
       val statusUpdate = if (notDeposit) Succeeded else Confirmed
       setAccountTransferStatus(manager.transferMap, item.id.get, statusUpdate)
       setResState(Updator.copy(item = item.copy(status = Some(statusUpdate)), addMongo = true, addMsgBox = notDeposit, rmItem = notDeposit, putItem = !notDeposit))
+      if (item.txType.get == ColdToHot) {
+        manager.removeItemIdFromMap(manager.coldToHotSigId2TxPortIdMap, item.sigId.get, item.to.get)
+      }
     }
     updateAccountTransferConfirmNum(item, lastBlockHeight)
     confirmed
