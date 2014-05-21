@@ -121,7 +121,7 @@ object Client {
           orderPrice = 1.0/(250 + Random.nextInt(100))
         }
         val action = Some(DoSubmitOrder(side,
-          Order(robot.userId, 0, quantity.toLong, price = Some(orderPrice), robotId = Some(robot.robotId))))
+	  Order(robot.userId, 0, quantity.toLong, price = Some(RDouble(orderPrice, false)), robotId = Some(robot.robotId))))
         (r -> "LOOP", action)
         """.format(50.0))
 
