@@ -22,7 +22,7 @@ trait StackableEventsourced[T <: AnyRef, M <: Manager[T]]
     case event: AnyRef => updateState(event)
   }
 
-  abstract override def receiveCommand = filterFor(super.receiveCommand, false) orElse super.receiveCommand orElse {
+  abstract override def receiveCommand = filterFor(super.receiveCommand) orElse super.receiveCommand orElse {
     case cmd: TakeSnapshotNow => takeSnapshot(cmd)(saveSnapshot(manager.getSnapshot))
     case QueryRecoverStats => execAfterRecover(recoveryFinished)
     case DumpStateToFile(_) => sender ! dumpToFile(manager.getSnapshot, self.path)
