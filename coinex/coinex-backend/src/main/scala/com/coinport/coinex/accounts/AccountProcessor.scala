@@ -96,7 +96,7 @@ class AccountProcessor(
           transferHotColdIfNeed(m.transfer.currency)
       }
 
-    case p @ ConfirmablePersistent(m :CryptoTransferSucceeded, _, _) =>
+    case p @ ConfirmablePersistent(m: CryptoTransferSucceeded, _, _) =>
       persist(m) {
         event =>
           confirm(p)

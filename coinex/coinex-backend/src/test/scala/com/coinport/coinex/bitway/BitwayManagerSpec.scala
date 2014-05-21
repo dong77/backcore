@@ -118,6 +118,39 @@ class BitwayManagerSpec extends Specification {
         CryptoCurrencyBlock(BlockIndex(Some("b8"), Some(8)), BlockIndex(Some("b7"), Some(7)), Nil),
         CryptoCurrencyBlock(BlockIndex(Some("b9"), Some(9)), BlockIndex(Some("b8"), Some(8)), Nil)
       ))) mustEqual BlockContinuityEnum.OTHER_BRANCH
+
+      bwm.appendBlockChain(List(
+        BlockIndex(Some("b7"), Some(7)),
+        BlockIndex(Some("b8"), Some(8))
+      ), None)
+
+      bwm.getBlockIndexes mustEqual Some(ArrayBuffer(BlockIndex(Some("b1"), Some(1)), BlockIndex(Some("b2"), Some(2)), BlockIndex(Some("b3"), Some(3)), BlockIndex(Some("b4"), Some(4)), BlockIndex(Some("b5"), Some(5)), BlockIndex(Some("b6"), Some(6)), BlockIndex(Some("b7"), Some(7)), BlockIndex(Some("b8"), Some(8))))
+
+      bwm.appendBlockChain(List(
+        BlockIndex(Some("b8"), Some(8)),
+        BlockIndex(Some("b9"), Some(9))
+      ), None)
+      bwm.getBlockIndexes mustEqual Some(ArrayBuffer(BlockIndex(Some("b1"), Some(1)), BlockIndex(Some("b2"), Some(2)), BlockIndex(Some("b3"), Some(3)), BlockIndex(Some("b4"), Some(4)), BlockIndex(Some("b5"), Some(5)), BlockIndex(Some("b6"), Some(6)), BlockIndex(Some("b7"), Some(7)), BlockIndex(Some("b8"), Some(8)), BlockIndex(Some("b8"), Some(8)), BlockIndex(Some("b9"), Some(9))))
+
+      bwm.appendBlockChain(List(
+        BlockIndex(Some("b10"), Some(10)),
+        BlockIndex(Some("b11"), Some(11))
+      ), Some(BlockIndex(Some("b9"), Some(9))))
+
+      bwm.getBlockIndexes mustEqual Some(ArrayBuffer(BlockIndex(Some("b3"), Some(3)), BlockIndex(Some("b4"), Some(4)), BlockIndex(Some("b5"), Some(5)), BlockIndex(Some("b6"), Some(6)), BlockIndex(Some("b7"), Some(7)), BlockIndex(Some("b8"), Some(8)), BlockIndex(Some("b8"), Some(8)), BlockIndex(Some("b9"), Some(9)), BlockIndex(Some("b10"), Some(10)), BlockIndex(Some("b11"), Some(11))))
+
+      bwm.appendBlockChain(List(
+        BlockIndex(Some("b10"), Some(10)),
+        BlockIndex(Some("b11"), Some(11))
+      ), Some(BlockIndex(Some("b3"), Some(3))))
+
+      bwm.getBlockIndexes mustEqual Some(ArrayBuffer(BlockIndex(Some("b3"), Some(3)), BlockIndex(Some("b10"), Some(10)), BlockIndex(Some("b11"), Some(11))))
+
+      bwm.appendBlockChain(List(
+        BlockIndex(Some("b10"), Some(10)),
+        BlockIndex(Some("b11"), Some(11))
+      ), Some(BlockIndex(None, None)))
+      bwm.getBlockIndexes mustEqual Some(ArrayBuffer(BlockIndex(Some("b3"), Some(3)), BlockIndex(Some("b10"), Some(10)), BlockIndex(Some("b11"), Some(11)), BlockIndex(Some("b10"), Some(10)), BlockIndex(Some("b11"), Some(11))))
     }
 
     "tx generation test" in {

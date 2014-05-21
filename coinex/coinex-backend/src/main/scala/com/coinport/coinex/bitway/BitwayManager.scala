@@ -41,7 +41,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
   def getSnapshot = TBitwayState(
     supportedCurrency,
     getFiltersSnapshot,
-    blockIndexes,
+    blockIndexes.toList,
     addresses.map(kv => (kv._1 -> kv._2.clone)),
     addressLastTx.clone,
     lastAlive,
