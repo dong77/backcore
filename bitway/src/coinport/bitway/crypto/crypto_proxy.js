@@ -89,6 +89,97 @@ CryptoProxy.prototype.generateUserAddress = function(request, callback) {
     }
 };
 
+CryptoProxy.prototype.transfer = function(request, callback) {
+    var self = this;
+    cryptoProxy.log.info('** TransferRequest Received **');
+    cryptoProxy.log.info(cryptoProxy.currency);
+    switch(request.type){
+        case TransferType.WITHDRAWAL:
+        case TransferType.HOT_TO_COLD:
+            Async.map(requset, self.ccOutflowFromHot_.bind(self), function(error, txid) {
+                if (error) {
+                    callback(error);
+                } else {
+                
+                }
+            });
+            break;
+        case TransferType.USER_TO_HOT:
+            Async.map(requset, self.ccInflowToHot_.bind(self), function(error, txid) {
+                if (error) {
+                    callback(error);
+                } else {
+                
+                }
+            });
+            break;
+        default:
+            cryptoProxy.log.error("Invalid request type: " + request.type);
+    }
+};
+
+CryptoProxy.prototype.ccOutflowFromHot_ = function(transferreq, callback) {
+    var self = this;
+    Async.compose(self.sendTransaction_.bind(self),
+        self.signTransaction_.bind(self),
+        self.getRawTransaction_.bind(self),
+        self.constructRawTransaction_.bind())(transferreq, function(error, txid) {
+        if (!error) {
+            callback(txid);
+        } else {
+            callback(error);
+        }
+    });
+};
+
+CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback) {
+    var self = this;
+    switch(request.type){
+        case TransferType.WITHDRAWAL:
+        case TransferType.HOT_TO_COLD:
+            Async.parallel ([
+                self.getUnspent.bind(self)(),
+                self.getChangeAddress.bind(self)
+                ], function(err, result){
+                if (!err) {
+                    var unspentTxs = result[0];
+                    var changeAddress = result[1];
+                    var amountUnspent = 0;
+                    var transactions = [];
+                    for (var i = 0; i < unspentTxs.length; i++) {
+                        amountUnspent += unspentTxs[i].amount;
+                        var transaction = {
+                            txid: unspentTxs[i].txid,
+                            vout: unspentTxs[i].vout,
+                        };
+                        transactions.push(transaction);
+                        if(amountUnspent > (amountTotal + tip)){//TODO:
+                            for(var j =0; j < transferReq.transferInfos.length; j++)
+                            {
+                                addresses[transferReq.transferInfos[j].to] = transferReq.transferInfos[j].amount;
+                            }
+                            addresses[changeAddress] = amountUnspent - amountTotal - tip;
+                            break;
+                        }else if(amountUnspent == (amount + tip)){
+                            for(var j =0; j < transferReq.transferInfos.length; j++)
+                            {
+                                addresses[transferReq.transferInfos[j].to] = transferReq.transferInfos[j].amount;
+                            }
+                            break;
+                        }
+                    }
+                    var rawData = new Object();
+                    rawData.transactions = transactions;
+                    rawDate.addresses = addresses;
+                    callback(null, rawData);
+                } else {
+                    callback(err);
+                }
+            });
+            break;
+    }
+};
+
 CryptoProxy.prototype.start = function() {
     var self = this;
     setInterval(self.checkEvent_.bind(self), self.checkInterval);
@@ -116,8 +207,10 @@ CryptoProxy.prototype.checkBlock_ = function() {
 
 CryptoProxy.prototype.getNewCCTXsSinceLatest_ = function(callback) {
     var self = this;
-    Async.compose(self.getNewCCTXsFromTxids_.bind(self), self.getTxidsSinceBlockHash_.bind(self),
-        self.getBlockHash_.bind(self), self.getBlockCount_.bind(self))(function(error, newCCTXs) {
+    Async.compose(self.getNewCCTXsFromTxids_.bind(self),
+        self.getTxidsSinceBlockHash_.bind(self),
+        self.getBlockHash_.bind(self),
+        self.getBlockCount_.bind(self))(function(error, newCCTXs) {
             CryptoProxy.invokeCallback(error, function() {return newCCTXs}, callback);
         });
 };
@@ -186,7 +279,8 @@ CryptoProxy.prototype.getBlock_ = function(hash, callback) {
 
 CryptoProxy.prototype.getBlockByIndex_ = function(index, callback) {
     var self = this;
-    Async.compose(self.getBlock_.bind(self), self.getBlockHash_.bind(self))(index, callback);
+    Async.compose(self.getBlock_.bind(self),
+        self.getBlockHash_.bind(self))(index, callback);
 };
 
 CryptoProxy.prototype.getOutputAddresses_ = function(tx) {
