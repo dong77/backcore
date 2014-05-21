@@ -20,6 +20,13 @@ class AssetView extends ExtendedView {
   val manager = new AssetManager()
 
   def receive = LoggingReceive {
+    case Persistent(cts: CryptoTransferSucceeded, _) =>
+      val t = cts.transfer
+      t.`type` match {
+        case Deposit => manager.updateAsset(t.userId, t.updated.get, t.currency, t.amount)
+        case Withdrawal => manager.updateAsset(t.userId, t.updated.get, t.currency, -t.amount)
+        case _ =>
+      }
     case Persistent(acts: AdminConfirmTransferSuccess, _) =>
       val t = acts.transfer
       t.`type` match {
