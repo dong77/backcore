@@ -96,8 +96,14 @@ class AccountProcessor(
           transferHotColdIfNeed(m.transfer.currency)
       }
 
-    case p @ ConfirmablePersistent(m: CryptoTransferSucceeded, _, _) =>
-      persist(m) { event => confirm(p); updateState(event) }
+    case p @ ConfirmablePersistent(m :CryptoTransferSucceeded, _, _) =>
+      persist(m) {
+        event =>
+          confirm(p)
+          updateState(event)
+          if (m.transfer.`type` == Withdrawal || m.transfer.`type` == UserToHot)
+            transferHotColdIfNeed(m.transfer.currency)
+      }
 
     case DoRequestGenerateABCode(userId, amount, _, _) => {
       val adjustment = CashAccount(Currency.Cny, -amount, amount, 0)
