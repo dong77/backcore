@@ -5,14 +5,13 @@
 package com.coinport.coinex.transfer
 
 import com.coinport.coinex.data._
-import com.mongodb.casbah._
 import com.coinport.coinex.common.EmbeddedMongoForTestWithBF
-import com.coinport.coinex.data.Implicits._
+import akka.event.LoggingAdapter
 
 class TransferBehaviorSpec extends EmbeddedMongoForTestWithBF {
-
   "AccountTransferWithdrawSpec" should {
     val dw = new AccountTransferBehavior {
+      implicit val logger: LoggingAdapter = null //Cann't log anything
       val db = database
       val manager = new AccountTransferManager
     }
