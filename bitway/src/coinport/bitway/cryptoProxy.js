@@ -545,15 +545,19 @@ var makeFinalBlocksResponse = function(cryptoProxy, redisProxy, request, blocksM
             break;
         }
     }
+    var blocks = [];
     if(diffPos == 0 && flag == false){
         cryptoProxy.log.error("block chain fork!");
+        for(var j = 0; j < blocksMsg.blocks.length; j++){
+            blocks.push(blocksMsg.blocks[j]);
+        }
     }else{
+        cryptoProxy.log.info("reorg pos is: " + blocksMsg.blocks[diffPos].index.id);
         reorgIndex.id = blocksMsg.blocks[diffPos].index.id;
         reorgIndex.height =  blocksMsg.blocks[diffPos].index.height;
-    }
-    var blocks = [];
-    for(var j = diffPos; j < blocksMsg.blocks.length; j++){
-        blocks.push(blocksMsg.blocks[j]);
+        for(var j = diffPos + 1; j < blocksMsg.blocks.length; j++){
+            blocks.push(blocksMsg.blocks[j]);
+        }
     }
     var blocksFinal = new CryptoCurrencyBlocksMessage({reorgIndex: reorgIndex, blocks:blocks});
     makeNormalResponse(BitwayResponseType.GET_MISSED_BLOCKS, cryptoProxy, blocksFinal, redisProxy);
@@ -853,11 +857,16 @@ var makeNormalResponse = function(type, cryptoProxy, response, redisProxy){
             redisProxy.publish(new BitwayMessage({currency: currency, tx: response}));
             break;
         case BitwayResponseType.GET_MISSED_BLOCKS:
+            cryptoProxy.log.info("MISSED BLOCK REPORT: " + currency);
+            cryptoProxy.log.info("response.blocks.length:" + response.blocks.length);
+            //cryptoProxy.log.info("auto block: " + JSON.stringify(response));
+            redisProxy.publish(new BitwayMessage({currency: currency, blocksMsg: response}));
+            break;
         case BitwayResponseType.AUTO_REPORT_BLOCKS:
             cryptoProxy.log.debug("BLOCK REPORT: " + currency);
             cryptoProxy.log.debug("response.blocks.length:" + response.blocks.length);
             //displayBlocksContent(cryptoProxy, response.blocks);
-            //cryptoProxy.log.info("block: " + JSON.stringify(response));
+            cryptoProxy.log.info("block: " + JSON.stringify(response));
             redisProxy.publish(new BitwayMessage({currency: currency, blocksMsg: response}));
             break;
         default:
