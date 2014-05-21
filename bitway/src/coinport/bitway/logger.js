@@ -49,7 +49,7 @@ log4js.configure({
     ],  
     replaceConsole: true, //替换console.log  
     levels:{  
-        dateFileLog: 'INFO'  
+        1000: 'INFO'  
     }  
 });  
 
