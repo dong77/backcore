@@ -508,6 +508,12 @@ struct CryptoCurrencyTransferItem {
     14: optional i64 updated
 }
 
+struct CryptoCurrencyNetworkStatus {
+    1: optional string id
+    2: optional i64 height
+    3: optional i64 heartbeatTime
+}
+
 struct Notification {
     1: i64 id
     2: i64 uid

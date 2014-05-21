@@ -187,7 +187,7 @@ class BitwayManagerSpec extends Specification {
           Some(Withdrawal), Confirming))
     }
 
-    "lastTx/lastAlive test" in {
+    "lastTx/getNetworkStatus test" in {
       val bwm = new BitwayManager(Btc, 10)
       bwm.faucetAddress(UserUsed, Set("u1", "u2", "u3", "u4", "u5", "u6"))
       bwm.faucetAddress(Hot, Set("h1", "h2"))
@@ -212,8 +212,11 @@ class BitwayManagerSpec extends Specification {
           status = Confirming
         )
       ))
+      bwm.appendBlockChain(List(BlockIndex(Some("b1"), Some(1)), BlockIndex(Some("b2"), Some(2)),
+        BlockIndex(Some("b3"), Some(3))))
+
       bwm.updateLastAlive(1234L)
-      bwm.getLastAlive mustEqual 1234L
+      bwm.getNetworkStatus mustEqual CryptoCurrencyNetworkStatus(Some("b3"), Some(3L), Some(1234L))
       bwm.getLastTxs(Hot) mustEqual Map("h1" -> BlockIndex(Some("t2"), Some(2)), "h2" -> BlockIndex(Some("t2"), Some(2)))
       bwm.getLastTxs(Cold) mustEqual Map.empty[String, BlockIndex]
       bwm.getLastTxs(UserUsed) mustEqual Map("u1" -> BlockIndex(Some("t1"), Some(1)), "u2" -> BlockIndex(Some("t2"), Some(2)))

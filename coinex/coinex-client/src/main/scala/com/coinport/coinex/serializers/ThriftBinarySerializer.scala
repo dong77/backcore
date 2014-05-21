@@ -22,6 +22,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cCandleDataItem = BinaryScalaCodec(CandleDataItem)
   lazy val _cCashAccount = BinaryScalaCodec(CashAccount)
   lazy val _cCryptoCurrencyBlock = BinaryScalaCodec(CryptoCurrencyBlock)
+  lazy val _cCryptoCurrencyNetworkStatus = BinaryScalaCodec(CryptoCurrencyNetworkStatus)
   lazy val _cCryptoCurrencyTransaction = BinaryScalaCodec(CryptoCurrencyTransaction)
   lazy val _cCryptoCurrencyTransactionPort = BinaryScalaCodec(CryptoCurrencyTransactionPort)
   lazy val _cCryptoCurrencyTransferInfo = BinaryScalaCodec(CryptoCurrencyTransferInfo)
@@ -115,10 +116,12 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cQueryAssetResult = BinaryScalaCodec(QueryAssetResult)
   lazy val _cQueryCandleData = BinaryScalaCodec(QueryCandleData)
   lazy val _cQueryCandleDataResult = BinaryScalaCodec(QueryCandleDataResult)
+  lazy val _cQueryCryptoCurrencyAddressStatus = BinaryScalaCodec(QueryCryptoCurrencyAddressStatus)
+  lazy val _cQueryCryptoCurrencyAddressStatusResult = BinaryScalaCodec(QueryCryptoCurrencyAddressStatusResult)
+  lazy val _cQueryCryptoCurrencyNetworkStatus = BinaryScalaCodec(QueryCryptoCurrencyNetworkStatus)
+  lazy val _cQueryCryptoCurrencyNetworkStatusResult = BinaryScalaCodec(QueryCryptoCurrencyNetworkStatusResult)
   lazy val _cQueryCryptoCurrencyTransfer = BinaryScalaCodec(QueryCryptoCurrencyTransfer)
   lazy val _cQueryCryptoCurrencyTransferResult = BinaryScalaCodec(QueryCryptoCurrencyTransferResult)
-  lazy val _cQueryLatestCryptoCurrencyStatus = BinaryScalaCodec(QueryLatestCryptoCurrencyStatus)
-  lazy val _cQueryLatestCryptoCurrencyStatusResult = BinaryScalaCodec(QueryLatestCryptoCurrencyStatusResult)
   lazy val _cQueryMarketDepth = BinaryScalaCodec(QueryMarketDepth)
   lazy val _cQueryMarketDepthResult = BinaryScalaCodec(QueryMarketDepthResult)
   lazy val _cQueryNotification = BinaryScalaCodec(QueryNotification)
@@ -186,6 +189,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: CandleDataItem => _cCandleDataItem(m)
     case m: CashAccount => _cCashAccount(m)
     case m: CryptoCurrencyBlock => _cCryptoCurrencyBlock(m)
+    case m: CryptoCurrencyNetworkStatus => _cCryptoCurrencyNetworkStatus(m)
     case m: CryptoCurrencyTransaction => _cCryptoCurrencyTransaction(m)
     case m: CryptoCurrencyTransactionPort => _cCryptoCurrencyTransactionPort(m)
     case m: CryptoCurrencyTransferInfo => _cCryptoCurrencyTransferInfo(m)
@@ -279,10 +283,12 @@ class ThriftBinarySerializer extends Serializer {
     case m: QueryAssetResult => _cQueryAssetResult(m)
     case m: QueryCandleData => _cQueryCandleData(m)
     case m: QueryCandleDataResult => _cQueryCandleDataResult(m)
+    case m: QueryCryptoCurrencyAddressStatus => _cQueryCryptoCurrencyAddressStatus(m)
+    case m: QueryCryptoCurrencyAddressStatusResult => _cQueryCryptoCurrencyAddressStatusResult(m)
+    case m: QueryCryptoCurrencyNetworkStatus => _cQueryCryptoCurrencyNetworkStatus(m)
+    case m: QueryCryptoCurrencyNetworkStatusResult => _cQueryCryptoCurrencyNetworkStatusResult(m)
     case m: QueryCryptoCurrencyTransfer => _cQueryCryptoCurrencyTransfer(m)
     case m: QueryCryptoCurrencyTransferResult => _cQueryCryptoCurrencyTransferResult(m)
-    case m: QueryLatestCryptoCurrencyStatus => _cQueryLatestCryptoCurrencyStatus(m)
-    case m: QueryLatestCryptoCurrencyStatusResult => _cQueryLatestCryptoCurrencyStatusResult(m)
     case m: QueryMarketDepth => _cQueryMarketDepth(m)
     case m: QueryMarketDepthResult => _cQueryMarketDepthResult(m)
     case m: QueryNotification => _cQueryNotification(m)
@@ -354,6 +360,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[CandleDataItem.Immutable] => _cCandleDataItem.invert(bytes).get
     case Some(c) if c == classOf[CashAccount.Immutable] => _cCashAccount.invert(bytes).get
     case Some(c) if c == classOf[CryptoCurrencyBlock.Immutable] => _cCryptoCurrencyBlock.invert(bytes).get
+    case Some(c) if c == classOf[CryptoCurrencyNetworkStatus.Immutable] => _cCryptoCurrencyNetworkStatus.invert(bytes).get
     case Some(c) if c == classOf[CryptoCurrencyTransaction.Immutable] => _cCryptoCurrencyTransaction.invert(bytes).get
     case Some(c) if c == classOf[CryptoCurrencyTransactionPort.Immutable] => _cCryptoCurrencyTransactionPort.invert(bytes).get
     case Some(c) if c == classOf[CryptoCurrencyTransferInfo.Immutable] => _cCryptoCurrencyTransferInfo.invert(bytes).get
@@ -447,10 +454,12 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[QueryAssetResult.Immutable] => _cQueryAssetResult.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleData.Immutable] => _cQueryCandleData.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleDataResult.Immutable] => _cQueryCandleDataResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryCryptoCurrencyAddressStatus.Immutable] => _cQueryCryptoCurrencyAddressStatus.invert(bytes).get
+    case Some(c) if c == classOf[QueryCryptoCurrencyAddressStatusResult.Immutable] => _cQueryCryptoCurrencyAddressStatusResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryCryptoCurrencyNetworkStatus.Immutable] => _cQueryCryptoCurrencyNetworkStatus.invert(bytes).get
+    case Some(c) if c == classOf[QueryCryptoCurrencyNetworkStatusResult.Immutable] => _cQueryCryptoCurrencyNetworkStatusResult.invert(bytes).get
     case Some(c) if c == classOf[QueryCryptoCurrencyTransfer.Immutable] => _cQueryCryptoCurrencyTransfer.invert(bytes).get
     case Some(c) if c == classOf[QueryCryptoCurrencyTransferResult.Immutable] => _cQueryCryptoCurrencyTransferResult.invert(bytes).get
-    case Some(c) if c == classOf[QueryLatestCryptoCurrencyStatus.Immutable] => _cQueryLatestCryptoCurrencyStatus.invert(bytes).get
-    case Some(c) if c == classOf[QueryLatestCryptoCurrencyStatusResult.Immutable] => _cQueryLatestCryptoCurrencyStatusResult.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepth.Immutable] => _cQueryMarketDepth.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepthResult.Immutable] => _cQueryMarketDepthResult.invert(bytes).get
     case Some(c) if c == classOf[QueryNotification.Immutable] => _cQueryNotification.invert(bytes).get

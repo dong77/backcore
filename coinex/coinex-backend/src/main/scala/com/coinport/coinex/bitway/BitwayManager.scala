@@ -110,7 +110,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
 
   def getCurrentBlockIndex: Option[BlockIndex] = {
     if (blockIndexes.size > 0)
-      Some(blockIndexes(0))
+      Some(blockIndexes.last)
     else None
   }
 
@@ -248,7 +248,13 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
       blockIndexes.remove(0, blockIndexes.length - maintainedChainLength)
   }
 
-  def getLastAlive = lastAlive
+  def getNetworkStatus: CryptoCurrencyNetworkStatus = {
+    getCurrentBlockIndex match {
+      case None => CryptoCurrencyNetworkStatus(heartbeatTime = if (lastAlive != -1) Some(lastAlive) else None)
+      case Some(index) => CryptoCurrencyNetworkStatus(index.id, index.height,
+        if (lastAlive != -1) Some(lastAlive) else None)
+    }
+  }
 
   def getLastTxs(t: CryptoCurrencyAddressType): Map[String, BlockIndex] = {
     Map(addresses(t).filter(d => addressLastTx.contains(d) && addressLastTx(d) != BlockIndex(None, None)).toSeq.map(address =>

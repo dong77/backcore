@@ -197,9 +197,9 @@ class BitwayReceiver(bitwayProcessor: ActorRef, supportedCurrency: Currency, con
       }
   }
 
+  def getResponseChannel = config.responseChannelPrefix + supportedCurrency.toString.toLowerCase
+
   private def listenAtRedis() {
     context.system.scheduler.scheduleOnce(0 seconds, self, ListenAtRedis)(context.system.dispatcher)
   }
-
-  def getResponseChannel = config.responseChannelPrefix + supportedCurrency.toString.toLowerCase
 }
