@@ -341,10 +341,10 @@ var txWithDefiniteTo = function(cryptoProxy, request, redisProxy){
     });
 };
 
-var getTransactionInfo = function(cryptoPrxoy, txid, ids, redisProxy){
-    var rpc = cryptoPrxoy.rpc;
+var getTransactionInfo = function(cryptoProxy, txid, ids, redisProxy){
+    var rpc = cryptoProxy.rpc;
     cryptoProxy.log.info("txid: " + txid);
-    rpc.getRawTransaction(txid, cryptoPrxoy.needJson, function(err,ret){
+    rpc.getRawTransaction(txid, cryptoProxy.needJson, function(err,ret){
         if(err){
             cryptoProxy.log.info("fail code: " + err.code);
             cryptoProxy.log.info("fail message: " + err.message);
@@ -356,7 +356,7 @@ var getTransactionInfo = function(cryptoPrxoy, txid, ids, redisProxy){
             getOutputAddresses(ret.result, cctx);
             for(var i = 0; i < ret.result.vin.length; i++){
                 cryptoProxy.log.info("vout: " + ret.result.vin[i].vout);
-                saveTransferIds(cryptoPrxoy, ret.result.vin[i], cctx, ret.result.vin.length, ids, redisProxy);
+                saveTransferIds(cryptoProxy, ret.result.vin[i], cctx, ret.result.vin.length, ids, redisProxy);
             }
         }
     });
