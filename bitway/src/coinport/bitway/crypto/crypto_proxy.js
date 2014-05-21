@@ -101,8 +101,7 @@ CryptoProxy.prototype.checkEvent_ = function() {
 
 CryptoProxy.prototype.checkTx_ = function() {
     var self = this;
-    Async.compose(self.getNewCCTXsFromTxids_.bind(self), self.getTxidsSinceBlockHash_.bind(self),
-        self.getBlockHash_.bind(self), self.getBlockCount_.bind(self))(function(error, newCCTXs) {
+    self.getNewCCTXsSinceLatest_(function(error, newCCTXs) {
         if (!error && newCCTXs.length != 0) {
             for (var i = 0; i < newCCTXs.length; ++i) {
                 self.emit(CryptoProxy.EventType.TX_ARRIVED, newCCTXs[i]);
@@ -113,6 +112,14 @@ CryptoProxy.prototype.checkTx_ = function() {
 
 CryptoProxy.prototype.checkBlock_ = function() {
     console.log('checkBlock called!');
+};
+
+CryptoProxy.prototype.getNewCCTXsSinceLatest_ = function(callback) {
+    var self = this;
+    Async.compose(self.getNewCCTXsFromTxids_.bind(self), self.getTxidsSinceBlockHash_.bind(self),
+        self.getBlockHash_.bind(self), self.getBlockCount_.bind(self))(function(error, newCCTXs) {
+            CryptoProxy.invokeCallback(error, function() {return newCCTXs}, callback);
+        });
 };
 
 CryptoProxy.prototype.getBlockCount_ = function(callback) {
@@ -139,9 +146,9 @@ CryptoProxy.prototype.getNewCCTXsFromTxids_ = function(txids, callback) {
                 } else {
                     var sigStrIds = sigIds.map(function(element) {return String(element)});
                     var newCCTXs = cctxs.filter(function(element) {return sigStrIds.indexOf(element.sigId) == -1;});
-                    callback(null, newCCTXs);
                     self.redis.sadd(CryptoProxy.PROCESSED_SIGIDS,
                         newCCTXs.map(function(element) {return element.sigId}), function() {});
+                    callback(null, newCCTXs);
                 }
             });
         }
@@ -242,7 +249,7 @@ CryptoProxy.prototype.getCCTXFromTx_ = function(tx, callback) {
             callback(error);
         } else {
             var cctx = new CryptoCurrencyTransaction({txid: tx.txid, inputs: rawInputs, outputs: retOutputs,
-                status: TransferStatus.Confirming});
+                status: TransferStatus.CONFIRMING});
             var sigId = self.getSigId_(cctx);
             cctx.sigId = sigId;
             self.redis.get(sigId, function(error, ids) {
