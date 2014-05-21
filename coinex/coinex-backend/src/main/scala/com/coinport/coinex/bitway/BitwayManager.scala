@@ -30,6 +30,11 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
   val addressUidMap = Map.empty[String, Long]
   var lastAlive: Long = -1
 
+  final val SPECIAL_ACCOUNT_ID: Map[CryptoCurrencyAddressType, Long] = Map(
+    CryptoCurrencyAddressType.Hot -> -1,
+    CryptoCurrencyAddressType.Cold -> -2
+  )
+
   val FAUCET_THRESHOLD: Double = 0.5
   val INIT_ADDRESS_NUM: Int = 100
 
@@ -80,6 +85,8 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
   def faucetAddress(cryptoCurrencyAddressType: CryptoCurrencyAddressType, addrs: Set[String]) {
     addresses(cryptoCurrencyAddressType) ++= addrs
     addressLastTx ++= addrs.map(i => (i -> BlockIndex()))
+    if (SPECIAL_ACCOUNT_ID.contains(cryptoCurrencyAddressType))
+      addressUidMap ++= addrs.map(_ -> SPECIAL_ACCOUNT_ID(cryptoCurrencyAddressType))
   }
 
   def updateLastTx(txs: Seq[CryptoCurrencyTransaction]) {

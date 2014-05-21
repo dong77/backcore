@@ -250,12 +250,12 @@ trait AccountManagerBehavior extends CountFeeSupport {
       failedTransfer(t)
 
     case CryptoTransferSucceeded(t) => {
-//      println(s">>>>>>>>>>>>>>>>>>>>> AccountProcessor got success accountTransfer => ${t.toString}")
+      //      println(s">>>>>>>>>>>>>>>>>>>>> AccountProcessor got success accountTransfer => ${t.toString}")
       succeededTransfer(t)
     }
 
     case CryptoTransferFailed(t, _) => {
-//      println(s">>>>>>>>>>>>>>>>>>>>> AccountProcessor got failed accountTransfer => ${t.toString}")
+      //      println(s">>>>>>>>>>>>>>>>>>>>> AccountProcessor got failed accountTransfer => ${t.toString}")
       failedTransfer(t)
     }
 

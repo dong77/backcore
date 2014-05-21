@@ -135,7 +135,7 @@ class BitwayManagerSpec extends Specification {
         inputs = Some(Set(CryptoCurrencyTransactionPort("u7", Some(1.1)))),
         outputs = Some(Set(CryptoCurrencyTransactionPort("h1", Some(0.9)))),
         includedBlock = Some(bi1), status = Confirming)
-      bwm.completeCryptoCurrencyTransaction(rawTx, None, None) mustEqual Some(CryptoCurrencyTransaction(None, Some("t1"), None, Some(Set(CryptoCurrencyTransactionPort("u7", Some(1.1), Some(1100), Some(1)))), Some(Set(CryptoCurrencyTransactionPort("h1", Some(0.9), Some(900)))), None, None, Some(UserToHot), Confirming))
+      bwm.completeCryptoCurrencyTransaction(rawTx, None, None) mustEqual Some(CryptoCurrencyTransaction(None, Some("t1"), None, Some(Set(CryptoCurrencyTransactionPort("u7", Some(1.1), Some(1100), Some(1)))), Some(Set(CryptoCurrencyTransactionPort("h1", Some(0.9), Some(900), Some(-1)))), None, None, Some(UserToHot), Confirming))
 
       val infos = Seq(
         CryptoCurrencyTransferInfo(1, Some("i1"), Some(1000)),
@@ -171,17 +171,17 @@ class BitwayManagerSpec extends Specification {
 
       bwm.extractTxsFromBlocks(blocks) mustEqual List(
         CryptoCurrencyTransaction(None, Some("t1"), None,
-          Some(Set(CryptoCurrencyTransactionPort("h1", Some(1.1), Some(1100)))),
+          Some(Set(CryptoCurrencyTransactionPort("h1", Some(1.1), Some(1100), Some(-1)))),
           Some(Set(CryptoCurrencyTransactionPort("d1", Some(0.9), Some(900)))),
           Some(BlockIndex(Some("b9"), Some(9))),
           Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Confirming),
         CryptoCurrencyTransaction(None, Some("t2"), None,
-          Some(Set(CryptoCurrencyTransactionPort("h2", Some(2.1), Some(2100)))),
+          Some(Set(CryptoCurrencyTransactionPort("h2", Some(2.1), Some(2100), Some(-1)))),
           Some(Set(CryptoCurrencyTransactionPort("d2", Some(2.9), Some(2900)))),
           Some(BlockIndex(Some("b9"), Some(9))),
           Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Confirming),
         CryptoCurrencyTransaction(None, Some("t3"), None,
-          Some(Set(CryptoCurrencyTransactionPort("h3", Some(3.1), Some(3100)))),
+          Some(Set(CryptoCurrencyTransactionPort("h3", Some(3.1), Some(3100), Some(-1)))),
           Some(Set(CryptoCurrencyTransactionPort("d3", Some(3.9), Some(3900)))),
           Some(BlockIndex(Some("b10"), Some(10))), Some(BlockIndex(Some("b11"), Some(11))),
           Some(Withdrawal), Confirming))

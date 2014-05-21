@@ -82,7 +82,7 @@ trait AccountTransferBehavior {
     }
 
     case m @ MultiCryptoCurrencyTransactionMessage(currency, txs, newIndex: Option[BlockIndex]) =>
-//      println(s">>>>>>>>>>>>>>>>>>>>> updateState  => MultiCryptoCurrencyTransactionMessage = ${m.toString}")
+      //      println(s">>>>>>>>>>>>>>>>>>>>> updateState  => MultiCryptoCurrencyTransactionMessage = ${m.toString}")
       clearResList
       if (manager.getLastBlockHeight > 0) newIndex foreach (index => reOrgnize(index))
       txs foreach {
