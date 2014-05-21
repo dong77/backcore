@@ -188,4 +188,8 @@ package object model {
     User(u.id, u.email, u.realName, u.passwordHash.getOrElse(""), u.nationalId, u.mobile, dmap, wmap)
   }
 
+  def fromNotification(n: Notification) = {
+    ApiNotification(n.id, n.author, n.nType.toString, n.title, n.content, n.created, n.updated)
+  }
+
 }

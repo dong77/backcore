@@ -516,10 +516,11 @@ struct CryptoCurrencyNetworkStatus {
 
 struct Notification {
     1: i64 id
-    2: i64 uid
+    2: string author
     3: NotificationType nType
     4: string title
     5: string content
-    6: i64 created
-    7: i64 updated
+    6: bool removed
+    7: i64 created
+    8: i64 updated
 }

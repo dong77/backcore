@@ -4,21 +4,26 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.api.model._
 import akka.pattern.ask
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 object NotificationService extends AkkaService {
   // TODO: store notifications in actors
   val notifications = collection.mutable.HashMap[Long, Notification]()
 
-  def getNotifications() = {
-    ApiResult(data = Some(notifications.values.toSeq))
+  def getNotifications(cur: Cursor) = {
+    backend ? QueryNotification(getRemoved = Some(false), cur = cur) map {
+      case rv: QueryNotificationResult =>
+        ApiResult(data = Some(rv.notifications.map(fromNotification)))
+    }
   }
 
-  def addNotification(notification: Notification) = {
-    notifications.put(notification.id, notification)
+  def adminGetNotifications(id: Option[Long], uid: Option[String], ntype: Option[NotificationType], getRemoved: Option[Boolean], cursor: Cursor) = {
+    backend ? QueryNotification(id, uid, ntype, getRemoved, cursor) map {
+      case rv: QueryNotificationResult =>
+        ApiResult(data = Some(ApiPagingWrapper(cursor.skip, cursor.limit, rv.notifications.map(fromNotification), rv.count.toInt)))
+    }
   }
 
-  def removeNotification(id: Long) = {
-    notifications.remove(id)
+  def updateNotification(n: Notification) = {
+    backend ! SetNotification(n)
   }
 }

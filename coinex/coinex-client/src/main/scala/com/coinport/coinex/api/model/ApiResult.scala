@@ -72,3 +72,4 @@ case class ApiMAItem(time: Long, value: PriceObject)
 
 case class ApiHistory(candles: Seq[ApiCandleItem])
 
+case class ApiNotification(id: Long, author: String, ntype: String, title: String, content: String, created: Long, updated: Long)
