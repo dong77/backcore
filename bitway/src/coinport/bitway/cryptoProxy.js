@@ -843,7 +843,7 @@ var makeNormalResponse = function(type, cryptoProxy, response, redisProxy){
         case BitwayResponseType.TRANSFER:
         case BitwayResponseType.TRANSACTION:
             cryptoProxy.log.info("TRANSACTION REPORT: " + currency);
-            displayTxContent(response);
+            displayTxContent(cryptoProxy, response);
             redisProxy.publish(new BitwayMessage({currency: currency, tx: response}));
             break;
         case BitwayResponseType.GET_MISSED_BLOCKS:
