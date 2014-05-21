@@ -129,11 +129,12 @@ CryptoProxy.prototype.generateUserAddress = function(cryptoProxy, request, redis
 CryptoProxy.prototype.getMissedBlocks = function(cryptoProxy, request, redisProxy) {
     cryptoProxy.log.debug(RedisProxy.EventType.GET_MISSED_BLOCKS);
     cryptoProxy.log.debug("endIndex hash:" + request.endIndex.id);
+    cryptoProxy.log.info("get missed block request: " + JSON.stringify(request));
     var rpc = cryptoProxy.rpc;
     var blocksFinishLength = request.endIndex.height - request.startIndexs[0].height +1;
     var blocksMsg = new CryptoCurrencyBlocksMessage({blocks:[]});
     for(var iHeight = request.startIndexs[0].height; iHeight < request.endIndex.height + 1; iHeight++){
-        cryptoProxy.log.debug("iHeight: " + iHeight);
+        cryptoProxy.log.info("iHeight: " + iHeight);
         rpc.getBlockHash(iHeight, function(errHash, retHash){
             cryptoProxy.log.debug("block hash: " + retHash.result);
             rpc.getBlock(retHash.result, function(errBlock, retBlock){
@@ -152,13 +153,11 @@ CryptoProxy.prototype.getMissedBlocks = function(cryptoProxy, request, redisProx
                                 cryptoProxy.log.error("errTx code: " + errBlock.code);
                                 cryptoProxy.log.error("errTx message: " + errBlock.message);
                             }else{
-                                //cryptoProxy.log.debug("txid: " + retTx.result.txid);
                                 var cctx = new CryptoCurrencyTransaction({inputs: [], outputs: [],
                                     status: TransferStatus.Confirming});
                                 cctx.txid = retTx.result.txid;
                                 getOutputAddresses(retTx.result, cctx);
                                 for(var j = 0; j < retTx.result.vin.length; j++){
-                                    //cryptoProxy.log.debug("vout: " + retTx.result.vin[j].vout);
                                     constructBlocks(cryptoProxy, redisProxy, retTx.result.vin[j], retTx.result.vin.length,
                                         retBlock.result.tx.length, blocksFinishLength, request, cctx, block, blocksMsg);
                                 }
@@ -531,17 +530,23 @@ var compare = function(blockA, blockB){
 var makeFinalBlocksResponse = function(cryptoProxy, redisProxy, request, blocksMsg){
     blocksMsg.blocks.sort(compare);
     var diffPos = 0;
+    var flag = false;
     var reorgIndex = new BlockIndex({id: null, height: null});
     for(var i = 0; i < request.startIndexs.length; i++){
         diffPos = i;
+        cryptoProxy.log.info("request.startIndexs id: " + request.startIndexs[i].id);
+        cryptoProxy.log.info("blocksMsg.blocks id: " + i + " " +  blocksMsg.blocks[i].index.id);
+        cryptoProxy.log.info("request.startIndexs height: " + request.startIndexs[i].height);
+        cryptoProxy.log.info("blocksMsg.blocks height: " + i + " " +  blocksMsg.blocks[i].index.height);
         if(request.startIndexs[i].id == blocksMsg.blocks[i].index.id &&
            request.startIndexs[i].height == blocksMsg.blocks[i].index.height){
+            flag = true;
         }else{
             break;
         }
     }
-    if(diffPos == 0){
-        cryptoProxy.log.debug("block chain fork!");
+    if(diffPos == 0 && flag == false){
+        cryptoProxy.log.error("block chain fork!");
     }else{
         reorgIndex.id = blocksMsg.blocks[diffPos].index.id;
         reorgIndex.height =  blocksMsg.blocks[diffPos].index.height;
@@ -852,7 +857,7 @@ var makeNormalResponse = function(type, cryptoProxy, response, redisProxy){
             cryptoProxy.log.debug("BLOCK REPORT: " + currency);
             cryptoProxy.log.debug("response.blocks.length:" + response.blocks.length);
             //displayBlocksContent(cryptoProxy, response.blocks);
-            cryptoProxy.log.info("block: " + JSON.stringify(response));
+            //cryptoProxy.log.info("block: " + JSON.stringify(response));
             redisProxy.publish(new BitwayMessage({currency: currency, blocksMsg: response}));
             break;
         default:
