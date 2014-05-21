@@ -17,6 +17,9 @@ trait RedeliverFilterSupport[T <: AnyRef, M <: Manager[T]] extends Actor with Ac
     case p @ ConfirmablePersistent(payload, seq, _) if target.isDefinedAt(p) =>
       val channel = if (identifyChannel.isDefinedAt(payload)) identifyChannel(payload) else "default"
       if (manager.hasProcessed(channel, seq)) {
+        // TODO(c): adds this: p.confirm() when make sure channel is ok
+        //          For now, we need redeliver for counting the following message to check the dup message is processed
+        //          or not
         log.warning("ConfirmablePersistent request was previously processed: " + p)
       } else {
         target(p)
