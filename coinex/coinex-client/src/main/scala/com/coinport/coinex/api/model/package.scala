@@ -189,7 +189,6 @@ package object model {
   }
 
   def fromNotification(n: Notification) = {
-    ApiNotification(n.id, n.author, n.nType.toString, n.title, n.content, n.created, n.updated)
+    ApiNotification(n.id, n.nType.toString, n.title, n.content, n.created, n.updated, n.removed)
   }
-
 }

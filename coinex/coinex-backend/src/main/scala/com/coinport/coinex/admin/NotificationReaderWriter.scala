@@ -9,7 +9,7 @@ class NotificationReaderWriter(val db: MongoDB) extends Actor with NotificationH
 
   def receive = LoggingReceive {
     case n: SetNotification =>
-      val notification = if (n.notification.id <= 0) n.notification else n.notification.copy(id = idGenerator)
+      val notification = if (n.notification.id <= 0) n.notification.copy(id = idGenerator) else n.notification
       notificationHandler.put(notification)
     case q: QueryNotification =>
       val query = notificationHandler.getQueryDBObject(q)

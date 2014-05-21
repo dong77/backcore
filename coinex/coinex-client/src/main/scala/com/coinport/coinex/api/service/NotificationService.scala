@@ -9,15 +9,15 @@ object NotificationService extends AkkaService {
   // TODO: store notifications in actors
   val notifications = collection.mutable.HashMap[Long, Notification]()
 
-  def getNotifications(cur: Cursor) = {
-    backend ? QueryNotification(getRemoved = Some(false), cur = cur) map {
+  def getNotifications() = {
+    backend ? QueryNotification(getRemoved = Some(false), cur = Cursor(0, 10)) map {
       case rv: QueryNotificationResult =>
         ApiResult(data = Some(rv.notifications.map(fromNotification)))
     }
   }
 
-  def adminGetNotifications(id: Option[Long], uid: Option[String], ntype: Option[NotificationType], getRemoved: Option[Boolean], cursor: Cursor) = {
-    backend ? QueryNotification(id, uid, ntype, getRemoved, cursor) map {
+  def adminGetNotifications(id: Option[Long], ntype: Option[NotificationType], getRemoved: Option[Boolean], cursor: Cursor) = {
+    backend ? QueryNotification(id, ntype, getRemoved, cursor) map {
       case rv: QueryNotificationResult =>
         ApiResult(data = Some(ApiPagingWrapper(cursor.skip, cursor.limit, rv.notifications.map(fromNotification), rv.count.toInt)))
     }
