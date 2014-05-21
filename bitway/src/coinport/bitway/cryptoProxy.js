@@ -858,7 +858,7 @@ var makeNormalResponse = function(type, cryptoProxy, response, redisProxy){
     }
 };
 
-var logo = "" +
+var logo = "\n" +
 " _    _ _                     \n" +
 "| |__(_) |___ __ ____ _ _  _  \n" +
 "| '_ \\ |  _\\ V  V / _` | || | \n" +

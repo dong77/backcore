@@ -35,5 +35,5 @@ lmdb/
 gen-java/
 node_modules/
 gen-nodejs/
-
+logs
 coinex/.ensime

@@ -7,4 +7,8 @@ thrift --gen js:node -o ./ proto/data.thrift
 thrift --gen js:node -o ./ proto/message.thrift
 thrift --gen js:node -o ./ proto/test.thrift
 
+if [ ! -d 'logs' ]; then
+    mkdir logs
+fi
+
 node src/coinport/bitway/btc.js
