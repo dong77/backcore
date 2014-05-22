@@ -141,7 +141,7 @@ object UserService extends AkkaService {
       email = email,
       realName = realName,
       nationalId = nationalId,
-      emailVerified = false,
+      emailVerified = true,
       mobile = mobile,
       mobileVerified = true,
       status = UserStatus.Normal,
