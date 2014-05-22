@@ -4,7 +4,7 @@
         <filter class="com.coinport.coinex.LogFilter" />
         <target>System.out</target>
         <encoder>
-            <pattern>%-5level %X{akkaSource}[%logger{0}] >>>> %msg%n</pattern>
+            <pattern>%date{yyyy-MM-dd} %X{akkaTimestamp} %-5level %X{akkaSource}[%logger{0}] >>>> %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
