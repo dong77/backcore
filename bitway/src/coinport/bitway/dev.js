@@ -54,4 +54,8 @@ cryptoProxy.getCCBlockByIndex_(123, function(error, response) {
 cryptoProxy.on(CryptoProxy.EventType.TX_ARRIVED, function(cctx) {
     console.log('%j', cctx);
 });
+
+cryptoProxy.on(CryptoProxy.EventType.BLOCK_ARRIVED, function(block) {
+    console.log('%j', block);
+});
 cryptoProxy.start();

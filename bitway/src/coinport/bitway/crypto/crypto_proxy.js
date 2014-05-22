@@ -55,12 +55,13 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
     this.redis || (this.redis = Redis.createClient('6379', '127.0.0.1'));
     this.checkInterval || (this.checkInterval = 5000);
 
+    this.processedSigids = this.currency + '_processed_sigids';
+    this.lastIndex = this.currency + '_last_index';
 };
 Util.inherits(CryptoProxy, Events.EventEmitter);
 
 CryptoProxy.ACCOUNT = 'customers';
 CryptoProxy.HOT_ACCOUNT = "hot";
-CryptoProxy.PROCESSED_SIGIDS = "processed_sigids";
 CryptoProxy.TIP = 0.0001;
 CryptoProxy.MIN_GENERATE_ADDR_NUM = 1;
 CryptoProxy.MAX_GENERATE_ADDR_NUM = 1000;
@@ -68,7 +69,7 @@ CryptoProxy.MAX_CONFIRM_NUM = 9999999;
 
 CryptoProxy.EventType = {
     TX_ARRIVED : 'tx_arrived',
-    BLOCKS_ARRIVED : 'blocks_arrived'
+    BLOCK_ARRIVED : 'block_arrived'
 };
 
 CryptoProxy.prototype.generateUserAddress = function(request, callback) {
@@ -161,13 +162,22 @@ CryptoProxy.prototype.calTotalPay = function(transferReq) {
 };
 
 CryptoProxy.prototype.start = function() {
-    var self = this;
-    setInterval(self.checkEvent_.bind(self), self.checkInterval);
+    this.checkTxAfterDelay_();
+    this.checkBlockAfterDelay_();
 };
 
-CryptoProxy.prototype.checkEvent_ = function() {
-    this.checkTx_();
-    this.checkBlock_();
+CryptoProxy.prototype.checkTxAfterDelay_ = function(opt_interval) {
+    var self = this;
+    var interval = self.checkInterval;
+    opt_interval && (interval = opt_interval)
+    setTimeout(self.checkTx_.bind(self), interval);
+};
+
+CryptoProxy.prototype.checkBlockAfterDelay_ = function(opt_interval) {
+    var self = this;
+    var interval = self.checkInterval;
+    opt_interval && (interval = opt_interval)
+    setTimeout(self.checkBlock_.bind(self), interval);
 };
 
 CryptoProxy.prototype.checkTx_ = function() {
@@ -179,11 +189,59 @@ CryptoProxy.prototype.checkTx_ = function() {
                     self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, newCCTXs[i]));
             }
         }
+        self.checkTxAfterDelay_();
     });
 };
 
 CryptoProxy.prototype.checkBlock_ = function() {
-    console.log('checkBlock called!');
+    var self = this;
+    self.getNextCCBlock_(function(error, ccblock) {
+        if (error || !ccblock) {
+            self.checkBlockAfterDelay_();
+        } else {
+            self.emit(CryptoProxy.EventType.BLOCK_ARRIVED,
+                self.makeNormalResponse_(BitwayResponseType.AUTO_REPORT_BLOCKS, self.currency, ccblock));
+            self.checkBlockAfterDelay_(0);
+        }
+    });
+};
+
+CryptoProxy.prototype.getNextCCBlock_ = function(callback) {
+    var self = this;
+    Async.compose(self.getNextCCBlockSinceLastIndex_.bind(self), self.getLastIndex_.bind(self))(callback);
+};
+
+CryptoProxy.prototype.getLastIndex_ = function(callback) {
+    var self = this;
+    self.redis.get(self.lastIndex, function(error, index) {
+        var numIndex = Number(index);
+        if (!error && numIndex) {
+            callback(null, numIndex);
+        } else {
+            callback(null, -1);
+        }
+    });
+};
+
+CryptoProxy.prototype.getNextCCBlockSinceLastIndex_ = function(index, callback) {
+    var self = this;
+    self.getBlockCount_(function(error, count) {
+        if (error) {
+            callback(error);
+        } else if (index == count) {
+            callback('no new block found');
+        } else {
+            var nextIndex = (index == -1) ? count : index + 1;
+            self.redis.del(self.processedSigids, function() {});
+            self.redis.set(self.lastIndex, nextIndex, function(error, replay) {
+                if (!error) {
+                    self.getCCBlockByIndex_(nextIndex, callback);
+                } else {
+                    callback(error);
+                }
+            });
+        }
+    });
 };
 
 CryptoProxy.prototype.getNewCCTXsSinceLatest_ = function(callback) {
@@ -191,9 +249,7 @@ CryptoProxy.prototype.getNewCCTXsSinceLatest_ = function(callback) {
     Async.compose(self.getNewCCTXsFromTxids_.bind(self),
         self.getTxidsSinceBlockHash_.bind(self),
         self.getBlockHash_.bind(self),
-        self.getBlockCount_.bind(self))(function(error, newCCTXs) {
-            CryptoProxy.invokeCallback(error, function() {return newCCTXs}, callback);
-        });
+        self.getBlockCount_.bind(self))(callback);
 };
 
 CryptoProxy.prototype.getBlockCount_ = function(callback) {
@@ -214,15 +270,20 @@ CryptoProxy.prototype.getNewCCTXsFromTxids_ = function(txids, callback) {
         if (error) {
             callback(error);
         } else {
-            self.redis.smembers(CryptoProxy.PROCESSED_SIGIDS, function(error, sigIds) {
+            self.redis.smembers(self.processedSigids, function(error, sigIds) {
                 if (error) {
                     callback(error);
                 } else {
                     var sigStrIds = sigIds.map(function(element) {return String(element)});
                     var newCCTXs = cctxs.filter(function(element) {return sigStrIds.indexOf(element.sigId) == -1;});
-                    self.redis.sadd(CryptoProxy.PROCESSED_SIGIDS,
-                        newCCTXs.map(function(element) {return element.sigId}), function() {});
-                    callback(null, newCCTXs);
+                    self.redis.sadd(self.processedSigids, newCCTXs.map(function(element) {return element.sigId}),
+                        function(error, replay) {
+                        if (error) {
+                            callback(error);
+                        } else {
+                            callback(null, newCCTXs);
+                        }
+                    });
                 }
             });
         }

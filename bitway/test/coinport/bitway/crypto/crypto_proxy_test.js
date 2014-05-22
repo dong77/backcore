@@ -68,16 +68,18 @@ describe('crypto proxy', function() {
 
     describe('getNewCCTXsSinceLatest_', function() {
         it('get new cctxs from latest height', function(done) {
+            var redisClient = new MockRedis();
+            redisClient.map['aeefac23a12130754be0512ab8986ef740f8e381dc4cc5a606e6a3630f7d4033'] = [1, 8];
             var cryptoProxy = new CryptoProxy(Currency.BTC, {
                 cryptoRpc: new MockRpc({fail: 'partial', blockCount: 244498}),
                 minConfirm: 1,
-                redis: new MockRedis()
+                redis: redisClient
             });
             cryptoProxy.getNewCCTXsSinceLatest_(function(error, cctxs) {
                 var expectedTxs = [new CryptoCurrencyTransaction ({
                     "sigId": "aeefac23a12130754be0512ab8986ef740f8e381dc4cc5a606e6a3630f7d4033",
                     "txid": "8debdd1691d1bff1e0b9f27cbf4958c9b7578e2bd0b50334a2bcc7060217e7a7",
-                    "ids": null,
+                    "ids": [1, 8],
                     "inputs": [
                     {
                         "address": "n1YiTZ9SczJM5ZpRgBmRP2B5Gax7JHptAa",
