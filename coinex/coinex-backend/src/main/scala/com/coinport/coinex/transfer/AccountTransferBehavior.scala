@@ -77,6 +77,7 @@ trait AccountTransferBehavior {
 
     case AdminConfirmTransferSuccess(t) => {
       if (isCryptoCurrency(t.currency) && !transferDebug) {
+        clearResList
         t.`type` match {
           case TransferType.Withdrawal =>
             val to = CryptoCurrencyTransactionPort(t.address.get, None, Some(t.amount), Some(t.userId))
@@ -243,7 +244,7 @@ trait AccountTransferBehavior {
             if (checkConfirm(item, lastBlockHeight, false)) {
               val transferId = manager.getTransferId
               manager.setLastTransferId(transferId)
-              transferHandler.put(AccountTransfer(transferId, 0, TransferType.UserToHot, currency, item.to.get.internalAmount.get, Confirming, Some(System.currentTimeMillis())))
+              transferHandler.put(AccountTransfer(transferId, item.userId.get, TransferType.UserToHot, currency, item.to.get.internalAmount.get, Confirming, Some(System.currentTimeMillis())))
               val user2HotItem =
                 // id, sigId, txid, userId, currency, from, to(hot address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
                 CryptoCurrencyTransferItem(Some(manager.getNewTransferItemId), None, None, item.userId, Some(currency), item.to, None, None, Some(UserToHot), Some(Confirming), item.id, Some(transferId), Some(System.currentTimeMillis()))

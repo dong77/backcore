@@ -55,6 +55,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
               case TransferType.Unknown => // accept wait for admin accept
                 sender ! RequestTransferFailed(UnsupportTransferType)
             }
+            handleResList()
           } else {
             sender ! RequestTransferSucceeded(event.transfer) // wait for admin confirm
           }
@@ -85,7 +86,6 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                 persist(AdminConfirmTransferSuccess(updated)) {
                   event =>
                     updateState(event)
-                    handleResList() // need send message to bitway for withdraw
                     sender ! AdminCommandResult(Ok)
                 }
               case TransferType.ColdToHot =>
@@ -98,6 +98,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
               case _ =>
                 sender ! RequestTransferFailed(UnsupportTransferType)
             }
+            handleResList()
           } else {
             val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Succeeded)
             persist(AdminConfirmTransferSuccess(updated)) {
