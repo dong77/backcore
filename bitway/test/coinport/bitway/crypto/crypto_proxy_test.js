@@ -111,4 +111,25 @@ describe('crypto proxy', function() {
             });
         });
     });
+
+    describe('getNextCCBlock_', function() {
+        it('get new block for newest height', function(done) {
+            var redisClient = new MockRedis();
+            var cryptoProxy = new CryptoProxy(Currency.BTC, {
+                cryptoRpc: new MockRpc({fail: 'partial', blockCount: 244498}),
+                minConfirm: 1,
+                redis: redisClient
+            });
+            cryptoProxy.getNextCCBlock_(function(error, block) {
+                Assert.deepEqual(redisClient.map, {'1000_processed_sigids': undefined, '1000_last_index': 244498});
+                Assert.equal(block.index.id, '000000003471884e402aa2383121c4cc9e4f769c6d16e1ce920a7c35d852f872');
+                Assert.equal(block.txs.length, 18);
+                Assert.deepEqual(block.txs[1].inputs, [{"address":"n2JjGvghqD9vPF1HGnxHiKABmCZUEskwEU","amount":2.823,"internalAmount":null,"userId":null}]);
+                Assert.deepEqual(block.txs[1].outputs, [
+                    {"address":"mkSmF1qmmpdaaSLt2qayVitSedX7stXbSQ","amount":0.3,"internalAmount":null,"userId":null},
+                    {"address":"mrCC7TwxfTTMxC796474wTmbXN1n5JWLu3","amount":2.523,"internalAmount":null,"userId":null}]);
+                done();
+            });
+        });
+    });
 });

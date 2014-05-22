@@ -28,3 +28,8 @@ MockRedis.prototype.set = function(key, val, callback) {
     this.map[key] = val;
     callback();
 };
+
+MockRedis.prototype.del = function(key, callback) {
+    this.map[key] = undefined;
+    callback();
+};
