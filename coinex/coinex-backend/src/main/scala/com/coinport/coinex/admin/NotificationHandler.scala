@@ -15,7 +15,7 @@ trait NotificationHandler {
       var query = MongoDBObject()
       if (q.id.isDefined) query ++= MongoDBObject(DATA + "." + Notification.IdField.name -> q.id.get)
       if (q.ntype.isDefined) query ++= MongoDBObject(DATA + "." + Notification.NTypeField.name -> q.ntype.get)
-      if (q.getRemoved.isDefined) query ++= MongoDBObject(DATA + "." + Notification.NTypeField.name -> q.getRemoved.get)
+      if (q.getRemoved.isDefined) query ++= MongoDBObject(DATA + "." + Notification.RemovedField.name -> q.getRemoved.get)
       query
     }
   }
