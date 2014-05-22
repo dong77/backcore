@@ -131,18 +131,18 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
             }
         }
       }
-    case m @ BitwayMessage(currency, None, None, Some(blocksMsg)) =>
-      val continuity = manager.getBlockContinuity(blocksMsg)
+    case m @ BitwayMessage(currency, None, None, Some(blockMsg)) =>
+      val continuity = manager.getBlockContinuity(blockMsg)
       continuity match {
-        case DUP => log.info("receive block list which first block has seen: " + blocksMsg.blocks.head.index)
+        case DUP => log.info("receive block which has been seen: " + blockMsg.block.index)
         case SUCCESSOR | REORG =>
-          val blocksMsgWithTime = if (blocksMsg.timestamp.isDefined)
-            blocksMsg else blocksMsg.copy(timestamp = Some(System.currentTimeMillis))
-          persist(m.copy(blocksMsg = Some(blocksMsgWithTime))) { event =>
+          val blocksMsgWithTime = if (blockMsg.timestamp.isDefined)
+            blockMsg else blockMsg.copy(timestamp = Some(System.currentTimeMillis))
+          persist(m.copy(blockMsg = Some(blocksMsgWithTime))) { event =>
             updateState(event)
-            val relatedTxs = manager.extractTxsFromBlocks(blocksMsg.blocks.toList)
+            val relatedTxs = manager.extractTxsFromBlock(blockMsg.block)
             if (relatedTxs.nonEmpty) {
-              val reorgIndex = if (continuity == REORG) blocksMsg.reorgIndex else None
+              val reorgIndex = if (continuity == REORG) blockMsg.reorgIndex else None
               channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
                 relatedTxs, reorgIndex)), transferProcessor.path)
             }
@@ -151,7 +151,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
           if (client.isDefined) {
             client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
               BitwayRequestType.GetMissedBlocks, currency, getMissedCryptoCurrencyBlocksRequest = Some(
-                GetMissedCryptoCurrencyBlocks(manager.getBlockIndexes.get, blocksMsg.blocks.head.index)))))
+                GetMissedCryptoCurrencyBlocks(manager.getBlockIndexes.get, blockMsg.block.index)))))
           }
         case OTHER_BRANCH =>
           throw new RuntimeException("The crypto currency seems has multi branches: " + currency)
@@ -177,9 +177,9 @@ trait BitwayManagerBehavior {
     case BitwayMessage(currency, None, Some(tx), None) =>
       if (tx.timestamp.isDefined) manager.updateLastAlive(tx.timestamp.get)
       manager.rememberTx(tx)
-    case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlocksMessage(startIndex, blocks, timestamp))) =>
+    case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlockMessage(startIndex, block, timestamp))) =>
       if (timestamp.isDefined) manager.updateLastAlive(timestamp.get)
-      manager.updateBlocks(startIndex, blocks)
+      manager.updateBlocks(startIndex, block)
     case e => println("bitway updateState doesn't handle the message: ", e)
   }
 }

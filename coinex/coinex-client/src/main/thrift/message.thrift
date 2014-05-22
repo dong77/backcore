@@ -186,7 +186,7 @@ typedef data.AddressStatusResult                _AddressStatusResult
                                                               2: optional set<string> addresses,
                                                               3: optional _CryptoCurrencyAddressType addressType
                                                           }
-/* I    */ struct CryptoCurrencyBlocksMessage             {1: optional _BlockIndex reorgIndex, /* BlockIndex(None, None) means in another branch */ 2: list<_CryptoCurrencyBlock> blocks, 3: optional i64 timestamp}
+/* I    */ struct CryptoCurrencyBlockMessage              {1: optional _BlockIndex reorgIndex, /* BlockIndex(None, None) means in another branch */ 2: _CryptoCurrencyBlock block, 3: optional i64 timestamp}
 /* C    */ struct BitwayRequest                           {
                                                               1: _BitwayRequestType type
                                                               2: _Currency currency
@@ -198,7 +198,7 @@ typedef data.AddressStatusResult                _AddressStatusResult
                                                               1: _Currency currency
                                                               2: optional GenerateAddressesResult generateAddressResponse
                                                               3: optional _CryptoCurrencyTransaction tx
-                                                              4: optional CryptoCurrencyBlocksMessage blocksMsg
+                                                              4: optional CryptoCurrencyBlockMessage blockMsg
                                                           }
 
 ////////////////////////////////////////////////////////////////

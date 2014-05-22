@@ -86,38 +86,29 @@ class BitwayManagerSpec extends Specification {
         BlockIndex(Some("b5"), Some(5)),
         BlockIndex(Some("b6"), Some(6))
       ), None)
-      bwm.getBlockContinuity(CryptoCurrencyBlocksMessage(None, List(
-        CryptoCurrencyBlock(BlockIndex(Some("b1"), Some(1)), BlockIndex(None, None), Nil),
-        CryptoCurrencyBlock(BlockIndex(Some("b2"), Some(2)), BlockIndex(Some("b1"), Some(1)), Nil),
-        CryptoCurrencyBlock(BlockIndex(Some("b3"), Some(3)), BlockIndex(Some("b2"), Some(2)), Nil)
-      ))) mustEqual BlockContinuityEnum.DUP
+      bwm.getBlockContinuity(CryptoCurrencyBlockMessage(None,
+        CryptoCurrencyBlock(BlockIndex(Some("b1"), Some(1)), BlockIndex(None, None), Nil)
+      )) mustEqual BlockContinuityEnum.DUP
 
-      bwm.getBlockContinuity(CryptoCurrencyBlocksMessage(None, List(
-        CryptoCurrencyBlock(BlockIndex(Some("b7"), Some(7)), BlockIndex(Some("b6"), Some(6)), Nil),
-        CryptoCurrencyBlock(BlockIndex(Some("b8"), Some(8)), BlockIndex(Some("b7"), Some(7)), Nil),
-        CryptoCurrencyBlock(BlockIndex(Some("b9"), Some(9)), BlockIndex(Some("b8"), Some(8)), Nil)
-      ))) mustEqual BlockContinuityEnum.SUCCESSOR
+      bwm.getBlockContinuity(CryptoCurrencyBlockMessage(None,
+        CryptoCurrencyBlock(BlockIndex(Some("b7"), Some(7)), BlockIndex(Some("b6"), Some(6)), Nil)
+      )) mustEqual BlockContinuityEnum.SUCCESSOR
 
-      bwm.getBlockContinuity(CryptoCurrencyBlocksMessage(None, List(
-        CryptoCurrencyBlock(BlockIndex(Some("b8"), Some(8)), BlockIndex(Some("b7"), Some(7)), Nil),
-        CryptoCurrencyBlock(BlockIndex(Some("b9"), Some(9)), BlockIndex(Some("b8"), Some(8)), Nil)
-      ))) mustEqual BlockContinuityEnum.GAP
+      bwm.getBlockContinuity(CryptoCurrencyBlockMessage(None,
+        CryptoCurrencyBlock(BlockIndex(Some("b8"), Some(8)), BlockIndex(Some("b7"), Some(7)), Nil)
+      )) mustEqual BlockContinuityEnum.GAP
 
-      bwm.getBlockContinuity(CryptoCurrencyBlocksMessage(Some(BlockIndex(Some("b6"), Some(6))), List(
-        CryptoCurrencyBlock(BlockIndex(Some("b7"), Some(7)), BlockIndex(Some("b6"), Some(6)), Nil),
-        CryptoCurrencyBlock(BlockIndex(Some("b8"), Some(8)), BlockIndex(Some("b7"), Some(7)), Nil),
-        CryptoCurrencyBlock(BlockIndex(Some("b9"), Some(9)), BlockIndex(Some("b8"), Some(8)), Nil)
-      ))) mustEqual BlockContinuityEnum.SUCCESSOR
+      bwm.getBlockContinuity(CryptoCurrencyBlockMessage(Some(BlockIndex(Some("b6"), Some(6))),
+        CryptoCurrencyBlock(BlockIndex(Some("b7"), Some(7)), BlockIndex(Some("b6"), Some(6)), Nil)
+      )) mustEqual BlockContinuityEnum.SUCCESSOR
 
-      bwm.getBlockContinuity(CryptoCurrencyBlocksMessage(Some(BlockIndex(Some("b2"), Some(2))), List(
-        CryptoCurrencyBlock(BlockIndex(Some("b8"), Some(8)), BlockIndex(Some("b7p"), Some(7)), Nil),
-        CryptoCurrencyBlock(BlockIndex(Some("b9"), Some(9)), BlockIndex(Some("b8"), Some(8)), Nil)
-      ))) mustEqual BlockContinuityEnum.REORG
+      bwm.getBlockContinuity(CryptoCurrencyBlockMessage(Some(BlockIndex(Some("b2"), Some(2))),
+        CryptoCurrencyBlock(BlockIndex(Some("b8"), Some(8)), BlockIndex(Some("b7p"), Some(7)), Nil)
+      )) mustEqual BlockContinuityEnum.REORG
 
-      bwm.getBlockContinuity(CryptoCurrencyBlocksMessage(Some(BlockIndex(None, None)), List(
-        CryptoCurrencyBlock(BlockIndex(Some("b8"), Some(8)), BlockIndex(Some("b7"), Some(7)), Nil),
-        CryptoCurrencyBlock(BlockIndex(Some("b9"), Some(9)), BlockIndex(Some("b8"), Some(8)), Nil)
-      ))) mustEqual BlockContinuityEnum.OTHER_BRANCH
+      bwm.getBlockContinuity(CryptoCurrencyBlockMessage(Some(BlockIndex(None, None)),
+        CryptoCurrencyBlock(BlockIndex(Some("b8"), Some(8)), BlockIndex(Some("b7"), Some(7)), Nil)
+      )) mustEqual BlockContinuityEnum.OTHER_BRANCH
 
       bwm.appendBlockChain(List(
         BlockIndex(Some("b7"), Some(7)),
@@ -195,14 +186,11 @@ class BitwayManagerSpec extends Specification {
         inputs = Some(List(CryptoCurrencyTransactionPort("h4", Some(4.1)))),
         outputs = Some(List(CryptoCurrencyTransactionPort("d4", Some(4.9)))),
         includedBlock = Some(bi1), status = Confirming)
-      val blocks = List(
-        CryptoCurrencyBlock(BlockIndex(Some("b10"), Some(10)), BlockIndex(Some("b9"), Some(9)), List(
-          tx1, tx2)),
-        CryptoCurrencyBlock(BlockIndex(Some("b11"), Some(11)), BlockIndex(Some("b10"), Some(10)), List(
-          tx3, tx4))
-      )
 
-      bwm.extractTxsFromBlocks(blocks) mustEqual List(
+      val block = CryptoCurrencyBlock(
+        BlockIndex(Some("b10"), Some(10)), BlockIndex(Some("b9"), Some(9)), List(tx1, tx2, tx3, tx4))
+
+      bwm.extractTxsFromBlock(block) mustEqual List(
         CryptoCurrencyTransaction(None, Some("t1"), None,
           Some(List(CryptoCurrencyTransactionPort("h1", Some(1.1), Some(1100), Some(-1)))),
           Some(List(CryptoCurrencyTransactionPort("d1", Some(0.9), Some(900)))),
@@ -216,7 +204,7 @@ class BitwayManagerSpec extends Specification {
         CryptoCurrencyTransaction(None, Some("t3"), None,
           Some(List(CryptoCurrencyTransactionPort("h3", Some(3.1), Some(3100), Some(-1)))),
           Some(List(CryptoCurrencyTransactionPort("d3", Some(3.9), Some(3900)))),
-          Some(BlockIndex(Some("b10"), Some(10))), Some(BlockIndex(Some("b11"), Some(11))),
+          Some(BlockIndex(Some("b9"), Some(9))), Some(BlockIndex(Some("b10"), Some(10))),
           Some(Withdrawal), Confirming))
     }
 

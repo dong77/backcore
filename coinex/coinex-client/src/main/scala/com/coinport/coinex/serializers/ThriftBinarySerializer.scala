@@ -74,7 +74,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cBitwayMessage = BinaryScalaCodec(BitwayMessage)
   lazy val _cBitwayRequest = BinaryScalaCodec(BitwayRequest)
   lazy val _cCancelOrderFailed = BinaryScalaCodec(CancelOrderFailed)
-  lazy val _cCryptoCurrencyBlocksMessage = BinaryScalaCodec(CryptoCurrencyBlocksMessage)
+  lazy val _cCryptoCurrencyBlockMessage = BinaryScalaCodec(CryptoCurrencyBlockMessage)
   lazy val _cCryptoTransferFailed = BinaryScalaCodec(CryptoTransferFailed)
   lazy val _cCryptoTransferSucceeded = BinaryScalaCodec(CryptoTransferSucceeded)
   lazy val _cDoAddNewApiSecret = BinaryScalaCodec(DoAddNewApiSecret)
@@ -248,7 +248,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: BitwayMessage => _cBitwayMessage(m)
     case m: BitwayRequest => _cBitwayRequest(m)
     case m: CancelOrderFailed => _cCancelOrderFailed(m)
-    case m: CryptoCurrencyBlocksMessage => _cCryptoCurrencyBlocksMessage(m)
+    case m: CryptoCurrencyBlockMessage => _cCryptoCurrencyBlockMessage(m)
     case m: CryptoTransferFailed => _cCryptoTransferFailed(m)
     case m: CryptoTransferSucceeded => _cCryptoTransferSucceeded(m)
     case m: DoAddNewApiSecret => _cDoAddNewApiSecret(m)
@@ -426,7 +426,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[BitwayMessage.Immutable] => _cBitwayMessage.invert(bytes).get
     case Some(c) if c == classOf[BitwayRequest.Immutable] => _cBitwayRequest.invert(bytes).get
     case Some(c) if c == classOf[CancelOrderFailed.Immutable] => _cCancelOrderFailed.invert(bytes).get
-    case Some(c) if c == classOf[CryptoCurrencyBlocksMessage.Immutable] => _cCryptoCurrencyBlocksMessage.invert(bytes).get
+    case Some(c) if c == classOf[CryptoCurrencyBlockMessage.Immutable] => _cCryptoCurrencyBlockMessage.invert(bytes).get
     case Some(c) if c == classOf[CryptoTransferFailed.Immutable] => _cCryptoTransferFailed.invert(bytes).get
     case Some(c) if c == classOf[CryptoTransferSucceeded.Immutable] => _cCryptoTransferSucceeded.invert(bytes).get
     case Some(c) if c == classOf[DoAddNewApiSecret.Immutable] => _cDoAddNewApiSecret.invert(bytes).get

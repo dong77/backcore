@@ -5,20 +5,21 @@
 
 'use strict'
 
-var Async                     = require('async'),
-    Bitcore                   = require('bitcore'),
-    Events                    = require('events'),
-    Util                      = require("util"),
-    Crypto                    = require('crypto'),
-    Redis                     = require('redis'),
-    DataTypes                 = require('../../../../gen-nodejs/data_types'),
-    MessageTypes              = require('../../../../gen-nodejs/message_types'),
-    BitwayMessage             = MessageTypes.BitwayMessage,
-    BitwayResponseType        = DataTypes.BitwayResponseType,
-    ErrorCode                 = DataTypes.ErrorCode,
-    GenerateAddressesResult   = MessageTypes.GenerateAddressesResult,
-    TransferStatus            = DataTypes.TransferStatus,
-    CryptoCurrencyAddressType = DataTypes.CryptoCurrencyAddressType;
+var Async                      = require('async'),
+    Bitcore                    = require('bitcore'),
+    Events                     = require('events'),
+    Util                       = require("util"),
+    Crypto                     = require('crypto'),
+    Redis                      = require('redis'),
+    DataTypes                  = require('../../../../gen-nodejs/data_types'),
+    MessageTypes               = require('../../../../gen-nodejs/message_types'),
+    BitwayMessage              = MessageTypes.BitwayMessage,
+    BitwayResponseType         = DataTypes.BitwayResponseType,
+    ErrorCode                  = DataTypes.ErrorCode,
+    GenerateAddressesResult    = MessageTypes.GenerateAddressesResult,
+    TransferStatus             = DataTypes.TransferStatus,
+    CryptoCurrencyAddressType  = DataTypes.CryptoCurrencyAddressType,
+    CryptoCurrencyBlockMessage = MessageTypes.CryptoCurrencyBlockMessage;
 
 /**
  * Handle the crypto currency network event
@@ -199,8 +200,9 @@ CryptoProxy.prototype.checkBlock_ = function() {
         if (error || !ccblock) {
             self.checkBlockAfterDelay_();
         } else {
+            var blockMessage = new CryptoCurrencyBlockMessage({block: ccblock});
             self.emit(CryptoProxy.EventType.BLOCK_ARRIVED,
-                self.makeNormalResponse_(BitwayResponseType.AUTO_REPORT_BLOCKS, self.currency, ccblock));
+                self.makeNormalResponse_(BitwayResponseType.AUTO_REPORT_BLOCKS, self.currency, blockMessage));
             self.checkBlockAfterDelay_(0);
         }
     });
@@ -427,7 +429,7 @@ CryptoProxy.prototype.makeNormalResponse_ = function(type, currency, response) {
             return new BitwayMessage({currency: currency, tx: response});
         case BitwayResponseType.GET_MISSED_BLOCKS:
         case BitwayResponseType.AUTO_REPORT_BLOCKS:
-            return new BitwayMessage({currency: currency, blocksMsg: response});
+            return new BitwayMessage({currency: currency, blockMsg: response});
         default:
             console.log("Inavalid Type!");
             return null

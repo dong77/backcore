@@ -155,16 +155,15 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
 
   import BlockContinuityEnum._
 
-  def getBlockContinuity(blocksMsg: CryptoCurrencyBlocksMessage): BlockContinuity = {
+  def getBlockContinuity(blockMsg: CryptoCurrencyBlockMessage): BlockContinuity = {
     getBlockIndexes match {
       case None => SUCCESSOR
       case Some(indexList) if indexList.size > 0 =>
-        assert(blocksMsg.blocks.size > 0)
-        blocksMsg.reorgIndex match {
+        blockMsg.reorgIndex match {
           case None =>
-            if (blocksMsg.blocks.head.prevIndex.id == indexList.last.id)
+            if (blockMsg.block.prevIndex.id == indexList.last.id)
               SUCCESSOR
-            else if (indexList.exists(i => i.id == blocksMsg.blocks.head.index.id))
+            else if (indexList.exists(i => i.id == blockMsg.block.index.id))
               DUP
             else
               GAP
@@ -217,17 +216,15 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     }
   }
 
-  def extractTxsFromBlocks(blocks: List[CryptoCurrencyBlock]): List[CryptoCurrencyTransaction] = {
-    blocks.flatMap { block =>
-      val CryptoCurrencyBlock(index, prevIndex, txsInBlock) = block
-      val filteredTxs = txsInBlock.map(completeCryptoCurrencyTransaction(_, Some(prevIndex), Some(index))).filter(
-        _.isDefined).map(_.get)
-      if (filteredTxs.isEmpty) {
-        List(CryptoCurrencyTransaction(prevBlock = Some(prevIndex), includedBlock = Some(index),
-          status = TransferStatus.Confirming))
-      } else {
-        filteredTxs
-      }
+  def extractTxsFromBlock(block: CryptoCurrencyBlock): Seq[CryptoCurrencyTransaction] = {
+    val CryptoCurrencyBlock(index, prevIndex, txsInBlock) = block
+    val filteredTxs = txsInBlock.map(completeCryptoCurrencyTransaction(_, Some(prevIndex), Some(index))).filter(
+      _.isDefined).map(_.get)
+    if (filteredTxs.isEmpty) {
+      List(CryptoCurrencyTransaction(prevBlock = Some(prevIndex), includedBlock = Some(index),
+        status = TransferStatus.Confirming))
+    } else {
+      filteredTxs
     }
   }
 

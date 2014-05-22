@@ -242,15 +242,15 @@ object Client {
   }
 
   def sendHeartBlockMessage(prevId: String, prevH: Int, id: String, h: Int, address: String = "outputAddr1", sigId: String = "mockSigId1") = {
-    Client.backend ! BitwayMessage(Btc, blocksMsg = Some(CryptoCurrencyBlocksMessage(
-      blocks = List(CryptoCurrencyBlock(BlockIndex(Some(id), Some(h)), BlockIndex(Some(prevId), Some(prevH)),
+    Client.backend ! BitwayMessage(Btc, blockMsg = Some(CryptoCurrencyBlockMessage(
+      block = CryptoCurrencyBlock(BlockIndex(Some(id), Some(h)), BlockIndex(Some(prevId), Some(prevH)),
         txs = List(CryptoCurrencyTransaction(
           sigId = Some(sigId),
           ids = Some(List(1425L)),
           inputs = Some(List(CryptoCurrencyTransactionPort("inputAddr1", Some(1.0)))),
           outputs = Some(List(CryptoCurrencyTransactionPort(address, Some(1.0)))),
           status = TransferStatus.Confirming
-        ))))
+        )))
     )))
   }
 
