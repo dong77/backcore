@@ -8,8 +8,9 @@ import Implicits._
 import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.common.PersistentId._
 import akka.persistence.Persistent
+import com.coinport.coinex.common.ExtendedActor
 
-class OrderReader(db: MongoDB) extends Actor with OrderMongoHandler with ActorLogging {
+class OrderReader(db: MongoDB) extends ExtendedActor with OrderMongoHandler with ActorLogging {
   val coll = db("orders")
 
   def receive = LoggingReceive {

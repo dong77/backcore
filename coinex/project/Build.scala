@@ -25,6 +25,7 @@ object CoinexBuild extends Build {
     crossScalaVersions := Seq("2.10.3"),
     initialCommands in console := """
       import com.coinport.coinex.Client
+      import com.coinport.coinex.monitoring.MonitorTest
       import com.coinport.coinex.data._
       import com.coinport.coinex.data.Currency._
       import com.coinport.coinex.robot.sample._

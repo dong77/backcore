@@ -8,8 +8,9 @@ import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.common.PersistentId._
 import Implicits._
 import akka.persistence.Persistent
+import com.coinport.coinex.common.ExtendedActor
 
-class TransactionReader(val db: MongoDB) extends Actor with TransactionBehavior with ActorLogging {
+class TransactionReader(val db: MongoDB) extends ExtendedActor with TransactionBehavior with ActorLogging {
   val coll = db("transactions")
 
   def receive = LoggingReceive {

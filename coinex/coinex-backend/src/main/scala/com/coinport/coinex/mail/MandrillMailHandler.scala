@@ -30,6 +30,7 @@ class MandrillMailHandler(mandrillApiKey: String)(implicit val system: ActorSyst
   val registerConfimTemplate = "registerconfirm"
   val loginTokenTemplate = "logintoken"
   val passwordResetTemplate = "passwordreset"
+  val monitorTemplate = "monitor"
 
   case class TemplateContent(name: String, content: String)
   case class To(email: String)
@@ -56,10 +57,11 @@ class MandrillMailHandler(mandrillApiKey: String)(implicit val system: ActorSyst
   def sendRegistrationEmailConfirmation(to: String, params: Seq[(String, String)]) = sendMail(to, registerConfimTemplate, params)
   def sendLoginToken(to: String, params: Seq[(String, String)]) = sendMail(to, loginTokenTemplate, params)
   def sendPasswordReset(to: String, params: Seq[(String, String)]) = sendMail(to, passwordResetTemplate, params)
+  def sendMonitor(to: String, params: Seq[(String, String)]) = sendMail(to, monitorTemplate, params)
 
   private def sendMail(to: String, template: String, params: Seq[(String, String)]) = {
     val mergeVars = params.map { case (k, v) => MergeVar(k, v) }
-    val req = SendTemplateRequest(template, Message(Seq(To(to)), mergeVars))
+    val req = SendTemplateRequest(template, Message(to.split(";").map((i: String) => To(i)).toSeq, mergeVars))
 
     def trySendMail(maxTry: Int): Unit = {
       if (maxTry > 0) pipeline { Post(url, req) } onComplete {

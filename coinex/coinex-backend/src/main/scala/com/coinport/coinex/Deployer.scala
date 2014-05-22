@@ -48,7 +48,6 @@ import com.coinport.coinex.admin.NotificationReaderWriter
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
   val paths = new ListBuffer[String]
-  val actors = new ListBuffer[ActorRef]
   val secret = config.getString("akka.exchange.secret")
   val userManagerSecret = MHash.sha256Base64(secret + "userProcessorSecret")
   val apiAuthSecret = MHash.sha256Base64(secret + "apiAuthSecret")
@@ -128,8 +127,6 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     // Deploy monitor at last
     deployMonitor(routers)
 
-    deployWatcher
-
     routers
   }
 
@@ -141,15 +138,13 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
         terminationMessage = PoisonPill,
         role = Some(name)),
         name = name)
-      paths += actor.path.toString + "/singleton"
-      actors += actor
+      paths += actor.path.toStringWithoutAddress + "/singleton"
     }
 
   private def deploy(props: => Props, name: String) =
     if (cluster.selfRoles.contains(name)) {
       val actor = system.actorOf(props, name)
-      paths += actor.path.toString
-      actors += actor
+      paths += actor.path.toStringWithoutAddress
     }
 
   private def deployMailer(name: String) = {
@@ -158,20 +153,20 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       val handler = new MandrillMailHandler(mandrilApiKey)
       val props = Props(new Mailer(handler))
       val actor = system.actorOf(FromConfig.props(props), name)
-      paths += actor.path.toString
-      actors += actor
+      paths += actor.path.toStringWithoutAddress
     }
   }
 
   private def deployMonitor(routers: LocalRouters) = {
-    val service = system.actorOf(Props(new Monitor(paths.toList)), "monitor-service")
+    val service = system.actorOf(ClusterSingletonManager.props(
+      singletonProps = Props(new Monitor(paths.toList, routers.mailer, config: Config)),
+      singletonName = "singleton",
+      terminationMessage = PoisonPill,
+      role = Some("monitor_service")),
+      name = "monitor_service")
     val port = config.getInt("akka.exchange.monitor.http-port")
     IO(Http) ! Http.Bind(service, hostname, port)
     log.info("Started HTTP server: http://" + hostname + ":" + port)
-  }
-
-  private def deployWatcher {
-    val watchService = system.actorOf(Props(new ActorWatcher(actors.toList)), "watch-service")
   }
 
   private def loadConfig[T](configPath: String): T = {

@@ -4,8 +4,9 @@ import akka.actor.{ ActorLogging, Actor }
 import akka.event.{ LoggingAdapter, LoggingReceive }
 import com.coinport.coinex.data._
 import com.mongodb.casbah.Imports._
+import com.coinport.coinex.common.ExtendedActor
 
-class AccountTransferReader(val db: MongoDB) extends Actor with AccountTransferBehavior with ActorLogging {
+class AccountTransferReader(val db: MongoDB) extends ExtendedActor with AccountTransferBehavior with ActorLogging {
 
   lazy implicit val logger: LoggingAdapter = log
 

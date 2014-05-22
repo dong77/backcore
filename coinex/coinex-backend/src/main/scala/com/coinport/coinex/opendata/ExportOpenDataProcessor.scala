@@ -32,7 +32,6 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
     with EventsourcedProcessor {
   override def processorId = EXPORT_OPEN_DATA_PROCESSOR <<
 
-  val config = context.system.settings.config
   private var cancellable: Cancellable = null
   lazy val openDataConfig = loadConfig("open_data_config.scala")
   private val scheduleInterval = openDataConfig.scheduleInterval

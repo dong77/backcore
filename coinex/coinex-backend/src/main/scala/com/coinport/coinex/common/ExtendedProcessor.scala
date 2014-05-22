@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 import com.coinport.coinex.data.TakeSnapshotNow
 import com.coinport.coinex.common.support._
 
-trait ExtendedProcessor extends Actor with ActorLogging with SnapshotSupport with ChannelSupport with RecoverySupport {
+trait ExtendedProcessor extends ExtendedActor with SnapshotSupport with ChannelSupport with RecoverySupport {
 
   def identifyChannel: PartialFunction[Any, String] = PartialFunction.empty
 
