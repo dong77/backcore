@@ -322,7 +322,7 @@ var txWithDefiniteTo = function(cryptoProxy, request, redisProxy){
                                 }
                                 addresses[changeAddress] = amountCanUse - amountTotal - tip;
                                 break;
-                            }else if(amountCanUse == (amount + tip)){
+                            }else if(amountCanUse == (amountTotal + tip)){
                                 for(var j =0; j < request.transferInfos.length; j++)
                                 {
                                     addresses[request.transferInfos[j].to] = request.transferInfos[j].amount;
@@ -330,7 +330,7 @@ var txWithDefiniteTo = function(cryptoProxy, request, redisProxy){
                                 break;
                             }
                         }
-                        if(i <= result.length){
+                        if(i < result.length || i == result.length){
                             finishTransfer(cryptoProxy, transactions, addresses, ids, redisProxy);
                         }
                     }
