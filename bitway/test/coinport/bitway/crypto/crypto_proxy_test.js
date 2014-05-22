@@ -16,7 +16,8 @@ var Assert                    = require('assert'),
     GenerateAddressesResult   = MessageTypes.GenerateAddressesResult,
     CryptoCurrencyAddressType = DataTypes.CryptoCurrencyAddressType,
     ErrorCode                 = DataTypes.ErrorCode,
-    Currency                  = DataTypes.Currency;
+    Currency                  = DataTypes.Currency,
+    CryptoCurrencyTransaction = DataTypes.CryptoCurrencyTransaction;
 
 describe('crypto proxy', function() {
     describe('generateUserAddress', function() {
@@ -73,7 +74,7 @@ describe('crypto proxy', function() {
                 redis: new MockRedis()
             });
             cryptoProxy.getNewCCTXsSinceLatest_(function(error, cctxs) {
-                Assert.deepEqual(cctxs, [{
+                var expectedTxs = [new CryptoCurrencyTransaction ({
                     "sigId": "aeefac23a12130754be0512ab8986ef740f8e381dc4cc5a606e6a3630f7d4033",
                     "txid": "8debdd1691d1bff1e0b9f27cbf4958c9b7578e2bd0b50334a2bcc7060217e7a7",
                     "ids": null,
@@ -99,7 +100,8 @@ describe('crypto proxy', function() {
                     "txType": null,
                     "status": 2,
                     "timestamp":null
-                }]);
+                })];
+                Assert.deepEqual(cctxs, expectedTxs);
                 cryptoProxy.getNewCCTXsSinceLatest_(function(error, cctxs) {
                     Assert.deepEqual(cctxs, []);
                     done();

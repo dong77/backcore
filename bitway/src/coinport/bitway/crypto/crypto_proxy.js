@@ -175,7 +175,8 @@ CryptoProxy.prototype.checkTx_ = function() {
     self.getNewCCTXsSinceLatest_(function(error, newCCTXs) {
         if (!error && newCCTXs.length != 0) {
             for (var i = 0; i < newCCTXs.length; ++i) {
-                self.emit(CryptoProxy.EventType.TX_ARRIVED, newCCTXs[i]);
+                self.emit(CryptoProxy.EventType.TX_ARRIVED,
+                    self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, newCCTXs[i]));
             }
         }
     });
@@ -360,14 +361,9 @@ CryptoProxy.prototype.makeNormalResponse_ = function(type, currency, response) {
     switch (type) {
         case BitwayResponseType.GENERATE_ADDRESS:
             return new BitwayMessage({currency: currency, generateAddressResponse: response});
-        /*
         case BitwayResponseType.TRANSFER:
         case BitwayResponseType.TRANSACTION:
-            console.log("TRANSACTION REPORT: " + currency);
-            displayTxContent(response);
-            redisProxy.publish(new BitwayMessage({currency: currency, tx: response}));
-            break;
-        */
+            return new BitwayMessage({currency: currency, tx: response});
         case BitwayResponseType.GET_MISSED_BLOCKS:
         case BitwayResponseType.AUTO_REPORT_BLOCKS:
             return new BitwayMessage({currency: currency, blocksMsg: response});
