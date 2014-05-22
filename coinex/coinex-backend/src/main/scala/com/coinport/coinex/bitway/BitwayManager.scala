@@ -168,7 +168,12 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
             else
               GAP
           case Some(BlockIndex(Some(id), _)) =>
-            if (Some(id) == indexList.last.id) SUCCESSOR else REORG
+            if (Some(id) == indexList.last.id)
+              SUCCESSOR
+            else if (indexList.exists(i => i.id == blockMsg.block.index.id))
+              DUP
+            else
+              REORG
           case Some(BlockIndex(None, _)) => OTHER_BRANCH
         }
       case _ => SUCCESSOR
