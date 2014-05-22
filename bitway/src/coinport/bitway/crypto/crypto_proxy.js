@@ -5,21 +5,20 @@
 
 'use strict'
 
-var Async                      = require('async'),
-    Bitcore                    = require('bitcore'),
-    Events                     = require('events'),
-    Util                       = require("util"),
-    Crypto                     = require('crypto'),
-    Redis                      = require('redis'),
-    DataTypes                  = require('../../../../gen-nodejs/data_types'),
-    MessageTypes               = require('../../../../gen-nodejs/message_types'),
-    BitwayMessage              = MessageTypes.BitwayMessage,
-    BitwayResponseType         = DataTypes.BitwayResponseType,
-    ErrorCode                  = DataTypes.ErrorCode,
-    GenerateAddressesResult    = MessageTypes.GenerateAddressesResult,
-    TransferStatus             = DataTypes.TransferStatus,
-    CryptoCurrencyAddressType  = DataTypes.CryptoCurrencyAddressType,
-    CryptoCurrencyBlockMessage = MessageTypes.CryptoCurrencyBlockMessage;
+var Async                     = require('async'),
+    Bitcore                   = require('bitcore'),
+    Events                    = require('events'),
+    Util                      = require("util"),
+    Crypto                    = require('crypto'),
+    Redis                     = require('redis'),
+    DataTypes                 = require('../../../../gen-nodejs/data_types'),
+    MessageTypes              = require('../../../../gen-nodejs/message_types'),
+    BitwayMessage             = MessageTypes.BitwayMessage,
+    BitwayResponseType        = DataTypes.BitwayResponseType,
+    ErrorCode                 = DataTypes.ErrorCode,
+    GenerateAddressesResult   = MessageTypes.GenerateAddressesResult,
+    TransferStatus            = DataTypes.TransferStatus,
+    CryptoCurrencyAddressType = DataTypes.CryptoCurrencyAddressType;
 
 /**
  * Handle the crypto currency network event
@@ -94,10 +93,10 @@ CryptoProxy.prototype.generateUserAddress = function(request, callback) {
 CryptoProxy.prototype.transfer = function(request, callback) {
     var self = this;
     cryptoProxy.log.info('** TransferRequest Received **');
-    Async.compose(self.getCctxByTxid_.bind(self),
+    Async.compose(self.getCCTXFromTxid_.bind(self),
         self.sendTransaction_.bind(self),
         self.signTransaction_.bind(self),
-        self.getRawTransaction_.bind(self),
+        self.createRawTransaction_.bind(self),
         self.constructRawTransaction_.bind())(transferreq, function(error, cctx) {
         if (!error) {
             callback(self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, cctx));
@@ -108,10 +107,6 @@ CryptoProxy.prototype.transfer = function(request, callback) {
         }
     });
 };
-
-CryptoProxy.prototype.getRawTransaction_ = function(rawData, callback) {
-
-}
 
 CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback) {
     var self = this;
@@ -152,6 +147,41 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
             });
             break;
     }
+};
+
+CryptoProxy.prototype.createRawTransaction_ = function(rawData, callback) {
+    var self = this;
+    var transactions = rawData.transactions;
+    var addresses = rawData.addresses;
+    this.rpc.createRawTransaction(transactions, addresses, function(error, createReply) {
+        if (error) {
+            callback(error);
+        } else {
+            callback(null, createReply.result);
+        }
+    });
+}
+
+CryptoProxy.prototype.signTransaction_ = function(data, callback) {
+    var self = this;
+    this.rpc.signRawTransaction(data, function(error, signReply) {
+        if (error) {
+            callback(error);
+        } else {
+            callback(null, signReply.result.hex);
+        }
+    });
+}
+
+CryptoProxy.prototype.sendTransaction_ = function(hex, callback) {
+    var self = this;
+    this.rpc.sendRawTransaction(hex, function(error, sendReply) {
+        if (error) {
+            callback(error);
+        } else {
+            callback(null, sendReply.result);
+        }
+    });
 };
 
 CryptoProxy.prototype.calTotalPay = function(transferReq) {
@@ -200,9 +230,8 @@ CryptoProxy.prototype.checkBlock_ = function() {
         if (error || !ccblock) {
             self.checkBlockAfterDelay_();
         } else {
-            var blockMessage = new CryptoCurrencyBlockMessage({block: ccblock});
             self.emit(CryptoProxy.EventType.BLOCK_ARRIVED,
-                self.makeNormalResponse_(BitwayResponseType.AUTO_REPORT_BLOCKS, self.currency, blockMessage));
+                self.makeNormalResponse_(BitwayResponseType.AUTO_REPORT_BLOCKS, self.currency, ccblock));
             self.checkBlockAfterDelay_(0);
         }
     });
@@ -364,8 +393,8 @@ CryptoProxy.prototype.getInputAddress_ = function(vinItem, callback) {
     }
 };
 
-CryptoProxy.prototype.getSigId_ = function(cctx) {
-    var sigId = cctx.txid;
+CryptoProxy.prototype.getSigId_ = function(cctx, vinTxids) {
+    var sigId = vinTxids;
     for(var m = 0; m < cctx.inputs.length; m++){
         sigId += cctx.inputs[m].address;
         sigId += cctx.inputs[m].amount;
@@ -381,6 +410,10 @@ CryptoProxy.prototype.getSigId_ = function(cctx) {
 
 CryptoProxy.prototype.getCCTXFromTx_ = function(tx, callback) {
     var self = this;
+    var vinTxids = "";
+    for (var i = 0; i < tx.vin.length; i++){
+        vinTxids += (tx.vin[i].txid + tx.vin[i].vout);
+    }
     var retOutputs = self.getOutputAddresses_(tx);
     Async.map(tx.vin, self.getInputAddress_.bind(self), function(error, rawInputs) {
         if (error) {
@@ -388,7 +421,7 @@ CryptoProxy.prototype.getCCTXFromTx_ = function(tx, callback) {
         } else {
             var cctx = new CryptoCurrencyTransaction({txid: tx.txid, inputs: rawInputs, outputs: retOutputs,
                 status: TransferStatus.CONFIRMING});
-            var sigId = self.getSigId_(cctx);
+            var sigId = self.getSigId_(cctx, vinTxids);
             cctx.sigId = sigId;
             self.redis.get(sigId, function(error, ids) {
                 if (!error && ids != undefined && ids != null)
@@ -429,7 +462,7 @@ CryptoProxy.prototype.makeNormalResponse_ = function(type, currency, response) {
             return new BitwayMessage({currency: currency, tx: response});
         case BitwayResponseType.GET_MISSED_BLOCKS:
         case BitwayResponseType.AUTO_REPORT_BLOCKS:
-            return new BitwayMessage({currency: currency, blockMsg: response});
+            return new BitwayMessage({currency: currency, blocksMsg: response});
         default:
             console.log("Inavalid Type!");
             return null
