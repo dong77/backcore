@@ -92,45 +92,24 @@ CryptoProxy.prototype.generateUserAddress = function(request, callback) {
 CryptoProxy.prototype.transfer = function(request, callback) {
     var self = this;
     cryptoProxy.log.info('** TransferRequest Received **');
-    cryptoProxy.log.info(cryptoProxy.currency);
-    switch(request.type){
-        case TransferType.WITHDRAWAL:
-        case TransferType.HOT_TO_COLD:
-            Async.map(requset, self.ccOutflowFromHot_.bind(self), function(error, txid) {
-                if (error) {
-                    callback(error);
-                } else {
-                
-                }
-            });
-            break;
-        case TransferType.USER_TO_HOT:
-            Async.map(requset, self.ccInflowToHot_.bind(self), function(error, txid) {
-                if (error) {
-                    callback(error);
-                } else {
-                
-                }
-            });
-            break;
-        default:
-            cryptoProxy.log.error("Invalid request type: " + request.type);
-    }
-};
-
-CryptoProxy.prototype.ccOutflowFromHot_ = function(transferreq, callback) {
-    var self = this;
-    Async.compose(self.sendTransaction_.bind(self),
+    Async.compose(self.getCctxByTxid_.bind(self),
+        self.sendTransaction_.bind(self),
         self.signTransaction_.bind(self),
         self.getRawTransaction_.bind(self),
-        self.constructRawTransaction_.bind())(transferreq, function(error, txid) {
+        self.constructRawTransaction_.bind())(transferreq, function(error, cctx) {
         if (!error) {
-            callback(txid);
+            callback(self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, cctx));
         } else {
-            callback(error);
+            var response = new CryptoCurrencyTransaction({status: TransferStatus.REORGING});
+            self.log.error("Transfer failed! sigId: " + response.sigId);
+            callback(self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, response));
         }
     });
 };
+
+CryptoProxy.prototype.getRawTransaction_ = function(rawData, callback) {
+
+}
 
 CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback) {
     var self = this;
@@ -146,31 +125,24 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
                     var changeAddress = result[1];
                     var amountUnspent = 0;
                     var transactions = [];
+                    var amountTotalPay = calTotalPay(transferReq);
                     for (var i = 0; i < unspentTxs.length; i++) {
                         amountUnspent += unspentTxs[i].amount;
-                        var transaction = {
-                            txid: unspentTxs[i].txid,
-                            vout: unspentTxs[i].vout,
-                        };
+                        var transaction = {txid: unspentTxs[i].txid, vout: unspentTxs[i].vout};
                         transactions.push(transaction);
-                        if(amountUnspent > (amountTotal + tip)){//TODO:
-                            for(var j =0; j < transferReq.transferInfos.length; j++)
-                            {
-                                addresses[transferReq.transferInfos[j].to] = transferReq.transferInfos[j].amount;
-                            }
-                            addresses[changeAddress] = amountUnspent - amountTotal - tip;
+                        if (amountUnspent > (amountTotaloPay + self.TIP)) {
+                            addresses[changeAddress] = amountUnspent - amountTotalPay - self.TIP;
                             break;
-                        }else if(amountUnspent == (amount + tip)){
-                            for(var j =0; j < transferReq.transferInfos.length; j++)
-                            {
-                                addresses[transferReq.transferInfos[j].to] = transferReq.transferInfos[j].amount;
-                            }
+                        } else if((amountUnspent < (amountTotalPay + self.TIP) && amountUnspent > amountTotalPay)
+                                || amountUnspent == (amountTotalPay + self.TIP)) {
                             break;
                         }
                     }
-                    var rawData = new Object();
-                    rawData.transactions = transactions;
-                    rawDate.addresses = addresses;
+                    for(var j =0; j < transferReq.transferInfos.length; j++)
+                    {
+                        addresses[transferReq.transferInfos[j].to] = transferReq.transferInfos[j].amount;
+                    }
+                    var rawData = {transactions: transactions, addresses: addresses};
                     callback(null, rawData);
                 } else {
                     callback(err);
@@ -178,6 +150,14 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
             });
             break;
     }
+};
+
+CryptoProxy.prototype.calTotalPay = function(transferReq) {
+    var amountTotalPay = 0;
+    for (var i = 0; i < transferReq.transferInfos.length; i++) {
+        amountTotal += transferReq.transferInfos[i].amount;
+    }
+    return amountTotal;
 };
 
 CryptoProxy.prototype.start = function() {

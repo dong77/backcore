@@ -385,7 +385,7 @@ var saveTransferIds = function(cryptoProxy, input, cctx, finishLength, ids, redi
             cryptoProxy.log.debug("cctx.outputs.length: " + cctx.outputs.length);
             if(cctx.inputs.length == finishLength){
                 var sigId = getSigId(cctx); 
-                cryptoProxy.innerRedis.set(sigId, ids, function(errRedis, reply){
+                cryptoProxy.innerRedis.sadd(sigId, ids, function(errRedis, reply){
                     if(errRedis){
                         cryptoProxy.log.error("errRedis: " + errRedis);
                     }else{
@@ -466,12 +466,12 @@ var constructBlocks = function(cryptoProxy, redisProxy, input, txFinishLength, b
                     cryptoProxy.log.debug("block.txs.length: " + block.txs.length);
                     cryptoProxy.log.debug("blockFinishLength: " + blockFinishLength);
                     var sigId = getSigId(cctx);
-                    cryptoProxy.innerRedis.get(sigId, function(errRedis, reply){
+                    cryptoProxy.innerRedis.smembers(sigId, function(errRedis, reply){
                         if(errRedis){
                             cryptoProxy.log.error("errRedis: " + errRedis);
                         }else{
                             if(reply != null){
-                                cctx.ids = reply;
+                                cctx.ids = reply.map(function(element) {return Number(element);});
                             }
                             block.txs.push(cctx);
                             if(block.txs.length == blockFinishLength){
@@ -496,12 +496,12 @@ var constructBlocks = function(cryptoProxy, redisProxy, input, txFinishLength, b
             cryptoProxy.log.debug("block.txs.length: " + block.txs.length);
             cryptoProxy.log.debug("blockFinishLength: " + blockFinishLength);
             var sigId = getSigId(cctx);
-            cryptoProxy.innerRedis.get(sigId, function(errRedis, reply){
+            cryptoProxy.innerRedis.smembers(sigId, function(errRedis, reply){
                 if(errRedis){
                     cryptoProxy.log.error("errRedis: " + errRedis);
                 }else{
                     if(reply != null){
-                        cctx.ids = reply;
+                        cctx.ids = reply.map(function(element) {return Number(element);});
                     }
                     block.txs.push(cctx);
                     if(block.txs.length == blockFinishLength){
@@ -619,13 +619,13 @@ var getInputAddresses = function(cryptoProxy, input, cctx, finishLength) {
             cryptoProxy.log.debug("cctx.outputs.length: " + cctx.outputs.length);
             if(cctx.inputs.length == finishLength){
                 var sigId = getSigId(cctx);
-                cryptoProxy.innerRedis.get(sigId, function(errRedis, reply){
+                cryptoProxy.innerRedis.smembers(sigId, function(errRedis, reply){
                     if(errRedis){
                         cryptoProxy.log.error("errRedis: " + errRedis);
                     }else{
                         cryptoProxy.log.debug("cctx.ids: " + reply);
                         if(reply != null){
-                            cctx.ids = reply;
+                            cctx.ids = reply.map(function(element) {return Number(element);});
                         }
                         makeNormalResponse(BitwayResponseType.TRANSACTION, cryptoProxy,
                             cctx, cryptoProxy.redisProxy);
@@ -750,13 +750,13 @@ var getAllTxsInBlock = function(cryptoProxy, input, txFinishLength, blockFinishL
                 if(cctx.inputs.length == txFinishLength){
                     //cryptoProxy.log.debug("block.txs.length: " + block.txs.length);
                     var sigId = getSigId(cctx);
-                    cryptoProxy.innerRedis.get(sigId, function(errRedis, reply){
+                    cryptoProxy.innerRedis.smembers(sigId, function(errRedis, reply){
                         if(errRedis){
                             cryptoProxy.log.error("errRedis: " + errRedis);
                         }else{
                             cryptoProxy.log.debug("cctx.ids: " + reply);
                             if(reply != null){
-                                cctx.ids = reply;
+                                cctx.ids = reply.map(function(element) {return Number(element);});
                             }
                             block.txs.push(cctx);
                             if(block.txs.length == blockFinishLength){
@@ -786,13 +786,13 @@ var getAllTxsInBlock = function(cryptoProxy, input, txFinishLength, blockFinishL
         cctx.inputs.push(input);
         if(cctx.inputs.length == txFinishLength){
             var sigId = getSigId(cctx);
-            cryptoProxy.innerRedis.get(sigId, function(errRedis, reply){
+            cryptoProxy.innerRedis.smembers(sigId, function(errRedis, reply){
                 if(errRedis){
                     cryptoProxy.log.error("errRedis: " + errRedis);
                 }else{
                     cryptoProxy.log.debug("cctx.ids: " + reply);
                     if(reply != null){
-                        cctx.ids = reply;
+                        cctx.ids = reply.map(function(element) {return Number(element);});
                     }
                     block.txs.push(cctx);
                     if(block.txs.length == blockFinishLength){
