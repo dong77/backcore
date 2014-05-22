@@ -73,3 +73,5 @@ case class ApiMAItem(time: Long, value: PriceObject)
 case class ApiHistory(candles: Seq[ApiCandleItem])
 
 case class ApiNotification(id: Long, ntype: String, title: String, content: String, created: Long, updated: Long, removed: Boolean)
+
+case class ApiNetworkStatus(currency: String, timestamp: Long, height: Option[Long], block: Option[String])
