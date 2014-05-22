@@ -120,7 +120,7 @@ trait AccountTransferBehavior {
     clearResList
     // id, sigId, txid, userId, currency, from, to(external address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
     val cryptoCurrencyTransferItem = CryptoCurrencyTransferItem(Some(manager.getNewTransferItemId), None, None, Some(t.userId), Some(t.currency), from, to, None, Some(t.`type`), Some(Confirming), None, Some(t.id), Some(System.currentTimeMillis()))
-    setResState(Updator.copy(item = cryptoCurrencyTransferItem, addMsgBox = true, putItem = true)) //send message to bitway
+    setResState(Updator.copy(item = cryptoCurrencyTransferItem, addMsgBox = true, addMongo = true, putItem = true)) //send message to bitway
   }
 
   private def refreshLastBlockHeight(tx: CryptoCurrencyTransaction) {
@@ -137,30 +137,33 @@ trait AccountTransferBehavior {
           case Some(_) =>
             tx.ids.get foreach {
               id =>
-                assert(manager.transferMap.contains(id))
-                val userToHotItem = tx.status match {
-                  case Failed =>
-                    setAccountTransferStatus(manager.transferMap, id, Failed)
-                    manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock, status = Some(Failed))
-                  case _ => manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock) // need only one tx
-                }
-                setResState(Updator.copy(item = userToHotItem, addMongo = true, putItem = true))
-                userToHotItem.userToHotMapedDepositId match {
-                  case Some(depositId) =>
-                    if (manager.transferMap.contains(depositId)) {
-                      // check coresponded deposit item has not been removed from map
-                      val depositStatus = if (userToHotItem.status.get != Failed) Succeeded else Failed
-                      setAccountTransferStatus(manager.transferMap, depositId, depositStatus)
-                      val depositItem = manager.transferMap(depositId).copy(status = Some(depositStatus))
-                      manager.removeItemIdFromMap(manager.depositSigId2TxPortIdMap, depositItem.sigId.get, depositItem.to.get)
-                      setResState(Updator.copy(item = depositItem, addMongo = true, addMsgBox = (depositItem.status.get == Succeeded), rmItem = true))
-                    }
-                  case None =>
-                    logger.warning(s"UserToHot item not define userToHotMapedDepositId")
+                if (manager.transferMap.contains(id)) {
+                  val userToHotItem = tx.status match {
+                    case Failed =>
+                      setAccountTransferStatus(manager.transferMap, id, Failed)
+                      manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock, status = Some(Failed))
+                    case _ => manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock) // need only one tx
+                  }
+                  setResState(Updator.copy(item = userToHotItem, addMongo = true, putItem = true))
+                  userToHotItem.userToHotMapedDepositId match {
+                    case Some(depositId) =>
+                      if (manager.transferMap.contains(depositId)) {
+                        // check coresponded deposit item has not been removed from map
+                        val depositStatus = if (userToHotItem.status.get != Failed) Succeeded else Failed
+                        setAccountTransferStatus(manager.transferMap, depositId, depositStatus)
+                        val depositItem = manager.transferMap(depositId).copy(status = Some(depositStatus))
+                        manager.removeItemIdFromMap(manager.depositSigId2TxPortIdMap, depositItem.sigId.get, depositItem.to.get)
+                        setResState(Updator.copy(item = depositItem, addMongo = true, addMsgBox = (depositItem.status.get == Succeeded), rmItem = true))
+                      }
+                    case None =>
+                      logger.warning(s"splitAndHandleTxs() UserToHot item not define userToHotMapedDepositId : ${userToHotItem.toString}")
+                  }
+                } else {
+                  logger.warning(s"splitAndHandleTxs() UserToHot item confirm id not include in transferMap : ${tx.toString}")
                 }
             }
           case None =>
-            logger.warning(s"UserToHot tx not define ids : ${tx.toString}")
+            logger.warning(s"splitAndHandleTxs() UserToHot tx not define ids : ${tx.toString}")
         }
       case Withdrawal =>
         handleWithdrawlLikeTx(tx)

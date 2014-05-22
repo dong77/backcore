@@ -86,6 +86,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                 persist(AdminConfirmTransferSuccess(updated)) {
                   event =>
                     updateState(event)
+                    handleResList()
                     sender ! AdminCommandResult(Ok)
                 }
               case TransferType.ColdToHot =>
@@ -93,12 +94,12 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                 persist(AdminConfirmTransferSuccess(updated)) {
                   event =>
                     updateState(event)
+                    handleResList()
                     sender ! AdminCommandResult(Ok)
                 }
               case _ =>
                 sender ! RequestTransferFailed(UnsupportTransferType)
             }
-            handleResList()
           } else {
             val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Succeeded)
             persist(AdminConfirmTransferSuccess(updated)) {
