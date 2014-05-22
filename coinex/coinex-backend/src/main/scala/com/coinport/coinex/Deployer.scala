@@ -158,15 +158,17 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
   }
 
   private def deployMonitor(routers: LocalRouters) = {
-    val service = system.actorOf(ClusterSingletonManager.props(
-      singletonProps = Props(new Monitor(paths.toList, routers.mailer, config: Config)),
-      singletonName = "singleton",
-      terminationMessage = PoisonPill,
-      role = Some("monitor_service")),
-      name = "monitor_service")
-    val port = config.getInt("akka.exchange.monitor.http-port")
-    IO(Http) ! Http.Bind(service, hostname, port)
-    log.info("Started HTTP server: http://" + hostname + ":" + port)
+    if (cluster.selfRoles.contains(monitor_service <<)) {
+      val service = system.actorOf(ClusterSingletonManager.props(
+        singletonProps = Props(new Monitor(paths.toList, routers.mailer, config: Config)),
+        singletonName = "singleton",
+        terminationMessage = PoisonPill,
+        role = Some(monitor_service <<)),
+        name = monitor_service <<)
+      val port = config.getInt("akka.exchange.monitor.http-port")
+      IO(Http) ! Http.Bind(service, hostname, port)
+      log.info("Started HTTP server: http://" + hostname + ":" + port)
+    }
   }
 
   private def loadConfig[T](configPath: String): T = {

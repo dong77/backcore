@@ -41,6 +41,7 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config)(implic
   override def preStart = {
     super.preStart()
     watchAllActor
+    // actorStateMonitorSchedule
   }
 
   def receive = runRoute(route) orElse {
@@ -63,6 +64,20 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config)(implic
         }
       }
       f onFailure { case m => log.warning("unknow actor path >>>> " + clusterMember.address.toString + path) }
+    }
+  }
+
+  def actorStateMonitorSchedule {
+    context.system.scheduler.schedule(0 second, 5 seconds) {
+      for (path <- actorPaths; clusterMember <- cluster.state.members) {
+        val f = cluster.system.actorSelection(clusterMember.address.toString + path).resolveOne(5 seconds)
+        f onSuccess {
+          case m => {
+            log.info("actor >>>>>>> " + m.path.toString)
+          }
+        }
+        f onFailure { case m => log.warning("unknow actor path >>>> " + clusterMember.address.toString + path) }
+      }
     }
   }
 

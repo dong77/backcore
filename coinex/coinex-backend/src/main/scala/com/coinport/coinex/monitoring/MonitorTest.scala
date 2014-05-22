@@ -27,9 +27,4 @@ object MonitorTest {
     }
     f onFailure { case m => }
   }
-
-  def restartActor(path: String) {
-
-  }
-
 }
