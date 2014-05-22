@@ -9,7 +9,7 @@ import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.common.support.ChannelSupport
 import com.coinport.coinex.data._
 import com.mongodb.casbah.Imports._
-import scala.collection.mutable.{ ListBuffer, Map, Set }
+import scala.collection.mutable.Map
 
 import ErrorCode._
 import Implicits._
@@ -67,9 +67,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
           persist(AdminConfirmTransferFailure(updated, error)) {
             event =>
               sender ! AdminCommandResult(Ok)
-              if (transfer.`type` != ColdToHot) {
-                deliverToAccountManager(event)
-              }
+              deliverToAccountManager(event)
               updateState(event)
           }
         case Some(_) => sender ! AdminCommandResult(AlreadyConfirmed)
@@ -125,7 +123,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   private def handleResList() {
     getMessagesBox foreach {
       item =>
-        //        println(s" ---------------------------- MessagesBox got item => ${item.toString}")
+        log.info(s" ---------------------------- MessagesBox got item => ${item.toString}")
         item.txType.get match {
           case Deposit if item.status.get == Succeeded =>
             deliverToAccountManager(CryptoTransferSucceeded(transferHandler.get(item.accountTransferId.get).get))
@@ -142,7 +140,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
     }
     getMongoWriteList foreach {
       item =>
-        //        println(s" =========================== getMongoWriteList got item => ${item.toString}")
+        log.info(s" =========================== getMongoWriteList got item => ${item.toString}")
         transferItemHandler.put(item)
     }
   }
@@ -160,12 +158,12 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   }
 
   private def deliverToAccountManager(event: Any) = {
-    //    println(s">>>>>>>>>>>>>>>>>>>>> deliverToAccountManager => event = ${event.toString}")
+    log.info(s">>>>>>>>>>>>>>>>>>>>> deliverToAccountManager => event = ${event.toString}")
     channelToAccountProcessor forward Deliver(Persistent(event), accountProcessorPath)
   }
 
   private def deliverToBitwayProcessor(currency: Currency, event: Any) = {
-    //    println(s">>>>>>>>>>>>>>>>>>>>> deliverToBitwayProcessor => currency = ${currency.toString}, event = ${event.toString}, path = ${bitwayProcessors(currency).path.toString}")
+    log.info(s">>>>>>>>>>>>>>>>>>>>> deliverToBitwayProcessor => currency = ${currency.toString}, event = ${event.toString}, path = ${bitwayProcessors(currency).path.toString}")
     bitwayChannels(currency) forward Deliver(Persistent(event), bitwayProcessors(currency).path)
   }
 }

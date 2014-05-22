@@ -88,7 +88,7 @@ trait AccountTransferBehavior {
     }
 
     case m @ MultiCryptoCurrencyTransactionMessage(currency, txs, newIndex: Option[BlockIndex]) =>
-      //      println(s">>>>>>>>>>>>>>>>>>>>> updateState  => MultiCryptoCurrencyTransactionMessage = ${m.toString}")
+      logger.info(s">>>>>>>>>>>>>>>>>>>>> updateState  => MultiCryptoCurrencyTransactionMessage = ${m.toString}")
       clearResList
       if (manager.getLastBlockHeight > 0) newIndex foreach (index => reOrgnize(index))
       txs foreach {
@@ -144,8 +144,8 @@ trait AccountTransferBehavior {
                   case _ => manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock) // need only one tx
                 }
                 setResState(Updator.copy(item = userToHotItem, addMongo = true, putItem = true))
-                userToHotItem.userToHotMapedDepositId foreach {
-                  depositId =>
+                userToHotItem.userToHotMapedDepositId match {
+                  case Some(depositId) =>
                     if (manager.transferMap.contains(depositId)) {
                       // check coresponded deposit item has not been removed from map
                       val depositStatus = if (userToHotItem.status.get != Failed) Succeeded else Failed
@@ -154,6 +154,8 @@ trait AccountTransferBehavior {
                       manager.removeItemIdFromMap(manager.depositSigId2TxPortIdMap, depositItem.sigId.get, depositItem.to.get)
                       setResState(Updator.copy(item = depositItem, addMongo = true, addMsgBox = (depositItem.status.get == Succeeded), rmItem = true))
                     }
+                  case None =>
+                    logger.warning(s"UserToHot item not define userToHotMapedDepositId")
                 }
             }
           case None =>
@@ -317,14 +319,15 @@ trait AccountTransferBehavior {
 
           // reset item which has bigger height than reOrg's height
           def setReorg(item: CryptoCurrencyTransferItem) {
-            //Success, Confirmed, Reorging
-            val reOrgItem = item.copy(includedBlock = Some(reOrgBlock), status = Some(Reorging))
+            // Confirmed, Reorging
+            val newBlock = if (reOrgBlock.height.get < itemHeight) None else item.includedBlock
+            val reOrgItem = item.copy(includedBlock = newBlock, status = Some(Reorging))
             setResState(Updator.copy(item = reOrgItem, addMongo = true, putItem = true))
           }
 
           item.status match {
             case Some(Confirming) if reOrgBlock.height.get < itemHeight =>
-              val confirmingItem: CryptoCurrencyTransferItem = item.copy(includedBlock = Some(reOrgBlock))
+              val confirmingItem: CryptoCurrencyTransferItem = item.copy(includedBlock = None)
               setResState(Updator.copy(item = confirmingItem, addMongo = true, putItem = true))
             case Some(Confirmed) if reOrgBlock.height.get - itemHeight < confirmableHeight - 1 =>
               setReorg(item)
