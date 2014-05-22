@@ -179,4 +179,14 @@ object PerformanceTest {
       f onFailure { case m => println(m) }
     }
   }
+
+  def main(args: Array[String]) {
+
+    args(0) match {
+      case "test" => test(args(1).toInt, args(2).toInt, args(3).toInt)
+      case "continusPressureTest" => continusPressureTest(args(1).toInt, args(2).toInt)
+      case "marketDepthViewQpsTest" => marketDepthViewQpsTest(args(1).toInt)
+      case _ => println("usage: \nClient add 100    -- add 100 robots\nrm    -- remove all robots")
+    }
+  }
 }
