@@ -24,10 +24,11 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
 
   val manager = new AccountTransferManager()
   val transferDebugConfig = context.system.settings.config.getBoolean("akka.exchange.account-transfer-debug")
+  val transferConfirmableHeight = context.system.settings.config.getInt("akka.exchange.transfer-confirmable-height")
   private val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
   private val bitwayChannels = bitwayProcessors.map(kv => kv._1 -> createChannelTo(BITWAY_PROCESSOR << kv._1))
 
-  setConfirmableHeight(1)
+  setConfirmableHeight(transferConfirmableHeight)
   setTransferDebug(transferDebugConfig)
 
   override def identifyChannel: PartialFunction[Any, String] = {
