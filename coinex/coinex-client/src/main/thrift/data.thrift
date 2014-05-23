@@ -56,6 +56,9 @@ enum ErrorCode {
     // Controller
     PARAM_EMPTY                      = 9001
     CAPTCHA_NOT_MATCH                = 9002
+
+    // Transfer
+    TRANSFER_REJECT                  = 10001
 }
 
 

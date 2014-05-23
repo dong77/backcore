@@ -15,8 +15,6 @@ class NotificationReaderWriter(val db: MongoDB) extends Actor with NotificationH
       val query = notificationHandler.getQueryDBObject(q)
       val items = notificationHandler.find(query, q.cur.skip, q.cur.limit)
       val count = notificationHandler.count(query)
-      println("query>>>>>>>>>>>" + query)
-      println("items>>>>>>>>>>>" + items)
       sender ! QueryNotificationResult(items, count)
   }
 }
