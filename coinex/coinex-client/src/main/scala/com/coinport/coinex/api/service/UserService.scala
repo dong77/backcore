@@ -172,11 +172,11 @@ object UserService extends AkkaService {
       case failed: LoginFailed =>
         failed.error match {
           case ErrorCode.PasswordNotMatch =>
-            ApiResult(false, 1, "密码错误")
+            ApiResult(false, failed.error.value, "密码错误", Some(failed))
           case ErrorCode.UserNotExist =>
-            ApiResult(false, 2, "用户 " + email + " 不存在")
+            ApiResult(false, failed.error.value, "用户 " + email + " 不存在", Some(failed))
           case _ =>
-            ApiResult(false, -1, failed.toString)
+            ApiResult(false, failed.error.value, failed.toString, Some(failed))
         }
       case x =>
         ApiResult(false, -1, x.toString)
