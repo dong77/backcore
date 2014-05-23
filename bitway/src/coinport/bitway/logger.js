@@ -49,7 +49,9 @@ log4js.configure({
     ],  
     replaceConsole: true, //替换console.log  
     levels:{  
-        1000: 'INFO'  
+        1000: 'INFO',
+        1010: 'INFO',
+        1100: 'DEBUG',
     }  
 });  
 
