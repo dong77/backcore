@@ -164,6 +164,9 @@ class AccountProcessor(
     case p @ ConfirmablePersistent(m: CryptoTransferFailed, _, _) =>
       persist(m) { event => confirm(p); updateState(event) }
 
+    case p @ ConfirmablePersistent(m: DoCancelTransfer, _, _) =>
+      persist(m) { event => confirm(p); updateState(event) }
+
     case DoSubmitOrder(side, order) =>
       if (order.quantity <= 0) {
         sender ! SubmitOrderFailed(side, order, ErrorCode.InvalidAmount)
@@ -264,6 +267,9 @@ trait AccountManagerBehavior extends CountFeeSupport {
       //      println(s">>>>>>>>>>>>>>>>>>>>> AccountProcessor got failed accountTransfer => ${t.toString}")
       failedTransfer(t)
     }
+
+    case DoCancelTransfer(t) =>
+      failedTransfer(t)
 
     case DoSubmitOrder(side: MarketSide, order) =>
       manager.updateCashAccount(order.userId, CashAccount(side.outCurrency, -order.quantity, order.quantity, 0))

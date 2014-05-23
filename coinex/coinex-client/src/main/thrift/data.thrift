@@ -39,8 +39,9 @@ enum ErrorCode {
 
     // Deposit/Withdrawal
     ALREADY_CONFIRMED                = 6001
-    DEPOSIT_NOT_EXIST                = 6002
-    WITHDRAWAL_NOT_EXIST             = 6003
+    TRANSFER_NOT_EXIST               = 6002
+    USER_CANCELED                    = 6003
+    USER_AUTHEN_FAIL                 = 6004
 
     // Robot
     ROBOT_DNA_EXIST                  = 7001

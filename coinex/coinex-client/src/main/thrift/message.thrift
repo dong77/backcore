@@ -111,6 +111,7 @@ typedef data.CryptoCurrencyNetworkStatus        _CryptoCurrencyNetworkStatus
 /* R-   */ struct CryptoTransferFailed                   {1: _AccountTransfer transfer, 2:_ErrorCode error}
 /* R+   */ struct CryptoTransferSucceeded                {1: _AccountTransfer transfer}
 
+/* C,P  */ struct DoCancelTransfer                        {1: _AccountTransfer transfer}
 /* C,P  */ struct AdminConfirmTransferFailure             {1: _AccountTransfer transfer, 2:_ErrorCode error}
 /* C,P  */ struct AdminConfirmTransferSuccess             {1: _AccountTransfer transfer}
 

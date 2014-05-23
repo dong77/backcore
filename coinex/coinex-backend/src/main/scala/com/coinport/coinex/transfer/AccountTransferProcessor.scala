@@ -61,8 +61,8 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
           }
       }
 
-    case AdminConfirmTransferFailure(transfer, error) =>
-      transferHandler.get(transfer.id) match {
+    case AdminConfirmTransferFailure(t, error) =>
+      transferHandler.get(t.id) match {
         case Some(transfer) if transfer.status == Pending =>
           val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Failed, reason = Some(error))
           persist(AdminConfirmTransferFailure(updated, error)) {
@@ -72,12 +72,30 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
               updateState(event)
           }
         case Some(_) => sender ! AdminCommandResult(AlreadyConfirmed)
-        case None => sender ! AdminCommandResult(DepositNotExist)
+        case None => sender ! AdminCommandResult(TransferNotExist)
       }
 
-    case AdminConfirmTransferSuccess(transfer) =>
-      transferHandler.get(transfer.id) match {
-        case Some(tranfer) if transfer.status == Pending =>
+    case DoCancelTransfer(t) =>
+      transferHandler.get(t.id) match {
+        case Some(transfer) if transfer.status == Pending =>
+          if (t.userId == transfer.userId) {
+            val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Failed, reason = Some(ErrorCode.UserCanceled))
+            persist(DoCancelTransfer(updated)) {
+              event =>
+                sender ! AdminCommandResult(Ok)
+                deliverToAccountManager(event)
+                updateState(event)
+            }
+          } else {
+            sender ! AdminCommandResult(UserAuthenFail)
+          }
+        case Some(_) => sender ! AdminCommandResult(AlreadyConfirmed)
+        case None => sender ! AdminCommandResult(TransferNotExist)
+      }
+
+    case AdminConfirmTransferSuccess(t) =>
+      transferHandler.get(t.id) match {
+        case Some(transfer) if transfer.status == Pending =>
           if (isCryptoCurrency(transfer.currency) && !transferDebugConfig) {
             transfer.`type` match {
               case TransferType.Deposit => sender ! RequestTransferFailed(UnsupportTransferType)
@@ -110,7 +128,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
             }
           }
         case Some(_) => sender ! AdminCommandResult(AlreadyConfirmed)
-        case None => sender ! AdminCommandResult(DepositNotExist)
+        case None => sender ! AdminCommandResult(TransferNotExist)
       }
 
     case p @ ConfirmablePersistent(msg: MultiCryptoCurrencyTransactionMessage, _, _) =>

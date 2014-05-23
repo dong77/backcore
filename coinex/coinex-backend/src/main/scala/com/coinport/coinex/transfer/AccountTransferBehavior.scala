@@ -75,6 +75,8 @@ trait AccountTransferBehavior {
 
     case AdminConfirmTransferFailure(t, _) => transferHandler.put(t)
 
+    case DoCancelTransfer(t) => transferHandler.put(t)
+
     case AdminConfirmTransferSuccess(t) => {
       if (isCryptoCurrency(t.currency) && !transferDebug) {
         clearResList
