@@ -233,8 +233,8 @@ object Client {
     Client.backend ! BitwayMessage(Btc, tx = Some(CryptoCurrencyTransaction(
       sigId = Some(sigId),
       ids = Some(List(1425L)),
-      inputs = Some(Set(CryptoCurrencyTransactionPort("inputAddr1", Some(1.0)))),
-      outputs = Some(Set(CryptoCurrencyTransactionPort(address, Some(1.0), userId = Some(1425L)))),
+      inputs = Some(List(CryptoCurrencyTransactionPort("inputAddr1", Some(1.0)))),
+      outputs = Some(List(CryptoCurrencyTransactionPort(address, Some(1.0), userId = Some(1425L)))),
       prevBlock = Some(BlockIndex(Some("blockId1"), Some(1))),
       includedBlock = Some(BlockIndex(Some("blockId2"), Some(2))),
       status = TransferStatus.Confirming
@@ -247,8 +247,8 @@ object Client {
         txs = List(CryptoCurrencyTransaction(
           sigId = Some(sigId),
           ids = Some(List(1425L)),
-          inputs = Some(Set(CryptoCurrencyTransactionPort("inputAddr1", Some(1.0)))),
-          outputs = Some(Set(CryptoCurrencyTransactionPort(address, Some(1.0)))),
+          inputs = Some(List(CryptoCurrencyTransactionPort("inputAddr1", Some(1.0)))),
+          outputs = Some(List(CryptoCurrencyTransactionPort(address, Some(1.0)))),
           status = TransferStatus.Confirming
         ))))
     )))

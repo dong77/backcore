@@ -165,10 +165,10 @@ class BitwayManagerSpec extends Specification {
       val bi1 = BlockIndex(Some("b1"), Some(1))
       val rawTx = CryptoCurrencyTransaction(
         txid = Some("t1"),
-        inputs = Some(Set(CryptoCurrencyTransactionPort("u7", Some(1.1)))),
-        outputs = Some(Set(CryptoCurrencyTransactionPort("h1", Some(0.9)))),
+        inputs = Some(List(CryptoCurrencyTransactionPort("u7", Some(1.1)))),
+        outputs = Some(List(CryptoCurrencyTransactionPort("h1", Some(0.9)))),
         includedBlock = Some(bi1), status = Confirming)
-      bwm.completeCryptoCurrencyTransaction(rawTx, None, None) mustEqual Some(CryptoCurrencyTransaction(None, Some("t1"), None, Some(Set(CryptoCurrencyTransactionPort("u7", Some(1.1), Some(1100), Some(1)))), Some(Set(CryptoCurrencyTransactionPort("h1", Some(0.9), Some(900), Some(-1)))), None, None, Some(UserToHot), Confirming))
+      bwm.completeCryptoCurrencyTransaction(rawTx, None, None) mustEqual Some(CryptoCurrencyTransaction(None, Some("t1"), None, Some(List(CryptoCurrencyTransactionPort("u7", Some(1.1), Some(1100), Some(1)))), Some(List(CryptoCurrencyTransactionPort("h1", Some(0.9), Some(900), Some(-1)))), None, None, Some(UserToHot), Confirming))
 
       val infos = Seq(
         CryptoCurrencyTransferInfo(1, Some("i1"), Some(1000)),
@@ -177,23 +177,23 @@ class BitwayManagerSpec extends Specification {
 
       val tx1 = CryptoCurrencyTransaction(
         txid = Some("t1"),
-        inputs = Some(Set(CryptoCurrencyTransactionPort("h1", Some(1.1)))),
-        outputs = Some(Set(CryptoCurrencyTransactionPort("d1", Some(0.9)))),
+        inputs = Some(List(CryptoCurrencyTransactionPort("h1", Some(1.1)))),
+        outputs = Some(List(CryptoCurrencyTransactionPort("d1", Some(0.9)))),
         includedBlock = Some(bi1), status = Confirming)
       val tx2 = CryptoCurrencyTransaction(
         txid = Some("t2"),
-        inputs = Some(Set(CryptoCurrencyTransactionPort("h2", Some(2.1)))),
-        outputs = Some(Set(CryptoCurrencyTransactionPort("d2", Some(2.9)))),
+        inputs = Some(List(CryptoCurrencyTransactionPort("h2", Some(2.1)))),
+        outputs = Some(List(CryptoCurrencyTransactionPort("d2", Some(2.9)))),
         includedBlock = Some(bi1), status = Confirming)
       val tx3 = CryptoCurrencyTransaction(
         txid = Some("t3"),
-        inputs = Some(Set(CryptoCurrencyTransactionPort("h3", Some(3.1)))),
-        outputs = Some(Set(CryptoCurrencyTransactionPort("d3", Some(3.9)))),
+        inputs = Some(List(CryptoCurrencyTransactionPort("h3", Some(3.1)))),
+        outputs = Some(List(CryptoCurrencyTransactionPort("d3", Some(3.9)))),
         includedBlock = Some(bi1), status = Confirming)
       val tx4 = CryptoCurrencyTransaction(
         txid = Some("t4"),
-        inputs = Some(Set(CryptoCurrencyTransactionPort("h4", Some(4.1)))),
-        outputs = Some(Set(CryptoCurrencyTransactionPort("d4", Some(4.9)))),
+        inputs = Some(List(CryptoCurrencyTransactionPort("h4", Some(4.1)))),
+        outputs = Some(List(CryptoCurrencyTransactionPort("d4", Some(4.9)))),
         includedBlock = Some(bi1), status = Confirming)
       val blocks = List(
         CryptoCurrencyBlock(BlockIndex(Some("b10"), Some(10)), BlockIndex(Some("b9"), Some(9)), List(
@@ -204,23 +204,23 @@ class BitwayManagerSpec extends Specification {
 
       bwm.extractTxsFromBlocks(blocks) mustEqual List(
         CryptoCurrencyTransaction(None, Some("t1"), None,
-          Some(Set(CryptoCurrencyTransactionPort("h1", Some(1.1), Some(1100), Some(-1)))),
-          Some(Set(CryptoCurrencyTransactionPort("d1", Some(0.9), Some(900)))),
+          Some(List(CryptoCurrencyTransactionPort("h1", Some(1.1), Some(1100), Some(-1)))),
+          Some(List(CryptoCurrencyTransactionPort("d1", Some(0.9), Some(900)))),
           Some(BlockIndex(Some("b9"), Some(9))),
           Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Confirming),
         CryptoCurrencyTransaction(None, Some("t2"), None,
-          Some(Set(CryptoCurrencyTransactionPort("h2", Some(2.1), Some(2100), Some(-1)))),
-          Some(Set(CryptoCurrencyTransactionPort("d2", Some(2.9), Some(2900)))),
+          Some(List(CryptoCurrencyTransactionPort("h2", Some(2.1), Some(2100), Some(-1)))),
+          Some(List(CryptoCurrencyTransactionPort("d2", Some(2.9), Some(2900)))),
           Some(BlockIndex(Some("b9"), Some(9))),
           Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Confirming),
         CryptoCurrencyTransaction(None, Some("t3"), None,
-          Some(Set(CryptoCurrencyTransactionPort("h3", Some(3.1), Some(3100), Some(-1)))),
-          Some(Set(CryptoCurrencyTransactionPort("d3", Some(3.9), Some(3900)))),
+          Some(List(CryptoCurrencyTransactionPort("h3", Some(3.1), Some(3100), Some(-1)))),
+          Some(List(CryptoCurrencyTransactionPort("d3", Some(3.9), Some(3900)))),
           Some(BlockIndex(Some("b10"), Some(10))), Some(BlockIndex(Some("b11"), Some(11))),
           Some(Withdrawal), Confirming))
     }
 
-    "lastTx/getNetworkStatus test" in {
+    "getAddressStatus/getNetworkStatus test" in {
       val bwm = new BitwayManager(Btc, 10)
       bwm.faucetAddress(UserUsed, Set("u1", "u2", "u3", "u4", "u5", "u6"))
       bwm.faucetAddress(Hot, Set("h1", "h2"))
@@ -229,18 +229,20 @@ class BitwayManagerSpec extends Specification {
       val bi1 = BlockIndex(Some("b1"), Some(1))
       val bi2 = BlockIndex(Some("b2"), Some(2))
 
-      bwm.updateLastTx(Seq(
+      bwm.updateAddressStatus(Seq(
         CryptoCurrencyTransaction(
           txid = Some("t1"),
-          inputs = Some(Set(CryptoCurrencyTransactionPort("h1"))),
-          outputs = Some(Set(CryptoCurrencyTransactionPort("u1"))),
+          inputs = Some(List(CryptoCurrencyTransactionPort("h1", Some(1.2)))),
+          outputs = Some(List(CryptoCurrencyTransactionPort("u1", Some(1.0)),
+            CryptoCurrencyTransactionPort("h1", Some(0.2))
+          )),
           includedBlock = Some(bi1),
           status = Confirming
         ),
         CryptoCurrencyTransaction(
           txid = Some("t2"),
-          inputs = Some(Set(CryptoCurrencyTransactionPort("h1"), CryptoCurrencyTransactionPort("h2"))),
-          outputs = Some(Set(CryptoCurrencyTransactionPort("u2"), CryptoCurrencyTransactionPort("h1"), CryptoCurrencyTransactionPort("h2"))),
+          inputs = Some(List(CryptoCurrencyTransactionPort("h1", Some(0.2)), CryptoCurrencyTransactionPort("h2", Some(0.4)))),
+          outputs = Some(List(CryptoCurrencyTransactionPort("u2", Some(0.2)), CryptoCurrencyTransactionPort("h1", Some(0.1)), CryptoCurrencyTransactionPort("h2", Some(0.1)))),
           includedBlock = Some(bi2),
           status = Confirming
         )
@@ -250,9 +252,10 @@ class BitwayManagerSpec extends Specification {
 
       bwm.updateLastAlive(1234L)
       bwm.getNetworkStatus mustEqual CryptoCurrencyNetworkStatus(Some("b3"), Some(3L), Some(1234L))
-      bwm.getLastTxs(Hot) mustEqual Map("h1" -> BlockIndex(Some("t2"), Some(2)), "h2" -> BlockIndex(Some("t2"), Some(2)))
-      bwm.getLastTxs(Cold) mustEqual Map.empty[String, BlockIndex]
-      bwm.getLastTxs(UserUsed) mustEqual Map("u1" -> BlockIndex(Some("t1"), Some(1)), "u2" -> BlockIndex(Some("t2"), Some(2)))
+
+      bwm.getAddressStatus(Hot) mustEqual Map("h2" -> AddressStatusResult(Some("t2"), Some(2), -300), "h1" -> AddressStatusResult(Some("t2"), Some(2), -1100))
+      bwm.getAddressStatus(UserUsed) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), 200), "u1" -> AddressStatusResult(Some("t1"), Some(1), 1000))
+      bwm.getAddressStatus(Cold) mustEqual Map.empty[String, BlockIndex]
     }
   }
 }

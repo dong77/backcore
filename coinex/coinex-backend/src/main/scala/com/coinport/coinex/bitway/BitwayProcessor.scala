@@ -108,10 +108,14 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       } else {
         manager.completeCryptoCurrencyTransaction(tx) match {
           case None => log.debug("unrelated tx received")
-          case Some(completedTx) => persist(m.copy(tx = Some(txWithTime))) { event =>
-            channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
-              List(completedTx))), transferProcessor.path)
-          }
+          case Some(completedTx) =>
+            if (manager.notProcessed(completedTx)) {
+              persist(m.copy(tx = Some(txWithTime))) { event =>
+                updateState(event)
+                channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
+                  List(completedTx))), transferProcessor.path)
+              }
+            }
         }
       }
     case m @ BitwayMessage(currency, None, None, Some(blocksMsg)) =>
@@ -158,12 +162,10 @@ trait BitwayManagerBehavior {
         manager.faucetAddress(res.addressType.get, Set.empty[String] ++ res.addresses.get)
     case BitwayMessage(currency, None, Some(tx), None) =>
       if (tx.timestamp.isDefined) manager.updateLastAlive(tx.timestamp.get)
+      manager.rememberTx(tx)
     case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlocksMessage(startIndex, blocks, timestamp))) =>
       if (timestamp.isDefined) manager.updateLastAlive(timestamp.get)
-      manager.appendBlockChain(blocks.map(_.index).toList, startIndex)
-      blocks foreach { block =>
-        manager.updateLastTx(block.txs)
-      }
+      manager.updateBlocks(startIndex, blocks)
     case e => println("bitway updateState doesn't handle the message: ", e)
   }
 }

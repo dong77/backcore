@@ -16,6 +16,7 @@ class ThriftBinarySerializer extends Serializer {
   val identifier = 607870725
   lazy val _cABCodeItem = BinaryScalaCodec(ABCodeItem)
   lazy val _cAccountTransfer = BinaryScalaCodec(AccountTransfer)
+  lazy val _cAddressStatusResult = BinaryScalaCodec(AddressStatusResult)
   lazy val _cApiSecret = BinaryScalaCodec(ApiSecret)
   lazy val _cBlockIndex = BinaryScalaCodec(BlockIndex)
   lazy val _cCandleData = BinaryScalaCodec(CandleData)
@@ -50,6 +51,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cRedeliverFilters = BinaryScalaCodec(RedeliverFilters)
   lazy val _cRefund = BinaryScalaCodec(Refund)
   lazy val _cSpanCursor = BinaryScalaCodec(SpanCursor)
+  lazy val _cTAddressStatus = BinaryScalaCodec(TAddressStatus)
   lazy val _cTMetricsObserver = BinaryScalaCodec(TMetricsObserver)
   lazy val _cTRobot = BinaryScalaCodec(TRobot)
   lazy val _cTStackQueue = BinaryScalaCodec(TStackQueue)
@@ -76,6 +78,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cDoAddNewApiSecret = BinaryScalaCodec(DoAddNewApiSecret)
   lazy val _cDoAddRobotDNA = BinaryScalaCodec(DoAddRobotDNA)
   lazy val _cDoCancelOrder = BinaryScalaCodec(DoCancelOrder)
+  lazy val _cDoCancelTransfer = BinaryScalaCodec(DoCancelTransfer)
   lazy val _cDoDeleteApiSecret = BinaryScalaCodec(DoDeleteApiSecret)
   lazy val _cDoRegisterUser = BinaryScalaCodec(DoRegisterUser)
   lazy val _cDoRemoveRobotDNA = BinaryScalaCodec(DoRemoveRobotDNA)
@@ -183,6 +186,7 @@ class ThriftBinarySerializer extends Serializer {
   def toBinary(obj: AnyRef): Array[Byte] = obj match {
     case m: ABCodeItem => _cABCodeItem(m)
     case m: AccountTransfer => _cAccountTransfer(m)
+    case m: AddressStatusResult => _cAddressStatusResult(m)
     case m: ApiSecret => _cApiSecret(m)
     case m: BlockIndex => _cBlockIndex(m)
     case m: CandleData => _cCandleData(m)
@@ -217,6 +221,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: RedeliverFilters => _cRedeliverFilters(m)
     case m: Refund => _cRefund(m)
     case m: SpanCursor => _cSpanCursor(m)
+    case m: TAddressStatus => _cTAddressStatus(m)
     case m: TMetricsObserver => _cTMetricsObserver(m)
     case m: TRobot => _cTRobot(m)
     case m: TStackQueue => _cTStackQueue(m)
@@ -243,6 +248,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: DoAddNewApiSecret => _cDoAddNewApiSecret(m)
     case m: DoAddRobotDNA => _cDoAddRobotDNA(m)
     case m: DoCancelOrder => _cDoCancelOrder(m)
+    case m: DoCancelTransfer => _cDoCancelTransfer(m)
     case m: DoDeleteApiSecret => _cDoDeleteApiSecret(m)
     case m: DoRegisterUser => _cDoRegisterUser(m)
     case m: DoRemoveRobotDNA => _cDoRemoveRobotDNA(m)
@@ -354,6 +360,7 @@ class ThriftBinarySerializer extends Serializer {
     clazz: Option[Class[_]]): AnyRef = clazz match {
     case Some(c) if c == classOf[ABCodeItem.Immutable] => _cABCodeItem.invert(bytes).get
     case Some(c) if c == classOf[AccountTransfer.Immutable] => _cAccountTransfer.invert(bytes).get
+    case Some(c) if c == classOf[AddressStatusResult.Immutable] => _cAddressStatusResult.invert(bytes).get
     case Some(c) if c == classOf[ApiSecret.Immutable] => _cApiSecret.invert(bytes).get
     case Some(c) if c == classOf[BlockIndex.Immutable] => _cBlockIndex.invert(bytes).get
     case Some(c) if c == classOf[CandleData.Immutable] => _cCandleData.invert(bytes).get
@@ -388,6 +395,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[RedeliverFilters.Immutable] => _cRedeliverFilters.invert(bytes).get
     case Some(c) if c == classOf[Refund.Immutable] => _cRefund.invert(bytes).get
     case Some(c) if c == classOf[SpanCursor.Immutable] => _cSpanCursor.invert(bytes).get
+    case Some(c) if c == classOf[TAddressStatus.Immutable] => _cTAddressStatus.invert(bytes).get
     case Some(c) if c == classOf[TMetricsObserver.Immutable] => _cTMetricsObserver.invert(bytes).get
     case Some(c) if c == classOf[TRobot.Immutable] => _cTRobot.invert(bytes).get
     case Some(c) if c == classOf[TStackQueue.Immutable] => _cTStackQueue.invert(bytes).get
@@ -414,6 +422,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[DoAddNewApiSecret.Immutable] => _cDoAddNewApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoAddRobotDNA.Immutable] => _cDoAddRobotDNA.invert(bytes).get
     case Some(c) if c == classOf[DoCancelOrder.Immutable] => _cDoCancelOrder.invert(bytes).get
+    case Some(c) if c == classOf[DoCancelTransfer.Immutable] => _cDoCancelTransfer.invert(bytes).get
     case Some(c) if c == classOf[DoDeleteApiSecret.Immutable] => _cDoDeleteApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoRegisterUser.Immutable] => _cDoRegisterUser.invert(bytes).get
     case Some(c) if c == classOf[DoRemoveRobotDNA.Immutable] => _cDoRemoveRobotDNA.invert(bytes).get

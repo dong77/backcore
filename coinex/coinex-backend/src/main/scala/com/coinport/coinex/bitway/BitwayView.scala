@@ -21,7 +21,7 @@ class BitwayView(supportedCurrency: Currency, config: BitwayConfig) extends Exte
   def receive = LoggingReceive {
     case Persistent(msg, _) => updateState(msg)
     case QueryCryptoCurrencyAddressStatus(currency, addressType) =>
-      sender ! QueryCryptoCurrencyAddressStatusResult(currency, manager.getLastTxs(addressType))
+      sender ! QueryCryptoCurrencyAddressStatusResult(currency, manager.getAddressStatus(addressType))
     case QueryCryptoCurrencyNetworkStatus(currency) =>
       sender ! QueryCryptoCurrencyNetworkStatusResult(currency, manager.getNetworkStatus)
   }

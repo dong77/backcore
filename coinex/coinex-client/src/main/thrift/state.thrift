@@ -13,24 +13,25 @@ include "data.thrift"
 ///////////////////// PROCESSOR AND VIEW STATES ///////////////////////
 ///////////////////////////////////////////////////////////////////////
 
-typedef data.Order                     Order
-typedef data.MarketSide                MarketSide
-typedef data.ApiSecret                 ApiSecret
-typedef data.UserAccount               UserAccount
-typedef data.UserProfile               UserProfile
-typedef data.RedeliverFilters          RedeliverFilters
-typedef data.ChartTimeDimension        ChartTimeDimension
-typedef data.CandleDataItem            CandleDataItem
-typedef data.TMetricsObserver          TMetricsObserver
-typedef data.CashAccount               CashAccount
-typedef data.Currency                  Currency
-typedef data.ABCodeItem                ABCodeItem
-typedef data.Metrics                   Metrics
-typedef data.TRobot                    TRobot
-typedef data.BlockIndex                BlockIndex
-typedef data.CryptoCurrencyAddressType CryptoCurrencyAddressType
+typedef data.Order                         Order
+typedef data.MarketSide                    MarketSide
+typedef data.ApiSecret                     ApiSecret
+typedef data.UserAccount                   UserAccount
+typedef data.UserProfile                   UserProfile
+typedef data.RedeliverFilters              RedeliverFilters
+typedef data.ChartTimeDimension            ChartTimeDimension
+typedef data.CandleDataItem                CandleDataItem
+typedef data.TMetricsObserver              TMetricsObserver
+typedef data.CashAccount                   CashAccount
+typedef data.Currency                      Currency
+typedef data.ABCodeItem                    ABCodeItem
+typedef data.Metrics                       Metrics
+typedef data.TRobot                        TRobot
+typedef data.BlockIndex                    BlockIndex
+typedef data.CryptoCurrencyAddressType     CryptoCurrencyAddressType
 typedef data.CryptoCurrencyTransactionPort CryptoCurrencyTransactionPort
-typedef data.CryptoCurrencyTransferItem CryptoCurrencyTransferItem
+typedef data.CryptoCurrencyTransferItem    CryptoCurrencyTransferItem
+typedef data.TAddressStatus                TAddressStatus
 
 struct TUserState {
     1: map<i64, i64> idMap
@@ -109,7 +110,8 @@ struct TBitwayState {
     2: RedeliverFilters filters
     3: list<BlockIndex> blockIndexes
     4: map<CryptoCurrencyAddressType, set<string>> addresses
-    5: map<string, BlockIndex> addressLastTx // key: address value: reuse BlockIndex, id is txid, height is tx first included block height
+    5: map<string, TAddressStatus> addressStatus
     6: i64 lastAlive
     7: map<string, i64> addressUidMap
+    8: set<string> sigIdsSinceLastBlock
 }

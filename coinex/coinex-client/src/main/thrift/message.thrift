@@ -40,7 +40,6 @@ typedef data.TransferType                       _TransferType
 typedef data.BitwayRequestType                  _BitwayRequestType
 typedef data.RechargeCodeStatus                 _RechargeCodeStatus
 typedef data.ABCodeItem                         _ABCodeItem
-typedef data.CryptoCurrencyTransactionPort      _CryptoCurrencyTransactionPort
 typedef data.CryptoCurrencyTransaction          _CryptoCurrencyTransaction
 typedef data.BlockIndex                         _BlockIndex
 typedef data.CryptoCurrencyTransferInfo         _CryptoCurrencyTransferInfo
@@ -51,6 +50,7 @@ typedef data.CashAccount                        _CashAccount
 typedef data.Notification                       _Notification
 typedef data.NotificationType                   _NotificationType
 typedef data.CryptoCurrencyNetworkStatus        _CryptoCurrencyNetworkStatus
+typedef data.AddressStatusResult                _AddressStatusResult
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -172,7 +172,7 @@ typedef data.CryptoCurrencyNetworkStatus        _CryptoCurrencyNetworkStatus
 /* R    */ struct TransferCryptoCurrencyResult            {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK}
 /* I    */ struct MultiCryptoCurrencyTransactionMessage   {1: _Currency currency, 2: list<_CryptoCurrencyTransaction> txs, 3: optional _BlockIndex reorgIndex}
 /* C    */ struct QueryCryptoCurrencyAddressStatus        {1: _Currency currency, 2: _CryptoCurrencyAddressType addressType}
-/* R    */ struct QueryCryptoCurrencyAddressStatusResult  {1: _Currency currency, 2: map<string, _BlockIndex> lastTxs}
+/* R    */ struct QueryCryptoCurrencyAddressStatusResult  {1: _Currency currency, 2: map<string, _AddressStatusResult> status}
 /* C    */ struct QueryCryptoCurrencyNetworkStatus        {1: _Currency currency}
 /* R    */ struct QueryCryptoCurrencyNetworkStatusResult  {1: _Currency currency, 2: _CryptoCurrencyNetworkStatus status}
 

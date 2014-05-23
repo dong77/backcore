@@ -454,6 +454,18 @@ struct BlockIndex {
     2: optional i64 height
 }
 
+struct AddressStatusResult {
+    1: optional string txid // last tx with include the address
+    2: optional i64 height // tx first included block height
+    3: i64 confirmedAmount
+}
+
+struct TAddressStatus {
+    1: optional string txid // last tx with include the address
+    2: optional i64 height // tx first included block height
+    3: map<i64, set<i64>> books
+}
+
 // We have a case-class named Robot
 struct TRobot {
     1: i64 robotId
@@ -483,8 +495,8 @@ struct CryptoCurrencyTransaction {
     1:  optional string sigId
     2:  optional string txid
     3:  optional list<i64> ids
-    4:  optional set<CryptoCurrencyTransactionPort> inputs
-    5:  optional set<CryptoCurrencyTransactionPort> outputs
+    4:  optional list<CryptoCurrencyTransactionPort> inputs
+    5:  optional list<CryptoCurrencyTransactionPort> outputs
     6:  optional BlockIndex prevBlock
     7:  optional BlockIndex includedBlock
     8:  optional TransferType txType
