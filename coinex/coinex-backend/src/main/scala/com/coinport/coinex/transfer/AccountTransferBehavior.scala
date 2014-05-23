@@ -143,8 +143,11 @@ trait AccountTransferBehavior {
                   val userToHotItem = tx.status match {
                     case Failed =>
                       setAccountTransferStatus(manager.transferMap, id, Failed)
-                      manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock, status = Some(Failed))
-                    case _ => manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock) // need only one tx
+                      manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, status = Some(Failed))
+                    case _ => manager.transferMap(id).includedBlock match {
+                      case Some(_) => manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid)
+                      case None => manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock)
+                    } // need only one tx
                   }
                   setResState(Updator.copy(item = userToHotItem, addMongo = true, putItem = true))
                   userToHotItem.userToHotMapedDepositId match {
@@ -173,8 +176,7 @@ trait AccountTransferBehavior {
         handleDepositLikeTx(currency, tx, manager.coldToHotSigId2TxPortIdMap)
       case HotToCold =>
         handleWithdrawlLikeTx(tx)
-      case Unknown =>
-        logger.warning(s"Got Unkown TransferType message from bitway: ${tx.toString}")
+      case _ =>
     }
   }
 
@@ -199,13 +201,16 @@ trait AccountTransferBehavior {
                   val toSaveDepositLikeItem =
                     manager.getItemIdFromMap(sigIdToItemMap, tx.sigId.get, outputPort) match {
                       case Some(id) =>
-                        manager.transferMap(id).copy(includedBlock = tx.includedBlock)
+                        manager.transferMap(id).includedBlock match {
+                          case Some(_) => manager.transferMap(id)
+                          case None => manager.transferMap(id).copy(includedBlock = tx.includedBlock)
+                        }
                       case None =>
                         val transferId = manager.getTransferId
                         manager.setLastTransferId(transferId)
                         transferHandler.put(AccountTransfer(transferId, outputPort.userId.get, tx.txType.get, currency, outputPort.internalAmount.get, Confirming, Some(System.currentTimeMillis())))
                         val newTransferItemId = manager.getNewTransferItemId
-                        manager.saveItemIdTomap(sigIdToItemMap, tx.sigId.get, outputPort, newTransferItemId)
+                        manager.saveItemIdToMap(sigIdToItemMap, tx.sigId.get, outputPort, newTransferItemId)
                         // id, sigId, txid, userId, currency, from, to(user's internal address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
                         CryptoCurrencyTransferItem(Some(newTransferItemId), tx.sigId, tx.txid, outputPort.userId, Some(currency), None, Some(outputPort), tx.includedBlock, tx.txType, Some(Confirming), None, Some(transferId), Some(System.currentTimeMillis()))
                     }
@@ -224,14 +229,20 @@ trait AccountTransferBehavior {
         tx.ids.get foreach {
           //every input corresponds to one tx
           id =>
-            assert(manager.transferMap.contains(id))
-            tx.status match {
-              case Failed =>
-                setAccountTransferStatus(manager.transferMap, id, Failed)
-                setResState(Updator.copy(item = manager.transferMap(id).copy(status = Some(Failed)), addMongo = true, addMsgBox = true, rmItem = true))
-              case _ =>
-                val item = manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock)
-                setResState(Updator.copy(item = item, addMongo = true, putItem = true))
+            if (manager.transferMap.contains(id)) {
+              tx.status match {
+                case Failed =>
+                  setAccountTransferStatus(manager.transferMap, id, Failed)
+                  setResState(Updator.copy(item = manager.transferMap(id).copy(status = Some(Failed)), addMongo = true, addMsgBox = true, rmItem = true))
+                case _ =>
+                  val item = manager.transferMap(id).includedBlock match {
+                    case Some(_) => manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid)
+                    case None => manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock)
+                  }
+                  setResState(Updator.copy(item = item, addMongo = true, putItem = true))
+              }
+            } else {
+              logger.warning(s"handleWithdrawlLikeTx() item confirm id not included in transferMap : ${tx.toString}")
             }
         }
       case None =>
@@ -304,7 +315,7 @@ trait AccountTransferBehavior {
   }
 
   private def updateAccountTransferConfirmNum(item: CryptoCurrencyTransferItem, lastBlockHeight: Long) {
-    if (item.includedBlock.isDefined && item.includedBlock.get.height.isDefined && item.includedBlock.get.height.get > lastBlockHeight) {
+    if (item.includedBlock.isDefined && item.includedBlock.get.height.isDefined && lastBlockHeight >= item.includedBlock.get.height.get) {
       item.accountTransferId foreach {
         accountTransferId =>
           transferHandler.get(accountTransferId) foreach {

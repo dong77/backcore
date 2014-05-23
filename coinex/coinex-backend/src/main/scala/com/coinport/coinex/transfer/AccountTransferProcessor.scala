@@ -108,7 +108,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                     sender ! AdminCommandResult(Ok)
                 }
               case TransferType.ColdToHot =>
-                val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Succeeded)
+                val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Accepted)
                 persist(AdminConfirmTransferSuccess(updated)) {
                   event =>
                     updateState(event)
@@ -248,7 +248,7 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
       None
   }
 
-  def saveItemIdTomap(operateMap: Map[String, Map[CryptoCurrencyTransactionPort, Long]], sigId: String, port: CryptoCurrencyTransactionPort, id: Long) {
+  def saveItemIdToMap(operateMap: Map[String, Map[CryptoCurrencyTransactionPort, Long]], sigId: String, port: CryptoCurrencyTransactionPort, id: Long) {
     if (!operateMap.contains(sigId)) {
       operateMap.put(sigId, Map.empty[CryptoCurrencyTransactionPort, Long])
     }

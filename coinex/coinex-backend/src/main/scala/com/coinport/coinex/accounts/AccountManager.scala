@@ -106,6 +106,18 @@ class AccountManager(initialLastOrderId: Long = 0L,
     (current + adjustment).isValid
   }
 
+  def canUpdateHotAccount(adjustment: CashAccount) = canUpdateCryptoAccount(adjustment, hotWalletAccount)
+
+  def canUpdateColdAccount(adjustment: CashAccount) = canUpdateCryptoAccount(adjustment, coldWalletAccount)
+
+  private def canUpdateCryptoAccount(adjustment: CashAccount, cryptoAccount: Map[Currency, CashAccount]) = {
+    if (adjustment.currency.value < Currency.Btc.value) {
+      true
+    } else {
+      (cryptoAccount(adjustment.currency) + adjustment).isValid
+    }
+  }
+
   def updateCashAccount(accounts: Map[Currency, CashAccount], adjustment: CashAccount) = {
     val current = accounts.getOrElse(adjustment.currency, CashAccount(adjustment.currency, 0, 0, 0))
     val updated = current + adjustment

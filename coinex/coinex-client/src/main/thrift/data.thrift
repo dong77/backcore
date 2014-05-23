@@ -28,7 +28,9 @@ enum ErrorCode {
     USED_B_CODE                      = 2005
     INVALID_B_CODE                   = 2006
     UNSUPPORT_TRANSFER_TYPE          = 2007
-    BITWAY_PROCESS_FAIL             = 2008
+    BITWAY_PROCESS_FAIL              = 2009
+    INSUFFICIENT_HOT                 = 2010
+    INSUFFICIENT_COLD                = 2011
 
     // Market related
     ORDER_NOT_EXIST                  = 3001

@@ -55,6 +55,8 @@ class AccountProcessor(
         val adjustment = CashAccount(t.currency, -t.amount, 0, t.amount)
         if (!manager.canUpdateCashAccount(t.userId, adjustment)) {
           sender ! RequestTransferFailed(InsufficientFund)
+        } else if (!manager.canUpdateHotAccount(adjustment)) {
+          sender ! RequestTransferFailed(InsufficientHot)
         } else {
           val updated = countFee(t.copy(created = Some(System.currentTimeMillis)))
           persist(DoRequestTransfer(updated)) { event =>
@@ -75,15 +77,23 @@ class AccountProcessor(
         }
 
       case HotToCold =>
-        persist(DoRequestTransfer(t)) { event =>
-          updateState(event)
-          channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
+        if (manager.canUpdateHotAccount(CashAccount(t.currency, -t.amount, 0, t.amount))) {
+          sender ! RequestTransferFailed(InsufficientHot)
+        } else {
+          persist(DoRequestTransfer(t)) { event =>
+            updateState(event)
+            channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
+          }
         }
 
       case ColdToHot =>
-        persist(DoRequestTransfer(t)) { event =>
-          updateState(event)
-          channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
+        if (manager.canUpdateColdAccount(CashAccount(t.currency, -t.amount, 0, t.amount))) {
+          sender ! RequestTransferFailed(InsufficientCold)
+        } else {
+          persist(DoRequestTransfer(t)) { event =>
+            updateState(event)
+            channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
+          }
         }
       case _ => // frontend can't send UserToHot
     }
