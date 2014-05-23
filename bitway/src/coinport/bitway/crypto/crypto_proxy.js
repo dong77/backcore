@@ -128,8 +128,8 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
         case TransferType.WITHDRAWAL:
         case TransferType.HOT_TO_COLD:
             Async.parallel ([
-                self.getHotUnspent_.bind(self)(),
-                self.getHotChangeAddress_.bind(self)
+                self.getHotUnspent_.bind(self),
+                self.getAHotAddressByRandom_.bind(self)
                 ], function(err, result){
                 if (!err) {
                     var unspentTxs = result[0];
@@ -160,6 +160,48 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
                 }
             });
             break;
+        case TransferType.USER_TO_HOT:
+            var fromAddresses = [];
+            var amountTotalPay = 0;
+            for (var i = 0; i < transferReq.transferInfos.length; i++) {
+                fromAddresses.push(transferReq.transferInos[i].from);
+                amountTotalPay += transferReq.transferInos[i].amount;
+            }
+            Async.parallel ([
+                self.getUnspentOfAddresses_.bind(self)(fromAddresses),
+                self.getAHotAddressByRandom_.bind(self)
+                ], function(err, result){
+                    if (err) {
+                        callback(err);
+                    } else {
+                        var unspentTxs = result[0];
+                        var toAddress = result[1];
+                        var amountTotalUnspent = 0;
+                        for (var j = 0; j < unspentTxs.length; j++) {
+                            amountTotalUnspent += unspentTxs[j].amount; 
+                            var transaction = {txid: unspentTxs[i].txid, vout: unspentTxs[i].vout};
+                            transactions.push(transaction);
+                        }
+                        if ((amountTotalUnspent > amountTotalPay && amountTotalUnspent < amountTotalPay + this.TIP)
+                            || amountTotalUnspent == amountTotalPay 
+                            || amountTotalUnspent == amountTotalPay + this.TIP) {
+                            addresses[toAddress] = amountTotalPay;
+                            var rawData = {transactions: transactions, addresses: addresses};
+                            callback(null, rawData);
+                        } else if (amountTotalUnspent > amountTotalPay + this.TIP){
+                            addresses[toAddress] = amountTotalUnspent;
+                            var rawData = {transactions: transactions, addresses: addresses};
+                            callback(null, rawData);
+                        } else {
+                            this.log.error("Lack of balance!");
+                            var err = {code: "Lack of balance!", message: "Lack of balance!"};
+                            callback(err);
+                        }
+                    }
+                });
+            break;
+        default:
+            this.log.error("Invalid type: " + type);
     }
 };
 
@@ -188,7 +230,7 @@ CryptoProxy.prototype.getUnspentOfAddresses_ = function(addresses, callback) {
         } else {
             var transactions = [];
             for (var i = 0; i < unspentReply.length; i++) {
-                var transaction = {txid: unspentReply.result[j].txid, vout: unspentReply.result[j].vout};
+                var transaction = {txid: unspentReply.result[j].txid, vout: unspentReply.result[j].vout, amount: amount};
                 transactions.push(transaction);
             }
             callback(null, transactions);
@@ -196,7 +238,7 @@ CryptoProxy.prototype.getUnspentOfAddresses_ = function(addresses, callback) {
     });
 };
 
-CryptoProxy.prototype.getHotChangeAddress_ = function(callback) {
+CryptoProxy.prototype.getAHotAddressByRandom_ = function(callback) {
     var self = this;
     this.getAddressesByAccount(this.HOT_ACCOUNT, function(errAddr, retAddr){
         if (errAddr) {
@@ -207,13 +249,13 @@ CryptoProxy.prototype.getHotChangeAddress_ = function(callback) {
                     if (error || results.length != this.HOT_ADDRESS_NUM) {
                         callback(error);
                     } else {
-                        var changePos = Math.floor(Math.random()*this.HOT_ADDRESS_NUM);
-                        callback(results[changePos]);
+                        var pos = Math.floor(Math.random()*this.HOT_ADDRESS_NUM);
+                        callback(results[pos]);
                     }
                 });
             } else {
-                var changePos = Math.floor(Math.random()*retAddr.result.length);
-                callback(retAddr.result[changePos]);
+                var pos = Math.floor(Math.random()*retAddr.result.length);
+                callback(retAddr.result[pos]);
             }
         }
     });
