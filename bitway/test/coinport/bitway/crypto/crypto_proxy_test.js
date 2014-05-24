@@ -71,7 +71,7 @@ describe('crypto proxy', function() {
             var redisClient = new MockRedis();
             redisClient.map['81fd055aeb9122673c3c98ca493871048eeb542c0876f3b5396f4b244501eca8'] = [1, 8];
             var cryptoProxy = new CryptoProxy(Currency.BTC, {
-                cryptoRpc: new MockRpc({fail: 'partial', blockCount: 244498}),
+                cryptoRpc: new MockRpc({blockCount: 244498}),
                 minConfirm: 1,
                 redis: redisClient
             });

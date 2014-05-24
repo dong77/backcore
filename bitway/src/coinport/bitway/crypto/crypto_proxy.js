@@ -281,8 +281,19 @@ CryptoProxy.prototype.getAHotAddressByRandom_ = function(callback) {
 };
 
 CryptoProxy.prototype.generateAHotAddress_ = function(unusedIndex, callback) {
-    this.rpc.getNewAddress(CryptoProxy.HOT_ACCOUNT, function(error, address) {
-        CryptoProxy.invokeCallback(error, function() {return address.result}, callback);
+    var self = this;
+    self.rpc.getNewAddress(CryptoProxy.HOT_ACCOUNT, function(error, address) {
+        if (error) {
+            self.log.err(error);
+            callback(error);
+        } else {
+            var addresses = [];
+            addresses.push(address.result);
+            var gar = new GenerateAddressesResult({error: ErrorCode.OK, addresses: addresses, 
+                addressType: CryptoCurrencyAddressType.HOT});
+            self.makeNormalResponse_(BitwayResponseType.GENERATE_ADDRESS, self.currency, gar);
+            callback(null, address.result);
+        }
     });
 };
 
