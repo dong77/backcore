@@ -115,6 +115,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cQueryAccountResult = BinaryScalaCodec(QueryAccountResult)
   lazy val _cQueryAccountStatistics = BinaryScalaCodec(QueryAccountStatistics)
   lazy val _cQueryAccountStatisticsResult = BinaryScalaCodec(QueryAccountStatisticsResult)
+  lazy val _cQueryActiveActors = BinaryScalaCodec(QueryActiveActors)
+  lazy val _cQueryActiveActorsResult = BinaryScalaCodec(QueryActiveActorsResult)
   lazy val _cQueryApiSecrets = BinaryScalaCodec(QueryApiSecrets)
   lazy val _cQueryApiSecretsResult = BinaryScalaCodec(QueryApiSecretsResult)
   lazy val _cQueryAsset = BinaryScalaCodec(QueryAsset)
@@ -287,6 +289,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: QueryAccountResult => _cQueryAccountResult(m)
     case m: QueryAccountStatistics => _cQueryAccountStatistics(m)
     case m: QueryAccountStatisticsResult => _cQueryAccountStatisticsResult(m)
+    case m: QueryActiveActors => _cQueryActiveActors(m)
+    case m: QueryActiveActorsResult => _cQueryActiveActorsResult(m)
     case m: QueryApiSecrets => _cQueryApiSecrets(m)
     case m: QueryApiSecretsResult => _cQueryApiSecretsResult(m)
     case m: QueryAsset => _cQueryAsset(m)
@@ -463,6 +467,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[QueryAccountResult.Immutable] => _cQueryAccountResult.invert(bytes).get
     case Some(c) if c == classOf[QueryAccountStatistics.Immutable] => _cQueryAccountStatistics.invert(bytes).get
     case Some(c) if c == classOf[QueryAccountStatisticsResult.Immutable] => _cQueryAccountStatisticsResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryActiveActors.Immutable] => _cQueryActiveActors.invert(bytes).get
+    case Some(c) if c == classOf[QueryActiveActorsResult.Immutable] => _cQueryActiveActorsResult.invert(bytes).get
     case Some(c) if c == classOf[QueryApiSecrets.Immutable] => _cQueryApiSecrets.invert(bytes).get
     case Some(c) if c == classOf[QueryApiSecretsResult.Immutable] => _cQueryApiSecretsResult.invert(bytes).get
     case Some(c) if c == classOf[QueryAsset.Immutable] => _cQueryAsset.invert(bytes).get

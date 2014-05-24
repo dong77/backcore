@@ -261,3 +261,7 @@ typedef data.AddressStatusResult                _AddressStatusResult
 /* C    */ struct SetNotification                         {1: _Notification notification}
 /* Q    */ struct QueryNotification                       {1: optional i64 id, 2: optional _NotificationType ntype, 3: optional bool getRemoved, 4: _Cursor cur}
 /* R    */ struct QueryNotificationResult                 {1: list<_Notification> notifications, 2: i64 count}
+
+////////// monitor
+/* Q    */ struct QueryActiveActors                       {}
+/* R    */ struct QueryActiveActorsResult                 {1: map<string, list<string>> actorPaths}

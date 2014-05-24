@@ -27,11 +27,12 @@ import com.coinport.coinex.data._
 import akka.cluster.Cluster
 import akka.actor.Terminated
 import com.typesafe.config.Config
+import scala.collection.mutable.Set
 
 /**
  * TODO(d): finish this class.
  */
-class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config)(implicit cluster: Cluster)
+class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config, allPaths: List[String])(implicit cluster: Cluster)
     extends Actor with HttpService with spray.httpx.SprayJsonSupport with ActorLogging {
   val actorRefFactory = context
   implicit def executionContext = context.dispatcher
@@ -41,13 +42,17 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config)(implic
   override def preStart = {
     super.preStart()
     watchAllActor
-    // actorStateMonitorSchedule
+    actorStateMonitorSchedule
   }
 
   def receive = runRoute(route) orElse {
     case Terminated(actor) => {
       log.error("[ERROR]ACTOR WAS TERMINATED >>>> " + actor.toString)
       sendMonitorEmail("[ERROR]ACTOR WAS TERMINATED >>>> " + actor.toString)
+    }
+
+    case QueryActiveActors() => {
+      sender ! QueryActiveActorsResult(fetchAllActiveState)
     }
   }
 
@@ -69,16 +74,48 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config)(implic
 
   def actorStateMonitorSchedule {
     context.system.scheduler.schedule(0 second, 5 seconds) {
-      for (path <- actorPaths; clusterMember <- cluster.state.members) {
-        val f = cluster.system.actorSelection(clusterMember.address.toString + path).resolveOne(5 seconds)
+      for (path <- allPaths; clusterMember <- cluster.state.members) {
+        val f = cluster.system.actorSelection(clusterMember.address.toString + "/user/" + path).resolveOne(5 seconds)
         f onSuccess {
           case m => {
-            log.info("actor >>>>>>> " + m.path.toString)
+            log.debug("actor >>>>>>> " + m.path.toString)
           }
         }
-        f onFailure { case m => log.warning("unknow actor path >>>> " + clusterMember.address.toString + path) }
+        f onFailure {
+          case m => {
+            log.warning("unknow actor path >>>> " + clusterMember.address.toString + "/user/" + path)
+          }
+        }
       }
     }
+  }
+
+  def fetchAllActiveState: Map[String, Seq[String]] = {
+
+    var statesMap = Map.empty[String, Seq[String]]
+    var sendNum = 0
+    var getNum = 0
+    cluster.state.members map { c =>
+      var statesSeq = Set.empty[String]
+      allPaths map { p =>
+        sendNum += 1
+        val f = cluster.system.actorSelection(c.address.toString + "/user/" + p).resolveOne(2 seconds)
+        f onSuccess {
+          case m => {
+            getNum += 1
+            statesSeq += m.path.toStringWithoutAddress
+          }
+        }
+        f onFailure {
+          case m => getNum += 1
+        }
+      }
+      while (sendNum != getNum) {
+        // do nothing
+      }
+      statesMap += c.address.toString -> statesSeq.toSeq
+    }
+    statesMap
   }
 
   val route: Route = {

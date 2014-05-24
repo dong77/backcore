@@ -48,6 +48,7 @@ import com.coinport.coinex.admin.NotificationReaderWriter
 class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(implicit cluster: Cluster) extends Object with Logging {
   implicit val system = cluster.system
   val paths = new ListBuffer[String]
+  val allPaths = new ListBuffer[String]
   val secret = config.getString("akka.exchange.secret")
   val userManagerSecret = MHash.sha256Base64(secret + "userProcessorSecret")
   val apiAuthSecret = MHash.sha256Base64(secret + "apiAuthSecret")
@@ -130,7 +131,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     routers
   }
 
-  private def deploySingleton(props: => Props, name: String) =
+  private def deploySingleton(props: => Props, name: String) = {
+    allPaths += name + "/singleton"
     if (cluster.selfRoles.contains(name)) {
       val actor = system.actorOf(ClusterSingletonManager.props(
         singletonProps = props,
@@ -140,14 +142,18 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
         name = name)
       paths += actor.path.toStringWithoutAddress + "/singleton"
     }
+  }
 
-  private def deploy(props: => Props, name: String) =
+  private def deploy(props: => Props, name: String) = {
+    allPaths += name
     if (cluster.selfRoles.contains(name)) {
       val actor = system.actorOf(props, name)
       paths += actor.path.toStringWithoutAddress
     }
+  }
 
   private def deployMailer(name: String) = {
+    allPaths += name
     if (cluster.selfRoles.contains(name)) {
       val mandrilApiKey = config.getString("akka.exchange.mailer.mandrill-api-key")
       val handler = new MandrillMailHandler(mandrilApiKey)
@@ -160,7 +166,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
   private def deployMonitor(routers: LocalRouters) = {
     if (cluster.selfRoles.contains(monitor_service <<)) {
       val service = system.actorOf(ClusterSingletonManager.props(
-        singletonProps = Props(new Monitor(paths.toList, routers.mailer, config: Config)),
+        singletonProps = Props(new Monitor(paths.toList, routers.mailer, config: Config, allPaths.toList)),
         singletonName = "singleton",
         terminationMessage = PoisonPill,
         role = Some(monitor_service <<)),
