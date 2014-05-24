@@ -268,8 +268,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
 
   def adjustAddressAmount(address: String, adjustAmount: Long) {
     val status = addressStatus.getOrElse(address, AddressStatus())
-    status.updateBook(Some(-1), Some(adjustAmount))
-    addressStatus += (address -> status)
+    addressStatus += (address -> status.updateBook(Some(-1), Some(adjustAmount)))
   }
 
   def getAddressAmount(address: String): Long = {

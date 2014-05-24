@@ -220,7 +220,7 @@ class BitwayManagerSpec extends Specification {
           Some(Withdrawal), Confirming))
     }
 
-    "getAddressStatus/getNetworkStatus test" in {
+    "getAddressStatus/getNetworkStatus/adjustAddressAmount test" in {
       val bwm = new BitwayManager(Btc, 10)
       bwm.faucetAddress(UserUsed, Set("u1", "u2", "u3", "u4", "u5", "u6"))
       bwm.faucetAddress(Hot, Set("h1", "h2"))
@@ -274,6 +274,11 @@ class BitwayManagerSpec extends Specification {
       bwm.getAddressStatus(Hot) mustEqual Map("h2" -> AddressStatusResult(Some("t2"), Some(2), 0), "h1" -> AddressStatusResult(Some("t2"), Some(2), -1400))
       bwm.getAddressStatus(UserUsed) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), 400), "u1" -> AddressStatusResult(Some("t1"), Some(1), 1000))
       bwm.getAddressStatus(Cold) mustEqual Map.empty[String, BlockIndex]
+
+      bwm.getAddressAmount("h1") mustEqual -1400
+      bwm.canAdjustAddressAmount("h1", 1500) mustEqual true
+      bwm.adjustAddressAmount("h1", 1500)
+      bwm.getAddressAmount("h1") mustEqual 100
     }
   }
 }
