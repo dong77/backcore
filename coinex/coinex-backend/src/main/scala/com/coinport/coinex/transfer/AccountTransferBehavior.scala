@@ -23,7 +23,7 @@ trait AccountTransferBehavior {
   val internalUserId: Int = 0
 
   // message need to send to processors
-  private val messageBox = ListBuffer.empty[CryptoncyncyTransferItem]
+  private val messageBox = ListBuffer.empty[CryptoCurrencyTransferItem]
   //message need to write to mongo
   private val mongoWriteList = ListBuffer.empty[CryptoCurrencyTransferItem]
 
