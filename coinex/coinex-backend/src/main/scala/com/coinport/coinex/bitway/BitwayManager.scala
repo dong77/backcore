@@ -276,6 +276,11 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     status.getAmount(getCurrentHeight, 1)
   }
 
+  def includeWithdrawalToDepositAddress(infos: Seq[CryptoCurrencyTransferInfo]): Boolean = {
+    infos.exists(info => (info.to.isDefined && info.from.isDefined &&
+      addresses(Hot).contains(info.from.get) && addresses(UserUsed).contains(info.to.get)))
+  }
+
   private def getCurrentHeight: Option[Long] = {
     blockIndexes.lastOption match {
       case None => None

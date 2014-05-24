@@ -54,6 +54,7 @@ enum ErrorCode {
     INVALID_REQUEST_ADDRESS_NUM      = 8002
     RPC_ERROR                        = 8003
     NO_ADDRESS_FOUND                 = 8004
+    WITHDRAWAL_TO_DEPOSIT_ADDRESS    = 8005
 
     // Controller
     PARAM_EMPTY                      = 9001

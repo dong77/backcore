@@ -280,5 +280,22 @@ class BitwayManagerSpec extends Specification {
       bwm.adjustAddressAmount("h1", 1500)
       bwm.getAddressAmount("h1") mustEqual 100
     }
+
+    "disable withdrawal to deposit address" in {
+      val bwm = new BitwayManager(Btc, 10)
+      bwm.faucetAddress(UserUsed, Set("u1", "u2", "u3", "u4", "u5", "u6"))
+      bwm.faucetAddress(Hot, Set("h1", "h2"))
+      bwm.faucetAddress(Cold, Set("c1"))
+
+      bwm.includeWithdrawalToDepositAddress(Seq(
+        CryptoCurrencyTransferInfo(1, from = Some("h1"), to = Some("c1")),
+        CryptoCurrencyTransferInfo(2, from = Some("c1"), to = Some("h2"))
+      )) mustEqual false
+
+      bwm.includeWithdrawalToDepositAddress(Seq(
+        CryptoCurrencyTransferInfo(2, from = Some("c1"), to = Some("h2")),
+        CryptoCurrencyTransferInfo(1, from = Some("h1"), to = Some("u1"))
+      )) mustEqual true
+    }
   }
 }
