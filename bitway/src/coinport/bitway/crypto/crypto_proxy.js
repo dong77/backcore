@@ -5,22 +5,24 @@
 
 'use strict'
 
-var Async                     = require('async'),
-    Bitcore                   = require('bitcore'),
-    Events                    = require('events'),
-    Util                      = require("util"),
-    Crypto                    = require('crypto'),
-    Redis                     = require('redis'),
-    DataTypes                 = require('../../../../gen-nodejs/data_types'),
-    MessageTypes              = require('../../../../gen-nodejs/message_types'),
-    BitwayMessage             = MessageTypes.BitwayMessage,
-    BitwayResponseType        = DataTypes.BitwayResponseType,
-    ErrorCode                 = DataTypes.ErrorCode,
-    GenerateAddressesResult   = MessageTypes.GenerateAddressesResult,
-    TransferStatus            = DataTypes.TransferStatus,
-    CryptoCurrencyAddressType = DataTypes.CryptoCurrencyAddressType,
-    Logger                    = require('../logger'),
-    TransferType              = DataTypes.TransferType;
+var Async                         = require('async'),
+    Bitcore                       = require('bitcore'),
+    Events                        = require('events'),
+    Util                          = require("util"),
+    Crypto                        = require('crypto'),
+    Redis                         = require('redis'),
+    DataTypes                     = require('../../../../gen-nodejs/data_types'),
+    MessageTypes                  = require('../../../../gen-nodejs/message_types'),
+    BitwayMessage                 = MessageTypes.BitwayMessage,
+    CryptoCurrencyBlockMessage    = MessageTypes.CryptoCurrencyBlockMessage,
+    BitwayResponseType            = DataTypes.BitwayResponseType,
+    ErrorCode                     = DataTypes.ErrorCode,
+    GenerateAddressesResult       = MessageTypes.GenerateAddressesResult,
+    TransferStatus                = DataTypes.TransferStatus,
+    CryptoCurrencyAddressType     = DataTypes.CryptoCurrencyAddressType,
+    Logger                        = require('../logger'),
+    TransferType                  = DataTypes.TransferType,
+    BlockIndex                    = DataTypes.BlockIndex;
 
 /**
  * Handle the crypto currency network event
@@ -73,11 +75,14 @@ CryptoProxy.HOT_ADDRESS_NUM = 10;
 
 CryptoProxy.EventType = {
     TX_ARRIVED : 'tx_arrived',
-    BLOCK_ARRIVED : 'block_arrived'
+    BLOCK_ARRIVED : 'block_arrived',
+    HOT_ADDRESS_GENERATE : 'hot_address_generate'
 };
 
 CryptoProxy.prototype.generateUserAddress = function(request, callback) {
     var self = this;
+    self.log.info('** Generate User Address Request Received **');
+    self.log.info("generateUserAddress req: " + JSON.stringify(request));
     if (request.num < CryptoProxy.MIN_GENERATE_ADDR_NUM || request.num > CryptoProxy.MAX_GENERATE_ADDR_NUM) {
         callback(self.makeNormalResponse_(BitwayResponseType.GENERATE_ADDRESS, self.currency,
             new GenerateAddressesResult({error: ErrorCode.INVALID_REQUEST_ADDRESS_NUM})));
@@ -97,6 +102,7 @@ CryptoProxy.prototype.generateUserAddress = function(request, callback) {
 CryptoProxy.prototype.transfer = function(request, callback) {
     var self = this;
     self.log.info('** TransferRequest Received **');
+    self.log.info("transfer req: " + JSON.stringify(request));
     var ids = [];
     for (var i = 0; i < request.transferInfos.length; i++) {
         ids.push(request.transferInfos[i].id);
@@ -233,9 +239,6 @@ CryptoProxy.prototype.getAllHotAddresses_ = function(callback) {
 
 CryptoProxy.prototype.getUnspentOfAddresses_ = function(addresses, callback) {
     var self = this;
-    console.log(self.minConfirm);
-    console.log(CryptoProxy.MAX_CONFIRM_NUM);
-    console.log(addresses);
     self.rpc.listUnspent(self.minConfirm, CryptoProxy.MAX_CONFIRM_NUM, 
         addresses, function(unspentError, unspentReply) {
         if (unspentError) {
@@ -248,7 +251,6 @@ CryptoProxy.prototype.getUnspentOfAddresses_ = function(addresses, callback) {
                 vout: unspentReply.result[i].vout, amount: unspentReply.result[i].amount};
                 transactions.push(transaction);
             }
-            console.log(transactions);
             callback(null, transactions);
         }
     });
@@ -258,7 +260,7 @@ CryptoProxy.prototype.getAHotAddressByRandom_ = function(callback) {
     var self = this;
     self.rpc.getAddressesByAccount(CryptoProxy.HOT_ACCOUNT, function(errAddr, retAddr){
         if (errAddr) {
-            console.error(errAddr);
+            self.log.error(errAddr);
             callback(errAddr);
         } else {
             if (retAddr.result.length == 0) {
@@ -291,7 +293,8 @@ CryptoProxy.prototype.generateAHotAddress_ = function(unusedIndex, callback) {
             addresses.push(address.result);
             var gar = new GenerateAddressesResult({error: ErrorCode.OK, addresses: addresses, 
                 addressType: CryptoCurrencyAddressType.HOT});
-            self.makeNormalResponse_(BitwayResponseType.GENERATE_ADDRESS, self.currency, gar);
+            self.emit(CryptoProxy.EventType.HOT_ADDRESS_GENERATE,
+                self.makeNormalResponse_(BitwayResponseType.GENERATE_ADDRESS, self.currency, gar));
             callback(null, address.result);
         }
     });
@@ -301,8 +304,8 @@ CryptoProxy.prototype.createRawTransaction_ = function(rawData, callback) {
     var self = this;
     var transactions = rawData.transactions;
     var addresses = rawData.addresses;
-    self.log.info(transactions);
-    self.log.info(addresses);
+    self.log.debug(transactions);
+    self.log.debug(addresses);
     this.rpc.createRawTransaction(transactions, addresses, function(error, createReply) {
         if (error) {
             self.log.error("create error: " + error);
@@ -376,6 +379,89 @@ CryptoProxy.prototype.checkTx_ = function() {
         }
         self.checkTxAfterDelay_();
     });
+};
+
+CryptoProxy.prototype.getMissedBlocks_ = function(request, callback) {
+    var self = this;
+    self.log.info('** Get Missed Request Received **');
+    self.log.info("getMissedBlocks req:" + JSON.stringify(request));
+    self.checkMissedRange_.bind(self)(request);
+    Async.compose(self.getReorgBlock_.bind(self), 
+        self.getReorgPosition_.bind(self))(request, function(err, reorgBlock) { 
+            if (err) {
+                self.log.error(err);
+                callback(err);
+            } else {
+                if (reorgBlock.block) {
+                    self.redis.set(self.lastIndex, reorgBlock.block.index.height,function(error, replay) {
+                        if (!error) {
+                            callback(null, self.makeNormalResponse_(BitwayResponseType.GET_MISSED_BLOCKS, self.currency, reorgBlock));
+                        } else {
+                            self.log.error(error);
+                            callback(error);
+                        }
+                    });
+                }
+                callback(null, self.makeNormalResponse_(BitwayResponseType.GET_MISSED_BLOCKS, self.currency, reorgBlock));
+            }
+        });
+};
+
+CryptoProxy.prototype.checkMissedRange_ = function(request) {
+    var self = this;
+    var behind = request.endIndex.height - request.startIndexs[request.startIndexs.length - 1].height;
+    self.log.warn("Behind: " + behind);
+};
+
+CryptoProxy.prototype.getReorgPosition_ = function(request, callback) {
+    var self = this;
+    var indexes = request.startIndexs.map(function(element) {return Number(element.height)});
+    Async.map(indexes, self.getBlockHash_.bind(self), function(error, hashArray) {
+        if (error) {
+            self.log.error(error);
+            callback(error);
+        } else {
+            var position = 0;
+            var flag = false;
+            for (var i = 0; i < request.startIndexs.length; i++) {
+               position = i;
+               if (request.startIndexs[i].id != hashArray[i]) {
+                   flag = true;
+                   break;
+               }
+            }
+            if (flag) {
+                if (position == 0) {
+                    self.log.error("###### fatal forked ###### height: ", indexes[position]);
+                    callback(null, -1);
+                } else {
+                    self.log.error("###### forked ###### height: ", indexes[position] - 1);
+                    callback(null, request.startIndexs[position -1]);
+                }
+            } else {
+                callback(null, request.startIndexs[position]);
+            }
+        }
+    });
+};
+
+CryptoProxy.prototype.getReorgBlock_ = function(index, callback) {
+    var self = this;
+    if (index == -1) {
+        var gmb = new CryptoCurrencyBlockMessage({reorgIndex: new BlockIndex(null, null)});
+        callback(null, gmb);
+    } else {
+            self.getCCBlockByIndex_.bind(self)(index.height + 1, function(error, block){
+                if (error) {
+                    self.log.error(error);
+                    callback(error);
+                } else {
+                    self.log.info(block);
+                    var gmb = new CryptoCurrencyBlockMessage({reorgIndex: index, block: block});
+                    callback(null, gmb);
+                }
+            });
+    }
 };
 
 CryptoProxy.prototype.checkBlock_ = function() {
@@ -560,7 +646,6 @@ CryptoProxy.prototype.getSigId_ = function(cctx, vinTxids) {
     }
     var sha256 = Crypto.createHash('sha256');
     sha256.update(sigId);
-    self.log.info("raw sigId: " + sigId);
     return sha256.digest('hex');
 };
 
@@ -612,6 +697,7 @@ CryptoProxy.prototype.getCCBlockFromBlockInfo_ = function(block, callback) {
 };
 
 CryptoProxy.prototype.makeNormalResponse_ = function(type, currency, response) {
+    this.log.info("response: " + JSON.stringify(response));
     switch (type) {
         case BitwayResponseType.GENERATE_ADDRESS:
             return new BitwayMessage({currency: currency, generateAddressResponse: response});
@@ -620,9 +706,9 @@ CryptoProxy.prototype.makeNormalResponse_ = function(type, currency, response) {
             return new BitwayMessage({currency: currency, tx: response});
         case BitwayResponseType.GET_MISSED_BLOCKS:
         case BitwayResponseType.AUTO_REPORT_BLOCKS:
-            return new BitwayMessage({currency: currency, blocksMsg: response});
+            return new BitwayMessage({currency: currency, blockMsg: response});
         default:
-            console.log("Inavalid Type!");
+            this.log.error("Inavalid Type!");
             return null
     }
 };
@@ -634,3 +720,13 @@ CryptoProxy.invokeCallback = function(error, resultFun, callback) {
         callback(null, resultFun());
     }
 };
+
+
+var logo = "\n" +
+" _    _ _                     \n" +
+"| |__(_) |___ __ ____ _ _  _  \n" +
+"| '_ \\ |  _\\ V  V / _` | || | \n" +
+"|_.__/_|\\__|\\_/\\_/\\__,_|\\_, | \n" +
+"                        |__/  \n";
+console.log(logo);
+
