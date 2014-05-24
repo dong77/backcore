@@ -149,13 +149,13 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
           case Deposit if item.status.get == Succeeded =>
             deliverToAccountManager(CryptoTransferSucceeded(transferHandler.get(item.accountTransferId.get).get))
           case UserToHot =>
-            handleMessage(CryptoCurrencyTransferInfo(item.id.get, None, item.from.get.internalAmount, item.from.get.amount, Some(item.from.get.address)), item)
+            handleMessage(CryptoCurrencyTransferInfo(item.id, None, item.from.get.internalAmount, item.from.get.amount, Some(item.from.get.address)), item)
           case Withdrawal =>
-            handleMessage(CryptoCurrencyTransferInfo(item.id.get, Some(item.to.get.address), item.to.get.internalAmount, item.to.get.amount, None), item)
+            handleMessage(CryptoCurrencyTransferInfo(item.id, Some(item.to.get.address), item.to.get.internalAmount, item.to.get.amount, None), item)
           case ColdToHot =>
-            handleMessage(CryptoCurrencyTransferInfo(item.id.get, None, item.to.get.internalAmount, None, None), item)
+            handleMessage(CryptoCurrencyTransferInfo(item.id, None, item.to.get.internalAmount, None, None), item)
           case HotToCold =>
-            handleMessage(CryptoCurrencyTransferInfo(item.id.get, None, item.to.get.internalAmount, None, None), item)
+            handleMessage(CryptoCurrencyTransferInfo(item.id, None, item.to.get.internalAmount, None, None), item)
           case _ =>
         }
     }
@@ -169,7 +169,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   def handleMessage(info: CryptoCurrencyTransferInfo, item: CryptoCurrencyTransferItem) {
     item.status.get match {
       case Confirming =>
-        deliverToBitwayProcessor(item.currency.get, TransferCryptoCurrency(item.currency.get, List(info), item.txType.get))
+        deliverToBitwayProcessor(item.currency, TransferCryptoCurrency(item.currency, List(info), item.txType.get))
       case Succeeded =>
         deliverToAccountManager(CryptoTransferSucceeded(transferHandler.get(item.accountTransferId.get).get))
       case Failed if item.txType.get != UserToHot && item.txType != ColdToHot => //UserToHot fail will do nothing

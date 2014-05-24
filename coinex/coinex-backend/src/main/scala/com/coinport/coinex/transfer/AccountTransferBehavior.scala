@@ -23,7 +23,7 @@ trait AccountTransferBehavior {
   val internalUserId: Int = 0
 
   // message need to send to processors
-  private val messageBox = ListBuffer.empty[CryptoCurrencyTransferItem]
+  private val messageBox = ListBuffer.empty[CryptoncyncyTransferItem]
   //message need to write to mongo
   private val mongoWriteList = ListBuffer.empty[CryptoCurrencyTransferItem]
 
@@ -120,8 +120,8 @@ trait AccountTransferBehavior {
 
   private def prepareItemSendToBitway(t: AccountTransfer, from: Option[CryptoCurrencyTransactionPort], to: Option[CryptoCurrencyTransactionPort]) {
     clearResList
-    // id, sigId, txid, userId, currency, from, to(external address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
-    val cryptoCurrencyTransferItem = CryptoCurrencyTransferItem(Some(manager.getNewTransferItemId), None, None, Some(t.userId), Some(t.currency), from, to, None, Some(t.`type`), Some(Confirming), None, Some(t.id), Some(System.currentTimeMillis()))
+    // id, currency, sigId, txid, userId, from, to(external address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
+    val cryptoCurrencyTransferItem = CryptoCurrencyTransferItem(manager.getNewTransferItemId, t.currency, None, None, Some(t.userId), from, to, None, Some(t.`type`), Some(Confirming), None, Some(t.id), Some(System.currentTimeMillis()))
     setResState(Updator.copy(item = cryptoCurrencyTransferItem, addMsgBox = true, addMongo = true, putItem = true)) //send message to bitway
   }
 
@@ -211,8 +211,8 @@ trait AccountTransferBehavior {
                         transferHandler.put(AccountTransfer(transferId, outputPort.userId.get, tx.txType.get, currency, outputPort.internalAmount.get, Confirming, Some(System.currentTimeMillis())))
                         val newTransferItemId = manager.getNewTransferItemId
                         manager.saveItemIdToMap(sigIdToItemMap, tx.sigId.get, outputPort, newTransferItemId)
-                        // id, sigId, txid, userId, currency, from, to(user's internal address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
-                        CryptoCurrencyTransferItem(Some(newTransferItemId), tx.sigId, tx.txid, outputPort.userId, Some(currency), None, Some(outputPort), tx.includedBlock, tx.txType, Some(Confirming), None, Some(transferId), Some(System.currentTimeMillis()))
+                        // id, currency, sigId, txid, userId, from, to(user's internal address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
+                        CryptoCurrencyTransferItem(newTransferItemId, currency, tx.sigId, tx.txid, outputPort.userId, None, Some(outputPort), tx.includedBlock, tx.txType, Some(Confirming), None, Some(transferId), Some(System.currentTimeMillis()))
                     }
                   setResState(Updator.copy(item = toSaveDepositLikeItem, addMongo = true, putItem = true))
               }
@@ -262,8 +262,8 @@ trait AccountTransferBehavior {
               manager.setLastTransferId(transferId)
               transferHandler.put(AccountTransfer(transferId, item.userId.get, TransferType.UserToHot, currency, item.to.get.internalAmount.get, Confirming, Some(System.currentTimeMillis())))
               val user2HotItem =
-                // id, sigId, txid, userId, currency, from, to(hot address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
-                CryptoCurrencyTransferItem(Some(manager.getNewTransferItemId), None, None, item.userId, Some(currency), item.to, None, None, Some(UserToHot), Some(Confirming), item.id, Some(transferId), Some(System.currentTimeMillis()))
+                // id, currency, sigId, txid, userId, from, to(hot address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
+                CryptoCurrencyTransferItem(manager.getNewTransferItemId, currency, None, None, item.userId, item.to, None, None, Some(UserToHot), Some(Confirming), Some(item.id), Some(transferId), Some(System.currentTimeMillis()))
               setResState(Updator.copy(item = user2HotItem, addMongo = true, addMsgBox = true, putItem = true))
             }
           case UserToHot if item.includedBlock.isDefined =>
@@ -280,7 +280,7 @@ trait AccountTransferBehavior {
     manager.succeededMap.values foreach {
       item =>
         if (lastBlockHeight - item.includedBlock.get.height.get > succeededRetainHeight) {
-          manager.succeededMap.remove(item.id.get)
+          manager.succeededMap.remove(item.id)
         }
     }
   }
@@ -289,7 +289,7 @@ trait AccountTransferBehavior {
     val confirmed = lastBlockHeight - item.includedBlock.get.height.getOrElse(Long.MaxValue) >= confirmableHeight - 1
     if (confirmed) {
       val statusUpdate = if (notDeposit) Succeeded else Confirmed
-      setAccountTransferStatus(manager.transferMap, item.id.get, statusUpdate)
+      setAccountTransferStatus(manager.transferMap, item.id, statusUpdate)
       setResState(Updator.copy(item = item.copy(status = Some(statusUpdate)), addMongo = true, addMsgBox = notDeposit, rmItem = notDeposit, putItem = !notDeposit))
       if (item.txType.get == ColdToHot) {
         manager.removeItemIdFromMap(manager.coldToHotSigId2TxPortIdMap, item.sigId.get, item.to.get)
@@ -371,12 +371,12 @@ trait AccountTransferBehavior {
     if (up.addMongo) mongoWriteList.append(up.item)
     if (up.addMsgBox) messageBox.append(up.item)
     if (up.rmItem) {
-      manager.transferMap.remove(up.item.id.get)
+      manager.transferMap.remove(up.item.id)
       if (up.item.status.get == Succeeded) {
-        manager.succeededMap.put(up.item.id.get, up.item)
+        manager.succeededMap.put(up.item.id, up.item)
       }
     }
-    if (up.putItem) manager.transferMap.put(up.item.id.get, up.item.copy(updated = Some(System.currentTimeMillis())))
+    if (up.putItem) manager.transferMap.put(up.item.id, up.item.copy(updated = Some(System.currentTimeMillis())))
   }
 
   val transferHandler = new SimpleJsonMongoCollection[AccountTransfer, AccountTransfer.Immutable]() {
@@ -397,7 +397,7 @@ trait AccountTransferBehavior {
 
   val transferItemHandler = new SimpleJsonMongoCollection[CryptoCurrencyTransferItem, CryptoCurrencyTransferItem.Immutable]() {
     lazy val coll = db("transferitems")
-    def extractId(item: CryptoCurrencyTransferItem) = item.id.get
+    def extractId(item: CryptoCurrencyTransferItem) = item.id
 
     def getQueryDBObject(q: QueryCryptoCurrencyTransfer): MongoDBObject = {
       var query = MongoDBObject()

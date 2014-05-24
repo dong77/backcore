@@ -77,7 +77,7 @@ class AccountProcessor(
         }
 
       case HotToCold =>
-        if (manager.canUpdateHotAccount(CashAccount(t.currency, -t.amount, 0, t.amount))) {
+        if (!manager.canUpdateHotAccount(CashAccount(t.currency, -t.amount, 0, t.amount))) {
           sender ! RequestTransferFailed(InsufficientHot)
         } else {
           persist(DoRequestTransfer(t)) { event =>
@@ -87,7 +87,7 @@ class AccountProcessor(
         }
 
       case ColdToHot =>
-        if (manager.canUpdateColdAccount(CashAccount(t.currency, -t.amount, 0, t.amount))) {
+        if (!manager.canUpdateColdAccount(CashAccount(t.currency, -t.amount, 0, t.amount))) {
           sender ! RequestTransferFailed(InsufficientCold)
         } else {
           persist(DoRequestTransfer(t)) { event =>

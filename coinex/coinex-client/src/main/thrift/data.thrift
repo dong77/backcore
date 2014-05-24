@@ -511,11 +511,11 @@ struct CryptoCurrencyBlock {
 }
 
 struct CryptoCurrencyTransferItem {
-    1: optional i64 id
-    2: optional string sigId
-    3: optional string txid
-    4: optional i64 userId
-    5: optional Currency currency
+    1: i64 id
+    2: Currency currency
+    3: optional string sigId
+    4: optional string txid
+    5: optional i64 userId
     6: optional CryptoCurrencyTransactionPort from
     7: optional CryptoCurrencyTransactionPort to
     8: optional BlockIndex includedBlock
