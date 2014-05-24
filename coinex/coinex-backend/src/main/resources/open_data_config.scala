@@ -1,8 +1,8 @@
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
-import com.coinport.coinex.opendata.OpenDataConfig
-import scala.concurrent.duration._
+import com.coinport.coinex.opendata._
 import com.coinport.coinex.serializers._
+import scala.concurrent.duration._
 
 import Implicits._
 
@@ -18,5 +18,6 @@ new OpenDataConfig {
   override val debugSnapshotHdfsDir = "/debug/snapshot"
   override val hdfsHost = "hdfs://hadoop:54310"
   override val scheduleInterval = 900 second
-  override val snapshotSerializerMap = Map(TAccountTransferState.Immutable.getClass.getEnclosingClass.getSimpleName -> DebugJsonSerializer)
+  override val openSnapshotSerializerMap = Map(TAccountTransferState.Immutable.getClass.getEnclosingClass.getSimpleName -> OpenDataJsonSerializer)
+  override val openSnapshotFilterMap = Map(TAccountTransferState.Immutable.getClass.getEnclosingClass.getSimpleName -> TAccountTransferStateFilter)
 }

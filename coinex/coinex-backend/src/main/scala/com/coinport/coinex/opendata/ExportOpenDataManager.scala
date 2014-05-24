@@ -30,7 +30,8 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
   private val exportSnapshotHdfsDir = openDataConfig.exportSnapshotHdfsDir
   private val exportMessagesHdfsDir = openDataConfig.exportMessagesHdfsDir
   private val debugSnapshotHdfsDir = openDataConfig.debugSnapshotHdfsDir
-  private val snapshotSerializerMap = openDataConfig.snapshotSerializerMap
+  private val openSnapshotSerializerMap = openDataConfig.openSnapshotSerializerMap
+  private val openSnapshotFilterMap = openDataConfig.openSnapshotFilterMap
   private val snapshotHdfsDir: String = config.getString("hadoop-snapshot-store.snapshot-dir")
   private val messagesTable = config.getString("hbase-journal.table")
   private val messagesFamily = config.getString("hbase-journal.family")
@@ -101,14 +102,8 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
               IOUtils.toByteArray
             }, classOf[Snapshot])
         val className = snapshot.data.getClass.getEnclosingClass.getSimpleName
-        writeSnapshot(exportSnapshotHdfsDir, processorId, seqNum, snapshot, PrettyJsonSerializer, className)
-        val debugSerializer =
-          if (snapshotSerializerMap.contains(className)) {
-            snapshotSerializerMap(className)
-          } else {
-            DebugJsonSerializer
-          }
-        writeSnapshot(debugSnapshotHdfsDir, processorId, seqNum, snapshot, debugSerializer, className)
+        writeSnapshot(debugSnapshotHdfsDir, processorId, seqNum, snapshot, className, true)
+        writeSnapshot(exportSnapshotHdfsDir, processorId, seqNum, snapshot, className)
         seqNum
       case _ => processedSeqNum - 1
     }
@@ -178,10 +173,19 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
     }
   }
 
-  def writeSnapshot(outputDir: String, processorId: String, seqNum: Long, snapshot: Snapshot, serializer: BaseJsonSerializer, className: String) {
+  def writeSnapshot(outputDir: String, processorId: String, seqNum: Long, snapshot: Snapshot, className: String, isOpen: Boolean = false) {
+    val serializer = isOpen match {
+      case false => PrettyJsonSerializer
+      case true if openSnapshotSerializerMap.contains(className) => openSnapshotSerializerMap(className)
+      case _ => OpenDataJsonSerializer
+    }
+    val json = isOpen match {
+      case true if openSnapshotFilterMap.contains(className) => serializer.toJson(openSnapshotFilterMap(className).filter(snapshot.data))
+      case _ => serializer.toJson(snapshot.data)
+    }
+    val jsonSnapshot = s"""{"timestamp": ${System.currentTimeMillis()},\n"${className}": ${json}}"""
     val exportSnapshotPath = new Path(outputDir,
       s"coinport_snapshot_${pFileMap(processorId)}_${String.valueOf(seqNum).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase)
-    val jsonSnapshot = s"""{"timestamp": ${System.currentTimeMillis()},\n"${className}": ${serializer.toJson(snapshot.data)}}"""
     withStream(new BufferedWriter(new OutputStreamWriter(fs.create(exportSnapshotPath, true)), BUFFER_SIZE))(IOUtils.write(jsonSnapshot, _))
   }
 

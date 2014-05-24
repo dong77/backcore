@@ -75,12 +75,12 @@ class PrettyJsonSerializerTest extends Specification {
     "redeliverFilters filtered" in {
       val filters = RedeliverFilters(Map("rfd" -> RedeliverFilterData(List(100, 200), 20)))
 
-      val json = ("filters" -> ("filterMap" -> ("rfd" -> (("processedIds" -> List(100, 200)) ~ ("maxSize" -> 20)))))
+      val prettyJson = ("filters" -> ("filterMap" -> ("rfd" -> (("processedIds" -> List(100, 200)) ~ ("maxSize" -> 20)))))
 
-      val prettyJson = (JNothing -> JNothing)
+      val openJson = (JNothing -> JNothing)
 
-      DebugJsonSerializer.toJson(RedeliverFiltersWrapper(filters)) mustEqual writePretty(json)
       PrettyJsonSerializer.toJson(RedeliverFiltersWrapper(filters)) mustEqual writePretty(prettyJson)
+      OpenDataJsonSerializer.toJson(RedeliverFiltersWrapper(filters)) mustEqual writePretty(openJson)
     }
   }
 }

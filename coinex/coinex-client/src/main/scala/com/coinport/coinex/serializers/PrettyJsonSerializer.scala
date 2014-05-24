@@ -11,11 +11,11 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.data.Implicits._
 
 object PrettyJsonSerializer extends BaseJsonSerializer {
-  implicit val formats = ThriftEnumJson4sSerialization.formats + new CustomTypeSerializer
+  implicit val formats = ThriftEnumJson4sSerialization.formats + new DebugTypeSerializer
 }
 
-object DebugJsonSerializer extends BaseJsonSerializer {
-  implicit val formats = ThriftEnumJson4sSerialization.formats + new DebugTypeSerializer
+object OpenDataJsonSerializer extends BaseJsonSerializer {
+  implicit val formats = ThriftEnumJson4sSerialization.formats + new CustomTypeSerializer
 }
 
 trait BaseJsonSerializer {
