@@ -33,6 +33,11 @@ case class AddressStatus(txid: Option[String] = None, height: Option[Long] = Non
       this
   }
 
+  def clearBookAfterHeight(height: Long): AddressStatus = {
+    books = books.filter(kv => (kv._1 <= height))
+    copy(books = books)
+  }
+
   def updateBook(height: Option[Long], amount: Option[Long]): AddressStatus = {
     height match {
       case None => this
@@ -40,7 +45,6 @@ case class AddressStatus(txid: Option[String] = None, height: Option[Long] = Non
         amount match {
           case None => this
           case Some(a) =>
-            books = books.filter(kv => (kv._1 <= h))
             var items = books.getOrElse(h, Set.empty[Long])
             items += a
             copy(books = (books + (h -> items)))

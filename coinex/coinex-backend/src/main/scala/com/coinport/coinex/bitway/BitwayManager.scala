@@ -94,11 +94,10 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
       addressUidMap ++= addrs.map(_ -> SPECIAL_ACCOUNT_ID(cryptoCurrencyAddressType))
   }
 
-  private[bitway] def updateAddressStatus(txs: Seq[CryptoCurrencyTransaction]) {
+  private[bitway] def updateAddressStatus(txs: Seq[CryptoCurrencyTransaction], h: Option[Long]) {
     txs.foreach {
-      case CryptoCurrencyTransaction(_, Some(txid), _, Some(inputs), Some(outputs), _, includedBlock, _, _, _) =>
+      case CryptoCurrencyTransaction(_, Some(txid), _, Some(inputs), Some(outputs), _, _, _, _, _) =>
         def updateAddressStatus_(ports: Seq[CryptoCurrencyTransactionPort], isDeposit: Boolean) {
-          val h = if (includedBlock.isDefined) includedBlock.get.height else None
           ports.filter(port => addressStatus.contains(port.address)).foreach { port =>
             val addrStatus = addressStatus.getOrElse(port.address, AddressStatus())
             val newAddrStatus = addrStatus.updateTxid(Some(txid)).updateHeight(h).updateBook(h,
@@ -252,8 +251,15 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
 
   def updateBlocks(startIndex: Option[BlockIndex], blocks: Seq[CryptoCurrencyBlock]) {
     appendBlockChain(blocks.map(_.index).toList, startIndex)
+    if (startIndex.isDefined && startIndex.get.height.isDefined) clearAmountAfterHeight(startIndex.get.height.get)
     blocks foreach { block =>
-      updateAddressStatus(block.txs)
+      updateAddressStatus(block.txs, block.index.height)
+    }
+  }
+
+  private def clearAmountAfterHeight(h: Long) {
+    addressStatus.keys.foreach { addr =>
+      addressStatus.update(addr, addressStatus(addr).clearBookAfterHeight(h))
     }
   }
 
