@@ -219,7 +219,7 @@ trait AccountTransferBehavior {
             }
         }
       case None =>
-        logger.warning(s"${tx.txType.get.toString} tx not define outputs : ${tx.toString}")
+        logger.warning(s"handleDepositLikeTx() ${tx.txType.get.toString} tx not define outputs : ${tx.toString}")
     }
   }
 
@@ -246,7 +246,7 @@ trait AccountTransferBehavior {
             }
         }
       case None =>
-        logger.warning(s"${tx.txType.get.toString} tx not define ids : ${tx.toString}")
+        logger.warning(s"handleWithdrawlLikeTx() ${tx.txType.get.toString} tx not define ids : ${tx.toString}")
     }
   }
 

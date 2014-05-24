@@ -100,13 +100,15 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
             withStream(new BufferedInputStream(fs.open(path, BUFFER_SIZE), BUFFER_SIZE)) {
               IOUtils.toByteArray
             }, classOf[Snapshot])
-        writeSnapshot(exportSnapshotHdfsDir, processorId, seqNum, snapshot, PrettyJsonSerializer)
+        val className = snapshot.data.getClass.getEnclosingClass.getSimpleName
+        writeSnapshot(exportSnapshotHdfsDir, processorId, seqNum, snapshot, PrettyJsonSerializer, className)
         val debugSerializer =
-          if (snapshotSerializerMap.contains(snapshot.data.getClass))
-            snapshotSerializerMap(snapshot.data.getClass)
-          else
-            PrettyJsonSerializer
-        writeSnapshot(debugSnapshotHdfsDir, processorId, seqNum, snapshot, debugSerializer)
+          if (snapshotSerializerMap.contains(className)) {
+            snapshotSerializerMap(className)
+          } else {
+            DebugJsonSerializer
+          }
+        writeSnapshot(debugSnapshotHdfsDir, processorId, seqNum, snapshot, debugSerializer, className)
         seqNum
       case _ => processedSeqNum - 1
     }
@@ -176,10 +178,9 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
     }
   }
 
-  def writeSnapshot(outputDir: String, processorId: String, seqNum: Long, snapshot: Snapshot, serializer: BaseJsonSerializer) {
+  def writeSnapshot(outputDir: String, processorId: String, seqNum: Long, snapshot: Snapshot, serializer: BaseJsonSerializer, className: String) {
     val exportSnapshotPath = new Path(outputDir,
       s"coinport_snapshot_${pFileMap(processorId)}_${String.valueOf(seqNum).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase)
-    val className = snapshot.data.getClass.getEnclosingClass.getSimpleName
     val jsonSnapshot = s"""{"timestamp": ${System.currentTimeMillis()},\n"${className}": ${serializer.toJson(snapshot.data)}}"""
     withStream(new BufferedWriter(new OutputStreamWriter(fs.create(exportSnapshotPath, true)), BUFFER_SIZE))(IOUtils.write(jsonSnapshot, _))
   }
