@@ -463,7 +463,7 @@ struct AddressStatusResult {
 struct TAddressStatus {
     1: optional string txid // last tx with include the address
     2: optional i64 height // tx first included block height
-    3: map<i64, set<i64>> books
+    3: map<i64, list<i64>> books
 }
 
 // We have a case-class named Robot

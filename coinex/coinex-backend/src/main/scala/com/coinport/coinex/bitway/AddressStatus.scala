@@ -6,18 +6,17 @@
 package com.coinport.coinex.bitway
 
 import scala.collection.SortedMap
-import scala.collection.Set
 
 import com.coinport.coinex.data._
 
 object AddressStatus {
   def apply(s: TAddressStatus): AddressStatus = {
-    AddressStatus(s.txid, s.height, SortedMap.empty[Long, Set[Long]] ++ s.books)
+    AddressStatus(s.txid, s.height, SortedMap.empty[Long, List[Long]] ++ s.books.map(kv => (kv._1 -> kv._2.toList)))
   }
 }
 
 case class AddressStatus(txid: Option[String] = None, height: Option[Long] = None,
-    var books: SortedMap[Long, Set[Long]] = SortedMap.empty) {
+    var books: SortedMap[Long, List[Long]] = SortedMap.empty) {
 
   def updateTxid(txid: Option[String]): AddressStatus = {
     if (txid.isDefined)
@@ -45,8 +44,8 @@ case class AddressStatus(txid: Option[String] = None, height: Option[Long] = Non
         amount match {
           case None => this
           case Some(a) =>
-            var items = books.getOrElse(h, Set.empty[Long])
-            items += a
+            var items = books.getOrElse(h, List.empty[Long])
+            items = a :: items
             copy(books = (books + (h -> items)))
         }
     }

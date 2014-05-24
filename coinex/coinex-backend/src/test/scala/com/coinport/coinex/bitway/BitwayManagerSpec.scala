@@ -264,15 +264,15 @@ class BitwayManagerSpec extends Specification {
           txs = List(
             CryptoCurrencyTransaction(
               txid = Some("t2"),
-              inputs = Some(List(CryptoCurrencyTransactionPort("h1", Some(0.2)))),
-              outputs = Some(List(CryptoCurrencyTransactionPort("u2", Some(0.2)))),
+              inputs = Some(List(CryptoCurrencyTransactionPort("h1", Some(0.2)), CryptoCurrencyTransactionPort("h1", Some(0.2)))),
+              outputs = Some(List(CryptoCurrencyTransactionPort("u2", Some(0.2)), CryptoCurrencyTransactionPort("u2", Some(0.2)))),
               status = Confirming
             ))
         )
       ))
 
-      bwm.getAddressStatus(Hot) mustEqual Map("h1" -> AddressStatusResult(Some("t2"), Some(2), -1200))
-      bwm.getAddressStatus(UserUsed) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), 200), "u1" -> AddressStatusResult(Some("t1"), Some(1), 1000))
+      bwm.getAddressStatus(Hot) mustEqual Map("h2" -> AddressStatusResult(Some("t2"), Some(2), 0), "h1" -> AddressStatusResult(Some("t2"), Some(2), -1400))
+      bwm.getAddressStatus(UserUsed) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), 400), "u1" -> AddressStatusResult(Some("t1"), Some(1), 1000))
       bwm.getAddressStatus(Cold) mustEqual Map.empty[String, BlockIndex]
     }
   }
