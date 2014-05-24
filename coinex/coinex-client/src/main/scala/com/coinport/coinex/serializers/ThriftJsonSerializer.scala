@@ -63,6 +63,8 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cUserProfile = JsonScalaCodec(UserProfile)
   lazy val _cAddRobotDNAFailed = JsonScalaCodec(AddRobotDNAFailed)
   lazy val _cAddRobotDNASucceeded = JsonScalaCodec(AddRobotDNASucceeded)
+  lazy val _cAdjustAddressAmount = JsonScalaCodec(AdjustAddressAmount)
+  lazy val _cAdjustAddressAmountResult = JsonScalaCodec(AdjustAddressAmountResult)
   lazy val _cAdminCommandResult = JsonScalaCodec(AdminCommandResult)
   lazy val _cAdminConfirmTransferFailure = JsonScalaCodec(AdminConfirmTransferFailure)
   lazy val _cAdminConfirmTransferSuccess = JsonScalaCodec(AdminConfirmTransferSuccess)
@@ -233,6 +235,8 @@ class ThriftJsonSerializer extends Serializer {
     case m: UserProfile => _cUserProfile(m)
     case m: AddRobotDNAFailed => _cAddRobotDNAFailed(m)
     case m: AddRobotDNASucceeded => _cAddRobotDNASucceeded(m)
+    case m: AdjustAddressAmount => _cAdjustAddressAmount(m)
+    case m: AdjustAddressAmountResult => _cAdjustAddressAmountResult(m)
     case m: AdminCommandResult => _cAdminCommandResult(m)
     case m: AdminConfirmTransferFailure => _cAdminConfirmTransferFailure(m)
     case m: AdminConfirmTransferSuccess => _cAdminConfirmTransferSuccess(m)
@@ -407,6 +411,8 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[UserProfile.Immutable] => _cUserProfile.invert(bytes).get
     case Some(c) if c == classOf[AddRobotDNAFailed.Immutable] => _cAddRobotDNAFailed.invert(bytes).get
     case Some(c) if c == classOf[AddRobotDNASucceeded.Immutable] => _cAddRobotDNASucceeded.invert(bytes).get
+    case Some(c) if c == classOf[AdjustAddressAmount.Immutable] => _cAdjustAddressAmount.invert(bytes).get
+    case Some(c) if c == classOf[AdjustAddressAmountResult.Immutable] => _cAdjustAddressAmountResult.invert(bytes).get
     case Some(c) if c == classOf[AdminCommandResult.Immutable] => _cAdminCommandResult.invert(bytes).get
     case Some(c) if c == classOf[AdminConfirmTransferFailure.Immutable] => _cAdminConfirmTransferFailure.invert(bytes).get
     case Some(c) if c == classOf[AdminConfirmTransferSuccess.Immutable] => _cAdminConfirmTransferSuccess.invert(bytes).get

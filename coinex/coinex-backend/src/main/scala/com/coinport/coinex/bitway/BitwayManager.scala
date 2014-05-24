@@ -94,24 +94,6 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
       addressUidMap ++= addrs.map(_ -> SPECIAL_ACCOUNT_ID(cryptoCurrencyAddressType))
   }
 
-  private[bitway] def updateAddressStatus(txs: Seq[CryptoCurrencyTransaction], h: Option[Long]) {
-    txs.foreach {
-      case CryptoCurrencyTransaction(_, Some(txid), _, Some(inputs), Some(outputs), _, _, _, _, _) =>
-        def updateAddressStatus_(ports: Seq[CryptoCurrencyTransactionPort], isDeposit: Boolean) {
-          ports.filter(port => addressStatus.contains(port.address)).foreach { port =>
-            val addrStatus = addressStatus.getOrElse(port.address, AddressStatus())
-            val newAddrStatus = addrStatus.updateTxid(Some(txid)).updateHeight(h).updateBook(h,
-              port.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency) * (if (isDeposit) 1 else -1)))
-            addressStatus += (port.address -> newAddrStatus)
-          }
-        }
-
-        updateAddressStatus_(inputs, false)
-        updateAddressStatus_(outputs, true)
-      case _ => None
-    }
-  }
-
   def updateLastAlive(ts: Long) {
     lastAlive = ts
   }
@@ -257,6 +239,69 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     }
   }
 
+  def getNetworkStatus: CryptoCurrencyNetworkStatus = {
+    getCurrentBlockIndex match {
+      case None => CryptoCurrencyNetworkStatus(heartbeatTime = if (lastAlive != -1) Some(lastAlive) else None)
+      case Some(index) => CryptoCurrencyNetworkStatus(index.id, index.height,
+        if (lastAlive != -1) Some(lastAlive) else None)
+    }
+  }
+
+  def getAddressStatus(t: CryptoCurrencyAddressType): Map[String, AddressStatusResult] = {
+    Map(addresses(t).filter(d =>
+      addressStatus.contains(d) && addressStatus(d) != AddressStatus()).toSeq.map(address =>
+      (address -> addressStatus(address).getAddressStatusResult(getCurrentHeight))
+    ): _*)
+  }
+
+  def notProcessed(tx: CryptoCurrencyTransaction): Boolean = {
+    tx.sigId.isDefined && !sigIdsSinceLastBlock.contains(tx.sigId.get)
+  }
+
+  def rememberTx(tx: CryptoCurrencyTransaction) {
+    sigIdsSinceLastBlock += tx.sigId.get
+  }
+
+  def canAdjustAddressAmount(address: String, adjustAmount: Long): Boolean = {
+    (getAddressAmount(address) + adjustAmount) >= 0
+  }
+
+  def adjustAddressAmount(address: String, adjustAmount: Long) {
+    val status = addressStatus.getOrElse(address, AddressStatus())
+    status.updateBook(Some(-1), Some(adjustAmount))
+    addressStatus += (address -> status)
+  }
+
+  def getAddressAmount(address: String): Long = {
+    val status = addressStatus.getOrElse(address, AddressStatus())
+    status.getAmount(getCurrentHeight, 1)
+  }
+
+  private def getCurrentHeight: Option[Long] = {
+    blockIndexes.lastOption match {
+      case None => None
+      case Some(index) => index.height
+    }
+  }
+
+  private[bitway] def updateAddressStatus(txs: Seq[CryptoCurrencyTransaction], h: Option[Long]) {
+    txs.foreach {
+      case CryptoCurrencyTransaction(_, Some(txid), _, Some(inputs), Some(outputs), _, _, _, _, _) =>
+        def updateAddressStatus_(ports: Seq[CryptoCurrencyTransactionPort], isDeposit: Boolean) {
+          ports.filter(port => addressStatus.contains(port.address)).foreach { port =>
+            val addrStatus = addressStatus.getOrElse(port.address, AddressStatus())
+            val newAddrStatus = addrStatus.updateTxid(Some(txid)).updateHeight(h).updateBook(h,
+              port.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency) * (if (isDeposit) 1 else -1)))
+            addressStatus += (port.address -> newAddrStatus)
+          }
+        }
+
+        updateAddressStatus_(inputs, false)
+        updateAddressStatus_(outputs, true)
+      case _ => None
+    }
+  }
+
   private def clearAmountAfterHeight(h: Long) {
     addressStatus.keys.foreach { addr =>
       addressStatus.update(addr, addressStatus(addr).clearBookAfterHeight(h))
@@ -271,33 +316,5 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     blockIndexes ++= chain
     if (blockIndexes.length > maintainedChainLength)
       blockIndexes.remove(0, blockIndexes.length - maintainedChainLength)
-  }
-
-  def getNetworkStatus: CryptoCurrencyNetworkStatus = {
-    getCurrentBlockIndex match {
-      case None => CryptoCurrencyNetworkStatus(heartbeatTime = if (lastAlive != -1) Some(lastAlive) else None)
-      case Some(index) => CryptoCurrencyNetworkStatus(index.id, index.height,
-        if (lastAlive != -1) Some(lastAlive) else None)
-    }
-  }
-
-  def getAddressStatus(t: CryptoCurrencyAddressType): Map[String, AddressStatusResult] = {
-    Map(addresses(t).filter(d =>
-      addressStatus.contains(d) && addressStatus(d) != AddressStatus()).toSeq.map(address =>
-      (address -> addressStatus(address).getAddressStatusResult(
-        blockIndexes.lastOption match {
-          case None => None
-          case Some(index) => index.height
-        }
-      ))
-    ): _*)
-  }
-
-  def notProcessed(tx: CryptoCurrencyTransaction): Boolean = {
-    tx.sigId.isDefined && !sigIdsSinceLastBlock.contains(tx.sigId.get)
-  }
-
-  def rememberTx(tx: CryptoCurrencyTransaction) {
-    sigIdsSinceLastBlock += tx.sigId.get
   }
 }

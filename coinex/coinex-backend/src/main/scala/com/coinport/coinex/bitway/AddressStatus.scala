@@ -59,7 +59,7 @@ case class AddressStatus(txid: Option[String] = None, height: Option[Long] = Non
     AddressStatusResult(txid, height, getAmount(currentHeight, 1))
   }
 
-  private def getAmount(currentHeight: Option[Long], confirmationNum: Int): Long = {
+  def getAmount(currentHeight: Option[Long], confirmationNum: Int): Long = {
     if (!currentHeight.isDefined) {
       0
     } else {

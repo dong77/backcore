@@ -175,6 +175,8 @@ typedef data.AddressStatusResult                _AddressStatusResult
 /* R    */ struct QueryCryptoCurrencyAddressStatusResult  {1: _Currency currency, 2: map<string, _AddressStatusResult> status}
 /* C    */ struct QueryCryptoCurrencyNetworkStatus        {1: _Currency currency}
 /* R    */ struct QueryCryptoCurrencyNetworkStatusResult  {1: _Currency currency, 2: _CryptoCurrencyNetworkStatus status}
+/* C    */ struct AdjustAddressAmount                     {1: _Currency currency, 2: string address, 3: i64 adjustAmount}
+/* R    */ struct AdjustAddressAmountResult               {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: string address, 4: optional i64 adjustAmount}
 
 ////////// Bitway nodejs
 /* C    */ struct GenerateAddresses                       {1: i32 num}
