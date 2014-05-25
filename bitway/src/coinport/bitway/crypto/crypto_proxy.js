@@ -191,12 +191,12 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
                         var transactions = [];
                         var addresses = {};
                         for (var j = 0; j < unspentTxs.length; j++) {
-                            amountTotalUnspent += unspentTxs[j].amount; 
+                            amountTotalUnspent += unspentTxs[j].amount;
                             var transaction = {txid: unspentTxs[j].txid, vout: unspentTxs[j].vout};
                             transactions.push(transaction);
                         }
                         if ((amountTotalUnspent > amountTotalPay && amountTotalUnspent < amountTotalPay + CryptoProxy.TIP)
-                            || amountTotalUnspent == amountTotalPay 
+                            || amountTotalUnspent == amountTotalPay
                             || amountTotalUnspent == amountTotalPay + CryptoProxy.TIP) {
                             addresses[toAddress] = amountTotalPay;
                             var rawData = {transactions: transactions, addresses: addresses};
@@ -221,7 +221,7 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
 
 CryptoProxy.prototype.getHotUnspent_ = function(callback) {
     var self = this;
-    Async.compose(self.getUnspentOfAddresses_.bind(self), 
+    Async.compose(self.getUnspentOfAddresses_.bind(self),
         self.getAllHotAddresses_.bind(self))(callback);
 };
 
@@ -239,7 +239,7 @@ CryptoProxy.prototype.getAllHotAddresses_ = function(callback) {
 
 CryptoProxy.prototype.getUnspentOfAddresses_ = function(addresses, callback) {
     var self = this;
-    self.rpc.listUnspent(self.minConfirm, CryptoProxy.MAX_CONFIRM_NUM, 
+    self.rpc.listUnspent(self.minConfirm, CryptoProxy.MAX_CONFIRM_NUM,
         addresses, function(unspentError, unspentReply) {
         if (unspentError) {
             self.log(unspentError);
@@ -291,7 +291,7 @@ CryptoProxy.prototype.generateAHotAddress_ = function(unusedIndex, callback) {
         } else {
             var addresses = [];
             addresses.push(address.result);
-            var gar = new GenerateAddressesResult({error: ErrorCode.OK, addresses: addresses, 
+            var gar = new GenerateAddressesResult({error: ErrorCode.OK, addresses: addresses,
                 addressType: CryptoCurrencyAddressType.HOT});
             self.emit(CryptoProxy.EventType.HOT_ADDRESS_GENERATE,
                 self.makeNormalResponse_(BitwayResponseType.GENERATE_ADDRESS, self.currency, gar));
@@ -386,8 +386,8 @@ CryptoProxy.prototype.getMissedBlocks_ = function(request, callback) {
     self.log.info('** Get Missed Request Received **');
     self.log.info("getMissedBlocks req:" + JSON.stringify(request));
     self.checkMissedRange_.bind(self)(request);
-    Async.compose(self.getReorgBlock_.bind(self), 
-        self.getReorgPosition_.bind(self))(request, function(err, reorgBlock) { 
+    Async.compose(self.getReorgBlock_.bind(self),
+        self.getReorgPosition_.bind(self))(request, function(err, reorgBlock) {
             if (err) {
                 self.log.error(err);
                 callback(err);
@@ -503,7 +503,7 @@ CryptoProxy.prototype.getNextCCBlockSinceLastIndex_ = function(index, callback) 
             callback('no new block found');
         } else {
             var nextIndex = (index == -1) ? count : index + 1;
-            self.redis.del(self.processedSigids, function() {});
+            self.redis.del(self.getProcessedSigidsByHeight_(nextIndex - 1), function() {});
             self.redis.set(self.lastIndex, nextIndex, function(error, replay) {
                 if (!error) {
                     self.getCCBlockByIndex_(nextIndex, callback);
@@ -525,30 +525,30 @@ CryptoProxy.prototype.getNewCCTXsSinceLatest_ = function(callback) {
 
 CryptoProxy.prototype.getBlockCount_ = function(callback) {
     this.rpc.getBlockCount(function(error, count) {
-        CryptoProxy.invokeCallback(error, function() {return count.result}, callback);
+        CryptoProxy.invokeCallback_(error, function() {return count.result}, callback);
     });
 };
 
 CryptoProxy.prototype.generateOneAddress_ = function(unusedIndex, callback) {
     this.rpc.getNewAddress(CryptoProxy.ACCOUNT, function(error, address) {
-        CryptoProxy.invokeCallback(error, function() {return address.result}, callback);
+        CryptoProxy.invokeCallback_(error, function() {return address.result}, callback);
     });
 };
 
-CryptoProxy.prototype.getNewCCTXsFromTxids_ = function(txids, callback) {
+CryptoProxy.prototype.getNewCCTXsFromTxids_ = function(height, txids, callback) {
     var self = this;
     Async.map(txids, self.getCCTXFromTxid_.bind(self), function(error, cctxs) {
         if (error) {
             callback(error);
         } else {
-            self.redis.smembers(self.processedSigids, function(error, sigIds) {
+            self.redis.smembers(self.getProcessedSigidsByHeight_(height), function(error, sigIds) {
                 if (error) {
                     callback(error);
                 } else {
                     var sigStrIds = sigIds.map(function(element) {return String(element)});
                     var newCCTXs = cctxs.filter(function(element) {return sigStrIds.indexOf(element.sigId) == -1;});
-                    self.redis.sadd(self.processedSigids, newCCTXs.map(function(element) {return element.sigId}),
-                        function(error, replay) {
+                    self.redis.sadd(self.getProcessedSigidsByHeight_(height),
+                        newCCTXs.map(function(element) {return element.sigId}), function(error, replay) {
                         if (error) {
                             callback(error);
                         } else {
@@ -561,14 +561,14 @@ CryptoProxy.prototype.getNewCCTXsFromTxids_ = function(txids, callback) {
     });
 };
 
-CryptoProxy.prototype.getTxidsSinceBlockHash_ = function(hash, callback) {
+CryptoProxy.prototype.getTxidsSinceBlockHash_ = function(height, hash, callback) {
     var self = this;
     this.rpc.listSinceBlock(hash, function(error, txs) {
         if (error) {
             callback(error);
         } else {
             var txids = txs.result.transactions.map(function(element) {return element.txid});
-            callback(null, txids);
+            callback(null, height, txids);
         }
     });
 };
@@ -580,13 +580,17 @@ CryptoProxy.prototype.getCCBlockByIndex_ = function(index, callback) {
 
 CryptoProxy.prototype.getBlockHash_ = function(index, callback) {
     this.rpc.getBlockHash(index, function(error, hash) {
-        CryptoProxy.invokeCallback(error, function() {return hash.result}, callback);
+        if (error) {
+            callback(error);
+        } else {
+            callback(null, index, hash.result);
+        }
     });
 };
 
-CryptoProxy.prototype.getBlock_ = function(hash, callback) {
+CryptoProxy.prototype.getBlock_ = function(unuseHeight, hash, callback) {
     this.rpc.getBlock(hash, function(error, block) {
-        CryptoProxy.invokeCallback(error, function() {return block.result}, callback);
+        CryptoProxy.invokeCallback_(error, function() {return block.result}, callback);
     });
 };
 
@@ -691,7 +695,7 @@ CryptoProxy.prototype.getCCBlockFromBlockInfo_ = function(block, callback) {
     var index = new BlockIndex({id: block.hash, height:block.height});
     var prevIndex = new BlockIndex({id: block.previousblockhash, height:block.height - 1});
     Async.map(block.tx, self.getCCTXFromTxid_.bind(self), function(error, cctxs) {
-        CryptoProxy.invokeCallback(error,
+        CryptoProxy.invokeCallback_(error,
             function() {return new CryptoCurrencyBlock({index:index, prevIndex:prevIndex, txs:cctxs})}, callback);
     });
 };
@@ -713,20 +717,14 @@ CryptoProxy.prototype.makeNormalResponse_ = function(type, currency, response) {
     }
 };
 
-CryptoProxy.invokeCallback = function(error, resultFun, callback) {
+CryptoProxy.prototype.getProcessedSigidsByHeight_ = function(height) {
+    return this.processedSigids + '_' + height;
+};
+
+CryptoProxy.invokeCallback_ = function(error, resultFun, callback) {
     if (error) {
         callback(error);
     } else {
         callback(null, resultFun());
     }
 };
-
-
-var logo = "\n" +
-" _    _ _                     \n" +
-"| |__(_) |___ __ ____ _ _  _  \n" +
-"| '_ \\ |  _\\ V  V / _` | || | \n" +
-"|_.__/_|\\__|\\_/\\_/\\__,_|\\_, | \n" +
-"                        |__/  \n";
-console.log(logo);
-

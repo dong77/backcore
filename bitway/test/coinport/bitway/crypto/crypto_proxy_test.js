@@ -105,6 +105,7 @@ describe('crypto proxy', function() {
                 })];
                 Assert.deepEqual(cctxs, expectedTxs);
                 cryptoProxy.getNewCCTXsSinceLatest_(function(error, cctxs) {
+                    Assert.deepEqual(redisClient.map, {"81fd055aeb9122673c3c98ca493871048eeb542c0876f3b5396f4b244501eca8":[1,8],"1000_processed_sigids_244498":["81fd055aeb9122673c3c98ca493871048eeb542c0876f3b5396f4b244501eca8"]});
                     Assert.deepEqual(cctxs, []);
                     done();
                 });
@@ -121,7 +122,7 @@ describe('crypto proxy', function() {
                 redis: redisClient
             });
             cryptoProxy.getNextCCBlock_(function(error, block) {
-                Assert.deepEqual(redisClient.map, {'1000_processed_sigids': undefined, '1000_last_index': 244498});
+                Assert.deepEqual(redisClient.map, {'1000_processed_sigids_244497': undefined, '1000_last_index': 244498});
                 Assert.equal(block.index.id, '000000003471884e402aa2383121c4cc9e4f769c6d16e1ce920a7c35d852f872');
                 Assert.equal(block.txs.length, 18);
                 Assert.deepEqual(block.txs[1].inputs, [{"address":"n2JjGvghqD9vPF1HGnxHiKABmCZUEskwEU","amount":2.823,"internalAmount":null,"userId":null}]);
