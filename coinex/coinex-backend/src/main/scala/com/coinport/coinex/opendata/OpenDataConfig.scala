@@ -2,7 +2,7 @@ package com.coinport.coinex.opendata
 
 import scala.concurrent.duration._
 import com.coinport.coinex.serializers.BaseJsonSerializer
-import com.coinport.coinex.data.{ CryptoCurrencyTransactionPort, RedeliverFilterData, RedeliverFilters, TAccountTransferState }
+import com.coinport.coinex.data.{ CryptoCurrencyTransactionPort, CryptoCurrencyTransferItem, TAccountTransferState }
 
 class OpenDataConfig() {
   val enableExportData: Boolean = false
@@ -24,8 +24,8 @@ trait BaseJsonFilter {
 object TAccountTransferStateFilter extends BaseJsonFilter {
   override def filter(original: Any): Any = {
     original.asInstanceOf[TAccountTransferState.Immutable].copy(
-      filters = RedeliverFilters(filterMap = Map.empty[String, RedeliverFilterData]),
-      depositSigId2TxPortIdMapInner = Map.empty[String, Map[CryptoCurrencyTransactionPort, Long]]
+      depositSigId2TxPortIdMapInner = Map.empty[String, Map[CryptoCurrencyTransactionPort, Long]],
+      succeededMap = Map.empty[Long, CryptoCurrencyTransferItem]
     )
   }
 }

@@ -102,8 +102,8 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
               IOUtils.toByteArray
             }, classOf[Snapshot])
         val className = snapshot.data.getClass.getEnclosingClass.getSimpleName
-        writeSnapshot(debugSnapshotHdfsDir, processorId, seqNum, snapshot, className, true)
-        writeSnapshot(exportSnapshotHdfsDir, processorId, seqNum, snapshot, className)
+        writeSnapshot(exportSnapshotHdfsDir, processorId, seqNum, snapshot, className, true)
+        writeSnapshot(debugSnapshotHdfsDir, processorId, seqNum, snapshot, className)
         seqNum
       case _ => processedSeqNum - 1
     }

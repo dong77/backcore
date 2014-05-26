@@ -100,7 +100,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
           if (isCryptoCurrency(transfer.currency) && !transferDebugConfig) {
             transfer.`type` match {
               case TransferType.Deposit => sender ! RequestTransferFailed(UnsupportTransferType)
-              case TransferType.Withdrawal =>
+              case TransferType.Withdrawal if transfer.address.isDefined =>
                 val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Accepted)
                 persist(AdminConfirmTransferSuccess(updated)) {
                   event =>

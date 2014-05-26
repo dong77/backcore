@@ -236,8 +236,8 @@ trait AccountTransferBehavior {
                   setResState(Updator.copy(item = manager.transferMap(id).copy(status = Some(Failed)), addMongo = true, addMsgBox = true, rmItem = true))
                 case _ =>
                   val item = manager.transferMap(id).includedBlock match {
-                    case Some(_) => manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid)
-                    case None => manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock)
+                    case Some(_) => manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, status = Some(Confirming))
+                    case None => manager.transferMap(id).copy(sigId = tx.sigId, txid = tx.txid, status = Some(Confirming), includedBlock = tx.includedBlock)
                   }
                   setResState(Updator.copy(item = item, addMongo = true, putItem = true))
               }
