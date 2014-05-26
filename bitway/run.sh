@@ -11,4 +11,4 @@ if [ ! -d 'logs' ]; then
     mkdir logs
 fi
 
-node src/coinport/bitway/btc.js
+node src/coinport/bitway/index.js
