@@ -18,7 +18,6 @@ class AssetManagerSpec extends Specification {
     val key3 = day3 / timeSkip
     "update user asset and can get them all" in {
       val manager = new AssetManager()
-      val timeskip = ChartTimeDimension.OneDay
 
       manager.updateAsset(1L, day, Cny, 1000)
       manager.updateAsset(1L, day, Btc, 1000)
