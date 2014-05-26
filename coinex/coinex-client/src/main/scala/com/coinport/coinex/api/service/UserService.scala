@@ -46,15 +46,7 @@ object UserService extends AkkaService {
         val returnProfile = succeeded.userProfile
         ApiResult(true, 0, returnProfile.id.toString, Some(returnProfile))
       case failed: RegisterUserFailed =>
-        failed.error match {
-          case ErrorCode.EmailAlreadyRegistered =>
-            ApiResult(false, 1, "用户 " + user.email + " 已存在")
-          case ErrorCode.MissingInformation =>
-            ApiResult(false, 2, "缺少必填字段")
-          case _ =>
-            ApiResult(false, -1, failed.toString)
-        }
-
+        ApiResult(false, failed.error.value, failed.toString)
       case x =>
         ApiResult(false, -1, x.toString)
     }
@@ -68,7 +60,7 @@ object UserService extends AkkaService {
           case Some(profile) =>
             ApiResult(true, 0, "", Some(fromProfile(profile)))
           case None =>
-            ApiResult(false, -1, "用户不存在", None)
+            ApiResult(false, ErrorCode.UserNotExist.value, "用户不存在", None)
         }
       case e =>
         ApiResult(false, -1, e.toString)
@@ -154,7 +146,7 @@ object UserService extends AkkaService {
         val returnProfile = succeeded.userProfile
         ApiResult(true, 0, returnProfile.id.toString, Some(returnProfile))
       case failed: UpdateUserProfileFailed =>
-        ApiResult(false, -1, failed.toString)
+        ApiResult(false, failed.error.value, failed.toString)
       case x =>
         ApiResult(false, -1, x.toString)
     }
@@ -170,14 +162,7 @@ object UserService extends AkkaService {
       case succeeded: LoginSucceeded =>
         ApiResult(true, 0, "登录成功", Some(succeeded))
       case failed: LoginFailed =>
-        failed.error match {
-          case ErrorCode.PasswordNotMatch =>
-            ApiResult(false, failed.error.value, "密码错误", Some(failed))
-          case ErrorCode.UserNotExist =>
-            ApiResult(false, failed.error.value, "用户 " + email + " 不存在", Some(failed))
-          case _ =>
-            ApiResult(false, failed.error.value, failed.toString, Some(failed))
-        }
+        ApiResult(false, failed.error.value, failed.toString)
       case x =>
         ApiResult(false, -1, x.toString)
     }
@@ -189,7 +174,7 @@ object UserService extends AkkaService {
       case succeeded: VerifyEmailSucceeded =>
         ApiResult(true, 0, "注册邮箱验证成功", Some(succeeded))
       case failed: VerifyEmailFailed =>
-        ApiResult(false, -1, failed.toString)
+        ApiResult(false, failed.error.value, failed.toString)
       case e =>
         ApiResult(false, -1, e.toString)
     }
@@ -201,7 +186,7 @@ object UserService extends AkkaService {
       case succeeded: RequestPasswordResetSucceeded =>
         ApiResult(true, 0, "重置密码链接已发送，请查看注册邮箱", Some(succeeded))
       case failed: RequestPasswordResetFailed =>
-        ApiResult(false, -1, failed.toString)
+        ApiResult(false, failed.error.value, failed.toString)
       case e =>
         ApiResult(false, -1, e.toString)
     }
@@ -224,7 +209,7 @@ object UserService extends AkkaService {
       case succeeded: ResetPasswordSucceeded =>
         ApiResult(true, 0, "", Some(succeeded))
       case failed: ResetPasswordFailed =>
-        ApiResult(false, -1, failed.toString)
+        ApiResult(false, failed.error.value, failed.toString)
       case e =>
         ApiResult(false, -1, e.toString)
     }

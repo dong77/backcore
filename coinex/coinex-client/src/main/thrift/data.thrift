@@ -11,6 +11,7 @@ namespace java com.coinport.coinex.data
 
 enum ErrorCode {
     OK = 0
+    UNKNOWN = -1
 
     // User related
     EMAIL_ALREADY_REGISTERED         = 1001
@@ -56,7 +57,7 @@ enum ErrorCode {
     NO_ADDRESS_FOUND                 = 8004
     WITHDRAWAL_TO_DEPOSIT_ADDRESS    = 8005
 
-    // Controller
+    // Controller && Services
     PARAM_EMPTY                      = 9001
     CAPTCHA_NOT_MATCH                = 9002
     INVALID_EMAIL_FORMAT             = 9003
