@@ -42,7 +42,7 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config, allPat
   override def preStart = {
     super.preStart()
     watchAllActor
-    actorStateMonitorSchedule
+    // actorStateMonitorSchedule
   }
 
   def receive = runRoute(route) orElse {
