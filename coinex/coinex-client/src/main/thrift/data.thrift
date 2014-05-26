@@ -59,6 +59,9 @@ enum ErrorCode {
     // Controller
     PARAM_EMPTY                      = 9001
     CAPTCHA_NOT_MATCH                = 9002
+    INVALID_EMAIL_FORMAT             = 9003
+    INVALID_PASSWORD_FORMAT          = 9004
+    SMS_CODE_NOT_MATCH               = 9005
 
     // Transfer
     TRANSFER_REJECT                  = 10001
