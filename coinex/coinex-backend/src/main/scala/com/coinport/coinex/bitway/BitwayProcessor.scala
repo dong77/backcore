@@ -179,7 +179,7 @@ trait BitwayManagerBehavior {
       manager.rememberTx(tx)
     case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlockMessage(startIndex, block, timestamp))) =>
       if (timestamp.isDefined) manager.updateLastAlive(timestamp.get)
-      manager.updateBlocks(startIndex, block)
+      manager.updateBlock(startIndex, block)
     case e => println("bitway updateState doesn't handle the message: ", e)
   }
 }

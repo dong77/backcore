@@ -245,19 +245,17 @@ class BitwayManagerSpec extends Specification {
       bwm.getAddressStatus(UserUsed) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), 200), "u1" -> AddressStatusResult(Some("t1"), Some(1), 1000))
       bwm.getAddressStatus(Cold) mustEqual Map.empty[String, BlockIndex]
 
-      bwm.updateBlocks(Some(BlockIndex(Some("b1"), Some(1))), Seq(
-        CryptoCurrencyBlock(
-          index = BlockIndex(Some("b2"), Some(2)),
-          prevIndex = BlockIndex(Some("b1"), Some(1)),
-          txs = List(
-            CryptoCurrencyTransaction(
-              txid = Some("t2"),
-              inputs = Some(List(CryptoCurrencyTransactionPort("h1", Some(0.2)), CryptoCurrencyTransactionPort("h1", Some(0.2)))),
-              outputs = Some(List(CryptoCurrencyTransactionPort("u2", Some(0.2)), CryptoCurrencyTransactionPort("u2", Some(0.2)))),
-              status = Confirming
-            ))
-        )
-      ))
+      bwm.updateBlock(Some(BlockIndex(Some("b1"), Some(1))), CryptoCurrencyBlock(
+        index = BlockIndex(Some("b2"), Some(2)),
+        prevIndex = BlockIndex(Some("b1"), Some(1)),
+        txs = List(
+          CryptoCurrencyTransaction(
+            txid = Some("t2"),
+            inputs = Some(List(CryptoCurrencyTransactionPort("h1", Some(0.2)), CryptoCurrencyTransactionPort("h1", Some(0.2)))),
+            outputs = Some(List(CryptoCurrencyTransactionPort("u2", Some(0.2)), CryptoCurrencyTransactionPort("u2", Some(0.2)))),
+            status = Confirming
+          )))
+      )
 
       bwm.getAddressStatus(Hot) mustEqual Map("h2" -> AddressStatusResult(Some("t2"), Some(2), 0), "h1" -> AddressStatusResult(Some("t2"), Some(2), -1400))
       bwm.getAddressStatus(UserUsed) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), 400), "u1" -> AddressStatusResult(Some("t1"), Some(1), 1000))

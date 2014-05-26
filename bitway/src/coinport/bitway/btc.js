@@ -2,7 +2,7 @@
  *Copyright 2014 Coinport Inc. All Rights Reserved.
  *Author: YangLi--ylautumn84@gmail.com
  *Filename: btc.js
- *Description: 
+ *Description:
  */
 
 
@@ -24,7 +24,6 @@ var btcRpcConfig = {
     };
 
 var btcRedisProxy = new RedisProxy("BTC", "127.0.0.1", "6379");
-btcRedisProxy.start();
 
 var btcConfig = {
     cryptoRpc : new Bitcore.RpcClient(btcRpcConfig),
@@ -33,37 +32,38 @@ var btcConfig = {
 };
 var btcProxy = new CryptoProxy(Currency.BTC, btcConfig);
 
-btcProxy.start();
-
 btcRedisProxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
     btcProxy.generateUserAddress(request, function(message) {
-        btcRedisProxy.publish(message); 
+        btcRedisProxy.publish(message);
     });
 });
 
 btcRedisProxy.on(RedisProxy.EventType.TRANSFER, function(currency, request) {
     btcProxy.generateUserAddress(request, function(message) {
-        btcRedisProxy.publish(message); 
+        btcRedisProxy.publish(message);
     });
 });
 
 btcRedisProxy.on(RedisProxy.EventType.GET_MISSED_BLOCKS, function(currency, request) {
     btcProxy.generateUserAddress(request, function(error, message) {
         if (!error) {
-            btcRedisProxy.publish(message); 
+            btcRedisProxy.publish(message);
         }
     });
 });
 
 btcProxy.on(CryptoProxy.EventType.TX_ARRIVED, function(message) {
-    btcRedisProxy.publish(message); 
+    btcRedisProxy.publish(message);
 });
 
 
 btcProxy.on(CryptoProxy.EventType.BLOCK_ARRIVED, function(message) {
-    btcRedisProxy.publish(message); 
+    btcRedisProxy.publish(message);
 });
 
 btcProxy.on(CryptoProxy.EventType.HOT_ADDRESS_GENERATE, function(message) {
-    btcRedisProxy.publish(message); 
+    btcRedisProxy.publish(message);
 });
+
+btcRedisProxy.start();
+btcProxy.start();

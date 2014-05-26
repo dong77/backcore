@@ -233,12 +233,10 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     }
   }
 
-  def updateBlocks(startIndex: Option[BlockIndex], blocks: Seq[CryptoCurrencyBlock]) {
-    appendBlockChain(blocks.map(_.index).toList, startIndex)
+  def updateBlock(startIndex: Option[BlockIndex], block: CryptoCurrencyBlock) {
+    appendBlockChain(List(block.index), startIndex)
     if (startIndex.isDefined && startIndex.get.height.isDefined) clearAmountAfterHeight(startIndex.get.height.get)
-    blocks foreach { block =>
-      updateAddressStatus(block.txs, block.index.height)
-    }
+    updateAddressStatus(block.txs, block.index.height)
   }
 
   def getNetworkStatus: CryptoCurrencyNetworkStatus = {
@@ -314,7 +312,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     }
   }
 
-  private[bitway] def appendBlockChain(chain: List[BlockIndex], startIndex: Option[BlockIndex] = None) {
+  private[bitway] def appendBlockChain(chain: Seq[BlockIndex], startIndex: Option[BlockIndex] = None) {
     val reorgPos = blockIndexes.indexWhere(Option(_) == startIndex) + 1
     if (reorgPos > 0) {
       blockIndexes.remove(reorgPos, blockIndexes.length - reorgPos)

@@ -470,8 +470,9 @@ CryptoProxy.prototype.checkBlock_ = function() {
         if (error || !ccblock) {
             self.checkBlockAfterDelay_();
         } else {
+            var response = new CryptoCurrencyBlockMessage({block: ccblock});
             self.emit(CryptoProxy.EventType.BLOCK_ARRIVED,
-                self.makeNormalResponse_(BitwayResponseType.AUTO_REPORT_BLOCKS, self.currency, ccblock));
+                self.makeNormalResponse_(BitwayResponseType.AUTO_REPORT_BLOCKS, self.currency, response));
             self.checkBlockAfterDelay_(0);
         }
     });
