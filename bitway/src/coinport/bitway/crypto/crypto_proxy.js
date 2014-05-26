@@ -425,7 +425,7 @@ CryptoProxy.prototype.getReorgPosition_ = function(request, callback) {
             var flag = false;
             for (var i = 0; i < request.startIndexs.length; i++) {
                position = i;
-               if (request.startIndexs[i].id != hashArray[i]) {
+               if (request.startIndexs[i].id != hashArray[i].hash) {
                    flag = true;
                    break;
                }
@@ -562,14 +562,14 @@ CryptoProxy.prototype.getNewCCTXsFromTxids_ = function(height, txids, callback) 
     });
 };
 
-CryptoProxy.prototype.getTxidsSinceBlockHash_ = function(height, hash, callback) {
+CryptoProxy.prototype.getTxidsSinceBlockHash_ = function(hash, callback) {
     var self = this;
-    this.rpc.listSinceBlock(hash, function(error, txs) {
+    this.rpc.listSinceBlock(hash.hash, function(error, txs) {
         if (error) {
             callback(error);
         } else {
             var txids = txs.result.transactions.map(function(element) {return element.txid});
-            callback(null, height, txids);
+            callback(null, hash.index, txids);
         }
     });
 };
@@ -584,13 +584,13 @@ CryptoProxy.prototype.getBlockHash_ = function(index, callback) {
         if (error) {
             callback(error);
         } else {
-            callback(null, index, hash.result);
+            callback(null, {'index': index, 'hash': hash.result});
         }
     });
 };
 
-CryptoProxy.prototype.getBlock_ = function(unuseHeight, hash, callback) {
-    this.rpc.getBlock(hash, function(error, block) {
+CryptoProxy.prototype.getBlock_ = function(hash, callback) {
+    this.rpc.getBlock(hash.hash, function(error, block) {
         CryptoProxy.invokeCallback_(error, function() {return block.result}, callback);
     });
 };

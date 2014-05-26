@@ -2,7 +2,7 @@
  *Copyright 2014 Coinport Inc. All Rights Reserved.
  *Author: YangLi--ylautumn84@gmail.com
  *Filename: btc.js
- *Description: 
+ *Description:
  */
 
 
@@ -43,7 +43,7 @@ btcRedisProxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, reque
 
 btcRedisProxy.on(RedisProxy.EventType.TRANSFER, function(currency, request) {
     btcProxy.transfer(request, function(message) {
-        btcRedisProxy.publish(message); 
+        btcRedisProxy.publish(message);
     });
 });
 
@@ -70,6 +70,7 @@ btcProxy.on(CryptoProxy.EventType.HOT_ADDRESS_GENERATE, function(message) {
 
 /****************************************************DOG***************************************************************/
 
+/*
 var dogRpcConfig = {
     protocol: 'http',
     user: 'user',
@@ -92,40 +93,42 @@ dogProxy.start();
 
 dogRedisProxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
     dogProxy.generateUserAddress(request, function(message) {
-        dogRedisProxy.publish(message); 
+        dogRedisProxy.publish(message);
     });
 });
 
 dogRedisProxy.on(RedisProxy.EventType.TRANSFER, function(currency, request) {
     dogProxy.transfer(request, function(message) {
-        dogRedisProxy.publish(message); 
+        dogRedisProxy.publish(message);
     });
 });
 
 dogRedisProxy.on(RedisProxy.EventType.GET_MISSED_BLOCKS, function(currency, request) {
     dogProxy.getMissedBlocks(request, function(error, message) {
         if (!error) {
-            dogRedisProxy.publish(message); 
+            dogRedisProxy.publish(message);
         }
     });
 });
 
 dogProxy.on(CryptoProxy.EventType.TX_ARRIVED, function(message) {
-    dogRedisProxy.publish(message); 
+    dogRedisProxy.publish(message);
 });
 
 
 dogProxy.on(CryptoProxy.EventType.BLOCK_ARRIVED, function(message) {
-    dogRedisProxy.publish(message); 
+    dogRedisProxy.publish(message);
 });
 
 dogProxy.on(CryptoProxy.EventType.HOT_ADDRESS_GENERATE, function(message) {
-    dogRedisProxy.publish(message); 
+    dogRedisProxy.publish(message);
 });
 
+*/
 
 /****************************************************LTC***************************************************************/
 
+/*
 var ltcRpcConfig = {
     protocol: 'http',
     user: 'user',
@@ -148,34 +151,35 @@ ltcProxy.start();
 
 ltcRedisProxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
     ltcProxy.generateUserAddress(request, function(message) {
-        ltcRedisProxy.publish(message); 
+        ltcRedisProxy.publish(message);
     });
 });
 
 ltcRedisProxy.on(RedisProxy.EventType.TRANSFER, function(currency, request) {
     ltcProxy.transfer(request, function(message) {
-        ltcRedisProxy.publish(message); 
+        ltcRedisProxy.publish(message);
     });
 });
 
 ltcRedisProxy.on(RedisProxy.EventType.GET_MISSED_BLOCKS, function(currency, request) {
     ltcProxy.getMissedBlocks(request, function(error, message) {
         if (!error) {
-            ltcRedisProxy.publish(message); 
+            ltcRedisProxy.publish(message);
         }
     });
 });
 
 ltcProxy.on(CryptoProxy.EventType.TX_ARRIVED, function(message) {
-    ltcRedisProxy.publish(message); 
+    ltcRedisProxy.publish(message);
 });
 
 
 ltcProxy.on(CryptoProxy.EventType.BLOCK_ARRIVED, function(message) {
-    ltcRedisProxy.publish(message); 
+    ltcRedisProxy.publish(message);
 });
 
 ltcProxy.on(CryptoProxy.EventType.HOT_ADDRESS_GENERATE, function(message) {
-    ltcRedisProxy.publish(message); 
+    ltcRedisProxy.publish(message);
 });
 
+*/
