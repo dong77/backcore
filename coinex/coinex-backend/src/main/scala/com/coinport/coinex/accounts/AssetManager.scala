@@ -14,8 +14,8 @@ class AssetManager extends Manager[TAssetState] {
   private var historyPriceMap = Map.empty[MarketSide, Map[Long, Double]]
   private var currentPriceMap = Map.empty[MarketSide, Double]
 
-  //  val day = 1000 * 60 * 60 * 24
-  val day = 1000 * 60
+  val day = 1000 * 60 * 60 * 24
+  //  val day = 1000 * 60
 
   // Thrift conversions     ----------------------------------------------
   def getSnapshot = TAssetState(currentAssetMap, historyAssetMap, currentPriceMap, historyPriceMap)

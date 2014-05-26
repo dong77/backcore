@@ -48,7 +48,7 @@ object MarketService extends AkkaService {
   def getAsset(userId: Long, from: Long, to: Long, baseCurrency: Currency) = {
     backend ? QueryAsset(userId, from, to) map {
       case result: QueryAssetResult =>
-        val timeSkip: Long = ChartTimeDimension.OneMinute
+        val timeSkip: Long = ChartTimeDimension.OneDay
         val start = Math.min(from / timeSkip, to / timeSkip)
         val stop = Math.max(from / timeSkip, to / timeSkip)
 
