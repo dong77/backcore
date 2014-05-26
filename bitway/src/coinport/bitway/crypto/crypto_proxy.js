@@ -195,15 +195,22 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
                             var transaction = {txid: unspentTxs[j].txid, vout: unspentTxs[j].vout};
                             transactions.push(transaction);
                         }
-                        if ((amountTotalUnspent > amountTotalPay && amountTotalUnspent < amountTotalPay + CryptoProxy.TIP)
-                            || amountTotalUnspent == amountTotalPay
-                            || amountTotalUnspent == amountTotalPay + CryptoProxy.TIP) {
+                        if (amountTotalUnspent > amountTotalPay && amountTotalUnspent < amountTotalPay + CryptoProxy.TIP) {
                             addresses[toAddress] = amountTotalPay;
                             var rawData = {transactions: transactions, addresses: addresses};
                             callback(null, rawData);
-                        } else if (amountTotalUnspent > amountTotalPay + CryptoProxy.TIP){
+                        } else if (amountTotalUnspent == amountTotalPay){
+                            if (amountTotalPay > CryptoProxy.TIP) {
+                                addresses[toAddress] = amountTotalPay;
+                            } else {
+                                addresses[toAddress] = amountTotalPay - amountTotalPay*0.1;
+                            }
+                            var rawData = {transactions: transactions, addresses: addresses};
+                            callback(null, rawData);
+                        } else if (amountTotalUnspent > amountTotalPay + CryptoProxy.TIP
+                                || amountTotalUnspent == amountTotalPay + CryptoProxy.TIP){
                             self.log.warn("User accounts exceed the amount transferred!");
-                            addresses[toAddress] = amountTotalUnspent;
+                            addresses[toAddress] = amountTotalUnspent - CryptoProxy.TIP;
                             var rawData = {transactions: transactions, addresses: addresses};
                             callback(null, rawData);
                         } else {
@@ -395,7 +402,6 @@ CryptoProxy.prototype.getMissedBlocks = function(request, callback) {
                 if (reorgBlock.block) {
                     self.redis.set(self.lastIndex, reorgBlock.block.index.height,function(error, replay) {
                         if (!error) {
-                            callback(null, self.makeNormalResponse_(BitwayResponseType.GET_MISSED_BLOCKS, self.currency, reorgBlock));
                         } else {
                             self.log.error(error);
                             callback(error);
