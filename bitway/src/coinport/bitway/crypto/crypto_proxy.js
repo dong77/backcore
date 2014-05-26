@@ -676,9 +676,9 @@ CryptoProxy.prototype.getCCTXFromTx_ = function(tx, callback) {
                 status: TransferStatus.CONFIRMING});
             var sigId = self.getSigId_.bind(self)(cctx, vinTxids);
             cctx.sigId = sigId;
-            self.redis.get(sigId, function(error, ids) {
+            self.redis.smembers(sigId, function(error, ids) {
                 if (!error && ids != undefined && ids != null)
-                    cctx.ids = ids;
+                    cctx.ids = ids.map(function(element) {return Number(element);});
                 callback(null, cctx);
             });
         }
