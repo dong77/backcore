@@ -381,7 +381,7 @@ CryptoProxy.prototype.checkTx_ = function() {
     });
 };
 
-CryptoProxy.prototype.getMissedBlocks_ = function(request, callback) {
+CryptoProxy.prototype.getMissedBlocks = function(request, callback) {
     var self = this;
     self.log.info('** Get Missed Request Received **');
     self.log.info("getMissedBlocks req:" + JSON.stringify(request));
