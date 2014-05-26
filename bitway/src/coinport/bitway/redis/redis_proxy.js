@@ -26,8 +26,8 @@ var Events             = require('events'),
 var RedisProxy = module.exports.RedisProxy = function(currency, ip, port) {
     Events.EventEmitter.call(this);
 
-    RedisProxy.REQUEST_CHANNEL = 'creq_' + currency.toLowerCase();
-    RedisProxy.RESPONSE_CHANNEL = 'cres_' + currency.toLowerCase();
+    this.REQUEST_CHANNEL = 'creq_' + currency.toLowerCase();
+    this.RESPONSE_CHANNEL = 'cres_' + currency.toLowerCase();
 
     this.pollClient = Redis.createClient(port, ip, { return_buffers: true });
     this.pushClient = Redis.createClient(port, ip, { return_buffers: true });
@@ -45,7 +45,7 @@ RedisProxy.EventType = {
 
 RedisProxy.prototype.start = function() {
     var listen = function(proxy) {
-        proxy.pollClient.blpop(RedisProxy.REQUEST_CHANNEL, 0, function(error, result) {
+        proxy.pollClient.blpop(proxy.REQUEST_CHANNEL, 0, function(error, result) {
             if (!error && result) {
                 var buf = new Buffer(result[1]);
                 var bwr = new BitwayRequest();
@@ -80,6 +80,6 @@ RedisProxy.prototype.start = function() {
 RedisProxy.prototype.publish = function(data) {
     var self = this;
     this.serializer.toBinary(data, function(bytes) {
-        self.pushClient.rpush(RedisProxy.RESPONSE_CHANNEL, bytes);
+        self.pushClient.rpush(self.RESPONSE_CHANNEL, bytes);
     });
 };
