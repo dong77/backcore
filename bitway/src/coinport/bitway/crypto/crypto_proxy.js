@@ -201,7 +201,7 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
                             callback(null, rawData);
                         } else if (amountTotalUnspent == amountTotalPay){
                             if (amountTotalPay > CryptoProxy.TIP) {
-                                addresses[toAddress] = amountTotalPay;
+                                addresses[toAddress] = amountTotalPay - CryptoProxy.TIP;
                             } else {
                                 addresses[toAddress] = amountTotalPay - amountTotalPay*0.1;
                             }

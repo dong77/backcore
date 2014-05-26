@@ -7,6 +7,7 @@
 
 var Assert                    = require('assert'),
     MockRpc                   = require('./mock_rpc').MockRpc,
+    MockDogRpc                = require('./mock_dog_rpc').MockDogRpc,
     MockRedis                 = require('./mock_redis').MockRedis,
     CryptoProxy               = require('../../../../src/coinport/bitway/crypto/crypto_proxy').CryptoProxy,
     DataTypes                 = require('../../../../gen-nodejs/data_types'),
@@ -129,6 +130,68 @@ describe('crypto proxy', function() {
                 Assert.deepEqual(block.txs[1].outputs, [
                     {"address":"mkSmF1qmmpdaaSLt2qayVitSedX7stXbSQ","amount":0.3,"internalAmount":null,"userId":null},
                     {"address":"mrCC7TwxfTTMxC796474wTmbXN1n5JWLu3","amount":2.523,"internalAmount":null,"userId":null}]);
+                done();
+            });
+        });
+    });
+
+    
+    describe('getMissedBlocks', function() {
+        it('get missed blocks', function(done) {
+            var redisClient = new MockRedis();
+            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+                cryptoRpc: new MockDogRpc({blockCount: 93721}),
+                minConfirm: 1,
+                redis: redisClient
+            });
+            var startA = new BlockIndex({id: '778835f7edb20df20174afe9316ae2339c9526c9bd2dca9b8d81406f774d6e0b', height: 93716});
+            var startB = new BlockIndex({id: '05a23efad2b301d280d5f5379ca5b31d586c685eab2b30ca543f213ce067afc6', height:93717});
+            var startIndexs = [];
+            startIndexs.push(startA);
+            startIndexs.push(startB);
+            var endIndex = new BlockIndex({id: 'd661700668f723ea29be1461d6dedd4cd27c52480896ab368fad1100d15f35a5', height:93721});
+            var request = new GetMissedCryptoCurrencyBlocks({startIndexs: startIndexs, endIndex: endIndex});
+            cryptoProxy.getMissedBlocks(request, function(error, message) {
+                Assert.equal(message.currency, Currency.DOG);
+                Assert.equal(message.blockMsg.reorgIndex.id, "05a23efad2b301d280d5f5379ca5b31d586c685eab2b30ca543f213ce067afc6");
+                Assert.equal(message.blockMsg.reorgIndex.height, 93717);
+                var block = message.blockMsg.block;
+                Assert.deepEqual(redisClient.map, {'1100_last_index': 93718});
+                Assert.equal(block.index.id, '79123d5fae236fa9f49b7a6f4f3c48367ca96fd59b1de5450827099b9260fa5d');
+                Assert.equal(block.index.height, 93718);
+                Assert.equal(block.prevIndex.id, '05a23efad2b301d280d5f5379ca5b31d586c685eab2b30ca543f213ce067afc6');
+                Assert.equal(block.prevIndex.height, 93717);
+                Assert.equal(block.txs.length, 1);
+                Assert.deepEqual(block.txs[0].sigId, "d1d2883deeea0f4bbda6d5e0294026608141d59482f446947cea937c8d14625b");
+                Assert.deepEqual(block.txs[0].txid, "367e72d39abc002d930745b64a4b36d5af783094b93da5c2e8a2cc82ece9ad3a");
+                Assert.deepEqual(block.txs[0].inputs, [{"address":"coinbase","amount":0,
+                    "internalAmount":null,"userId":null}]);
+                Assert.deepEqual(block.txs[0].outputs, [
+                    {"address":"nrrPrREiPuZua2XmL7YMj4BDSCuZKhemQo","amount":535256,"internalAmount":null,"userId":null}]);
+                done();
+            });
+        });
+    });
+
+    describe('getReorgPosition_', function() {
+        it('get the reorg position', function(done) {
+            var redisClient = new MockRedis();
+            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+                cryptoRpc: new MockDogRpc({blockCount: 93721}),
+                minConfirm: 1,
+                redis: redisClient
+            });
+
+            var startA = new BlockIndex({id: '778835f7edb20df20174afe9316ae2339c9526c9bd2dca9b8d81406f774d6e0b', height: 93716});
+            var startB = new BlockIndex({id: '05a23efad2b301d280d5f5379ca5b31d586c685eab2b30ca543f213ce067afc6', height:93717});
+            var startIndexs = [];
+            startIndexs.push(startA);
+            startIndexs.push(startB);
+            var endIndex = new BlockIndex({id: 'd661700668f723ea29be1461d6dedd4cd27c52480896ab368fad1100d15f35a5', height:93721});
+            var request = new GetMissedCryptoCurrencyBlocks({startIndexs: startIndexs, endIndex: endIndex});
+            cryptoProxy.getReorgPosition_(request, function(error, block) {
+                Assert.equal(block.id, '05a23efad2b301d280d5f5379ca5b31d586c685eab2b30ca543f213ce067afc6');
+                Assert.equal(block.height, 93717);
                 done();
             });
         });
