@@ -11,7 +11,7 @@ namespace java com.coinport.coinex.data
 
 enum ErrorCode {
     OK = 0
-    UNKNOWN = -1
+    UNKNOWN = 1
 
     // User related
     EMAIL_ALREADY_REGISTERED         = 1001
