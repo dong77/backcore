@@ -111,8 +111,8 @@ class AccountProcessor(
         event =>
           confirm(p)
           updateState(event)
-          if (m.transfer.`type` == Withdrawal || m.transfer.`type` == UserToHot)
-            transferHotColdIfNeed(m.transfer.currency)
+          if (m.txType == Withdrawal || m.txType == UserToHot)
+            transferHotColdIfNeed(m.transfers(0).currency)
       }
 
     case DoRequestGenerateABCode(userId, amount, _, _) => {
@@ -268,9 +268,10 @@ trait AccountManagerBehavior extends CountFeeSupport {
     case AdminConfirmTransferFailure(t, _) =>
       failedTransfer(t)
 
-    case CryptoTransferSucceeded(t) => {
+    case CryptoTransferSucceeded(_, t, minerFee) => {
       //      println(s">>>>>>>>>>>>>>>>>>>>> AccountProcessor got success accountTransfer => ${t.toString}")
-      succeededTransfer(t)
+      t foreach { succeededTransfer(_) }
+      minerFee foreach { substractMinerFee(t(0).currency, _) }
     }
 
     case CryptoTransferFailed(t, _) => {
@@ -334,6 +335,11 @@ trait AccountManagerBehavior extends CountFeeSupport {
         manager.updateHotCashAccount(CashAccount(t.currency, t.amount, 0, 0))
       case TransferType.Unknown =>
     }
+  }
+
+  private def substractMinerFee(currency: Currency, minerFee: Long) {
+    manager.updateHotCashAccount(CashAccount(currency, -minerFee, 0, 0))
+    manager.updateCashAccount(COINPORT_UID, CashAccount(currency, -minerFee, 0, 0))
   }
 
   private def failedTransfer(t: AccountTransfer) {

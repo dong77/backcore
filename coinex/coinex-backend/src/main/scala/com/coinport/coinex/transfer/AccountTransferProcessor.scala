@@ -9,7 +9,7 @@ import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.common.support.ChannelSupport
 import com.coinport.coinex.data._
 import com.mongodb.casbah.Imports._
-import scala.collection.mutable.Map
+import scala.collection.mutable.{ Map, ListBuffer }
 
 import ErrorCode._
 import Implicits._
@@ -27,6 +27,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   val transferConfirmableHeight = context.system.settings.config.getInt("akka.exchange.transfer-confirmable-height")
   private val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
   private val bitwayChannels = bitwayProcessors.map(kv => kv._1 -> createChannelTo(BITWAY_PROCESSOR << kv._1))
+  private val sigId2ItemListMap = Map.empty[String, ListBuffer[CryptoCurrencyTransferItem]]
 
   setConfirmableHeight(transferConfirmableHeight)
   setTransferDebug(transferDebugConfig)
@@ -147,7 +148,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
         log.info(s" ---------------------------- MessagesBox got item => ${item.toString}")
         item.txType.get match {
           case Deposit if item.status.get == Succeeded =>
-            deliverToAccountManager(CryptoTransferSucceeded(transferHandler.get(item.accountTransferId.get).get))
+            deliverToAccountManager(CryptoTransferSucceeded(item.txType.get, List(transferHandler.get(item.accountTransferId.get).get), None))
           case UserToHot =>
             handleMessage(CryptoCurrencyTransferInfo(item.id, None, item.from.get.internalAmount, item.from.get.amount, Some(item.from.get.address)), item)
           case Withdrawal =>
@@ -159,6 +160,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
           case _ =>
         }
     }
+    batchSendMinerFeeTransfer
     getMongoWriteList foreach {
       item =>
         log.info(s" =========================== getMongoWriteList got item => ${item.toString}")
@@ -170,12 +172,35 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
     item.status.get match {
       case Confirming =>
         deliverToBitwayProcessor(item.currency, TransferCryptoCurrency(item.currency, List(info), item.txType.get))
-      case Succeeded =>
-        deliverToAccountManager(CryptoTransferSucceeded(transferHandler.get(item.accountTransferId.get).get))
+      case Succeeded => // batch Set miner fee before sent message to accountProcessor
+        batchMinerFeeTransfer(item)
       case Failed if item.txType.get != UserToHot && item.txType != ColdToHot => //UserToHot fail will do nothing
         deliverToAccountManager(CryptoTransferFailed(transferHandler.get(item.accountTransferId.get).get, ErrorCode.BitwayProcessFail))
       case _ =>
     }
+  }
+
+  def batchMinerFeeTransfer(item: CryptoCurrencyTransferItem) {
+    item.sigId foreach {
+      sigId =>
+        sigId2ItemListMap.contains(sigId) match {
+          case true =>
+            sigId2ItemListMap(sigId).append(item)
+          case false =>
+            val buffer = ListBuffer.empty[CryptoCurrencyTransferItem]
+            buffer.append(item)
+            sigId2ItemListMap.put(sigId, buffer)
+        }
+    }
+  }
+
+  def batchSendMinerFeeTransfer() {
+    sigId2ItemListMap.keys foreach {
+      sigId =>
+        val transfers = sigId2ItemListMap(sigId).map(item => transferHandler.get(item.accountTransferId.get).get)
+        deliverToAccountManager(CryptoTransferSucceeded(transfers(0).`type`, transfers.toList, manager.sigId2MinerFeeMap.remove(sigId)))
+    }
+    sigId2ItemListMap.clear()
   }
 
   private def deliverToAccountManager(event: Any) = {
@@ -197,6 +222,7 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
   private val coldToHotSigId2TxPortIdMapInner = Map.empty[String, Map[CryptoCurrencyTransactionPort, Long]]
   private val transferMapInnner = Map.empty[Long, CryptoCurrencyTransferItem]
   private val succeededMapInnner = Map.empty[Long, CryptoCurrencyTransferItem]
+  private val sigId2MinerFeeMapInnner = Map.empty[String, Long]
 
   def getSnapshot = TAccountTransferState(
     lastTransferId,
@@ -206,6 +232,7 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
     coldToHotSigId2TxPortIdMapInner.clone(),
     transferMapInnner.clone(),
     succeededMapInnner.clone(),
+    sigId2MinerFeeMapInnner.clone(),
     getFiltersSnapshot)
 
   def loadSnapshot(s: TAccountTransferState) = {
@@ -216,6 +243,7 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
     coldToHotSigId2TxPortIdMapInner ++= s.coldToHotSigId2TxPortIdMapInner map { kv => (kv._1 -> (Map.empty ++ kv._2)) }
     transferMapInnner ++= s.transferMap
     succeededMapInnner ++= s.succeededMap
+    sigId2MinerFeeMapInnner ++= s.sigId2MinerFeeMapInnner
     loadFiltersSnapshot(s.filters)
   }
 
@@ -233,6 +261,8 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
   def transferMap = transferMapInnner
 
   def succeededMap = succeededMapInnner
+
+  def sigId2MinerFeeMap = sigId2MinerFeeMapInnner
 
   def getLastBlockHeight = lastBlockHeight
 

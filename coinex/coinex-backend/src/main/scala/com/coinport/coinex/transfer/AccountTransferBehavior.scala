@@ -167,6 +167,7 @@ trait AccountTransferBehavior {
                   logger.warning(s"splitAndHandleTxs() UserToHot item confirm id not include in transferMap : ${tx.toString}")
                 }
             }
+            updateSigId2MinerFee(tx)
           case None =>
             logger.warning(s"splitAndHandleTxs() UserToHot tx not define ids : ${tx.toString}")
         }
@@ -218,6 +219,7 @@ trait AccountTransferBehavior {
               }
             }
         }
+        updateSigId2MinerFee(tx)
       case None =>
         logger.warning(s"handleDepositLikeTx() ${tx.txType.get.toString} tx not define outputs : ${tx.toString}")
     }
@@ -245,9 +247,36 @@ trait AccountTransferBehavior {
               logger.warning(s"handleWithdrawlLikeTx() item confirm id not included in transferMap : ${tx.toString}")
             }
         }
+        updateSigId2MinerFee(tx)
       case None =>
         logger.warning(s"handleWithdrawlLikeTx() ${tx.txType.get.toString} tx not define ids : ${tx.toString}")
     }
+  }
+
+  private def updateSigId2MinerFee(tx: CryptoCurrencyTransaction) {
+    def updateMinerFee() {
+      tx.minerFee match {
+        case Some(fee) =>
+          tx.status match {
+            case Failed => manager.sigId2MinerFeeMap.remove(tx.sigId.get)
+            case _ => manager.sigId2MinerFeeMap.put(tx.sigId.get, fee)
+          }
+        case None =>
+      }
+    }
+
+    tx.sigId match {
+      case Some(sigId) =>
+        tx.txType match {
+          case Some(Withdrawal) => updateMinerFee
+          case Some(UserToHot) => updateMinerFee
+          case Some(ColdToHot) => updateMinerFee
+          case Some(HotToCold) => updateMinerFee
+          case _ =>
+        }
+      case None => logger.warning(s"saveSigId2MinerFee() tx not define sigId : ${tx.toString}")
+    }
+
   }
 
   // handle transfers that not confirmed by height

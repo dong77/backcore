@@ -74,7 +74,8 @@ struct TAccountTransferState {
     5: map<string, map<CryptoCurrencyTransactionPort, i64>> coldToHotSigId2TxPortIdMapInner
     6: map<i64, CryptoCurrencyTransferItem> transferMap
     7: map<i64, CryptoCurrencyTransferItem> succeededMap
-    8: RedeliverFilters filters
+    8: map<string, i64> sigId2MinerFeeMapInnner
+    9: RedeliverFilters filters
 }
 
 struct TCandleDataState {

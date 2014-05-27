@@ -109,7 +109,7 @@ typedef data.AddressStatusResult                _AddressStatusResult
 /* R+   */ struct RequestTransferSucceeded                {1: _AccountTransfer transfer}
 
 /* R-   */ struct CryptoTransferFailed                   {1: _AccountTransfer transfer, 2:_ErrorCode error}
-/* R+   */ struct CryptoTransferSucceeded                {1: _AccountTransfer transfer}
+/* R+   */ struct CryptoTransferSucceeded                {1: _TransferType txType, 2: list<_AccountTransfer> transfers, 3: optional i64 minerFee}
 
 /* C,P  */ struct DoCancelTransfer                        {1: _AccountTransfer transfer}
 /* C,P  */ struct AdminConfirmTransferFailure             {1: _AccountTransfer transfer, 2:_ErrorCode error}
