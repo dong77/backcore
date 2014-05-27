@@ -114,7 +114,7 @@ class AccountManager(initialLastOrderId: Long = 0L,
     if (adjustment.currency.value < Currency.Btc.value) {
       true
     } else {
-      (cryptoAccount(adjustment.currency) + adjustment).isValid
+      (cryptoAccount.get(adjustment.currency).getOrElse(CashAccount(adjustment.currency, 0, 0, 0)) + adjustment).isValid
     }
   }
 
