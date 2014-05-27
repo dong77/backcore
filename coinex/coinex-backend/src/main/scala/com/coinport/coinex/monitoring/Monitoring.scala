@@ -95,6 +95,7 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config, allPat
     var statesMap = Map.empty[String, Seq[String]]
     var sendNum = 0
     var getNum = 0
+
     cluster.state.members map { c =>
       var statesSeq = Set.empty[String]
       allPaths map { p =>
@@ -111,6 +112,7 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config, allPat
         }
       }
       while (sendNum != getNum) {
+        Thread.sleep(10)
         // do nothing
       }
       statesMap += c.address.toString -> statesSeq.toSeq
