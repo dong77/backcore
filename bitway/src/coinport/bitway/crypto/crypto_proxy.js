@@ -41,10 +41,10 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
     Events.EventEmitter.call(this);
 
     if (opt_config) {
-        opt_config.cryptoRpc && (this.rpc = opt_config.cryptoRpc);
-        opt_config.redis && (this.redis = opt_config.redis);
-        opt_config.minConfirm && (this.minConfirm = opt_config.minConfirm);
-        opt_config.checkInterval && (this.checkInterval = opt_config.checkInterval);
+        opt_config.cryptoRpc != undefined && (this.rpc = opt_config.cryptoRpc);
+        opt_config.redis != undefined && (this.redis = opt_config.redis);
+        opt_config.minConfirm != undefined && (this.minConfirm = opt_config.minConfirm);
+        opt_config.checkInterval != undefined && (this.checkInterval = opt_config.checkInterval);
     }
 
     this.currency || (this.currency = currency);
@@ -377,14 +377,14 @@ CryptoProxy.prototype.start = function() {
 CryptoProxy.prototype.checkTxAfterDelay_ = function(opt_interval) {
     var self = this;
     var interval = self.checkInterval;
-    opt_interval && (interval = opt_interval)
+    opt_interval != undefined && (interval = opt_interval)
     setTimeout(self.checkTx_.bind(self), interval);
 };
 
 CryptoProxy.prototype.checkBlockAfterDelay_ = function(opt_interval) {
     var self = this;
     var interval = self.checkInterval;
-    opt_interval && (interval = opt_interval)
+    opt_interval != undefined && (interval = opt_interval)
     setTimeout(self.checkBlock_.bind(self), interval);
 };
 
