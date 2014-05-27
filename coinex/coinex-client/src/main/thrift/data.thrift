@@ -63,6 +63,8 @@ enum ErrorCode {
     INVALID_EMAIL_FORMAT             = 9003
     INVALID_PASSWORD_FORMAT          = 9004
     SMS_CODE_NOT_MATCH               = 9005
+    MOBILE_NOT_VERIFIED              = 9006
+    SEND_SMS_FREQUENCY_TOO_HIGH      = 9007
 
     // Transfer
     TRANSFER_REJECT                  = 10001
