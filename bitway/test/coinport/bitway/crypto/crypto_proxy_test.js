@@ -18,6 +18,7 @@ var Assert                    = require('assert'),
     CryptoCurrencyAddressType = DataTypes.CryptoCurrencyAddressType,
     ErrorCode                 = DataTypes.ErrorCode,
     Currency                  = DataTypes.Currency,
+    TransferType              = DataTypes.TransferType,
     CryptoCurrencyTransaction = DataTypes.CryptoCurrencyTransaction;
 
 describe('crypto proxy', function() {
@@ -135,6 +136,49 @@ describe('crypto proxy', function() {
         });
     });
 
+    describe('constructRawTransaction_', function() {
+        it('withdrawal/hot to cold success', function(done) {
+            var redisClient = new MockRedis();
+            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+                cryptoRpc: new MockDogRpc({blockCount: 93721}),
+                minConfirm: 1,
+                redis: redisClient
+            });
+            var transferInfoA = {from: "", to: "nmoEYptTPTRfzn9U8x58q97vioduyS98dE", amount: 5, id: '10001'};
+            var transferInfoB = {from: "", to: "nkUjTEVGs9x52FQPAkiEz5XoQHj5A9Tg4F", amount: 10, id: '10002'};
+            var transferInfos = [];
+            transferInfos.push(transferInfoA);
+            transferInfos.push(transferInfoB);
+            var request = {currency: Currency.DOG, transferInfos: transferInfos, type: TransferType.WITHDRAWAL};
+            cryptoProxy.constructRawTransaction_(request, function(error, rawData) {
+                Assert.deepEqual(rawData.transactions, [
+                    {"txid":"6ea96574c2325dd1c2bd00f3d6e8b34dfbedb72593e34f4f15f67cb6295d8cf5","vout":0},
+                    {"txid":"854dbdbefde63e0435fee1519e3893860d6687061ebb79624a0542968a29a92b","vout":0}]);
+                var allHotAddresses = "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0d03156e010101062f503253482fffffffff010086b167e836000023210386b46794ca0ec0e696feb6388b6ca4011c1e6ab9f9bc567e63baae1e348fd5b0ac00000000";
+                done();
+            });
+        });
+
+        it('withdrawal/hot to cold fail', function(done) {
+            var redisClient = new MockRedis();
+            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+                cryptoRpc: new MockDogRpc({blockCount: 93721}),
+                minConfirm: 1,
+                redis: redisClient
+            });
+            var transferInfoA = {from: "", to: "nmoEYptTPTRfzn9U8x58q97vioduyS98dE", amount: 5, id: '10001'};
+            var transferInfoB = {from: "", to: "nkUjTEVGs9x52FQPAkiEz5XoQHj5A9Tg4F", amount: 100000, id: '10002'};
+            var transferInfos = [];
+            transferInfos.push(transferInfoA);
+            transferInfos.push(transferInfoB);
+            var request = {currency: Currency.DOG, transferInfos: transferInfos, type: TransferType.WITHDRAWAL};
+            cryptoProxy.constructRawTransaction_(request, function(error, rawData) {
+                Assert.equal(error.code, "Lack of balance!");
+                Assert.equal(error.message, "Lack of balance!");
+                done();
+            });
+        });
+    });
 
     describe('getMissedBlocks', function() {
         it('get missed blocks', function(done) {

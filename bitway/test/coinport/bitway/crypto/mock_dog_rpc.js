@@ -34,3 +34,11 @@ MockDogRpc.prototype.listSinceBlock = function(hash, callback) {
 MockDogRpc.prototype.getRawTransaction = function(txid, needJson, callback) {
     callback(null, {result: MockDogData.txidTx[txid]});
 };
+
+MockDogRpc.prototype.getAddressesByAccount = function(account, callback) {
+    callback(null, {result: MockDogData.addressesByAccount[account]});
+};
+
+MockDogRpc.prototype.listUnspent = function(minConfirm, maxConfirm, addrArray, callback) {
+    callback(null, {result: MockDogData.listUnspent[addrArray.toString()]});
+};

@@ -172,12 +172,18 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
                             break;
                         }
                     }
-                    for(var j =0; j < transferReq.transferInfos.length; j++)
-                    {
-                        addresses[transferReq.transferInfos[j].to] = transferReq.transferInfos[j].amount;
+                    if (amountUnspent < amountTotalPay) {
+                        self.log.error("Lack of balance!");
+                        var err = {code: "Lack of balance!", message: "Lack of balance!"};
+                        callback(err);
+                    } else {
+                        for(var j =0; j < transferReq.transferInfos.length; j++)
+                        {
+                            addresses[transferReq.transferInfos[j].to] = transferReq.transferInfos[j].amount;
+                        }
+                        var rawData = {transactions: transactions, addresses: addresses};
+                        callback(null, rawData);
                     }
-                    var rawData = {transactions: transactions, addresses: addresses};
-                    callback(null, rawData);
                 } else {
                     callback(err);
                 }
