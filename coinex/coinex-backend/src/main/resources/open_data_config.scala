@@ -17,6 +17,6 @@ new OpenDataConfig {
   override val debugSnapshotHdfsDir = "/debug/snapshot"
   override val hdfsHost = "hdfs://hadoop:54310"
   override val scheduleInterval = 900 second
-  override val openSnapshotSerializerMap = Map.empty
+  override val openSnapshotSerializerMap = Map.empty[String,com.coinport.coinex.serializers.BaseJsonSerializer]
   override val openSnapshotFilterMap = Map(TAccountState.Immutable.getClass.getEnclosingClass.getSimpleName -> TAccountStateFilter)
 }

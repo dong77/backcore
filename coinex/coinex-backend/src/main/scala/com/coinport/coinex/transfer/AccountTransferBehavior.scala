@@ -109,9 +109,9 @@ trait AccountTransferBehavior {
             case Some(HotToCold) =>
               splitAndHandleTxs(currency, tx)
             case Some(Unknown) =>
-              logger.warning(s"Unknow tx meet : ${tx.toString}")
+              logger.warning(s"Unknown tx meet : ${tx.toString}")
             case _ =>
-              logger.warning(s"Unexcepted tx meet : ${tx.toString}")
+              logger.warning(s"Unexpected tx meet : ${tx.toString}")
           }
       }
       handleNeedConfirmTransfer(currency)
