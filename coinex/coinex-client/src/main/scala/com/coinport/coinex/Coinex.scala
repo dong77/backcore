@@ -96,6 +96,9 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: SetNotification => routers.notification forward m
       case m: QueryNotification => routers.notification forward m
 
+      // Monitoring
+      case m: QueryActiveActors => routers.monitorService forward m
+
       //-------------------------------------------------------------------------
       case m =>
         log.error("Coinex received unsupported event: " + m.toString)
