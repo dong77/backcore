@@ -52,7 +52,9 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config, allPat
     }
 
     case QueryActiveActors() => {
+      println("x" * 100)
       sender ! QueryActiveActorsResult(fetchAllActiveState)
+      println("y" * 100)
     }
   }
 
