@@ -57,6 +57,12 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
         port: '18332',
     }));
     this.redis || (this.redis = Redis.createClient('6379', '127.0.0.1'));
+    this.redis.on('connect'     , this.logFunction('connect'));
+    this.redis.on('ready'       , this.logFunction('ready'));
+    this.redis.on('reconnecting', this.logFunction('reconnecting'));
+    this.redis.on('error'       , this.logFunction('error'));
+    this.redis.on('end'         , this.logFunction('end'));
+
     this.checkInterval || (this.checkInterval = 5000);
 
     this.processedSigids = this.currency + '_processed_sigids';
@@ -77,6 +83,13 @@ CryptoProxy.EventType = {
     TX_ARRIVED : 'tx_arrived',
     BLOCK_ARRIVED : 'block_arrived',
     HOT_ADDRESS_GENERATE : 'hot_address_generate'
+};
+
+CryptoProxy.prototype.logFunction = function log(type) {
+    var self = this;
+    return function() {
+        self.log.info(type, arguments);
+    };
 };
 
 CryptoProxy.prototype.generateUserAddress = function(request, callback) {

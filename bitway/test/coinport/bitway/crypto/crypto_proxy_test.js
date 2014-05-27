@@ -26,7 +26,7 @@ describe('crypto proxy', function() {
             var cryptoProxy = new CryptoProxy(Currency.BTC, {
                 cryptoRpc: new MockRpc({fail: 'none'}),
                 minConfirm: 1,
-                redis: 'noredis'
+                redis: new MockRedis()
             });
             cryptoProxy.generateUserAddress(new GenerateAddresses({num: 4}), function(response) {
                 var expectRes = new BitwayMessage({currency: Currency.BTC, generateAddressResponse:
@@ -40,7 +40,7 @@ describe('crypto proxy', function() {
             var cryptoProxy = new CryptoProxy(Currency.BTC, {
                 cryptoRpc: new MockRpc({fail: 'all'}),
                 minConfirm: 1,
-                redis: 'noredis'
+                redis: new MockRedis()
             });
             cryptoProxy.generateUserAddress(new GenerateAddresses({num: 4}), function(response) {
                 var expectRes = new BitwayMessage({currency: Currency.BTC, generateAddressResponse:
@@ -55,7 +55,7 @@ describe('crypto proxy', function() {
             var cryptoProxy = new CryptoProxy(Currency.BTC, {
                 cryptoRpc: new MockRpc({fail: 'partial'}),
                 minConfirm: 1,
-                redis: 'noredis'
+                redis: new MockRedis()
             });
             cryptoProxy.generateUserAddress(new GenerateAddresses({num: 4}), function(response) {
                 var expectRes = new BitwayMessage({currency: Currency.BTC, generateAddressResponse:
@@ -135,7 +135,7 @@ describe('crypto proxy', function() {
         });
     });
 
-    
+
     describe('getMissedBlocks', function() {
         it('get missed blocks', function(done) {
             var redisClient = new MockRedis();

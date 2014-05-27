@@ -33,3 +33,6 @@ MockRedis.prototype.del = function(key, callback) {
     this.map[key] = undefined;
     callback();
 };
+
+MockRedis.prototype.on = function(e, callback) {
+};

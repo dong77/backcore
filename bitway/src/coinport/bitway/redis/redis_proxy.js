@@ -14,6 +14,7 @@ var Events             = require('events'),
     Data               = require('../../../../gen-nodejs/data_types'),
     BitwayRequestType  = Data.BitwayRequestType,
     Currency           = Data.Currency,
+    Logger             = require('../logger'),
     Serializer         = require('../serializer/thrift_binary_serializer').ThriftBinarySerializer;
 
 /**
@@ -30,8 +31,22 @@ var RedisProxy = module.exports.RedisProxy = function(currency, ip, port) {
     this.RESPONSE_CHANNEL = 'cres_' + currency.toLowerCase();
 
     this.pollClient = Redis.createClient(port, ip, { return_buffers: true });
+    var self = this;
+    this.pollClient.on('connect'     , function() {
+        self.start();
+    });
+    this.pollClient.on('ready'       , this.logFunction('ready'));
+    this.pollClient.on('reconnecting', this.logFunction('reconnecting'));
+    this.pollClient.on('error'       , this.logFunction('error'));
+    this.pollClient.on('end'         , this.logFunction('end'));
+
     this.pushClient = Redis.createClient(port, ip, { return_buffers: true });
-    this.innerClient = Redis.createClient(port, ip, { return_buffers: true });
+    this.pushClient.on('connect'     , this.logFunction('connect'));
+    this.pushClient.on('ready'       , this.logFunction('ready'));
+    this.pushClient.on('reconnecting', this.logFunction('reconnecting'));
+    this.pushClient.on('error'       , this.logFunction('error'));
+    this.pushClient.on('end'         , this.logFunction('end'));
+
     this.serializer = new Serializer();
 };
 Util.inherits(RedisProxy, Events.EventEmitter);
@@ -42,6 +57,12 @@ RedisProxy.EventType = {
     GET_MISSED_BLOCKS : 'get_missed_blocks'
 };
 
+RedisProxy.prototype.logFunction = function log(type) {
+    var self = this;
+    return function() {
+        console.log(type, arguments);
+    };
+};
 
 RedisProxy.prototype.start = function() {
     var listen = function(proxy) {
@@ -65,12 +86,13 @@ RedisProxy.prototype.start = function() {
                             bwr.getMissedCryptoCurrencyBlocksRequest);
                         break;
                 }
+                listen(proxy);
             } else if (!error && !result) {
                 console.log("timeout");
+                listen(proxy);
             } else {
                 console.log(error);
             }
-            listen(proxy);
         });
     };
 
