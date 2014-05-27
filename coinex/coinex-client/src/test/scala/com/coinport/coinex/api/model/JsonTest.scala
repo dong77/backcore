@@ -21,35 +21,35 @@ class JsonTest extends Specification {
     }
 
     "CurrencyObject to JSON" in {
-      var result = CurrencyObject("CNY", 12345)
+      var result = CurrencyObject("CNY", 12345000L)
       var json =
         ("currency" -> "CNY") ~
-          ("value_int" -> 12345) ~
+          ("value_int" -> 12345000L) ~
           ("value" -> 123.45) ~
-          ("display" -> "123.45") ~
+          ("display" -> "123.45000") ~
           ("display_short" -> "123.45")
 
       result.toJson mustEqual json
 
-      result = CurrencyObject("BTC", 12345)
+      result = CurrencyObject("BTC", 1234500000L)
       json =
         ("currency" -> "BTC") ~
-          ("value_int" -> 12345) ~
+          ("value_int" -> 1234500000L) ~
           ("value" -> 12.345) ~
-          ("display" -> "12.345") ~
+          ("display" -> "12.34500000") ~
           ("display_short" -> "12.35")
 
       result.toJson mustEqual json
     }
 
     "PriceObject to JSON" in {
-      val result = PriceObject(Btc ~> Cny, 123.45)
+      val result = PriceObject(Btc ~> Cny, 1.2345)
       val json =
         ("item" -> "BTC") ~
           ("currency" -> "CNY") ~
-          ("value_int" -> 123.45) ~
+          ("value_int" -> 1.2345) ~
           ("value" -> 1234.5) ~
-          ("display" -> "1234.50") ~
+          ("display" -> "1234.50000") ~
           ("display_short" -> "1234.50")
 
       result.toJson mustEqual json

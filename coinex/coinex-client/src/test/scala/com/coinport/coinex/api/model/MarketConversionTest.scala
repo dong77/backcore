@@ -12,14 +12,14 @@ class MarketConversionTest extends Specification {
   "market conversions" should {
     "market depth conversion" in {
       val bids = List(
-        MarketDepthItem(450, 1500),
-        MarketDepthItem(300, 2000),
-        MarketDepthItem(200, 3000)
+        MarketDepthItem(4500.0.internalValue(Btc ~> Cny), 1.5.internalValue(Btc)),
+        MarketDepthItem(3000.0.internalValue(Btc ~> Cny), 2.0.internalValue(Btc)),
+        MarketDepthItem(2000.0.internalValue(Btc ~> Cny), 3.0.internalValue(Btc))
       )
       val asks = List(
-        MarketDepthItem(550, 4500),
-        MarketDepthItem(600, 5000),
-        MarketDepthItem(700, 6000)
+        MarketDepthItem(5500.0.internalValue(Btc ~> Cny), 4.5.internalValue(Btc)),
+        MarketDepthItem(6000.0.internalValue(Btc ~> Cny), 5.0.internalValue(Btc)),
+        MarketDepthItem(7000.0.internalValue(Btc ~> Cny), 6.0.internalValue(Btc))
       )
 
       val backendObj = MarketDepth(Btc ~> Cny, asks = asks, bids = bids)

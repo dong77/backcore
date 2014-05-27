@@ -27,14 +27,14 @@ class CurrencyConversionTest extends Specification {
     }
 
     "currency unit conversion" in {
-      12.345.internalValue(Btc) mustEqual 12345L
-      23.45.internalValue(Cny) mustEqual 2345L
+      12.345.internalValue(Btc) mustEqual 1234500000L
+      23.45.internalValue(Cny) mustEqual 2345000L
 
-      1000.externalValue(Btc) mustEqual 1.0
-      78900.externalValue(Cny) mustEqual 789.0
+      100000000L.externalValue(Btc) mustEqual 1.0
+      78900000L.externalValue(Cny) mustEqual 789.0
 
-      3456.0.internalValue(Btc ~> Cny) mustEqual 345.6
-      345.6.externalValue(Btc ~> Cny) mustEqual 3456.0
+      3456.0.internalValue(Btc ~> Cny) mustEqual 3.456
+      3.456.externalValue(Btc ~> Cny) mustEqual 3456.0
     }
   }
 }

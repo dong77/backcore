@@ -12,12 +12,12 @@ object CurrencyConversion {
   // exponent (10-based) of the factor between internal value and external value
   // Btc -> 3 means: 1 BTC(external value) equals 1 * 10E3 MBTC(internal value)
   val exponents = Map[Currency, Double](
-    Btc -> 3,
-    Ltc -> 3,
-    Pts -> 3,
-    Dog -> 3,
-    Cny -> 2,
-    Usd -> 2
+    Btc -> 8,
+    Ltc -> 8,
+    Pts -> 8,
+    Dog -> 8,
+    Cny -> 5,
+    Usd -> 5
   )
 
   val multipliers: Map[Currency, Double] = exponents map {
@@ -38,6 +38,10 @@ class CurrencyWrapper(val value: Double) {
   def internalValue(currency: Currency): Long = {
     (value * CurrencyConversion.multipliers(currency)).toLong
   }
+
+  def E(currency: Currency) = externalValue(currency)
+
+  def I(currency: Currency) = internalValue(currency)
 }
 
 class PriceWrapper(val value: Double) {
@@ -52,4 +56,8 @@ class PriceWrapper(val value: Double) {
 
     (value * math.pow(10, exp)).!!!
   }
+
+  def E(marketSide: MarketSide) = externalValue(marketSide)
+
+  def I(marketSide: MarketSide) = internalValue(marketSide)
 }
