@@ -52,9 +52,9 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config, allPat
     }
 
     case QueryActiveActors() => {
-      println("x" * 100)
+      log.debug("start the actor state fetch")
       sender ! QueryActiveActorsResult(fetchAllActiveState)
-      println("y" * 100)
+      log.debug("finish the actor state fetch")
     }
   }
 
