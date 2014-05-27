@@ -2,7 +2,7 @@ package com.coinport.coinex.opendata
 
 import scala.concurrent.duration._
 import com.coinport.coinex.serializers.BaseJsonSerializer
-import com.coinport.coinex.data.{ CryptoCurrencyTransactionPort, CryptoCurrencyTransferItem, TAccountTransferState }
+import com.coinport.coinex.data.{ TAccountState }
 
 class OpenDataConfig() {
   val enableExportData: Boolean = false
@@ -13,19 +13,19 @@ class OpenDataConfig() {
   val debugSnapshotHdfsDir: String = "/debug/snapshot"
   val hdfsHost: String = "hdfs://hadoop:54310"
   val scheduleInterval = 60 seconds // check if there are data to export every 1 minute.
-  val openSnapshotSerializerMap: Map[String, BaseJsonSerializer] = Map.empty[String, BaseJsonSerializer]
-  val openSnapshotFilterMap: Map[String, BaseJsonFilter] = Map.empty[String, BaseJsonFilter]
+  val openSnapshotSerializerMap: Map[String, BaseJsonSerializer] = Map.empty
+  val openSnapshotFilterMap: Map[String, BaseJsonFilter] = Map.empty
 }
 
 trait BaseJsonFilter {
   def filter(original: Any): Any
 }
 
-object TAccountTransferStateFilter extends BaseJsonFilter {
+object TAccountStateFilter extends BaseJsonFilter {
   override def filter(original: Any): Any = {
-    original.asInstanceOf[TAccountTransferState.Immutable].copy(
-      depositSigId2TxPortIdMapInner = Map.empty[String, Map[CryptoCurrencyTransactionPort, Long]],
-      succeededMap = Map.empty[Long, CryptoCurrencyTransferItem]
+    original.asInstanceOf[TAccountState.Immutable].copy(
+      codeAIndexMap = Map.empty,
+      codeBIndexMap = Map.empty
     )
   }
 }
