@@ -199,7 +199,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     tx: CryptoCurrencyTransaction,
     prevBlock: Option[BlockIndex] = None,
     includedBlock: Option[BlockIndex] = None): Option[CryptoCurrencyTransaction] = {
-    val CryptoCurrencyTransaction(_, _, _, inputs, outputs, _, _, _, status, _) = tx
+    val CryptoCurrencyTransaction(_, _, _, inputs, outputs, _, _, _, status, _, _) = tx
     if (!inputs.isDefined || !outputs.isDefined) {
       None
     } else {
@@ -212,9 +212,17 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
         val regularizeOutputs = outputs.map(_.map(i => i.copy(
           internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)),
           userId = addressUidMap.get(i.address))))
+        val sumInput = regularizeInputs.get.map(i => i.internalAmount.getOrElse(0L)).sum
+        val sumOutput = regularizeOutputs.get.map(i => i.internalAmount.getOrElse(0L)).sum
+        val minerFee = if (sumInput > sumOutput) {
+          Some(sumInput - sumOutput)
+        } else {
+          None
+        }
+
         Some(tx.copy(inputs = regularizeInputs, outputs = regularizeOutputs,
           prevBlock = if (prevBlock.isDefined) prevBlock else getCurrentBlockIndex,
-          includedBlock = includedBlock, txType = txType))
+          includedBlock = includedBlock, txType = txType, minerFee = minerFee))
       } else {
         None
       }
@@ -290,7 +298,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
 
   private[bitway] def updateAddressStatus(txs: Seq[CryptoCurrencyTransaction], h: Option[Long]) {
     txs.foreach {
-      case CryptoCurrencyTransaction(_, Some(txid), _, Some(inputs), Some(outputs), _, _, _, _, _) =>
+      case CryptoCurrencyTransaction(_, Some(txid), _, Some(inputs), Some(outputs), _, _, _, _, _, _) =>
         def updateAddressStatus_(ports: Seq[CryptoCurrencyTransactionPort], isDeposit: Boolean) {
           ports.filter(port => addressStatus.contains(port.address)).foreach { port =>
             val addrStatus = addressStatus.getOrElse(port.address, AddressStatus())

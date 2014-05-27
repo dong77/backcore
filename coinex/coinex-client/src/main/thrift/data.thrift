@@ -509,6 +509,7 @@ struct CryptoCurrencyTransaction {
     8:  optional TransferType txType
     9:  TransferStatus status
     10: optional i64 timestamp
+    11: optional i64 minerFee
 }
 
 struct CryptoCurrencyBlock {

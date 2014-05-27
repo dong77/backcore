@@ -159,7 +159,7 @@ class BitwayManagerSpec extends Specification {
         inputs = Some(List(CryptoCurrencyTransactionPort("u7", Some(1.1)))),
         outputs = Some(List(CryptoCurrencyTransactionPort("h1", Some(0.9)))),
         includedBlock = Some(bi1), status = Confirming)
-      bwm.completeCryptoCurrencyTransaction(rawTx, None, None) mustEqual Some(CryptoCurrencyTransaction(None, Some("t1"), None, Some(List(CryptoCurrencyTransactionPort("u7", Some(1.1), Some(1100), Some(1)))), Some(List(CryptoCurrencyTransactionPort("h1", Some(0.9), Some(900), Some(-1)))), None, None, Some(UserToHot), Confirming))
+      bwm.completeCryptoCurrencyTransaction(rawTx, None, None) mustEqual Some(CryptoCurrencyTransaction(None, Some("t1"), None, Some(List(CryptoCurrencyTransactionPort("u7", Some(1.1), Some(1100), Some(1)))), Some(List(CryptoCurrencyTransactionPort("h1", Some(0.9), Some(900), Some(-1)))), None, None, Some(UserToHot), Confirming, minerFee = Some(200)))
 
       val infos = Seq(
         CryptoCurrencyTransferInfo(1, Some("i1"), Some(1000)),
@@ -178,9 +178,13 @@ class BitwayManagerSpec extends Specification {
         includedBlock = Some(bi1), status = Confirming)
       val tx3 = CryptoCurrencyTransaction(
         txid = Some("t3"),
-        inputs = Some(List(CryptoCurrencyTransactionPort("h3", Some(3.1)))),
-        outputs = Some(List(CryptoCurrencyTransactionPort("d3", Some(3.9)))),
-        includedBlock = Some(bi1), status = Confirming)
+        inputs = Some(List(
+          CryptoCurrencyTransactionPort("h3", Some(3.1)),
+          CryptoCurrencyTransactionPort("h4", Some(2.6)))),
+        outputs = Some(List(
+          CryptoCurrencyTransactionPort("d3", Some(3.9)),
+          CryptoCurrencyTransactionPort("d4", Some(0.9))
+        )), includedBlock = Some(bi1), status = Confirming)
       val tx4 = CryptoCurrencyTransaction(
         txid = Some("t4"),
         inputs = Some(List(CryptoCurrencyTransactionPort("h4", Some(4.1)))),
@@ -195,17 +199,23 @@ class BitwayManagerSpec extends Specification {
           Some(List(CryptoCurrencyTransactionPort("h1", Some(1.1), Some(1100), Some(-1)))),
           Some(List(CryptoCurrencyTransactionPort("d1", Some(0.9), Some(900)))),
           Some(BlockIndex(Some("b9"), Some(9))),
-          Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Confirming),
+          Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Confirming, minerFee = Some(200)),
         CryptoCurrencyTransaction(None, Some("t2"), None,
           Some(List(CryptoCurrencyTransactionPort("h2", Some(2.1), Some(2100), Some(-1)))),
           Some(List(CryptoCurrencyTransactionPort("d2", Some(2.9), Some(2900)))),
           Some(BlockIndex(Some("b9"), Some(9))),
-          Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Confirming),
+          Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Confirming), // error case
         CryptoCurrencyTransaction(None, Some("t3"), None,
-          Some(List(CryptoCurrencyTransactionPort("h3", Some(3.1), Some(3100), Some(-1)))),
-          Some(List(CryptoCurrencyTransactionPort("d3", Some(3.9), Some(3900)))),
+          Some(List(
+            CryptoCurrencyTransactionPort("h3", Some(3.1), Some(3100), Some(-1)),
+            CryptoCurrencyTransactionPort("h4", Some(2.6), Some(2600))
+          )),
+          Some(List(
+            CryptoCurrencyTransactionPort("d3", Some(3.9), Some(3900)),
+            CryptoCurrencyTransactionPort("d4", Some(0.9), Some(900))
+          )),
           Some(BlockIndex(Some("b9"), Some(9))), Some(BlockIndex(Some("b10"), Some(10))),
-          Some(Withdrawal), Confirming))
+          Some(Withdrawal), Confirming, minerFee = Some(900)))
     }
 
     "getAddressStatus/getNetworkStatus/adjustAddressAmount test" in {
