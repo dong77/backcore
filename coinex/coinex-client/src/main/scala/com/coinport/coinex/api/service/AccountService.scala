@@ -43,7 +43,7 @@ object AccountService extends AkkaService {
     backend ? DoRequestTransfer(withdrawal) map {
       case result: RequestTransferSucceeded =>
         // TODO: confirm by admin dashboard
-        backend ! AdminConfirmTransferSuccess(result.transfer)
+        //        backend ! AdminConfirmTransferSuccess(result.transfer)
 
         //update withdrawal address of user profile
         backend ? QueryProfile(Some(uid)) map {

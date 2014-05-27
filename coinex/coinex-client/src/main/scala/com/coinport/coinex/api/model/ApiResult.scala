@@ -78,3 +78,7 @@ case class ApiNetworkStatus(currency: String, timestamp: Long, height: Option[Lo
 
 case class ApiWallet(currency: String, address: String, amount: CurrencyObject, walletType: String, lastTx: Option[String], height: Option[Long])
 
+case class ApiActorsPath(ip: String, actors: Seq[String])
+
+case class ApiActorsInfo(pathList: Seq[ApiActorsPath])
+
