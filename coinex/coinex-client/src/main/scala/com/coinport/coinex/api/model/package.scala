@@ -104,8 +104,9 @@ package object model {
     ApiUserAccount(userId, accounts)
   }
 
-  def fromTransaction(t: Transaction, marketSide: MarketSide) = {
-    val sell = marketSide == t.side
+  def fromTransaction(t: Transaction) = {
+    val marketSide = t.side.normalized
+    val sell = t.side.ordered
 
     val (tOrder, mOrder, price, subjectAmount, currencyAmount) = {
       val subject = marketSide.outCurrency

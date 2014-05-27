@@ -51,6 +51,7 @@ class RichMarketSide(raw: MarketSide) {
   def s = "%s%s".format(raw.outCurrency, raw.inCurrency).toLowerCase
   def market = Market(raw.outCurrency, raw.inCurrency)
   def ordered = raw.inCurrency.getValue < raw.outCurrency.getValue
+  def normalized = if (ordered) raw else reverse
 }
 
 class RichOrder(raw: Order) {

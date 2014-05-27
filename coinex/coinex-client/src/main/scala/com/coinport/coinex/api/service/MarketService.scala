@@ -34,7 +34,7 @@ object MarketService extends AkkaService {
     val cursor = Cursor(skip, limit)
     backend ? QueryTransaction(tid, uid, orderId, Some(QueryMarketSide(marketSide, true)), cursor) map {
       case result: QueryTransactionResult =>
-        val items = result.transactions map (t => fromTransaction(t, marketSide))
+        val items = result.transactions map (t => fromTransaction(t))
         ApiResult(data = Some(ApiPagingWrapper(skip, limit, items, result.count.toInt)))
     }
   }
@@ -44,6 +44,15 @@ object MarketService extends AkkaService {
   def getTransactionsByUser(marketSide: MarketSide, uid: Long, skip: Int, limit: Int): Future[ApiResult] = getTransactions(marketSide, None, Some(uid), None, skip, limit)
 
   def getTransactionsByOrder(marketSide: MarketSide, orderId: Long, skip: Int, limit: Int): Future[ApiResult] = getTransactions(marketSide, None, None, Some(orderId), skip, limit)
+
+  def getTransaction(tid: Long) = {
+    backend ? QueryTransaction(Some(tid), None, None, None, Cursor(0, 1)) map {
+      case result: QueryTransactionResult =>
+        val transaction = result.transactions(0)
+        val data = fromTransaction(transaction)
+        ApiResult(data = Some(data))
+    }
+  }
 
   def getAsset(userId: Long, from: Long, to: Long, baseCurrency: Currency) = {
     backend ? QueryAsset(userId, from, to) map {
