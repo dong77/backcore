@@ -12,6 +12,12 @@ var CryptoAgent = module.exports.CryptoAgent = function(cryptoProxy, redisProxy)
     self.cryptoProxy = cryptoProxy;
     self.redisProxy = redisProxy;
 
+    self.redisProxy.on(RedisProxy.EventType.SYNC_HOT_ADDRESSES, function(currency, request) {
+        self.cryptoProxy.synchronousHotAddr(request, function(message) {
+            self.redisProxy.publish(message);
+        });
+    });
+
     self.redisProxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
         self.cryptoProxy.generateUserAddress(request, function(message) {
             self.redisProxy.publish(message);
