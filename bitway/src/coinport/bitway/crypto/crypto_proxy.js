@@ -144,6 +144,40 @@ CryptoProxy.prototype.transfer = function(request, callback) {
     });
 };
 
+CryptoProxy.prototype.compareTransferInfo_ = function(transferInfoA, transferInfoB) {
+    if (transferInfoA.from > transferInfoB.from) {
+        return 1;
+    } else if (transferInfoA.from < transferInfoB.from) {
+        return -1;
+    } else {
+        return 0;
+    }
+};
+
+CryptoProxy.prototype.getMergedTransferInfos_ = function(request) {
+    if (request.transferInfos.length < 2) {
+        return request.transferInfos;
+    }
+    var transferInfos = request.transferInfos;
+    transferInfos.sort(this.compareTransferInfo_);
+    var newTransferInfos = [];
+    for (var i = 0; i < transferInfos.length - 1;) {
+        var newTransferInfo = transferInfos[i];
+        var start = i;
+        for (var j = start + 1; j < transferInfos.length; j++) {
+            if (newTransferInfo.from == transferInfos[j].from) {
+                newTransferInfo.amount += transferInfos[j].amount;
+                i++;
+            } else {
+                i++;
+                break;
+            }
+        }
+        newTransferInfos.push(newTransferInfo);
+    }
+    return newTransferInfos;
+};
+
 CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback) {
     var self = this;
     switch(transferReq.type){
@@ -190,10 +224,11 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
             });
             break;
         case TransferType.USER_TO_HOT:
+            var newTransferInfos = self.getMergedTransferInfos_(transferReq);
             var fromAddresses = [];
             var amountTotalPay = 0;
-            for (var i = 0; i < transferReq.transferInfos.length; i++) {
-                fromAddresses.push(transferReq.transferInfos[i].from);
+            for (var i = 0; i < newTransferInfos.length; i++) {
+                fromAddresses.push(newTransferInfos[i].from);
                 amountTotalPay += transferReq.transferInfos[i].amount;
             }
             Async.parallel ([

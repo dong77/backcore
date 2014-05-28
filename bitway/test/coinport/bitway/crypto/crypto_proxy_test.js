@@ -8,6 +8,7 @@
 var Assert                    = require('assert'),
     MockRpc                   = require('./mock_rpc').MockRpc,
     MockDogRpc                = require('./mock_dog_rpc').MockDogRpc,
+    MockDogData               = require('./mock_dog_data').MockDogData,
     MockRedis                 = require('./mock_redis').MockRedis,
     CryptoProxy               = require('../../../../src/coinport/bitway/crypto/crypto_proxy').CryptoProxy,
     DataTypes                 = require('../../../../gen-nodejs/data_types'),
@@ -154,7 +155,6 @@ describe('crypto proxy', function() {
                 Assert.deepEqual(rawData.transactions, [
                     {"txid":"6ea96574c2325dd1c2bd00f3d6e8b34dfbedb72593e34f4f15f67cb6295d8cf5","vout":0},
                     {"txid":"854dbdbefde63e0435fee1519e3893860d6687061ebb79624a0542968a29a92b","vout":0}]);
-                var allHotAddresses = "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0d03156e010101062f503253482fffffffff010086b167e836000023210386b46794ca0ec0e696feb6388b6ca4011c1e6ab9f9bc567e63baae1e348fd5b0ac00000000";
                 done();
             });
         });
@@ -175,6 +175,56 @@ describe('crypto proxy', function() {
             cryptoProxy.constructRawTransaction_(request, function(error, rawData) {
                 Assert.equal(error.code, "Lack of balance!");
                 Assert.equal(error.message, "Lack of balance!");
+                done();
+            });
+        });
+
+
+        it('user to hot(single address)', function(done) {
+            var redisClient = new MockRedis();
+            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+                cryptoRpc: new MockDogRpc({blockCount: 93721}),
+                minConfirm: 1,
+                redis: redisClient
+            });
+            var transferInfoA = {from: "nmoEYptTPTRfzn9U8x58q97vioduyS98dE", to: "", amount: 15, id: '10001'};
+            var transferInfos = [];
+            transferInfos.push(transferInfoA);
+            var request = {currency: Currency.DOG, transferInfos: transferInfos, type: TransferType.USER_TO_HOT};
+            cryptoProxy.constructRawTransaction_(request, function(error, rawData) {
+                Assert.equal(error, null);
+                Assert.deepEqual(rawData.transactions, [{"txid":"f72cf190df6c13b704c4830fc043a4b7b0ef56ad3d4bcf0324928365dd82cfdc","vout":0},
+                    {"txid":"854dbdbefde63e0435fee1519e3893860d6687061ebb79624a0542968a29a92b","vout":1}]);
+                var hotAddresses = MockDogData.addressesByAccount["hot"];
+                var flag = false;
+                for (var i = 0; i < hotAddresses.length; i++) {
+                    if (rawData.addresses[hotAddresses[i]] == 14.9999) {
+                        flag = true;
+                        break;
+                    }
+                }
+                Assert.equal(flag, true);
+                done();
+            });
+        });
+
+        it('user to hot(duplicate addresses)', function(done) {
+            var redisClient = new MockRedis();
+            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+                cryptoRpc: new MockDogRpc({blockCount: 93721}),
+                minConfirm: 1,
+                redis: redisClient
+            });
+            var transferInfoA = {from: "nmoEYptTPTRfzn9U8x58q97vioduyS98dE", to: "", amount: 4.99995, id: '10001'};
+            var transferInfoB = {from: "nmoEYptTPTRfzn9U8x58q97vioduyS98dE", to: "", amount: 10, id: '10002'};
+            var transferInfos = [];
+            transferInfos.push(transferInfoA);
+            transferInfos.push(transferInfoB);
+            var request = {currency: Currency.DOG, transferInfos: transferInfos, type: TransferType.USER_TO_HOT};
+            cryptoProxy.constructRawTransaction_(request, function(error, rawData) {
+                Assert.equal(error, null);
+                Assert.deepEqual(rawData.transactions, [{"txid":"f72cf190df6c13b704c4830fc043a4b7b0ef56ad3d4bcf0324928365dd82cfdc","vout":0},
+                    {"txid":"854dbdbefde63e0435fee1519e3893860d6687061ebb79624a0542968a29a92b","vout":1}]);
                 done();
             });
         });
@@ -206,8 +256,8 @@ describe('crypto proxy', function() {
                 Assert.equal(block.prevIndex.id, '05a23efad2b301d280d5f5379ca5b31d586c685eab2b30ca543f213ce067afc6');
                 Assert.equal(block.prevIndex.height, 93717);
                 Assert.equal(block.txs.length, 1);
-                Assert.deepEqual(block.txs[0].sigId, "d1d2883deeea0f4bbda6d5e0294026608141d59482f446947cea937c8d14625b");
-                Assert.deepEqual(block.txs[0].txid, "367e72d39abc002d930745b64a4b36d5af783094b93da5c2e8a2cc82ece9ad3a");
+                Assert.equal(block.txs[0].sigId, "d1d2883deeea0f4bbda6d5e0294026608141d59482f446947cea937c8d14625b");
+                Assert.equal(block.txs[0].txid, "367e72d39abc002d930745b64a4b36d5af783094b93da5c2e8a2cc82ece9ad3a");
                 Assert.deepEqual(block.txs[0].inputs, [{"address":"coinbase","amount":0,
                     "internalAmount":null,"userId":null}]);
                 Assert.deepEqual(block.txs[0].outputs, [
