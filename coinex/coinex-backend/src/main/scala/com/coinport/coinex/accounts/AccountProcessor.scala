@@ -102,8 +102,6 @@ class AccountProcessor(
       persist(m) { event =>
         confirm(p)
         updateState(event)
-        if (m.transfer.`type` == Withdrawal || m.transfer.`type` == UserToHot)
-          transferHotColdIfNeed(m.transfer.currency)
       }
 
     case p @ ConfirmablePersistent(m: CryptoTransferSucceeded, _, _) =>
@@ -111,8 +109,10 @@ class AccountProcessor(
         event =>
           confirm(p)
           updateState(event)
+          /* TODO(c): reopen this after stable
           if (m.txType == Withdrawal || m.txType == UserToHot)
             transferHotColdIfNeed(m.transfers(0).currency)
+          */
       }
 
     case DoRequestGenerateABCode(userId, amount, _, _) => {
