@@ -281,6 +281,8 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
     }
 
   def removeOrder(orderId: Long, userId: Long): (MarketSide, Order) = {
+    assert(orderMap.contains(orderId))
+
     val order = orderMap(orderId)
     assert(order.userId == userId)
 
