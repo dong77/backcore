@@ -22,6 +22,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cCandleData = BinaryScalaCodec(CandleData)
   lazy val _cCandleDataItem = BinaryScalaCodec(CandleDataItem)
   lazy val _cCashAccount = BinaryScalaCodec(CashAccount)
+  lazy val _cCryptoAddress = BinaryScalaCodec(CryptoAddress)
   lazy val _cCryptoCurrencyBlock = BinaryScalaCodec(CryptoCurrencyBlock)
   lazy val _cCryptoCurrencyNetworkStatus = BinaryScalaCodec(CryptoCurrencyNetworkStatus)
   lazy val _cCryptoCurrencyTransaction = BinaryScalaCodec(CryptoCurrencyTransaction)
@@ -196,6 +197,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: CandleData => _cCandleData(m)
     case m: CandleDataItem => _cCandleDataItem(m)
     case m: CashAccount => _cCashAccount(m)
+    case m: CryptoAddress => _cCryptoAddress(m)
     case m: CryptoCurrencyBlock => _cCryptoCurrencyBlock(m)
     case m: CryptoCurrencyNetworkStatus => _cCryptoCurrencyNetworkStatus(m)
     case m: CryptoCurrencyTransaction => _cCryptoCurrencyTransaction(m)
@@ -374,6 +376,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[CandleData.Immutable] => _cCandleData.invert(bytes).get
     case Some(c) if c == classOf[CandleDataItem.Immutable] => _cCandleDataItem.invert(bytes).get
     case Some(c) if c == classOf[CashAccount.Immutable] => _cCashAccount.invert(bytes).get
+    case Some(c) if c == classOf[CryptoAddress.Immutable] => _cCryptoAddress.invert(bytes).get
     case Some(c) if c == classOf[CryptoCurrencyBlock.Immutable] => _cCryptoCurrencyBlock.invert(bytes).get
     case Some(c) if c == classOf[CryptoCurrencyNetworkStatus.Immutable] => _cCryptoCurrencyNetworkStatus.invert(bytes).get
     case Some(c) if c == classOf[CryptoCurrencyTransaction.Immutable] => _cCryptoCurrencyTransaction.invert(bytes).get

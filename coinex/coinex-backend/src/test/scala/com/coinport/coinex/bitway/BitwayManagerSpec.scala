@@ -9,6 +9,7 @@ import org.specs2.mutable._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Set
 
+import com.coinport.coinex.api.model._
 import com.coinport.coinex.data._
 import Implicits._
 import Currency._
@@ -17,6 +18,10 @@ class BitwayManagerSpec extends Specification {
   import CryptoCurrencyAddressType._
   import TransferType._
   import TransferStatus._
+
+  private def getBtcInternalAmount(amount: Double): Option[Long] = Some(new CurrencyWrapper(amount).internalValue(Btc))
+
+  private def getBtcExternalAmount(amount: Long): Option[Double] = Some(new CurrencyWrapper(amount).externalValue(Btc))
 
   "BitwayManager" should {
     "address accocate test" in {
@@ -159,12 +164,12 @@ class BitwayManagerSpec extends Specification {
         inputs = Some(List(CryptoCurrencyTransactionPort("u7", Some(1.1)))),
         outputs = Some(List(CryptoCurrencyTransactionPort("h1", Some(0.9)))),
         includedBlock = Some(bi1), status = Confirming)
-      bwm.completeCryptoCurrencyTransaction(rawTx, None, None) mustEqual Some(CryptoCurrencyTransaction(None, Some("t1"), None, Some(List(CryptoCurrencyTransactionPort("u7", Some(1.1), Some(1100), Some(1)))), Some(List(CryptoCurrencyTransactionPort("h1", Some(0.9), Some(900), Some(-1)))), None, None, Some(UserToHot), Confirming, minerFee = Some(200)))
+      bwm.completeCryptoCurrencyTransaction(rawTx, None, None) mustEqual Some(CryptoCurrencyTransaction(None, Some("t1"), None, Some(List(CryptoCurrencyTransactionPort("u7", Some(1.1), getBtcInternalAmount(1.1), Some(1)))), Some(List(CryptoCurrencyTransactionPort("h1", Some(0.9), getBtcInternalAmount(0.9), Some(-1)))), None, None, Some(UserToHot), Confirming, minerFee = getBtcInternalAmount(0.2)))
 
       val infos = Seq(
         CryptoCurrencyTransferInfo(1, Some("i1"), Some(1000)),
         CryptoCurrencyTransferInfo(2, Some("i2"), Some(80)))
-      bwm.completeTransferInfos(infos) mustEqual (List(CryptoCurrencyTransferInfo(1, Some("i1"), Some(1000), Some(1.0), None), CryptoCurrencyTransferInfo(2, Some("i2"), Some(80), Some(0.08), None)), false)
+      bwm.completeTransferInfos(infos) mustEqual (List(CryptoCurrencyTransferInfo(1, Some("i1"), Some(1000), getBtcExternalAmount(1000), None), CryptoCurrencyTransferInfo(2, Some("i2"), Some(80), getBtcExternalAmount(80), None)), false)
 
       val tx1 = CryptoCurrencyTransaction(
         txid = Some("t1"),
@@ -196,26 +201,26 @@ class BitwayManagerSpec extends Specification {
 
       bwm.extractTxsFromBlock(block) mustEqual List(
         CryptoCurrencyTransaction(None, Some("t1"), None,
-          Some(List(CryptoCurrencyTransactionPort("h1", Some(1.1), Some(1100), Some(-1)))),
-          Some(List(CryptoCurrencyTransactionPort("d1", Some(0.9), Some(900)))),
+          Some(List(CryptoCurrencyTransactionPort("h1", Some(1.1), getBtcInternalAmount(1.1), Some(-1)))),
+          Some(List(CryptoCurrencyTransactionPort("d1", Some(0.9), getBtcInternalAmount(0.9)))),
           Some(BlockIndex(Some("b9"), Some(9))),
-          Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Confirming, minerFee = Some(200)),
+          Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Confirming, minerFee = getBtcInternalAmount(0.2)),
         CryptoCurrencyTransaction(None, Some("t2"), None,
-          Some(List(CryptoCurrencyTransactionPort("h2", Some(2.1), Some(2100), Some(-1)))),
-          Some(List(CryptoCurrencyTransactionPort("d2", Some(2.9), Some(2900)))),
+          Some(List(CryptoCurrencyTransactionPort("h2", Some(2.1), getBtcInternalAmount(2.1), Some(-1)))),
+          Some(List(CryptoCurrencyTransactionPort("d2", Some(2.9), getBtcInternalAmount(2.9)))),
           Some(BlockIndex(Some("b9"), Some(9))),
           Some(BlockIndex(Some("b10"), Some(10))), Some(Withdrawal), Confirming), // error case
         CryptoCurrencyTransaction(None, Some("t3"), None,
           Some(List(
-            CryptoCurrencyTransactionPort("h3", Some(3.1), Some(3100), Some(-1)),
-            CryptoCurrencyTransactionPort("h4", Some(2.6), Some(2600))
+            CryptoCurrencyTransactionPort("h3", Some(3.1), getBtcInternalAmount(3.1), Some(-1)),
+            CryptoCurrencyTransactionPort("h4", Some(2.6), getBtcInternalAmount(2.6))
           )),
           Some(List(
-            CryptoCurrencyTransactionPort("d3", Some(3.9), Some(3900)),
-            CryptoCurrencyTransactionPort("d4", Some(0.9), Some(900))
+            CryptoCurrencyTransactionPort("d3", Some(3.9), getBtcInternalAmount(3.9)),
+            CryptoCurrencyTransactionPort("d4", Some(0.9), getBtcInternalAmount(0.9))
           )),
           Some(BlockIndex(Some("b9"), Some(9))), Some(BlockIndex(Some("b10"), Some(10))),
-          Some(Withdrawal), Confirming, minerFee = Some(900)))
+          Some(Withdrawal), Confirming, minerFee = getBtcInternalAmount(0.9)))
     }
 
     "getAddressStatus/getNetworkStatus/adjustAddressAmount test" in {
@@ -251,8 +256,8 @@ class BitwayManagerSpec extends Specification {
       bwm.updateLastAlive(1234L)
       bwm.getNetworkStatus mustEqual CryptoCurrencyNetworkStatus(Some("b3"), Some(3L), Some(1234L))
 
-      bwm.getAddressStatus(Hot) mustEqual Map("h2" -> AddressStatusResult(Some("t2"), Some(2), -300), "h1" -> AddressStatusResult(Some("t2"), Some(2), -1100))
-      bwm.getAddressStatus(UserUsed) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), 200), "u1" -> AddressStatusResult(Some("t1"), Some(1), 1000))
+      bwm.getAddressStatus(Hot) mustEqual Map("h2" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(-0.3).get), "h1" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(-1.1).get))
+      bwm.getAddressStatus(UserUsed) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(0.2).get), "u1" -> AddressStatusResult(Some("t1"), Some(1), getBtcInternalAmount(1).get))
       bwm.getAddressStatus(Cold) mustEqual Map.empty[String, BlockIndex]
 
       bwm.updateBlock(Some(BlockIndex(Some("b1"), Some(1))), CryptoCurrencyBlock(
@@ -260,21 +265,28 @@ class BitwayManagerSpec extends Specification {
         prevIndex = BlockIndex(Some("b1"), Some(1)),
         txs = List(
           CryptoCurrencyTransaction(
+            txid = Some("t0"),
+            inputs = Some(List(CryptoCurrencyTransactionPort("coinbase", Some(0)))),
+            outputs = Some(List(CryptoCurrencyTransactionPort("u1", Some(25.2)))),
+            status = Confirming
+          ),
+          CryptoCurrencyTransaction(
             txid = Some("t2"),
-            inputs = Some(List(CryptoCurrencyTransactionPort("h1", Some(0.2)), CryptoCurrencyTransactionPort("h1", Some(0.2)))),
+            inputs = Some(List(CryptoCurrencyTransactionPort("h1", Some(0.4)), CryptoCurrencyTransactionPort("h1", Some(0.2)))),
             outputs = Some(List(CryptoCurrencyTransactionPort("u2", Some(0.2)), CryptoCurrencyTransactionPort("u2", Some(0.2)))),
             status = Confirming
           )))
       )
 
-      bwm.getAddressStatus(Hot) mustEqual Map("h2" -> AddressStatusResult(Some("t2"), Some(2), 0), "h1" -> AddressStatusResult(Some("t2"), Some(2), -1400))
-      bwm.getAddressStatus(UserUsed) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), 400), "u1" -> AddressStatusResult(Some("t1"), Some(1), 1000))
+      bwm.getAddressStatus(Hot) mustEqual Map("h2" -> AddressStatusResult(Some("t2"), Some(2), 0), "h1" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(-1.6).get))
+      bwm.getAddressStatus(UserUsed) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(0.4).get), "u1" -> AddressStatusResult(Some("t0"), Some(2), getBtcInternalAmount(26.2).get))
       bwm.getAddressStatus(Cold) mustEqual Map.empty[String, BlockIndex]
 
-      bwm.getAddressAmount("h1") mustEqual -1400
-      bwm.canAdjustAddressAmount("h1", 1500) mustEqual true
-      bwm.adjustAddressAmount("h1", 1500)
-      bwm.getAddressAmount("h1") mustEqual 100
+      bwm.getAddressAmount("h1") mustEqual getBtcInternalAmount(-1.6).get
+      bwm.canAdjustAddressAmount("h1", getBtcInternalAmount(1.5).get) mustEqual false
+      bwm.canAdjustAddressAmount("h1", getBtcInternalAmount(1.7).get) mustEqual true
+      bwm.adjustAddressAmount("h1", getBtcInternalAmount(1.7).get)
+      bwm.getAddressAmount("h1") mustEqual getBtcInternalAmount(0.1).get
     }
 
     "disable withdrawal to deposit address" in {

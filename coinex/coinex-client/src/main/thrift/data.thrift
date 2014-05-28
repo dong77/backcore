@@ -467,6 +467,11 @@ struct AddressStatusResult {
     3: i64 confirmedAmount
 }
 
+struct CryptoAddress {
+    1: string address
+    2: string private
+}
+
 struct TAddressStatus {
     1: optional string txid // last tx with include the address
     2: optional i64 height // tx first included block height
