@@ -31,8 +31,10 @@ describe('crypto proxy', function() {
                 redis: new MockRedis()
             });
             cryptoProxy.generateUserAddress(new GenerateAddresses({num: 4}), function(response) {
+                console.log("%j", response);
                 var expectRes = new BitwayMessage({currency: Currency.BTC, generateAddressResponse:
-                    new GenerateAddressesResult({error: ErrorCode.OK, addresses: ['addr', 'addr', 'addr', 'addr'],
+                    new GenerateAddressesResult({error: ErrorCode.OK, addresses: [{"address":"addr","privateKey":"priv"},
+                        {"address":"addr","privateKey":"priv"},{"address":"addr","privateKey":"priv"},{"address":"addr","privateKey":"priv"}],
                         addressType: CryptoCurrencyAddressType.UNUSED})})
                 Assert.deepEqual(response, expectRes);
                 done();

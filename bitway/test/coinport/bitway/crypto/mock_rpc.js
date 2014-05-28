@@ -32,6 +32,25 @@ MockRpc.prototype.getNewAddress = function(account, callback) {
     }
 };
 
+MockRpc.prototype.dumpPrivKey = function(addr, callback) {
+
+    if (this.fail == 'all') {
+        callback('fail');
+    } else if (this.fail == 'partial') {
+
+        if (this.struggle == true) {
+            callback('fail');
+            this.struggle = false;
+        } else {
+            callback(null, {result: 'priv'});
+            this.struggle = true;
+        }
+
+    } else {
+        callback(null, {result: 'priv'});
+    }
+}
+
 MockRpc.prototype.getBlockCount = function(callback) {
     var self = this;
     callback(null, {result: self.blockCount});
