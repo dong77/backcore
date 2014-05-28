@@ -267,7 +267,8 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
   }
 
   def rememberTx(tx: CryptoCurrencyTransaction) {
-    sigIdsSinceLastBlock += tx.sigId.get
+    if (tx.sigId.isDefined)
+      sigIdsSinceLastBlock += tx.sigId.get
   }
 
   def canAdjustAddressAmount(address: String, adjustAmount: Long): Boolean = {
