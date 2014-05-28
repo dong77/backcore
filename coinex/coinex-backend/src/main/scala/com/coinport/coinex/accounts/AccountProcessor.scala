@@ -109,7 +109,7 @@ class AccountProcessor(
         event =>
           confirm(p)
           updateState(event)
-          /* TODO(c): reopen this after stable
+        /* TODO(c): reopen this after stable
           if (m.txType == Withdrawal || m.txType == UserToHot)
             transferHotColdIfNeed(m.transfers(0).currency)
           */
