@@ -125,6 +125,14 @@ class AccountManager(initialLastOrderId: Long = 0L,
     accounts += (adjustment.currency -> updated)
   }
 
+  def updateCoinportAccount(adjustment: CashAccount) = {
+    val current = getUserCashAccount(COINPORT_UID, adjustment.currency)
+    val updated = current + adjustment
+    setUserCashAccount(COINPORT_UID, updated, false)
+    val updateAggregation = aggregationAccount.getOrElse(adjustment.currency, CashAccount(adjustment.currency, 0, 0, 0)) + adjustment
+    aggregationAccount += (adjustment.currency -> updateAggregation)
+  }
+
   def updateCashAccount(userId: Long, adjustment: CashAccount) = {
     assert(userId > 0)
     val current = getUserCashAccount(userId, adjustment.currency)
@@ -145,8 +153,8 @@ class AccountManager(initialLastOrderId: Long = 0L,
   private def getUserCashAccount(userId: Long, currency: Currency): CashAccount =
     getUserAccounts(userId).cashAccounts.getOrElse(currency, CashAccount(currency, 0, 0, 0))
 
-  private def setUserCashAccount(userId: Long, cashAccount: CashAccount) = {
-    if (!cashAccount.isValid)
+  private def setUserCashAccount(userId: Long, cashAccount: CashAccount, checkValid: Boolean = true) = {
+    if (checkValid && !cashAccount.isValid)
       throw new IllegalArgumentException("Attempted to set user cash account to an invalid value: " + cashAccount)
 
     val accounts = accountMap.getOrElseUpdate(userId, UserAccount(userId))

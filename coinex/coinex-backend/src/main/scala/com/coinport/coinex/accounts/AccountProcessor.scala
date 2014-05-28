@@ -339,7 +339,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
 
   private def substractMinerFee(currency: Currency, minerFee: Long) {
     manager.updateHotCashAccount(CashAccount(currency, -minerFee, 0, 0))
-    manager.updateCashAccount(COINPORT_UID, CashAccount(currency, -minerFee, 0, 0))
+    manager.updateCoinportAccount(CashAccount(currency, -minerFee, 0, 0))
   }
 
   private def failedTransfer(t: AccountTransfer) {

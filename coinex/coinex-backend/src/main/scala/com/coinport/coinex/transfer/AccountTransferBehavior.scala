@@ -93,7 +93,7 @@ trait AccountTransferBehavior {
     case m @ MultiCryptoCurrencyTransactionMessage(currency, txs, newIndex: Option[BlockIndex]) =>
       logger.info(s">>>>>>>>>>>>>>>>>>>>> updateState  => MultiCryptoCurrencyTransactionMessage = ${m.toString}")
       clearResList
-      if (manager.getLastBlockHeight > 0) newIndex foreach (index => reOrgnize(index))
+      if (manager.getLastBlockHeight > 0) newIndex foreach (index => reOrgnize(index, txs))
       txs foreach {
         tx =>
           refreshLastBlockHeight(tx)
@@ -136,8 +136,8 @@ trait AccountTransferBehavior {
         handleDepositLikeTx(currency, tx, manager.depositSigId2TxPortIdMap)
       case UserToHot =>
         tx.ids match {
-          case Some(_) =>
-            tx.ids.get foreach {
+          case Some(idList) if idList.size > 0 =>
+            idList foreach {
               id =>
                 if (manager.transferMap.contains(id)) {
                   val userToHotItem = tx.status match {
@@ -168,7 +168,7 @@ trait AccountTransferBehavior {
                 }
             }
             updateSigId2MinerFee(tx)
-          case None =>
+          case _ =>
             logger.warning(s"splitAndHandleTxs() UserToHot tx not define ids : ${tx.toString}")
         }
       case Withdrawal =>
@@ -183,8 +183,8 @@ trait AccountTransferBehavior {
 
   def handleDepositLikeTx(currency: Currency, tx: CryptoCurrencyTransaction, sigIdToItemMap: Map[String, Map[CryptoCurrencyTransactionPort, Long]]) {
     tx.outputs match {
-      case Some(_) =>
-        tx.outputs.get foreach {
+      case Some(outputList) if outputList.size > 0 =>
+        outputList foreach {
           //every output corresponds to one tx
           outputPort =>
             if (outputPort.userId.isDefined) {
@@ -220,15 +220,15 @@ trait AccountTransferBehavior {
             }
         }
         updateSigId2MinerFee(tx)
-      case None =>
+      case _ =>
         logger.warning(s"handleDepositLikeTx() ${tx.txType.get.toString} tx not define outputs : ${tx.toString}")
     }
   }
 
   private def handleWithdrawlLikeTx(tx: CryptoCurrencyTransaction) {
     tx.ids match {
-      case Some(_) =>
-        tx.ids.get foreach {
+      case Some(idList) if idList.size > 0 =>
+        idList foreach {
           //every input corresponds to one tx
           id =>
             if (manager.transferMap.contains(id)) {
@@ -248,7 +248,7 @@ trait AccountTransferBehavior {
             }
         }
         updateSigId2MinerFee(tx)
-      case None =>
+      case _ =>
         logger.warning(s"handleWithdrawlLikeTx() ${tx.txType.get.toString} tx not define ids : ${tx.toString}")
     }
   }
@@ -355,44 +355,48 @@ trait AccountTransferBehavior {
     }
   }
 
-  private def reOrgnize(reOrgBlock: BlockIndex) {
-    assert(reOrgBlock.height.isDefined && reOrgBlock.height.get < manager.getLastBlockHeight)
-    manager.transferMap.keys foreach {
-      key: Long =>
-        val item = manager.transferMap(key)
-        if (item.includedBlock.isDefined && item.includedBlock.get.height.isDefined) {
-          val itemHeight = item.includedBlock.get.height.get
+  private def reOrgnize(reOrgBlock: BlockIndex, txs: Seq[CryptoCurrencyTransaction]) {
+    reOrgBlock.height match {
+      case Some(height) if height < manager.getLastBlockHeight =>
+        manager.transferMap.keys foreach {
+          key: Long =>
+            val item = manager.transferMap(key)
+            if (item.includedBlock.isDefined && item.includedBlock.get.height.isDefined) {
+              val itemHeight = item.includedBlock.get.height.get
 
-          // reset item which has bigger height than reOrg's height
-          def setReorg(item: CryptoCurrencyTransferItem) {
-            // Confirmed, Reorging
-            val newBlock = if (reOrgBlock.height.get < itemHeight) None else item.includedBlock
-            val reOrgItem = item.copy(includedBlock = newBlock, status = Some(Reorging))
-            setResState(Updator.copy(item = reOrgItem, addMongo = true, putItem = true))
-          }
+              // reset item which has bigger height than reOrg's height
+              def setReorg(item: CryptoCurrencyTransferItem) {
+                // Confirmed, Reorging
+                val newBlock = if (reOrgBlock.height.get < itemHeight) None else item.includedBlock
+                val reOrgItem = item.copy(includedBlock = newBlock, status = Some(Reorging))
+                setResState(Updator.copy(item = reOrgItem, addMongo = true, putItem = true))
+              }
 
-          item.status match {
-            case Some(Confirming) if reOrgBlock.height.get < itemHeight =>
-              val confirmingItem: CryptoCurrencyTransferItem = item.copy(includedBlock = None)
-              setResState(Updator.copy(item = confirmingItem, addMongo = true, putItem = true))
-            case Some(Confirmed) if reOrgBlock.height.get - itemHeight < confirmableHeight - 1 =>
-              setReorg(item)
-            case Some(Reorging) if reOrgBlock.height.get < itemHeight =>
-              setReorg(item)
-            case Some(Succeeded) => //Succeeded item has mv to manager.succeededMap, no need to reorging
-            case None =>
-            case _ =>
-          }
+              item.status match {
+                case Some(Confirming) if reOrgBlock.height.get < itemHeight =>
+                  val confirmingItem: CryptoCurrencyTransferItem = item.copy(includedBlock = None)
+                  setResState(Updator.copy(item = confirmingItem, addMongo = true, putItem = true))
+                case Some(Confirmed) if reOrgBlock.height.get - itemHeight < confirmableHeight - 1 =>
+                  setReorg(item)
+                case Some(Reorging) if reOrgBlock.height.get < itemHeight =>
+                  setReorg(item)
+                case Some(Succeeded) => //Succeeded item has mv to manager.succeededMap, no need to reorging
+                case None =>
+                case _ =>
+              }
+            }
         }
-    }
-    manager.succeededMap.keys foreach {
-      // reorging succeeded item
-      key: Long =>
-        val item = manager.succeededMap(key)
-        if (reOrgBlock.height.get - item.includedBlock.get.height.get < confirmableHeight - 1) {
-          setAccountTransferStatus(manager.succeededMap, key, Reorging)
-          manager.succeededMap.remove(key) //no need to reserve reorging item
+        manager.succeededMap.keys foreach {
+          // reorging succeeded item
+          key: Long =>
+            val item = manager.succeededMap(key)
+            if (reOrgBlock.height.get - item.includedBlock.get.height.get < confirmableHeight - 1) {
+              setAccountTransferStatus(manager.succeededMap, key, Reorging)
+              manager.succeededMap.remove(key) //no need to reserve reorging item
+            }
         }
+      case _ =>
+        logger.warning(s"reOrgnize() wrong reOrgnize height : ${txs.toString()}")
     }
   }
 
