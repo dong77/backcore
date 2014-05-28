@@ -217,7 +217,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
 class AccountTransferManager() extends Manager[TAccountTransferState] {
   private var lastTransferId = 1E12.toLong
   private var lastTransferItemId = 6E12.toLong
-  private var lastBlockHeight = 0L
+  private var lastBlockHeight = Map.empty[Currency, Long]
   private val depositSigId2TxPortIdMapInner = Map.empty[String, Map[CryptoCurrencyTransactionPort, Long]]
   private val coldToHotSigId2TxPortIdMapInner = Map.empty[String, Map[CryptoCurrencyTransactionPort, Long]]
   private val transferMapInnner = Map.empty[Long, CryptoCurrencyTransferItem]
@@ -238,7 +238,7 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
   def loadSnapshot(s: TAccountTransferState) = {
     lastTransferId = s.lastTransferId
     lastTransferItemId = s.lastTransferItemId
-    lastBlockHeight = s.lastBlockHeight
+    lastBlockHeight ++= s.lastBlockHeight
     depositSigId2TxPortIdMapInner ++= s.depositSigId2TxPortIdMapInner map { kv => (kv._1 -> (Map.empty ++ kv._2)) }
     coldToHotSigId2TxPortIdMapInner ++= s.coldToHotSigId2TxPortIdMapInner map { kv => (kv._1 -> (Map.empty ++ kv._2)) }
     transferMapInnner ++= s.transferMap
@@ -264,9 +264,9 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
 
   def sigId2MinerFeeMap = sigId2MinerFeeMapInnner
 
-  def getLastBlockHeight = lastBlockHeight
+  def getLastBlockHeight(currency: Currency): Long = lastBlockHeight.getOrElse(currency, 0L)
 
-  def setLastBlockHeight(height: Long) = { lastBlockHeight = height }
+  def setLastBlockHeight(currency: Currency, height: Long) = { lastBlockHeight.put(currency, height) }
 
   def depositSigId2TxPortIdMap = depositSigId2TxPortIdMapInner
 
