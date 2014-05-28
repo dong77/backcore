@@ -225,7 +225,7 @@ object Client {
   }
 
   def faucetBtcUserAddress = {
-    Client.backend ! BitwayMessage(Btc, generateAddressResponse = Some(GenerateAddressesResult(ErrorCode.Ok, Some(Set("userAddress1")), Some(CryptoCurrencyAddressType.Unused))))
+    Client.backend ! BitwayMessage(Btc, generateAddressResponse = Some(GenerateAddressesResult(ErrorCode.Ok, Some(Set(CryptoAddress("userAddress1"))), Some(CryptoCurrencyAddressType.Unused))))
   }
 
   // userAddress1

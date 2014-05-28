@@ -30,7 +30,7 @@ class BitwayManagerSpec extends Specification {
       bwm.getSupportedCurrency mustEqual Btc
 
       bwm.isDryUp mustEqual true
-      bwm.faucetAddress(Unused, Set("d1", "d2", "d3", "d4", "d5", "d6"))
+      bwm.faucetAddress(Unused, Set(CryptoAddress("d1"), CryptoAddress("d2"), CryptoAddress("d3"), CryptoAddress("d4"), CryptoAddress("d5"), CryptoAddress("d6")))
       bwm.isDryUp mustEqual false
 
       val d1 = bwm.allocateAddress
@@ -65,9 +65,9 @@ class BitwayManagerSpec extends Specification {
 
     "get tx type test" in {
       val bwm = new BitwayManager(Btc, 10)
-      bwm.faucetAddress(UserUsed, Set("u1", "u2", "u3", "u4", "u5", "u6"))
-      bwm.faucetAddress(Hot, Set("h1", "h2"))
-      bwm.faucetAddress(Cold, Set("c1"))
+      bwm.faucetAddress(UserUsed, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
+      bwm.faucetAddress(Hot, Set(CryptoAddress("h1"), CryptoAddress("h2")))
+      bwm.faucetAddress(Cold, Set(CryptoAddress("c1")))
 
       bwm.getTransferType(Set("d1"), Set("d2")) mustEqual None
       bwm.getTransferType(Set("u1", "d1"), Set("h1", "u1")) mustEqual Some(UserToHot)
@@ -151,10 +151,10 @@ class BitwayManagerSpec extends Specification {
 
     "tx generation test" in {
       val bwm = new BitwayManager(Btc, 10)
-      bwm.faucetAddress(Unused, Set("u7"))
-      bwm.faucetAddress(UserUsed, Set("u1", "u2", "u3", "u4", "u5", "u6"))
-      bwm.faucetAddress(Hot, Set("h1", "h2", "h3"))
-      bwm.faucetAddress(Cold, Set("c1"))
+      bwm.faucetAddress(Unused, Set(CryptoAddress("u7")))
+      bwm.faucetAddress(UserUsed, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
+      bwm.faucetAddress(Hot, Set(CryptoAddress("h1"), CryptoAddress("h2"), CryptoAddress("h3")))
+      bwm.faucetAddress(Cold, Set(CryptoAddress("c1")))
 
       bwm.addressAllocated(1, "u7")
 
@@ -225,9 +225,9 @@ class BitwayManagerSpec extends Specification {
 
     "getAddressStatus/getNetworkStatus/adjustAddressAmount test" in {
       val bwm = new BitwayManager(Btc, 10)
-      bwm.faucetAddress(UserUsed, Set("u1", "u2", "u3", "u4", "u5", "u6"))
-      bwm.faucetAddress(Hot, Set("h1", "h2"))
-      bwm.faucetAddress(Cold, Set("c1"))
+      bwm.faucetAddress(UserUsed, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
+      bwm.faucetAddress(Hot, Set(CryptoAddress("h1"), CryptoAddress("h2")))
+      bwm.faucetAddress(Cold, Set(CryptoAddress("c1")))
 
       val bi1 = BlockIndex(Some("b1"), Some(1))
       val bi2 = BlockIndex(Some("b2"), Some(2))
@@ -291,9 +291,9 @@ class BitwayManagerSpec extends Specification {
 
     "disable withdrawal to deposit address" in {
       val bwm = new BitwayManager(Btc, 10)
-      bwm.faucetAddress(UserUsed, Set("u1", "u2", "u3", "u4", "u5", "u6"))
-      bwm.faucetAddress(Hot, Set("h1", "h2"))
-      bwm.faucetAddress(Cold, Set("c1"))
+      bwm.faucetAddress(UserUsed, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
+      bwm.faucetAddress(Hot, Set(CryptoAddress("h1"), CryptoAddress("h2")))
+      bwm.faucetAddress(Cold, Set(CryptoAddress("c1")))
 
       bwm.includeWithdrawalToDepositAddress(Seq(
         CryptoCurrencyTransferInfo(1, from = Some("h1"), to = Some("c1")),
@@ -304,6 +304,36 @@ class BitwayManagerSpec extends Specification {
         CryptoCurrencyTransferInfo(2, from = Some("c1"), to = Some("h2")),
         CryptoCurrencyTransferInfo(1, from = Some("h1"), to = Some("u1"))
       )) mustEqual true
+
+      bwm.privateKeysBackup mustEqual Map.empty[String, String]
+    }
+
+    "faucetAddress with private key" in {
+      val bwm = new BitwayManager(Btc, 10)
+      bwm.faucetAddress(UserUsed, Set(CryptoAddress("u1", Some("p1")), CryptoAddress("u2", Some("p2")), CryptoAddress("u3", Some("p3")), CryptoAddress("u4", Some("p4")), CryptoAddress("u5", Some("p5")), CryptoAddress("u6", Some("p6"))))
+      bwm.faucetAddress(Hot, Set(CryptoAddress("h1", Some("ph1")), CryptoAddress("h2", Some("ph2"))))
+      bwm.faucetAddress(Cold, Set(CryptoAddress("c1", Some("pc1"))))
+
+      bwm.includeWithdrawalToDepositAddress(Seq(
+        CryptoCurrencyTransferInfo(1, from = Some("h1"), to = Some("c1")),
+        CryptoCurrencyTransferInfo(2, from = Some("c1"), to = Some("h2"))
+      )) mustEqual false
+
+      bwm.includeWithdrawalToDepositAddress(Seq(
+        CryptoCurrencyTransferInfo(2, from = Some("c1"), to = Some("h2")),
+        CryptoCurrencyTransferInfo(1, from = Some("h1"), to = Some("u1"))
+      )) mustEqual true
+
+      bwm.privateKeysBackup mustEqual Map(
+        "u1" -> "p1",
+        "u2" -> "p2",
+        "u3" -> "p3",
+        "u4" -> "p4",
+        "u5" -> "p5",
+        "u6" -> "p6",
+        "h1" -> "ph1",
+        "h2" -> "ph2",
+        "c1" -> "pc1")
     }
   }
 }

@@ -51,6 +51,7 @@ typedef data.Notification                       _Notification
 typedef data.NotificationType                   _NotificationType
 typedef data.CryptoCurrencyNetworkStatus        _CryptoCurrencyNetworkStatus
 typedef data.AddressStatusResult                _AddressStatusResult
+typedef data.CryptoAddress                      _CryptoAddress
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -183,7 +184,7 @@ typedef data.AddressStatusResult                _AddressStatusResult
 /* C    */ struct GetMissedCryptoCurrencyBlocks           {1: list<_BlockIndex> startIndexs, 2: _BlockIndex endIndex} // returned (startIndex, endIndex]
 /* R    */ struct GenerateAddressesResult                 {
                                                               1: _ErrorCode error,
-                                                              2: optional set<string> addresses,
+                                                              2: optional set<_CryptoAddress> addresses,
                                                               3: optional _CryptoCurrencyAddressType addressType
                                                           }
 /* I    */ struct CryptoCurrencyBlockMessage              {1: optional _BlockIndex reorgIndex, /* BlockIndex(None, None) means in another branch */ 2: _CryptoCurrencyBlock block, 3: optional i64 timestamp}

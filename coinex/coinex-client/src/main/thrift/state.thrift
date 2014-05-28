@@ -115,4 +115,5 @@ struct TBitwayState {
     6: i64 lastAlive
     7: map<string, i64> addressUidMap
     8: set<string> sigIdsSinceLastBlock
+    9: optional map<string, string> privateKeysBackup
 }

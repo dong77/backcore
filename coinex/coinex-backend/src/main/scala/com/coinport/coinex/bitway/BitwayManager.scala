@@ -31,6 +31,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
   // TODO(c): remove confirmed tx
   val sigIdsSinceLastBlock = Set.empty[String]
   var lastAlive: Long = -1
+  private[bitway] val privateKeysBackup = Map.empty[String, String]
 
   final val SPECIAL_ACCOUNT_ID: Map[CryptoCurrencyAddressType, Long] = Map(
     CryptoCurrencyAddressType.Hot -> -1,
@@ -48,7 +49,8 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     addressStatus.map(kv => (kv._1 -> kv._2.toThrift)),
     lastAlive,
     addressUidMap.clone,
-    sigIdsSinceLastBlock.clone
+    sigIdsSinceLastBlock.clone,
+    privateKeysBackup = if (privateKeysBackup.size > 0) Some(privateKeysBackup.clone) else None
   )
 
   def loadSnapshot(s: TBitwayState) {
@@ -64,6 +66,10 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     addressUidMap ++= s.addressUidMap
     sigIdsSinceLastBlock.clear
     sigIdsSinceLastBlock ++= s.sigIdsSinceLastBlock
+    if (s.privateKeysBackup.isDefined) {
+      privateKeysBackup.clear
+      privateKeysBackup ++= s.privateKeysBackup.get
+    }
   }
 
   def isDryUp = addresses(Unused).size == 0 || addresses(UserUsed).size > addresses(Unused).size * FAUCET_THRESHOLD
@@ -87,11 +93,14 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     addressUidMap += (address -> uid)
   }
 
-  def faucetAddress(cryptoCurrencyAddressType: CryptoCurrencyAddressType, addrs: Set[String]) {
-    addresses(cryptoCurrencyAddressType) ++= addrs
-    addressStatus ++= addrs.map(i => (i -> AddressStatus()))
+  def faucetAddress(cryptoCurrencyAddressType: CryptoCurrencyAddressType, addrs: Set[CryptoAddress]) {
+    addresses(cryptoCurrencyAddressType) ++= addrs.map(_.address)
+    addressStatus ++= addrs.map(i => (i.address -> AddressStatus()))
     if (SPECIAL_ACCOUNT_ID.contains(cryptoCurrencyAddressType))
-      addressUidMap ++= addrs.map(_ -> SPECIAL_ACCOUNT_ID(cryptoCurrencyAddressType))
+      addressUidMap ++= addrs.map(_.address -> SPECIAL_ACCOUNT_ID(cryptoCurrencyAddressType))
+    val privateKeys = addrs.filter(_.privateKey.isDefined)
+    if (privateKeys.size > 0)
+      privateKeysBackup ++= Map(privateKeys.map(i => (i.address -> i.privateKey.get)).toSeq: _*)
   }
 
   def updateLastAlive(ts: Long) {

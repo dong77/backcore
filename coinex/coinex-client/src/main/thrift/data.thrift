@@ -469,7 +469,7 @@ struct AddressStatusResult {
 
 struct CryptoAddress {
     1: string address
-    2: string private
+    2: optional string privateKey
 }
 
 struct TAddressStatus {

@@ -173,7 +173,7 @@ trait BitwayManagerBehavior {
     case AdjustAddressAmount(currency, address, adjustAmount) => manager.adjustAddressAmount(address, adjustAmount)
     case BitwayMessage(currency, Some(res), None, None) =>
       if (res.addressType.isDefined && res.addresses.isDefined && res.addresses.get.size > 0)
-        manager.faucetAddress(res.addressType.get, Set.empty[String] ++ res.addresses.get)
+        manager.faucetAddress(res.addressType.get, Set.empty[CryptoAddress] ++ res.addresses.get)
     case BitwayMessage(currency, None, Some(tx), None) =>
       if (tx.timestamp.isDefined) manager.updateLastAlive(tx.timestamp.get)
       manager.rememberTx(tx)
