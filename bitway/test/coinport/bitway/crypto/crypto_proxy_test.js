@@ -31,7 +31,6 @@ describe('crypto proxy', function() {
                 redis: new MockRedis()
             });
             cryptoProxy.generateUserAddress(new GenerateAddresses({num: 4}), function(response) {
-                console.log("%j", response);
                 var expectRes = new BitwayMessage({currency: Currency.BTC, generateAddressResponse:
                     new GenerateAddressesResult({error: ErrorCode.OK, addresses: [{"address":"addr","privateKey":"priv"},
                         {"address":"addr","privateKey":"priv"},{"address":"addr","privateKey":"priv"},{"address":"addr","privateKey":"priv"}],

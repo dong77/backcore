@@ -73,6 +73,12 @@ RedisProxy.prototype.start = function() {
                 var bwr = new BitwayRequest();
                 proxy.serializer.fromBinary(bwr, buf);
                 switch (bwr.type) {
+                    case BitwayRequestType.SYNC_HOT_ADDRESSES:
+                        console.log(bwr.currency);
+                        console.log(bwr.syncHotAddresses);
+                        proxy.emit(RedisProxy.EventType.SYNC_HOT_ADDRESSES, bwr.currency,
+                            bwr.syncHotAddresses);
+                        break;
                     case BitwayRequestType.GENERATE_ADDRESS:
                         console.log(bwr.currency);
                         console.log(bwr.generateAddresses.num);

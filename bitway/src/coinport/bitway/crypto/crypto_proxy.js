@@ -116,6 +116,7 @@ CryptoProxy.prototype.generateUserAddress = function(request, callback) {
 
 CryptoProxy.prototype.synchronousHotAddr =  function(request, callback) {
     var self = this;
+    self.log.info('** Synchronous Hot Addr Request Received **');
     var shr = new SyncHotAddressesResult({error: ErrorCode.OK, addresses: []});
     self.getAllHotAddresses_.bind(self)(function(errHot, addresses){
         if (errHot) {
