@@ -25,6 +25,8 @@ case object DoExportData
 
 case object TryFetchAddresses
 
+case object TrySyncHotAddresses
+
 case class FetchAddresses(currency: Currency)
 
 case object QueryRecoverStats

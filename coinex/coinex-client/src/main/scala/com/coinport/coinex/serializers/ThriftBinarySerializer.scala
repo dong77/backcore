@@ -91,6 +91,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cDoRequestGenerateABCode = BinaryScalaCodec(DoRequestGenerateABCode)
   lazy val _cDoRequestPasswordReset = BinaryScalaCodec(DoRequestPasswordReset)
   lazy val _cDoRequestTransfer = BinaryScalaCodec(DoRequestTransfer)
+  lazy val _cDoResendVerifyEmail = BinaryScalaCodec(DoResendVerifyEmail)
   lazy val _cDoResetPassword = BinaryScalaCodec(DoResetPassword)
   lazy val _cDoSendEmail = BinaryScalaCodec(DoSendEmail)
   lazy val _cDoSimulateOrderSubmission = BinaryScalaCodec(DoSimulateOrderSubmission)
@@ -162,10 +163,14 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cRequestPasswordResetSucceeded = BinaryScalaCodec(RequestPasswordResetSucceeded)
   lazy val _cRequestTransferFailed = BinaryScalaCodec(RequestTransferFailed)
   lazy val _cRequestTransferSucceeded = BinaryScalaCodec(RequestTransferSucceeded)
+  lazy val _cResendVerifyEmailFailed = BinaryScalaCodec(ResendVerifyEmailFailed)
+  lazy val _cResendVerifyEmailSucceeded = BinaryScalaCodec(ResendVerifyEmailSucceeded)
   lazy val _cResetPasswordFailed = BinaryScalaCodec(ResetPasswordFailed)
   lazy val _cResetPasswordSucceeded = BinaryScalaCodec(ResetPasswordSucceeded)
   lazy val _cSetNotification = BinaryScalaCodec(SetNotification)
   lazy val _cSubmitOrderFailed = BinaryScalaCodec(SubmitOrderFailed)
+  lazy val _cSyncHotAddresses = BinaryScalaCodec(SyncHotAddresses)
+  lazy val _cSyncHotAddressesResult = BinaryScalaCodec(SyncHotAddressesResult)
   lazy val _cTakeSnapshotNow = BinaryScalaCodec(TakeSnapshotNow)
   lazy val _cTransferCryptoCurrency = BinaryScalaCodec(TransferCryptoCurrency)
   lazy val _cTransferCryptoCurrencyResult = BinaryScalaCodec(TransferCryptoCurrencyResult)
@@ -266,6 +271,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: DoRequestGenerateABCode => _cDoRequestGenerateABCode(m)
     case m: DoRequestPasswordReset => _cDoRequestPasswordReset(m)
     case m: DoRequestTransfer => _cDoRequestTransfer(m)
+    case m: DoResendVerifyEmail => _cDoResendVerifyEmail(m)
     case m: DoResetPassword => _cDoResetPassword(m)
     case m: DoSendEmail => _cDoSendEmail(m)
     case m: DoSimulateOrderSubmission => _cDoSimulateOrderSubmission(m)
@@ -337,10 +343,14 @@ class ThriftBinarySerializer extends Serializer {
     case m: RequestPasswordResetSucceeded => _cRequestPasswordResetSucceeded(m)
     case m: RequestTransferFailed => _cRequestTransferFailed(m)
     case m: RequestTransferSucceeded => _cRequestTransferSucceeded(m)
+    case m: ResendVerifyEmailFailed => _cResendVerifyEmailFailed(m)
+    case m: ResendVerifyEmailSucceeded => _cResendVerifyEmailSucceeded(m)
     case m: ResetPasswordFailed => _cResetPasswordFailed(m)
     case m: ResetPasswordSucceeded => _cResetPasswordSucceeded(m)
     case m: SetNotification => _cSetNotification(m)
     case m: SubmitOrderFailed => _cSubmitOrderFailed(m)
+    case m: SyncHotAddresses => _cSyncHotAddresses(m)
+    case m: SyncHotAddressesResult => _cSyncHotAddressesResult(m)
     case m: TakeSnapshotNow => _cTakeSnapshotNow(m)
     case m: TransferCryptoCurrency => _cTransferCryptoCurrency(m)
     case m: TransferCryptoCurrencyResult => _cTransferCryptoCurrencyResult(m)
@@ -445,6 +455,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[DoRequestGenerateABCode.Immutable] => _cDoRequestGenerateABCode.invert(bytes).get
     case Some(c) if c == classOf[DoRequestPasswordReset.Immutable] => _cDoRequestPasswordReset.invert(bytes).get
     case Some(c) if c == classOf[DoRequestTransfer.Immutable] => _cDoRequestTransfer.invert(bytes).get
+    case Some(c) if c == classOf[DoResendVerifyEmail.Immutable] => _cDoResendVerifyEmail.invert(bytes).get
     case Some(c) if c == classOf[DoResetPassword.Immutable] => _cDoResetPassword.invert(bytes).get
     case Some(c) if c == classOf[DoSendEmail.Immutable] => _cDoSendEmail.invert(bytes).get
     case Some(c) if c == classOf[DoSimulateOrderSubmission.Immutable] => _cDoSimulateOrderSubmission.invert(bytes).get
@@ -516,10 +527,14 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[RequestPasswordResetSucceeded.Immutable] => _cRequestPasswordResetSucceeded.invert(bytes).get
     case Some(c) if c == classOf[RequestTransferFailed.Immutable] => _cRequestTransferFailed.invert(bytes).get
     case Some(c) if c == classOf[RequestTransferSucceeded.Immutable] => _cRequestTransferSucceeded.invert(bytes).get
+    case Some(c) if c == classOf[ResendVerifyEmailFailed.Immutable] => _cResendVerifyEmailFailed.invert(bytes).get
+    case Some(c) if c == classOf[ResendVerifyEmailSucceeded.Immutable] => _cResendVerifyEmailSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ResetPasswordFailed.Immutable] => _cResetPasswordFailed.invert(bytes).get
     case Some(c) if c == classOf[ResetPasswordSucceeded.Immutable] => _cResetPasswordSucceeded.invert(bytes).get
     case Some(c) if c == classOf[SetNotification.Immutable] => _cSetNotification.invert(bytes).get
     case Some(c) if c == classOf[SubmitOrderFailed.Immutable] => _cSubmitOrderFailed.invert(bytes).get
+    case Some(c) if c == classOf[SyncHotAddresses.Immutable] => _cSyncHotAddresses.invert(bytes).get
+    case Some(c) if c == classOf[SyncHotAddressesResult.Immutable] => _cSyncHotAddressesResult.invert(bytes).get
     case Some(c) if c == classOf[TakeSnapshotNow.Immutable] => _cTakeSnapshotNow.invert(bytes).get
     case Some(c) if c == classOf[TransferCryptoCurrency.Immutable] => _cTransferCryptoCurrency.invert(bytes).get
     case Some(c) if c == classOf[TransferCryptoCurrencyResult.Immutable] => _cTransferCryptoCurrencyResult.invert(bytes).get

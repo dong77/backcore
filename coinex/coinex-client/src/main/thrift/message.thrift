@@ -184,8 +184,10 @@ typedef data.CryptoAddress                      _CryptoAddress
 /* R    */ struct AdjustAddressAmountResult               {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: string address, 4: optional i64 adjustAmount}
 
 ////////// Bitway nodejs
-/* C    */ struct GenerateAddresses                       {1: i32 num}
+/* C    */ struct SyncHotAddresses                        {1: _Currency currency}
+/* R    */ struct SyncHotAddressesResult                  {1: _ErrorCode error, 2: set<_CryptoAddress> addresses}
 /* C    */ struct GetMissedCryptoCurrencyBlocks           {1: list<_BlockIndex> startIndexs, 2: _BlockIndex endIndex} // returned (startIndex, endIndex]
+/* C    */ struct GenerateAddresses                       {1: i32 num}
 /* R    */ struct GenerateAddressesResult                 {
                                                               1: _ErrorCode error,
                                                               2: optional set<_CryptoAddress> addresses,
@@ -198,12 +200,14 @@ typedef data.CryptoAddress                      _CryptoAddress
                                                               3: optional GenerateAddresses generateAddresses
                                                               4: optional GetMissedCryptoCurrencyBlocks getMissedCryptoCurrencyBlocksRequest
                                                               5: optional TransferCryptoCurrency transferCryptoCurrency
+                                                              6: optional SyncHotAddresses syncHotAddresses
                                                           }
 /* I    */ struct BitwayMessage                           {
                                                               1: _Currency currency
                                                               2: optional GenerateAddressesResult generateAddressResponse
                                                               3: optional _CryptoCurrencyTransaction tx
                                                               4: optional CryptoCurrencyBlockMessage blockMsg
+                                                              5: optional SyncHotAddressesResult syncHotAddressesResult
                                                           }
 
 ////////////////////////////////////////////////////////////////

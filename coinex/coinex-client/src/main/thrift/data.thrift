@@ -181,6 +181,7 @@ enum BitwayRequestType {
     GENERATE_ADDRESS        = 0
     TRANSFER                = 1
     GET_MISSED_BLOCKS       = 2
+    SYNC_HOT_ADDRESSES      = 3
 }
 
 enum BitwayResponseType {

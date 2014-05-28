@@ -335,5 +335,26 @@ class BitwayManagerSpec extends Specification {
         "h2" -> "ph2",
         "c1" -> "pc1")
     }
+
+    "syncHotAddresses test" in {
+      val bwm = new BitwayManager(Btc, 10)
+      bwm.faucetAddress(UserUsed, Set(CryptoAddress("u1", Some("p1")), CryptoAddress("u2", Some("p2")), CryptoAddress("u3", Some("p3")), CryptoAddress("u4", Some("p4")), CryptoAddress("u5", Some("p5")), CryptoAddress("u6", Some("p6"))))
+      bwm.faucetAddress(Hot, Set(CryptoAddress("h1", Some("ph1")), CryptoAddress("h2", Some("ph2"))))
+      bwm.faucetAddress(Cold, Set(CryptoAddress("c1", Some("pc1"))))
+
+      bwm.syncHotAddresses(Set(CryptoAddress("h1"), CryptoAddress("h3", Some("ph3")), CryptoAddress("h2", Some("other")), CryptoAddress("h4")))
+
+      bwm.privateKeysBackup mustEqual Map(
+        "u1" -> "p1",
+        "u2" -> "p2",
+        "u3" -> "p3",
+        "u4" -> "p4",
+        "u5" -> "p5",
+        "u6" -> "p6",
+        "h1" -> "ph1",
+        "h2" -> "ph2",
+        "h3" -> "ph3",
+        "c1" -> "pc1")
+    }
   }
 }

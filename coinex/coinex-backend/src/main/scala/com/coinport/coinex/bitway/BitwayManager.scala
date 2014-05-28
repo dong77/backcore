@@ -299,6 +299,13 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
       addresses(Hot).contains(info.from.get) && addresses(UserUsed).contains(info.to.get)))
   }
 
+  def syncHotAddresses(addrs: Set[CryptoAddress]) {
+    val origAddresses = addresses.getOrElse(Hot, Set.empty[String])
+    val unseenAddresses = addrs.filter(i => !origAddresses.contains(i.address))
+    if (unseenAddresses.size > 0)
+      faucetAddress(Hot, unseenAddresses)
+  }
+
   private def getCurrentHeight: Option[Long] = {
     blockIndexes.lastOption match {
       case None => None
