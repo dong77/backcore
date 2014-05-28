@@ -4,7 +4,7 @@ import akka.actor.ActorContext
 import akka.persistence.PersistentRepr
 import akka.persistence.hbase.journal.PluginPersistenceSettings
 import akka.persistence.hbase.common.Const._
-import akka.persistence.hbase.common.{ DeferredConversions, RowKey, HdfsSnapshotDescriptor, EncryptingSerializationExtension }
+import akka.persistence.hbase.common.{ DeferredConversions, RowKey, HdfsSnapshotDescriptor, EncryptingSerializationExtension, SaltedScanner }
 import akka.persistence.hbase.common.Columns._
 import akka.persistence.serialization.Snapshot
 import com.coinport.coinex.common.Manager
@@ -22,6 +22,7 @@ import scala.collection.mutable.Map
 import scala.collection.JavaConverters._
 
 import DeferredConversions._
+import akka.persistence.hbase.common.RowKey
 
 class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context: ActorContext, val openDataConfig: OpenDataConfig)
     extends Manager[ExportOpenDataMap] {
@@ -113,12 +114,11 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
   def dumpMessages(processorId: String, fromSeqNum: Long, toSeqNum: Long) {
     if (toSeqNum <= fromSeqNum) return
     val client = asyncHBaseClient.getClient()
-    val scanner = client.newScanner(Bytes.toBytes(messagesTable))
-    scanner.setFamily(Bytes.toBytes(messagesFamily))
-    scanner.setStartKey(RowKey(processorId, fromSeqNum).toBytes)
-    scanner.setStopKey(RowKey.toKeyForProcessor(processorId, toSeqNum))
-    scanner.setKeyRegexp(RowKey.patternForProcessor(processorId))
-    scanner.setMaxNumRows(SCAN_MAX_NUM_ROWS)
+    val scanner = new SaltedScanner(client, pluginPersistenceSettings.partitionCount, Bytes.toBytes(messagesTable), Bytes.toBytes(messagesFamily))
+    scanner.setSaltedStartKeys(processorId, fromSeqNum)
+    scanner.setSaltedStopKeys(processorId, toSeqNum)
+    scanner.setKeyRegexp(processorId)
+    scanner.setMaxNumRows(pluginPersistenceSettings.scanBatchSize)
     type AsyncBaseRows = JArrayList[JArrayList[KeyValue]]
 
     def getMessages(rows: AsyncBaseRows): String = {

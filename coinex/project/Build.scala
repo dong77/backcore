@@ -122,7 +122,7 @@ object CoinexBuild extends Build {
     .settings(packageArchetype.java_server:_*)
     .settings(packageDescription in Debian := "coinex")
     .settings(
-      libraryDependencies += ("com.coinport" %% "akka-persistence-hbase" % "1.0.5-SNAPSHOT")
+      libraryDependencies += ("com.coinport" %% "akka-persistence-hbase" % "1.0.6-SNAPSHOT")
         .exclude("org.jboss.netty", "netty")
         .exclude("org.jruby", "jruby-complete")
         .exclude("javax.xml.stream", "stax-api")
