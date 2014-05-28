@@ -215,6 +215,16 @@ object UserService extends AkkaService {
     }
   }
 
+  def resendVerifyEmail(email: String) = {
+    val command = DoResendVerifyEmail(email)
+    backend ? command map {
+      case result: ResendVerifyEmailSucceeded =>
+        ApiResult(true, 0, "")
+      case e =>
+        ApiResult(false, -1, e.toString)
+    }
+  }
+
   def queryUserProfileByEmail(email: String) = {
     val command = QueryProfile(email = Some(email))
     backend ? command map {

@@ -40,6 +40,15 @@ class UserProcessor(mailer: ActorRef, secret: String)
           sendEmailVerificationEmail(profile)
       }
 
+    case m @ DoResendVerifyEmail(email) =>
+      manager.getUser(email) match {
+        case Some(profile) =>
+          sender ! ResendVerifyEmailSucceeded(profile.id, profile.email)
+          sendEmailVerificationEmail(profile)
+        case None =>
+          sender ! ResendVerifyEmailFailed(UserNotExist)
+      }
+
     case m @ DoUpdateUserProfile(userProfile) =>
       manager.getUser(userProfile.email) match {
         case Some(profile) =>

@@ -21,6 +21,7 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       //-------------------------------------------------------------------------
       // User Proceessor
       case m: DoRegisterUser => routers.userProcessor forward m
+      case m: DoResendVerifyEmail => routers.userProcessor forward m
       case m: DoRequestPasswordReset => routers.userProcessor forward m
       case m: DoResetPassword => routers.userProcessor forward m
       case m: VerifyEmail => routers.userProcessor forward m

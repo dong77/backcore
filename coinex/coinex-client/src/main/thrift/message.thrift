@@ -79,6 +79,10 @@ typedef data.CryptoAddress                      _CryptoAddress
 /* R-   */ struct RegisterUserFailed                      {1: _ErrorCode error}
 /* R+   */ struct RegisterUserSucceeded                   {1: _UserProfile userProfile}
 
+/* C,P  */ struct DoResendVerifyEmail                     {1: string email}
+/* R-   */ struct ResendVerifyEmailFailed                 {1: _ErrorCode error}
+/* R+   */ struct ResendVerifyEmailSucceeded              {1: i64 id, 2: string email}
+
 /* C,P  */ struct VerifyEmail                             {1: string token}
 /* R-   */ struct VerifyEmailFailed                       {1: _ErrorCode error}
 /* R+   */ struct VerifyEmailSucceeded                    {1: i64 id, 2: string email}
