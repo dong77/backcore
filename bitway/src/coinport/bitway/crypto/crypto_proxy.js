@@ -399,7 +399,7 @@ CryptoProxy.prototype.getAHotAddressByRandom_ = function(callback) {
 CryptoProxy.prototype.generateAHotAddress_ = function(unusedIndex, callback) {
     var self = this;
     self.rpc.getNewAddress(CryptoProxy.HOT_ACCOUNT, function(errPub, replyPub) {
-        if (error) {
+        if (errPub) {
             self.log.err(errPub);
             callback(errPub);
         } else {
@@ -837,7 +837,7 @@ CryptoProxy.prototype.makeNormalResponse_ = function(type, currency, response) {
     switch (type) {
         case BitwayResponseType.SYNC_HOT_ADDRESSES:
             this.log.info("sync hot addr response");
-            return new BitwayMessage({currency: currency, syncHotAddresses: response});
+            return new BitwayMessage({currency: currency, syncHotAddressesResult: response});
         case BitwayResponseType.GENERATE_ADDRESS:
             this.log.info("generate addr response");
             return new BitwayMessage({currency: currency, generateAddressResponse: response});
