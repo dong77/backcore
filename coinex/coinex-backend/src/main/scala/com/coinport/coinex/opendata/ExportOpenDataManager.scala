@@ -4,7 +4,7 @@ import akka.actor.ActorContext
 import akka.persistence.PersistentRepr
 import akka.persistence.hbase.journal.PluginPersistenceSettings
 import akka.persistence.hbase.common.Const._
-import akka.persistence.hbase.common.{ DeferredConversions, RowKey, HdfsSnapshotDescriptor, EncryptingSerializationExtension, SaltedScanner }
+import akka.persistence.hbase.common.{ DeferredConversions, HdfsSnapshotDescriptor, EncryptingSerializationExtension, SaltedScanner }
 import akka.persistence.hbase.common.Columns._
 import akka.persistence.serialization.Snapshot
 import com.coinport.coinex.common.Manager
@@ -22,7 +22,6 @@ import scala.collection.mutable.Map
 import scala.collection.JavaConverters._
 
 import DeferredConversions._
-import akka.persistence.hbase.common.RowKey
 
 class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context: ActorContext, val openDataConfig: OpenDataConfig)
     extends Manager[ExportOpenDataMap] {
@@ -38,7 +37,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
   private val messagesFamily = config.getString("hbase-journal.family")
   private val cryptKey = config.getString("akka.persistence.encryption-settings")
   private val BUFFER_SIZE = 2048
-  private val SCAN_MAX_NUM_ROWS = 200
+  private val SCAN_MAX_NUM_ROWS = 50
 
   implicit var pluginPersistenceSettings = PluginPersistenceSettings(config, JOURNAL_CONFIG)
   implicit var executionContext = context.system.dispatcher
@@ -118,7 +117,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
     scanner.setSaltedStartKeys(processorId, fromSeqNum)
     scanner.setSaltedStopKeys(processorId, toSeqNum)
     scanner.setKeyRegexp(processorId)
-    scanner.setMaxNumRows(pluginPersistenceSettings.scanBatchSize)
+    scanner.setMaxNumRows(SCAN_MAX_NUM_ROWS)
     type AsyncBaseRows = JArrayList[JArrayList[KeyValue]]
 
     def getMessages(rows: AsyncBaseRows): String = {
