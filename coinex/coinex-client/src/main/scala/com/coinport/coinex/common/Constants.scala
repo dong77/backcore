@@ -12,7 +12,7 @@ import Implicits._
 // TRY TO AVOID USING THIS CLASS!!!!!!!!!!!!!!!!!!!!!!!!
 
 object Constants {
-  val COINPORT_UID = 3142141421L
+  val COINPORT_UID = 1L
 
   // WARNING: use an enum somewhere else?
   val STOP_ORDER_ROBOT_TYPE = 1
