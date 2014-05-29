@@ -20,7 +20,7 @@ import java.net.InetAddress
 import com.typesafe.config.Config
 
 object CoinexApp extends App {
-  val markets = Seq(Btc ~> Cny, Ltc ~> Cny, Ltc ~> Btc, Pts ~> Btc, Dog ~> Btc)
+  val markets = Seq(Ltc ~> Btc, Dog ~> Btc)
   val allRoles = (ConstantRole.values.map(_.<<) ++ MarketRole.values.map { v => markets.map { m => v << m } }.flatten ++
     BitwayRole.values.map { v => markets.toCryptoCurrencySet.map { c => v << c } }.flatten)
 
