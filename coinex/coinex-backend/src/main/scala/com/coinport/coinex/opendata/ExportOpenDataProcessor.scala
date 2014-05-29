@@ -39,7 +39,7 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
       scheduleExport()
   }
 
-  def receiveRecover = updateState
+  def receiveRecover = PartialFunction.empty[Any, Unit]
 
   def updateState: Receive = {
     case m: ExportOpenDataMap => manager.updatePSeqMap(Map.empty[String, Long] ++ m.processorSeqMap)

@@ -14,7 +14,7 @@ trait ExtendedActor extends Actor with ActorLogging {
   override def preRestart(reason: Throwable, message: Option[Any]) = {
     val content = "[ERROR] ACTOR RESTART >>>> [PATH] " + self.path.toString +
       "\n[ERROR] ACTOR RESTART >>>> [REASON] " + reason.getMessage
-    "\n[ERROR] ACTOR RESTART >>>> [MESSAGE] " + message.get.toString
+    "\n[ERROR] ACTOR RESTART >>>> [MESSAGE] " + message.getOrElse("Not specify message").toString
     log.error(content)
     mail match {
       case m: ActorSelection => m ! DoSendEmail(config.getString("akka.exchange.monitor.mail.address"), EmailType.Monitor, Map("CONTENT" -> content))
