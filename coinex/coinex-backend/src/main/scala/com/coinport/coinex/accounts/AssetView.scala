@@ -55,7 +55,7 @@ class AssetView extends ExtendedView {
             val min = tx.takerUpdate.previous.quantity - tx.takerUpdate.current.quantity
             val mout = tx.makerUpdate.previous.quantity - tx.makerUpdate.current.quantity
 
-            val maker = tx.takerUpdate.current.userId
+            val maker = tx.makerUpdate.current.userId
             val timestamp2 = tx.timestamp
 
             manager.updateAsset(maker, timestamp2, toutCurrency, min)
