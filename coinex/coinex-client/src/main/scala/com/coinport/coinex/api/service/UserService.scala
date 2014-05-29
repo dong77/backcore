@@ -99,7 +99,28 @@ object UserService extends AkkaService {
     }
   }
 
-  def getWithdrawalAddress(currency: Currency, userId: Long) = {
+  def setWithdrawalAddress(uid: Long, currency: Currency, address: String) = {
+    //update withdrawal address of user profile
+    backend ? QueryProfile(Some(uid)) map {
+      case qpr: QueryProfileResult =>
+        val addr = qpr.userProfile match {
+          case Some(profile) =>
+            val addrMap = profile.withdrawalAddresses match {
+              case Some(withdrawalMap) => withdrawalMap ++ Map(currency -> address)
+              case None => Map(currency -> address)
+            }
+            println("addrMap>>>>>>>>>>>>>" + addrMap)
+            val newProfile = profile.copy(withdrawalAddresses = Some(addrMap))
+            println("new Profile>>>>>>>>>>>>>" + newProfile)
+            backend ! DoUpdateUserProfile(newProfile)
+          case None =>
+        }
+        ApiResult(true, 0, "", Some(addr))
+      case x => ApiResult(false, -1, x.toString)
+    }
+  }
+
+  def getWithdrawalAddress(userId: Long, currency: Currency) = {
     backend ? QueryProfile(Some(userId)) map {
       case qpr: QueryProfileResult =>
         val addr = qpr.userProfile match {

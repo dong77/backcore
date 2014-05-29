@@ -45,23 +45,6 @@ object AccountService extends AkkaService {
         // TODO: confirm by admin dashboard
         //        backend ! AdminConfirmTransferSuccess(result.transfer)
 
-        //update withdrawal address of user profile
-        backend ? QueryProfile(Some(uid)) map {
-          case qpr: QueryProfileResult =>
-            val addr = qpr.userProfile match {
-              case Some(profile) =>
-                val addrMap = profile.withdrawalAddresses match {
-                  case Some(withdrawalMap) => withdrawalMap ++ Map(currency -> address)
-                  case None => Map(currency -> address)
-                }
-                val newProfile = profile.copy(withdrawalAddresses = Some(addrMap))
-                backend ! DoUpdateUserProfile(newProfile)
-              case None =>
-            }
-            ApiResult(true, 0, "", Some(addr))
-          case x => ApiResult(false, -1, x.toString)
-        }
-
         ApiResult(true, 0, "提现申请已提交", Some(result))
       case failed: RequestTransferFailed =>
         ApiResult(false, 1, "提现失败", Some(failed))
