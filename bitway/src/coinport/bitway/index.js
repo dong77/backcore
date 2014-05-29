@@ -5,56 +5,66 @@
 
 var CryptoAgentManager = require('./crypto/crypto_agent_manager').CryptoAgentManager,
     DataTypes          = require('../../../gen-nodejs/data_types'),
-    Bitcore            = require('bitcore'),
-    RedisProxy         = require('./redis/redis_proxy').RedisProxy,
     Currency           = DataTypes.Currency;
 
 var btc = {
     currency: Currency.BTC,
     cryptoConfig: {
-        cryptoRpc: new Bitcore.RpcClient({
+        cryptoRpcConfig: {
             protocol: 'http',
             user: 'user',
             pass: 'pass',
             host: '127.0.0.1',
             port: '18332',
-        }),
+        },
         minConfirm: 1,
         checkInterval : 5000
     },
-    redisProxy: new RedisProxy('BTC', '127.0.0.1', '6379')
+    redisProxyConfig: {
+        currency: Currency.BTC,
+        ip: '127.0.0.1',
+        port: '6379',
+    }
 };
 
 var ltc = {
     currency: Currency.LTC,
     cryptoConfig: {
-        cryptoRpc: new Bitcore.RpcClient({
+        cryptoRpcConfig: {
             protocol: 'http',
             user: 'user',
             pass: 'pass',
             host: '127.0.0.1',
             port: '19332',
-        }),
+        },
         minConfirm: 1,
         checkInterval : 5000
     },
-    redisProxy: new RedisProxy('LTC', '127.0.0.1', '6379')
+    redisProxyConfig: {
+        currency: Currency.LTC,
+        ip: '127.0.0.1',
+        port: '6379',
+    }
 };
 
 var dog = {
     currency: Currency.DOG,
     cryptoConfig: {
-        cryptoRpc: new Bitcore.RpcClient({
+        cryptoRpcConfig: {
             protocol: 'http',
             user: 'user',
             pass: 'pass',
             host: '127.0.0.1',
             port: '44555',
-        }),
+        },
         minConfirm: 1,
         checkInterval : 5000
     },
-    redisProxy: new RedisProxy('DOG', '127.0.0.1', '6379')
+    redisProxyConfig: {
+        currency: Currency.DOG,
+        ip: '127.0.0.1',
+        port: '6379',
+    }
 };
 
 // var configs = [ btc, ltc, dog ];

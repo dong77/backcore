@@ -90,7 +90,7 @@ CryptoProxy.EventType = {
 CryptoProxy.prototype.logFunction = function log(type) {
     var self = this;
     return function() {
-        self.log.info(type, arguments);
+        self.log.info(type, 'crypto_proxy');
     };
 };
 

@@ -4,14 +4,21 @@
  */
 
 var CryptoAgent = require('./crypto_agent').CryptoAgent,
+    RedisProxy  = require('../redis/redis_proxy').RedisProxy,
+    RpcClient   = require('bitcore').RpcClient,
     CryptoProxy = require('./crypto_proxy').CryptoProxy;
 
 var CryptoAgentManager = module.exports.CryptoAgentManager = function(configs) {
     this.agents = [];
     for (var i = 0; i < configs.length; ++i) {
         var config = configs[i];
-        var redisProxy = config.redisProxy;
-        var cryptoProxy = new CryptoProxy(config.currency, config.cryptoConfig);
+        var redisConf = config.redisProxyConfig;
+        var redisProxy = new RedisProxy(redisConf.currency, redisConf.ip, redisConf.port);
+
+        var cryptoConfig = config.cryptoConfig;
+        cryptoConfig.cryptoRpc = new RpcClient(cryptoConfig.cryptoRpcConfig);
+
+        var cryptoProxy = new CryptoProxy(config.currency, cryptoConfig);
         this.agents.push(new CryptoAgent(cryptoProxy, redisProxy));
     }
 };

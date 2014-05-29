@@ -27,27 +27,25 @@ var Events             = require('events'),
 var RedisProxy = module.exports.RedisProxy = function(currency, ip, port) {
     Events.EventEmitter.call(this);
 
-    this.REQUEST_CHANNEL = 'creq_' + currency.toLowerCase();
-    this.RESPONSE_CHANNEL = 'cres_' + currency.toLowerCase();
+    this.currency = currency;
+
+    this.REQUEST_CHANNEL = 'creq_' + currency.toString();
+    this.RESPONSE_CHANNEL = 'cres_' + currency.toString();
 
     this.pollClient = Redis.createClient(port, ip, { return_buffers: true });
-    var self = this;
-    this.pollClient.on('connect'     , function() {
-        self.start();
-    });
+    this.pushClient = Redis.createClient(port, ip, { return_buffers: true });
     this.pollClient.on('ready'       , this.logFunction('ready'));
     this.pollClient.on('reconnecting', this.logFunction('reconnecting'));
     this.pollClient.on('error'       , this.logFunction('error'));
     this.pollClient.on('end'         , this.logFunction('end'));
 
-    this.pushClient = Redis.createClient(port, ip, { return_buffers: true });
     this.pushClient.on('connect'     , this.logFunction('connect'));
     this.pushClient.on('ready'       , this.logFunction('ready'));
     this.pushClient.on('reconnecting', this.logFunction('reconnecting'));
     this.pushClient.on('error'       , this.logFunction('error'));
     this.pushClient.on('end'         , this.logFunction('end'));
-
     this.serializer = new Serializer();
+    this.log = Logger.logger(this.currency.toString());
 };
 Util.inherits(RedisProxy, Events.EventEmitter);
 
@@ -61,49 +59,54 @@ RedisProxy.EventType = {
 RedisProxy.prototype.logFunction = function log(type) {
     var self = this;
     return function() {
-        console.log(type, arguments);
+        self.log.info(type);
     };
 };
 
-RedisProxy.prototype.start = function() {
-    var listen = function(proxy) {
-        proxy.pollClient.blpop(proxy.REQUEST_CHANNEL, 0, function(error, result) {
-            if (!error && result) {
-                var buf = new Buffer(result[1]);
-                var bwr = new BitwayRequest();
-                proxy.serializer.fromBinary(bwr, buf);
-                switch (bwr.type) {
-                    case BitwayRequestType.SYNC_HOT_ADDRESSES:
-                        console.log(bwr.currency);
-                        console.log(bwr.syncHotAddresses);
-                        proxy.emit(RedisProxy.EventType.SYNC_HOT_ADDRESSES, bwr.currency,
-                            bwr.syncHotAddresses);
-                        break;
-                    case BitwayRequestType.GENERATE_ADDRESS:
-                        console.log(bwr.currency);
-                        console.log(bwr.generateAddresses.num);
-                        proxy.emit(RedisProxy.EventType.GENERATE_ADDRESS, bwr.currency,
-                            bwr.generateAddresses);
-                        break;
-                    case BitwayRequestType.TRANSFER:
-                        proxy.emit(RedisProxy.EventType.TRANSFER, bwr.currency, bwr.transferCryptoCurrency);
-                        break;
-                    case BitwayRequestType.GET_MISSED_BLOCKS:
-                        proxy.emit(RedisProxy.EventType.GET_MISSED_BLOCKS, bwr.currency,
+RedisProxy.prototype.listen = function() {
+    var self = this;
+    self.pollClient.blpop(self.REQUEST_CHANNEL, 0, function(error, result) {
+        if (!error && result) {
+            var buf = new Buffer(result[1]);
+            var bwr = new BitwayRequest();
+            self.serializer.fromBinary(bwr, buf);
+            switch (bwr.type) {
+                case BitwayRequestType.SYNC_HOT_ADDRESSES:
+                    self.log.info(bwr.currency);
+                    self.log.info(bwr.syncHotAddresses);
+                    self.emit(RedisProxy.EventType.SYNC_HOT_ADDRESSES, bwr.currency,
+                        bwr.syncHotAddresses);
+                    break;
+                case BitwayRequestType.GENERATE_ADDRESS:
+                    self.log.info(bwr.currency);
+                    self.log.info(bwr.generateAddresses.num);
+                    self.emit(RedisProxy.EventType.GENERATE_ADDRESS, bwr.currency,
+                        bwr.generateAddresses);
+                    break;
+                case BitwayRequestType.TRANSFER:
+                    self.emit(RedisProxy.EventType.TRANSFER, bwr.currency, bwr.transferCryptoCurrency);
+                    break;
+                case BitwayRequestType.GET_MISSED_BLOCKS:
+                    self.emit(RedisProxy.EventType.GET_MISSED_BLOCKS, bwr.currency,
                             bwr.getMissedCryptoCurrencyBlocksRequest);
-                        break;
-                }
-                listen(proxy);
-            } else if (!error && !result) {
-                console.log("timeout");
-                listen(proxy);
-            } else {
-                console.log(error);
+                    break;
             }
-        });
-    };
+            self.listen();
+        } else if (!error && !result) {
+            self.log.info("timeout");
+            self.listen();
+        } else {
+            self.log.info(error);
+        }
+    });
+};
 
-    listen(this);
+RedisProxy.prototype.start = function() {
+    var self = this;
+    this.pollClient.on('connect', function() {
+        self.log.info('connect');
+        self.listen();
+    });
 };
 
 RedisProxy.prototype.publish = function(data) {

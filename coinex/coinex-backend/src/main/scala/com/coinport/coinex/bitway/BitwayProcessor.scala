@@ -187,7 +187,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     context.system.scheduler.scheduleOnce(delayinSeconds seconds, self, TrySyncHotAddresses)(context.system.dispatcher)
   }
 
-  private def getRequestChannel = config.requestChannelPrefix + supportedCurrency.toString.toLowerCase
+  private def getRequestChannel = config.requestChannelPrefix + supportedCurrency.value.toString
 }
 
 trait BitwayManagerBehavior {
@@ -241,7 +241,7 @@ class BitwayReceiver(bitwayProcessor: ActorRef, supportedCurrency: Currency, con
       }
   }
 
-  def getResponseChannel = config.responseChannelPrefix + supportedCurrency.toString.toLowerCase
+  def getResponseChannel = config.responseChannelPrefix + supportedCurrency.value.toString
 
   private def listenAtRedis() {
     context.system.scheduler.scheduleOnce(0 seconds, self, ListenAtRedis)(context.system.dispatcher)
