@@ -1,8 +1,12 @@
-resolvers += Classpaths.typesafeResolver
 
-// resolvers += "scct-github-repository" at "http://mtkopone.github.com/scct/maven-repo"
+resolvers ++= Seq(
+  // "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/groups/public/",
+  "JMParsons Releases" at "http://jmparsons.github.io/releases/",
+  Resolver.sonatypeRepo("snapshots"),
+  Resolver.sonatypeRepo("releases"),
+  Classpaths.typesafeResolver
+)
 
-resolvers += "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/groups/public/"
 
 libraryDependencies ++= Seq(
   // "com.github.siasia" %% "xsbt-web-plugin" % "0.12.0-0.2.11.1",
@@ -23,9 +27,9 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.3.0")
 
 // addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.5.0")
 
-addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.2.0")
+// addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.5.0")
 
-addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.6.0")
+// addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.6.0")
 
 addSbtPlugin("com.twitter" %% "scrooge-sbt-plugin" % "3.13.0")
 

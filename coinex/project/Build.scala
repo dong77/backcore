@@ -4,7 +4,7 @@ import com.twitter.scrooge._
 import com.typesafe.sbt.SbtMultiJvm
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 import com.typesafe.sbt.SbtScalariform._
-import org.sbtidea.SbtIdeaPlugin._
+// import org.sbtidea.SbtIdeaPlugin._
 import com.typesafe.sbt.SbtAtmos.{ Atmos, atmosSettings }
 import sbtassembly.Plugin._
 import AssemblyKeys._
@@ -12,8 +12,9 @@ import com.typesafe.sbt.SbtNativePackager._
 import NativePackagerKeys._
 
 object CoinexBuild extends Build {
-  val coinexVersion = "1.1.16-SNAPSHOT"
-  val akkaVersion = "2.3.2"
+  val coinexVersion = "1.1.18-SNAPSHOT"
+
+  val akkaVersion = "2.3.3"
   val bijectionVersion = "0.6.2"
   val sprayVersion = "1.3.1"
   val scroogeVersion = "3.13.0"
@@ -21,8 +22,8 @@ object CoinexBuild extends Build {
   val sharedSettings = Seq(
     organization := "com.coinport",
     version := coinexVersion,
-    scalaVersion := "2.10.3",
-    crossScalaVersions := Seq("2.10.3"),
+    scalaVersion := "2.10.4",
+    crossScalaVersions := Seq("2.10.4"),
     initialCommands in console := """
       import com.coinport.coinex.Client
       import com.coinport.coinex.monitoring.MonitorTest
@@ -52,7 +53,7 @@ object CoinexBuild extends Build {
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     resolvers ++= Seq(
       Resolver.sonatypeRepo("snapshots"),
-      "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/groups/public",
+      // "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/groups/public",
       "Spray Repo" at "http://repo.spray.io"
       // "scct-github-repository" at "http://mtkopone.github.com/scct/maven-repo"
       )) ++ assemblySettings ++ Seq(
@@ -122,7 +123,7 @@ object CoinexBuild extends Build {
     .settings(packageArchetype.java_server:_*)
     .settings(packageDescription in Debian := "coinex")
     .settings(
-      libraryDependencies += ("com.coinport" %% "akka-persistence-hbase" % "1.0.6-SNAPSHOT")
+      libraryDependencies += ("com.coinport" %% "akka-persistence-hbase" % "1.0.7-SNAPSHOT")
         .exclude("org.jboss.netty", "netty")
         .exclude("org.jruby", "jruby-complete")
         .exclude("javax.xml.stream", "stax-api")
