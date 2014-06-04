@@ -32,11 +32,11 @@ object CurrencyConversion {
 
 class CurrencyWrapper(val value: Double) {
   def externalValue(currency: Currency): Double = {
-    value / CurrencyConversion.multipliers(currency)
+    (BigDecimal(value) / CurrencyConversion.multipliers(currency)).toDouble
   }
 
   def internalValue(currency: Currency): Long = {
-    (value * CurrencyConversion.multipliers(currency)).toLong
+    (BigDecimal(value) * CurrencyConversion.multipliers(currency)).toLong
   }
 
   def E(currency: Currency) = externalValue(currency)

@@ -36,5 +36,18 @@ class CurrencyConversionTest extends Specification {
       3456.0.internalValue(Btc ~> Cny) mustEqual 3.456
       3.456.externalValue(Btc ~> Cny) mustEqual 3456.0
     }
+
+    "very small number" in {
+      20.00097.internalValue(Dog) mustEqual 2000097000L
+      0.000000123.internalValue(Dog ~> Btc) mustEqual 0.000000123
+
+      2000097000L.externalValue(Dog) mustEqual 20.00097
+      0.000000123.externalValue(Dog ~> Btc) mustEqual 0.000000123
+    }
+
+    "very big number" in {
+      1234567820.00097.internalValue(Dog) mustEqual 123456782000097000L
+      123456782000097000L.externalValue(Dog) mustEqual 1234567820.00097
+    }
   }
 }
