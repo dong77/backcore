@@ -109,9 +109,7 @@ object UserService extends AkkaService {
               case Some(withdrawalMap) => withdrawalMap ++ Map(currency -> address)
               case None => Map(currency -> address)
             }
-            println("addrMap>>>>>>>>>>>>>" + addrMap)
             val newProfile = profile.copy(withdrawalAddresses = Some(addrMap))
-            println("new Profile>>>>>>>>>>>>>" + newProfile)
             backend ! DoUpdateUserProfile(newProfile)
           case None =>
         }
