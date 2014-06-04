@@ -53,7 +53,12 @@ class UserProcessor(mailer: ActorRef, secret: String)
       manager.getUser(userProfile.email) match {
         case Some(profile) =>
           sender ! UpdateUserProfileSucceeded(profile)
-          persist(DoUpdateUserProfile(userProfile))(updateState)
+          val newProfile = profile.copy(realName = userProfile.realName,
+            nationalId = userProfile.nationalId, mobile = userProfile.mobile,
+            mobileVerified = userProfile.mobileVerified, status = userProfile.status,
+            depositAddresses = userProfile.depositAddresses,
+            withdrawalAddresses = userProfile.withdrawalAddresses)
+          persist(DoUpdateUserProfile(newProfile))(updateState)
         case None =>
           sender ! UpdateUserProfileFailed(UserNotExist)
       }
