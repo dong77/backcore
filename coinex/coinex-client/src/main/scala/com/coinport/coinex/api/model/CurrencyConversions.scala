@@ -4,9 +4,9 @@
 
 package com.coinport.coinex.api.model
 
+import com.coinport.coinex.data._
 import com.coinport.coinex.data.Currency._
 import com.coinport.coinex.data.Implicits._
-import com.coinport.coinex.data.{ MarketSide, Currency }
 
 object CurrencyConversion {
   // exponent (10-based) of the factor between internal value and external value
@@ -60,4 +60,39 @@ class PriceWrapper(val value: Double) {
   def E(marketSide: MarketSide) = externalValue(marketSide)
 
   def I(marketSide: MarketSide) = internalValue(marketSide)
+}
+
+case class CurrencyObject(currency: String, value_int: Long, value: Double, display: String, display_short: String)
+
+object CurrencyObject {
+  def apply(currency: Currency, value_int: Long): CurrencyObject = {
+    val externalValue = value_int.externalValue(currency)
+    CurrencyObject(currency, value_int, externalValue, format(externalValue, currency), formatShort(externalValue))
+  }
+
+  def format(value: Double, currency: Currency): String = {
+    val exponent = CurrencyConversion.getExponent(currency)
+    val patten = "%." + exponent + "f"
+    patten.format(value)
+  }
+
+  def formatShort(value: Double): String = "%.2f".format(value)
+}
+
+case class PriceObject(item: String, currency: String, value_int: Double, value: Double, display: String, display_short: String)
+
+object PriceObject {
+  def apply(side: MarketSide, value_int: Double): PriceObject = {
+    val externalValue: Double = value_int.externalValue(side)
+    val currency = side._2
+    PriceObject(side._1, currency, value_int, externalValue, format(externalValue, currency), formatShort(externalValue))
+  }
+
+  def format(value: Double, currency: Currency): String = {
+    val exponent = CurrencyConversion.getExponent(currency)
+    val patten = "%." + exponent + "f"
+    patten.format(value)
+  }
+
+  def formatShort(value: Double): String = "%.2f".format(value)
 }
