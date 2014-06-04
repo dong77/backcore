@@ -25,6 +25,19 @@ object CurrencyConversion {
       k -> math.pow(10, v)
   }
 
+  val currencyDecimals = Map[Currency, Int](
+    Cny -> 4,
+    Btc -> 4,
+    Ltc -> 4,
+    Dog -> 4
+  )
+
+  val priceDecimals = Map[MarketSide, Int](
+    Btc ~> Cny -> 4,
+    Ltc ~> Btc -> 4,
+    Dog ~> Btc -> 8
+  )
+
   def getExponent(currency: Currency) = exponents.get(currency).getOrElse(1.0).toInt
 
   def getMultiplier(currency: Currency) = multipliers.get(currency).getOrElse(1.0)
@@ -71,8 +84,8 @@ object CurrencyObject {
   }
 
   def format(value: Double, currency: Currency): String = {
-    val exponent = CurrencyConversion.getExponent(currency)
-    val patten = "%." + exponent + "f"
+    val decimal = CurrencyConversion.currencyDecimals(currency)
+    val patten = "%." + decimal + "f"
     patten.format(value)
   }
 
@@ -84,13 +97,12 @@ case class PriceObject(item: String, currency: String, value_int: Double, value:
 object PriceObject {
   def apply(side: MarketSide, value_int: Double): PriceObject = {
     val externalValue: Double = value_int.externalValue(side)
-    val currency = side._2
-    PriceObject(side._1, currency, value_int, externalValue, format(externalValue, currency), formatShort(externalValue))
+    PriceObject(side._1, side._2, value_int, externalValue, format(externalValue, side), formatShort(externalValue))
   }
 
-  def format(value: Double, currency: Currency): String = {
-    val exponent = CurrencyConversion.getExponent(currency)
-    val patten = "%." + exponent + "f"
+  def format(value: Double, side: MarketSide): String = {
+    val decimal = CurrencyConversion.priceDecimals(side)
+    val patten = "%." + decimal + "f"
     patten.format(value)
   }
 

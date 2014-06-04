@@ -7,6 +7,7 @@ import org.specs2.mutable._
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Implicits._
 import com.coinport.coinex.data.Currency._
+import com.coinport.coinex.api.model._
 
 class CurrencyConversionTest extends Specification {
   "currency conversions" should {
@@ -48,6 +49,16 @@ class CurrencyConversionTest extends Specification {
     "very big number" in {
       1234567820.00097.internalValue(Dog) mustEqual 123456782000097000L
       123456782000097000L.externalValue(Dog) mustEqual 1234567820.00097
+    }
+
+    "currency object" in {
+      CurrencyObject("BTC", 1234500000L) mustEqual CurrencyObject("BTC", 1234500000L, 12.345, "12.3450", "12.35")
+      CurrencyObject("DOG", 1234500000L) mustEqual CurrencyObject("DOG", 1234500000L, 12.345, "12.3450", "12.35")
+    }
+
+    "price object" in {
+      PriceObject("BTCCNY", 12.345) mustEqual PriceObject("BTC", "CNY", 12.345, 12345.0, "12345.0000", "12345.00")
+      PriceObject("DOGBTC", 0.000000234) mustEqual PriceObject("DOG", "BTC", 0.000000234, 0.000000234, "0.00000023", "0.00")
     }
   }
 }
