@@ -53,7 +53,7 @@ object CoinexBuild extends Build {
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     resolvers ++= Seq(
       Resolver.sonatypeRepo("snapshots"),
-      // "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/groups/public",
+      "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/groups/public",
       "Spray Repo" at "http://repo.spray.io"
       // "scct-github-repository" at "http://mtkopone.github.com/scct/maven-repo"
       )) ++ assemblySettings ++ Seq(
