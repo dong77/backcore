@@ -6,6 +6,7 @@
 var CryptoAgent = require('./crypto_agent').CryptoAgent,
     RedisProxy  = require('../redis/redis_proxy').RedisProxy,
     RpcClient   = require('bitcore').RpcClient,
+    Redis       = require('redis'),
     CryptoProxy = require('./crypto_proxy').CryptoProxy;
 
 var CryptoAgentManager = module.exports.CryptoAgentManager = function(configs) {
@@ -17,6 +18,7 @@ var CryptoAgentManager = module.exports.CryptoAgentManager = function(configs) {
 
         var cryptoConfig = config.cryptoConfig;
         cryptoConfig.cryptoRpc = new RpcClient(cryptoConfig.cryptoRpcConfig);
+        cryptoConfig.redis = Redis.createClient(redisConf.port, redisConf.ip);
 
         var cryptoProxy = new CryptoProxy(config.currency, cryptoConfig);
         this.agents.push(new CryptoAgent(cryptoProxy, redisProxy));
