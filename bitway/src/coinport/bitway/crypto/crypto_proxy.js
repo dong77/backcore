@@ -532,7 +532,8 @@ CryptoProxy.prototype.checkMissedRange_ = function(request) {
     var self = this;
     self.log.warn("Missed start begin position: " + request.startIndexs[0].height);
     self.log.warn("Missed start end position: " + request.startIndexs[request.startIndexs.length - 1].height);
-    self.log.warn("Behind: " + request.endIndex.height - request.startIndexs[request.startIndexs.length - 1].height);
+    self.log.warn("Required block position: " + request.endIndex.height);
+    self.log.warn("Behind: " + (request.endIndex.height - request.startIndexs[request.startIndexs.length - 1].height));
 };
 
 CryptoProxy.prototype.getReorgPosition_ = function(request, callback) {
@@ -848,7 +849,7 @@ CryptoProxy.prototype.makeNormalResponse_ = function(type, currency, response) {
             return new BitwayMessage({currency: currency, tx: response});
         case BitwayResponseType.GET_MISSED_BLOCKS:
         case BitwayResponseType.AUTO_REPORT_BLOCKS:
-            this.log.info("%F%L, blocks response: " + JSON.stringify(response));
+            this.log.info("blocks response: " + JSON.stringify(response));
             return new BitwayMessage({currency: currency, blockMsg: response});
         default:
             this.log.error("Inavalid Type!");
