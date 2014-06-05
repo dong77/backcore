@@ -31,6 +31,9 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
 
   import BlockContinuityEnum._
 
+  var sendGetMissedBlockTime = 0L
+  val RESEND_GET_MISSED_BLOCK_TIMEOUT = 30 * 1000L
+
   val serializer = new ThriftBinarySerializer()
   val client: Option[RedisClient] = try {
     Some(new RedisClient(config.ip, config.port))
@@ -149,6 +152,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       continuity match {
         case DUP => log.info("receive block which has been seen: " + blockMsg.block.index)
         case SUCCESSOR | REORG =>
+          sendGetMissedBlockTime = 0
           val blocksMsgWithTime = if (blockMsg.timestamp.isDefined)
             blockMsg else blockMsg.copy(timestamp = Some(System.currentTimeMillis))
           persist(m.copy(blockMsg = Some(blocksMsgWithTime))) { event =>
@@ -166,7 +170,8 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
             }
           }
         case GAP =>
-          if (client.isDefined) {
+          if (client.isDefined && System.currentTimeMillis - sendGetMissedBlockTime > RESEND_GET_MISSED_BLOCK_TIMEOUT) {
+            sendGetMissedBlockTime = System.currentTimeMillis
             client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
               BitwayRequestType.GetMissedBlocks, currency, getMissedCryptoCurrencyBlocksRequest = Some(
                 GetMissedCryptoCurrencyBlocks(manager.getBlockIndexes.get, blockMsg.block.index)))))
