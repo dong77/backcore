@@ -171,11 +171,11 @@ trait AccountTransferBehavior {
             logger.warning(s"splitAndHandleTxs() UserToHot tx not define ids : ${tx.toString}")
         }
       case Withdrawal =>
-        handleWithdrawlLikeTx(tx)
+        handleWithdrawalLikeTx(tx)
       case ColdToHot =>
         handleDepositLikeTx(currency, tx, manager.coldToHotSigId2TxPortIdMap)
       case HotToCold =>
-        handleWithdrawlLikeTx(tx)
+        handleWithdrawalLikeTx(tx)
       case _ =>
     }
   }
@@ -208,7 +208,7 @@ trait AccountTransferBehavior {
                       case None =>
                         val transferId = manager.getTransferId
                         manager.setLastTransferId(transferId)
-                        transferHandler.put(AccountTransfer(transferId, outputPort.userId.get, tx.txType.get, currency, outputPort.internalAmount.get, Confirming, Some(System.currentTimeMillis())))
+                        transferHandler.put(AccountTransfer(transferId, outputPort.userId.get, tx.txType.get, currency, outputPort.internalAmount.get, Confirming, Some(System.currentTimeMillis()), address = Some(outputPort.address)))
                         val newTransferItemId = manager.getNewTransferItemId
                         manager.saveItemIdToMap(sigIdToItemMap, tx.sigId.get, outputPort, newTransferItemId)
                         // id, currency, sigId, txid, userId, from, to(user's internal address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
@@ -224,7 +224,7 @@ trait AccountTransferBehavior {
     }
   }
 
-  private def handleWithdrawlLikeTx(tx: CryptoCurrencyTransaction) {
+  private def handleWithdrawalLikeTx(tx: CryptoCurrencyTransaction) {
     tx.ids match {
       case Some(idList) if idList.size > 0 =>
         idList foreach {
@@ -243,12 +243,12 @@ trait AccountTransferBehavior {
                   setResState(Updator.copy(item = item, addMongo = true, putItem = true))
               }
             } else {
-              logger.warning(s"handleWithdrawlLikeTx() item confirm id not included in transferMap : ${tx.toString}")
+              logger.warning(s"handleWithdrawalLikeTx() item confirm id not included in transferMap : ${tx.toString}")
             }
         }
         updateSigId2MinerFee(tx)
       case _ =>
-        logger.warning(s"handleWithdrawlLikeTx() ${tx.txType.get.toString} tx not define ids : ${tx.toString}")
+        logger.warning(s"handleWithdrawalLikeTx() ${tx.txType.get.toString} tx not define ids : ${tx.toString}")
     }
   }
 
@@ -288,7 +288,7 @@ trait AccountTransferBehavior {
             if (checkConfirm(item, lastBlockHeight, false)) {
               val transferId = manager.getTransferId
               manager.setLastTransferId(transferId)
-              transferHandler.put(AccountTransfer(transferId, item.userId.get, TransferType.UserToHot, currency, item.to.get.internalAmount.get, Confirming, Some(System.currentTimeMillis())))
+              transferHandler.put(AccountTransfer(transferId, item.userId.get, TransferType.UserToHot, currency, item.to.get.internalAmount.get, Confirming, Some(System.currentTimeMillis()), address = Some(item.to.get.address)))
               val user2HotItem =
                 // id, currency, sigId, txid, userId, from, to(hot address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
                 CryptoCurrencyTransferItem(manager.getNewTransferItemId, currency, None, None, item.userId, item.to, None, None, Some(UserToHot), Some(Confirming), Some(item.id), Some(transferId), Some(System.currentTimeMillis()))
