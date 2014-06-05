@@ -31,7 +31,7 @@ object Client {
   private val config = ConfigFactory.load(configPath)
   private implicit val system = ActorSystem("coinex", config)
   private implicit val cluster = Cluster(system)
-  private val markets = Seq(Btc ~> Cny)
+  private val markets = Seq(Btc ~> Ltc, Btc ~> Dog)
   private val routers = new LocalRouters(markets)
 
   val backend = system.actorOf(Props(new Coinex(routers)), name = "backend")
