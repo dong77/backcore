@@ -246,7 +246,7 @@ typedef data.CryptoAddress                      _CryptoAddress
 /* R    */ struct QueryTransactionResult                  {1: list<_Transaction> transactions, 2: i64 count}
 
 ////////// which view?
-/* Q    */ struct QueryTransfer                           {1: optional i64 uid, 2: optional _Currency currency, 3: optional _TransferStatus status, 4: optional _SpanCursor spanCur, 5:optional _TransferType type, 6: _Cursor cur}
+/* Q    */ struct QueryTransfer                           {1: optional i64 uid, 2: optional _Currency currency, 3: optional _TransferStatus status, 4: optional _SpanCursor spanCur, 5:list<_TransferType> types, 6: _Cursor cur}
 /* R    */ struct QueryTransferResult                     {1: list<_AccountTransfer> transfers, 2: i64 count}
 
 ////////// which view?
