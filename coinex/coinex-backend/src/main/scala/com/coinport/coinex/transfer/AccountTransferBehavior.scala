@@ -372,11 +372,14 @@ trait AccountTransferBehavior {
 
               item.status match {
                 case Some(Confirming) if reOrgHeight < itemHeight =>
+                  logger.info(s"reOrgnize() reOrgnize happened(Confirming) : tx -> ${txs.toString()}, item -> ${item.toString()}")
                   val confirmingItem: CryptoCurrencyTransferItem = item.copy(includedBlock = None)
                   setResState(Updator.copy(item = confirmingItem, addMongo = true, putItem = true))
                 case Some(Confirmed) if reOrgHeight - itemHeight < confirmableHeight - 1 =>
+                  logger.info(s"reOrgnize() reOrgnize happened(Confirmed) : tx -> ${txs.toString()}, item -> ${item.toString()}")
                   setReorg(item)
                 case Some(Reorging) if reOrgHeight < itemHeight =>
+                  logger.info(s"reOrgnize() reOrgnize happened(Reorging) : tx -> ${txs.toString()}, item -> ${item.toString()}")
                   setReorg(item)
                 case Some(Succeeded) => //Succeeded item has mv to manager.succeededMap, no need to reorging
                 case None =>
@@ -389,6 +392,7 @@ trait AccountTransferBehavior {
           // reorging succeeded item
           item =>
             if (reOrgHeight - item.includedBlock.get.height.get < confirmableHeight - 1) {
+              logger.info(s"reOrgnize() reOrgnize happened(Succeeded) : tx -> ${txs.toString()}, item -> ${item.toString()}")
               setAccountTransferStatus(manager.succeededMap, item.id, Reorging)
               manager.succeededMap.remove(item.id) //no need to reserve reorging item
             }
