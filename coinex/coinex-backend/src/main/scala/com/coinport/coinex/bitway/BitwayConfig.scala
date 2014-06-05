@@ -8,7 +8,7 @@ package com.coinport.coinex.bitway
 import com.coinport.coinex.data.Currency
 
 final case class BitwayConfig(
-  ip: String = "localhost",
+  ip: String = "bitway",
   port: Int = 6379,
   batchFetchAddressNum: Int = 100,
   requestChannelPrefix: String = "creq_",

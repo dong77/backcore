@@ -14,7 +14,7 @@ var btc = {
             protocol: 'http',
             user: 'user',
             pass: 'pass',
-            host: '127.0.0.1',
+            host: 'bitway',
             port: '18332',
         },
         minConfirm: 1,
@@ -22,7 +22,7 @@ var btc = {
     },
     redisProxyConfig: {
         currency: Currency.BTC,
-        ip: '127.0.0.1',
+        ip: 'bitway',
         port: '6379',
     }
 };
@@ -34,7 +34,7 @@ var ltc = {
             protocol: 'http',
             user: 'user',
             pass: 'pass',
-            host: '127.0.0.1',
+            host: 'bitway',
             port: '19332',
         },
         minConfirm: 1,
@@ -42,7 +42,7 @@ var ltc = {
     },
     redisProxyConfig: {
         currency: Currency.LTC,
-        ip: '127.0.0.1',
+        ip: 'bitway',
         port: '6379',
     }
 };
@@ -54,7 +54,7 @@ var dog = {
             protocol: 'http',
             user: 'user',
             pass: 'pass',
-            host: '127.0.0.1',
+            host: 'bitway',
             port: '44555',
         },
         minConfirm: 1,
@@ -62,13 +62,13 @@ var dog = {
     },
     redisProxyConfig: {
         currency: Currency.DOG,
-        ip: '127.0.0.1',
+        ip: 'bitway',
         port: '6379',
     }
 };
 
 // var configs = [ btc, ltc, dog ];
-var configs = [ btc ];
+var configs = [ dog ];
 
 var manager = new CryptoAgentManager(configs);
 manager.start();

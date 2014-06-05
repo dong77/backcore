@@ -12,13 +12,13 @@ import Implicits._
 
 BitwayConfigs(Map(
   Btc -> BitwayConfig(
-    ip = "192.168.0.108",
+    ip = "bitway",
     port = 6379,
     batchFetchAddressNum = 10,
     maintainedChainLength = 10
   ),
   Dog -> BitwayConfig(
-    ip = "192.168.0.108",
+    ip = "bitway",
     port = 6379,
     maintainedChainLength = 20
   )
