@@ -1,4 +1,4 @@
-#!/bin/sh
+
 #
 # Copyright 2014 Coinport Inc. All Rights Reserved.
 # Author: c@coinport.com (Chao Ma)
@@ -35,7 +35,30 @@ CMSFullGCsBeforeCompaction="-XX:CMSFullGCsBeforeCompaction=${NumOfFullGCBeforeCo
 # GCDetails="-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps"
 # ======================== End the parameters for JVM ==========================
 
-COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp ./coinex-backend-assembly-1.0.7-SNAPSHOT.jar com.coinport.coinex.CoinexApp 25551 127.0.0.1:25551 all 127.0.0.1"
+COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp ./coinex-backend-assembly-1.1.18-SNAPSHOT.jar com.coinport.coinex.CoinexApp 25551 172.31.1.218:25551,172.31.1.67:25551 all 172.31.1.218"
+#COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp ./coinex-backend-assembly-1.1.18-SNAPSHOT.jar com.coinport.coinex.CoinexApp 25551 127.0.0.1:25551 all 127.0.0.1"
 
 echo $COMMAND
+if [ -f "./nohup.out" ]; then
+  rm nohup.out
+fi
 nohup $COMMAND &
+pid=$!
+echo "==================================="
+echo "coinex backend running at pid: "$pid
+echo "==================================="
+
+while true
+do
+  currentPid=`ps -ef | grep "coinex-backend-assembly" | grep -v "grep" | awk '{print $2}'`
+  echo "currentPid is "$currentPid
+  echo "pid is "$pid
+  if [ -z "$currentPid" -a "$currentPid" != "$pid" ];then
+    nohup $COMMAND &
+    pid=$!
+    echo "===============restart coinex==============="
+    #(TODO: XIAOLU)send mail
+  fi 
+  sleep 2
+done
+
