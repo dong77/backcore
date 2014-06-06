@@ -761,7 +761,9 @@ CryptoProxy.prototype.getInputAddress_ = function(vinItem, callback) {
                 input.amount = outIndexes[0].value;
                 callback(null, input);
             } else {
-                callback('can\'t find the previous tx\'s output index for input');
+                input.address = outIndexes[0].scriptPubKey.type;
+                input.amount = outIndexes[0].value;
+                self.log.warn('the previous tx\'s output is nonstandard, txid: ', tx.result.txid);
             }
         }});
     } else {
