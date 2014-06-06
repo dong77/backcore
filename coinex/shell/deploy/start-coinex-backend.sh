@@ -35,7 +35,7 @@ CMSFullGCsBeforeCompaction="-XX:CMSFullGCsBeforeCompaction=${NumOfFullGCBeforeCo
 # GCDetails="-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps"
 # ======================== End the parameters for JVM ==========================
 
-COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp ./coinex-backend-assembly-1.1.18-SNAPSHOT.jar com.coinport.coinex.CoinexApp 25551 172.31.1.218:25551,172.31.1.67:25551 all 172.31.1.218"
+COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp ./coinex-backend-assembly-1.1.18-SNAPSHOT.jar -Dconfig.resource=application-prod.conf com.coinport.coinex.CoinexApp 25551 172.31.1.218:25551,172.31.1.67:25551 all 172.31.1.218"
 #COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp ./coinex-backend-assembly-1.1.18-SNAPSHOT.jar com.coinport.coinex.CoinexApp 25551 127.0.0.1:25551 all 127.0.0.1"
 
 echo $COMMAND
@@ -57,7 +57,8 @@ do
     nohup $COMMAND &
     pid=$!
     echo "===============restart coinex==============="
-    #(TODO: XIAOLU)send mail
+    #send mail
+    echo "coinex-backend has restarted! please check and make sure our system is OK!" | mail -s "backend_restart" everyone@coinport.com
   fi 
   sleep 2
 done
