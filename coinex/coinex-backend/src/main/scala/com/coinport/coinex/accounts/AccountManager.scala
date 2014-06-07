@@ -22,7 +22,6 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.common._
 import Implicits._
 import ErrorCode._
-import com.sun.beans.decoder.FalseElementHandler
 import com.coinport.coinex.common.Constants._
 
 class AccountManager(initialLastOrderId: Long = 0L,
