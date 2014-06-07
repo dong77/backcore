@@ -750,20 +750,21 @@ CryptoProxy.prototype.getOutputAddresses_ = function(tx) {
 };
 
 CryptoProxy.prototype.getInputAddress_ = function(vinItem, callback) {
+    var self = this;
     if (vinItem.txid) { this.rpc.getRawTransaction(vinItem.txid, 1, function(error, tx) {
         if (error) {
             callback(error);
         } else {
             var outIndexes = tx.result.vout.filter(function(element) {return element.n == vinItem.vout});
+            var input = new CryptoCurrencyTransactionPort();
             if (outIndexes.length > 0 && outIndexes[0].scriptPubKey && outIndexes[0].scriptPubKey.addresses) {
-                var input = new CryptoCurrencyTransactionPort();
                 input.address = outIndexes[0].scriptPubKey.addresses.toString();
                 input.amount = outIndexes[0].value;
                 callback(null, input);
             } else {
+                self.log.warn('the previous tx\'s output is ' + outIndexes[0].scriptPubKey.type + ', txid: ', tx.result.txid);
                 input.address = outIndexes[0].scriptPubKey.type;
                 input.amount = outIndexes[0].value;
-                self.log.warn('the previous tx\'s output is nonstandard, txid: ', tx.result.txid);
             }
         }});
     } else {
