@@ -12,7 +12,7 @@ case class ApiAccountItem(currency: String, available: CurrencyObject, locked: C
 
 case class ApiUserAccount(uid: String, accounts: Map[String, ApiAccountItem] = Map())
 
-case class ApiMarketDepthItem(price: Double, amount: Double)
+case class ApiMarketDepthItem(price: PriceObject, amount: CurrencyObject)
 
 case class ApiMarketDepth(bids: Seq[ApiMarketDepthItem], asks: Seq[ApiMarketDepthItem])
 

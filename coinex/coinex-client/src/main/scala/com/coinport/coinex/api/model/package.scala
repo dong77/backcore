@@ -166,8 +166,8 @@ package object model {
   }
 
   def fromMarketDepth(depth: MarketDepth) = {
-    val bids = depth.bids.map(item => ApiMarketDepthItem(item.price.externalValue(depth.side), item.quantity.externalValue(depth.side.outCurrency)))
-    val asks = depth.asks.map(item => ApiMarketDepthItem(item.price.externalValue(depth.side), item.quantity.externalValue(depth.side.outCurrency)))
+    val bids = depth.bids.map(item => ApiMarketDepthItem(PriceObject(depth.side, item.price), CurrencyObject(depth.side.outCurrency, item.quantity)))
+    val asks = depth.asks.map(item => ApiMarketDepthItem(PriceObject(depth.side, item.price), CurrencyObject(depth.side.outCurrency, item.quantity)))
 
     ApiMarketDepth(bids, asks)
   }
