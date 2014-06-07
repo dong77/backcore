@@ -18,7 +18,7 @@ class ExportOpenDataProcessor(var asyncHBaseClient: AsyncHBaseClient) extends Ex
   override def processorId = EXPORT_OPEN_DATA_PROCESSOR <<
 
   private var cancellable: Cancellable = null
-  lazy val openDataConfig = loadConfig("open_data_config.scala")
+  lazy val openDataConfig = loadConfig(context.system.settings.config.getString("akka.exchange.opendata-path"))
   private val scheduleInterval = openDataConfig.scheduleInterval
   lazy val manager = new ExportOpenDataManager(asyncHBaseClient, context, openDataConfig)
 
