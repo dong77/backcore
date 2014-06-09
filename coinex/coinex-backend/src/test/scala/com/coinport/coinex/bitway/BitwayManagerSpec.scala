@@ -65,7 +65,7 @@ class BitwayManagerSpec extends Specification {
 
     "get tx type test" in {
       val bwm = new BitwayManager(Btc, 10)
-      bwm.faucetAddress(UserUsed, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
+      bwm.faucetAddress(User, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
       bwm.faucetAddress(Hot, Set(CryptoAddress("h1"), CryptoAddress("h2")))
       bwm.faucetAddress(Cold, Set(CryptoAddress("c1")))
 
@@ -152,7 +152,7 @@ class BitwayManagerSpec extends Specification {
     "tx generation test" in {
       val bwm = new BitwayManager(Btc, 10)
       bwm.faucetAddress(Unused, Set(CryptoAddress("u7")))
-      bwm.faucetAddress(UserUsed, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
+      bwm.faucetAddress(User, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
       bwm.faucetAddress(Hot, Set(CryptoAddress("h1"), CryptoAddress("h2"), CryptoAddress("h3")))
       bwm.faucetAddress(Cold, Set(CryptoAddress("c1")))
 
@@ -225,7 +225,7 @@ class BitwayManagerSpec extends Specification {
 
     "getAddressStatus/getNetworkStatus/adjustAddressAmount test" in {
       val bwm = new BitwayManager(Btc, 10)
-      bwm.faucetAddress(UserUsed, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
+      bwm.faucetAddress(User, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
       bwm.faucetAddress(Hot, Set(CryptoAddress("h1"), CryptoAddress("h2")))
       bwm.faucetAddress(Cold, Set(CryptoAddress("c1")))
 
@@ -257,7 +257,7 @@ class BitwayManagerSpec extends Specification {
       bwm.getNetworkStatus mustEqual CryptoCurrencyNetworkStatus(Some("b3"), Some(3L), Some(1234L))
 
       bwm.getAddressStatus(Hot) mustEqual Map("h2" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(-0.3).get), "h1" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(-1.1).get))
-      bwm.getAddressStatus(UserUsed) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(0.2).get), "u1" -> AddressStatusResult(Some("t1"), Some(1), getBtcInternalAmount(1).get))
+      bwm.getAddressStatus(User) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(0.2).get), "u1" -> AddressStatusResult(Some("t1"), Some(1), getBtcInternalAmount(1).get))
       bwm.getAddressStatus(Cold) mustEqual Map.empty[String, BlockIndex]
 
       bwm.updateBlock(Some(BlockIndex(Some("b1"), Some(1))), CryptoCurrencyBlock(
@@ -279,7 +279,7 @@ class BitwayManagerSpec extends Specification {
       )
 
       bwm.getAddressStatus(Hot) mustEqual Map("h2" -> AddressStatusResult(Some("t2"), Some(2), 0), "h1" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(-1.6).get))
-      bwm.getAddressStatus(UserUsed) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(0.4).get), "u1" -> AddressStatusResult(Some("t0"), Some(2), getBtcInternalAmount(26.2).get))
+      bwm.getAddressStatus(User) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(0.4).get), "u1" -> AddressStatusResult(Some("t0"), Some(2), getBtcInternalAmount(26.2).get))
       bwm.getAddressStatus(Cold) mustEqual Map.empty[String, BlockIndex]
 
       bwm.getAddressAmount("h1") mustEqual getBtcInternalAmount(-1.6).get
@@ -291,7 +291,7 @@ class BitwayManagerSpec extends Specification {
 
     "disable withdrawal to deposit address" in {
       val bwm = new BitwayManager(Btc, 10)
-      bwm.faucetAddress(UserUsed, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
+      bwm.faucetAddress(User, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
       bwm.faucetAddress(Hot, Set(CryptoAddress("h1"), CryptoAddress("h2")))
       bwm.faucetAddress(Cold, Set(CryptoAddress("c1")))
 
@@ -310,7 +310,7 @@ class BitwayManagerSpec extends Specification {
 
     "faucetAddress with private key" in {
       val bwm = new BitwayManager(Btc, 10)
-      bwm.faucetAddress(UserUsed, Set(CryptoAddress("u1", Some("p1")), CryptoAddress("u2", Some("p2")), CryptoAddress("u3", Some("p3")), CryptoAddress("u4", Some("p4")), CryptoAddress("u5", Some("p5")), CryptoAddress("u6", Some("p6"))))
+      bwm.faucetAddress(User, Set(CryptoAddress("u1", Some("p1")), CryptoAddress("u2", Some("p2")), CryptoAddress("u3", Some("p3")), CryptoAddress("u4", Some("p4")), CryptoAddress("u5", Some("p5")), CryptoAddress("u6", Some("p6"))))
       bwm.faucetAddress(Hot, Set(CryptoAddress("h1", Some("ph1")), CryptoAddress("h2", Some("ph2"))))
       bwm.faucetAddress(Cold, Set(CryptoAddress("c1", Some("pc1"))))
 
@@ -338,7 +338,7 @@ class BitwayManagerSpec extends Specification {
 
     "syncHotAddresses test" in {
       val bwm = new BitwayManager(Btc, 10)
-      bwm.faucetAddress(UserUsed, Set(CryptoAddress("u1", Some("p1")), CryptoAddress("u2", Some("p2")), CryptoAddress("u3", Some("p3")), CryptoAddress("u4", Some("p4")), CryptoAddress("u5", Some("p5")), CryptoAddress("u6", Some("p6"))))
+      bwm.faucetAddress(User, Set(CryptoAddress("u1", Some("p1")), CryptoAddress("u2", Some("p2")), CryptoAddress("u3", Some("p3")), CryptoAddress("u4", Some("p4")), CryptoAddress("u5", Some("p5")), CryptoAddress("u6", Some("p6"))))
       bwm.faucetAddress(Hot, Set(CryptoAddress("h1", Some("ph1")), CryptoAddress("h2", Some("ph2"))))
       bwm.faucetAddress(Cold, Set(CryptoAddress("c1", Some("pc1"))))
 

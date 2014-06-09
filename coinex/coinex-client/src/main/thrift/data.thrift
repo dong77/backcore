@@ -171,10 +171,10 @@ enum RefundReason {
 }
 
 enum CryptoCurrencyAddressType {
-    USER_USED = 0
-    UNUSED    = 1
-    HOT       = 2
-    COLD      = 3
+    USER   = 0
+    UNUSED = 1
+    HOT    = 2
+    COLD   = 3
 }
 
 enum BitwayRequestType {

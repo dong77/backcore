@@ -72,7 +72,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     }
   }
 
-  def isDryUp = addresses(Unused).size == 0 || addresses(UserUsed).size > addresses(Unused).size * FAUCET_THRESHOLD
+  def isDryUp = addresses(Unused).size == 0 || addresses(User).size > addresses(Unused).size * FAUCET_THRESHOLD
 
   def allocateAddress: (Option[String], Boolean /* need fetch from bitway */ ) = {
     if (addresses(Unused).isEmpty) {
@@ -89,7 +89,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
   def addressAllocated(uid: Long, address: String) {
     assert(addresses(Unused).contains(address))
     addresses(Unused).remove(address)
-    addresses(UserUsed).add(address)
+    addresses(User).add(address)
     addressUidMap += (address -> uid)
   }
 
@@ -120,7 +120,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
   def getTransferType(inputs: Set[String], outputs: Set[String]): Option[TransferType] = {
     object AddressSetEnum extends Enumeration {
       type AddressSet = Value
-      val UNUSED, USED, HOT, COLD = Value
+      val UNUSED, USER, HOT, COLD = Value
     }
 
     import AddressSetEnum._
@@ -129,8 +129,8 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
       var enumSet = ValueSet.empty
       if ((set & addresses(Unused)).nonEmpty)
         enumSet += UNUSED
-      if ((set & addresses(UserUsed)).nonEmpty)
-        enumSet += USED
+      if ((set & addresses(User)).nonEmpty)
+        enumSet += USER
       if ((set & addresses(Hot)).nonEmpty)
         enumSet += HOT
       if ((set & addresses(Cold)).nonEmpty)
@@ -142,10 +142,10 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     // Which means one CryptoCurrencyTransaction can't has two types: Deposit as well as Withdrawal
     val inputsMatched = getIntersectSet(inputs)
     val outputsMatched = getIntersectSet(outputs)
-    if (inputsMatched.contains(USED) && outputsMatched.contains(HOT)) {
+    if (inputsMatched.contains(USER) && outputsMatched.contains(HOT)) {
       Some(TransferType.UserToHot)
     } else if (inputsMatched.contains(HOT)) {
-      assert(!outputsMatched.contains(USED))
+      assert(!outputsMatched.contains(USER))
       if (outputsMatched.contains(COLD)) {
         Some(TransferType.HotToCold)
       } else {
@@ -153,7 +153,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
       }
     } else if (inputsMatched.contains(COLD) && outputsMatched.contains(HOT)) {
       Some(TransferType.ColdToHot)
-    } else if (outputsMatched.contains(USED)) {
+    } else if (outputsMatched.contains(USER)) {
       Some(TransferType.Deposit)
     } else if (inputsMatched.nonEmpty || outputsMatched.nonEmpty) {
       Some(TransferType.Unknown)
@@ -296,7 +296,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
 
   def includeWithdrawalToDepositAddress(infos: Seq[CryptoCurrencyTransferInfo]): Boolean = {
     infos.exists(info => (info.to.isDefined && info.from.isDefined &&
-      addresses(Hot).contains(info.from.get) && addresses(UserUsed).contains(info.to.get)))
+      addresses(Hot).contains(info.from.get) && addresses(User).contains(info.to.get)))
   }
 
   def syncHotAddresses(addrs: Set[CryptoAddress]) {
