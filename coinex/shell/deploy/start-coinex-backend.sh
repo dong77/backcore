@@ -13,6 +13,7 @@ XmsSizeM=`expr $MaxHeapSizeM / $InitHeapSizeRatio`
 NewSizeM=`expr $XmsSizeM / $NewRatioA`
 MaxNewSizeM=`expr $MaxHeapSizeM / $NewRatioA`
 NumOfFullGCBeforeCompaction=1
+maillist=chunming@coinport.com,c@coinport.com,d@coinport.com
 
 Xms="-Xms${XmsSizeM}m"  # The init heap size
 Xmx="-Xmx${MaxHeapSizeM}m"
@@ -35,7 +36,11 @@ CMSFullGCsBeforeCompaction="-XX:CMSFullGCsBeforeCompaction=${NumOfFullGCBeforeCo
 # GCDetails="-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps"
 # ======================== End the parameters for JVM ==========================
 
-COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp ./coinex-backend-assembly-1.1.18-SNAPSHOT.jar -Dconfig.resource=application-prod.conf com.coinport.coinex.CoinexApp 25551 172.31.1.218:25551,172.31.1.67:25551 all 172.31.1.218"
+# get jar versionid
+version=`grep "val coinexVersion"  /home/ubuntu/coinport/backcore/coinex/project/Build.scala | cut -d '"' -f2`
+
+cd /home/ubuntu/coinport/coinex-backend
+COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp /home/ubuntu/coinport/coinex-backend/coinex-backend-assembly-$version.jar -Dconfig.resource=application-prod.conf com.coinport.coinex.CoinexApp 25551 172.31.1.218:25551,172.31.1.67:25551 all 172.31.1.218"
 #COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp ./coinex-backend-assembly-1.1.18-SNAPSHOT.jar com.coinport.coinex.CoinexApp 25551 127.0.0.1:25551 all 127.0.0.1"
 
 echo $COMMAND
@@ -58,7 +63,7 @@ do
     pid=$!
     echo "===============restart coinex==============="
     #send mail
-    echo "coinex-backend has restarted! please check and make sure our system is OK!" | mail -s "backend_restart" everyone@coinport.com
+    echo "coinex-backend has restarted! please check and make sure our system is OK!" | mail -s "backend_restart" $maillist
   fi 
   sleep 2
 done
