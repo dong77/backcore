@@ -25,4 +25,9 @@ object TransferService extends AkkaService {
     if (success) backend ! AdminConfirmTransferSuccess(transfer)
     else backend ! AdminConfirmTransferFailure(transfer, ErrorCode.TransferReject)
   }
+
+  def cancelWithdrawal(userId: Long, transferId: Long) = {
+    val transfer = AccountTransfer(id = transferId, userId = userId, `type` = TransferType.Withdrawal, currency = Currency.Btc, amount = 1, status = TransferStatus.Failed)
+    backend ! DoCancelTransfer(transfer)
+  }
 }
