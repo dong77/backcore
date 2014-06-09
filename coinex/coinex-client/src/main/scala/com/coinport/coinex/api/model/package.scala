@@ -159,7 +159,7 @@ package object model {
     val amount = CurrencyObject(t.currency, t.amount)
     val status = t.status.value
     val created = t.created.getOrElse(0L)
-    val updated = t.created.getOrElse(0L)
+    val updated = t.updated.getOrElse(0L)
     val operation = t.`type`.getValue
 
     ApiTransferItem(id, uid, amount, status, created, updated, operation, t.address.getOrElse(""), t.confirm.getOrElse(0L).toInt)
