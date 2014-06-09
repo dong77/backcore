@@ -4,7 +4,7 @@ import akka.actor.ActorContext
 import akka.persistence.PersistentRepr
 import akka.persistence.hbase.journal.PluginPersistenceSettings
 import akka.persistence.hbase.common.Const._
-import akka.persistence.hbase.common.{ DeferredConversions, HdfsSnapshotDescriptor, EncryptingSerializationExtension, SaltedScanner }
+import akka.persistence.hbase.common._
 import akka.persistence.hbase.common.Columns._
 import akka.persistence.serialization.Snapshot
 import com.coinport.coinex.common.Manager
@@ -18,6 +18,7 @@ import org.apache.hadoop.fs.{ Path, FileSystem }
 import org.apache.hadoop.hbase.util.Bytes
 import org.hbase.async.KeyValue
 import scala.concurrent.Future
+import scala.collection.mutable
 import scala.collection.mutable.Map
 import scala.collection.JavaConverters._
 
@@ -37,7 +38,8 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
   private val messagesFamily = config.getString("hbase-journal.family")
   private val cryptKey = config.getString("akka.persistence.encryption-settings")
   private val BUFFER_SIZE = 2048
-  private val SCAN_MAX_NUM_ROWS = 50
+  private val SCAN_MAX_NUM_ROWS = 5
+  private val ReplayGapRetry = 5
 
   implicit var pluginPersistenceSettings = PluginPersistenceSettings(config, JOURNAL_CONFIG)
   implicit var executionContext = context.system.dispatcher
@@ -113,63 +115,115 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
   def dumpMessages(processorId: String, fromSeqNum: Long, toSeqNum: Long) {
     if (toSeqNum <= fromSeqNum) return
     val client = asyncHBaseClient.getClient()
-    val scanner = new SaltedScanner(client, pluginPersistenceSettings.partitionCount, Bytes.toBytes(messagesTable), Bytes.toBytes(messagesFamily))
-    scanner.setSaltedStartKeys(processorId, fromSeqNum)
-    scanner.setSaltedStopKeys(processorId, toSeqNum)
-    scanner.setKeyRegexp(processorId)
-    scanner.setMaxNumRows(SCAN_MAX_NUM_ROWS)
+    var retryTimes: Int = 0
+    var isDuplicate = false
+    var tryStartSeqNr: Long = if (fromSeqNum <= 0) 1 else fromSeqNum
+
+    var scanner: SaltedScanner = null
     type AsyncBaseRows = JArrayList[JArrayList[KeyValue]]
 
-    def getMessages(rows: AsyncBaseRows): String = {
-      val builder = new StringBuilder()
-      for (row <- rows.asScala) {
-        builder ++= "{"
-        for (column <- row.asScala) {
-          if (java.util.Arrays.equals(column.qualifier, Message) || java.util.Arrays.equals(column.qualifier, SequenceNr)) {
-
-            if (java.util.Arrays.equals(column.qualifier, Message)) {
-              // will throw an exception if failed
-              val msg = serialization.deserialize(column.value(), classOf[PersistentRepr])
-              builder ++= "\"" ++= msg.payload.getClass.getEnclosingClass.getSimpleName ++= "\":"
-              builder ++= PrettyJsonSerializer.toJson(msg.payload)
-            } else {
-              builder ++= "\"" ++= Bytes.toString(column.qualifier) ++= "\":"
-              builder ++= Bytes.toLong(column.value()).toString
-            }
-            builder ++= ","
-          }
+    def hasSequenceGap(columns: collection.mutable.Buffer[KeyValue]): Boolean = {
+      val processingSeqNr = sequenceNr(columns)
+      if (tryStartSeqNr != processingSeqNr) {
+        if (tryStartSeqNr > processingSeqNr) {
+          sys.error(s"Replay $processorId Meet duplicated message: to process is $tryStartSeqNr, actual is $processingSeqNr")
+          isDuplicate = true
         }
-        builder.delete(builder.length - 1, builder.length)
-        builder ++= "},"
+        return true
+      } else {
+        return false
       }
-      builder.toString()
     }
 
-    def handleRows(): Future[StringBuilder] = {
+    def initScanner() {
+      if (scanner != null) scanner.close()
+      scanner = new SaltedScanner(client, pluginPersistenceSettings.partitionCount, Bytes.toBytes(messagesTable), Bytes.toBytes(messagesFamily))
+      scanner.setSaltedStartKeys(processorId, tryStartSeqNr)
+      scanner.setSaltedStopKeys(processorId, RowKey.toSequenceNr(toSeqNum))
+      scanner.setKeyRegexp(processorId)
+      scanner.setMaxNumRows(SCAN_MAX_NUM_ROWS)
+    }
+
+    def sequenceNr(columns: mutable.Buffer[KeyValue]): Long = {
+      for (column <- columns) {
+        if (java.util.Arrays.equals(column.qualifier, SequenceNr)) {
+          return Bytes.toLong(column.value())
+        }
+      }
+      0L
+    }
+
+    def getMessages(rows: AsyncBaseRows): (Boolean, String, String) = {
+      val builder = new StringBuilder()
+      for (row <- rows.asScala) {
+        if (hasSequenceGap(row.asScala) && retryTimes < ReplayGapRetry) {
+          if (isDuplicate) {
+            return (true, "Duplicated message", builder.toString())
+          }
+          sys.error(s"Meet gap at ${tryStartSeqNr}")
+          retryTimes += 1
+          Thread.sleep(100)
+          initScanner()
+          return (false, "", builder.toString())
+        } else {
+          if (retryTimes >= ReplayGapRetry) {
+            return (true, s"Gap retry times reach ${ReplayGapRetry}", builder.toString())
+          }
+          builder ++= "{"
+          for (column <- row.asScala) {
+            if (java.util.Arrays.equals(column.qualifier, Message) || java.util.Arrays.equals(column.qualifier, SequenceNr)) {
+              if (java.util.Arrays.equals(column.qualifier, Message)) {
+                // will throw an exception if failed
+                val msg = serialization.deserialize(column.value(), classOf[PersistentRepr])
+                builder ++= "\"" ++= msg.payload.getClass.getEnclosingClass.getSimpleName ++= "\":"
+                builder ++= PrettyJsonSerializer.toJson(msg.payload)
+              } else {
+                builder ++= "\"" ++= Bytes.toString(column.qualifier) ++= "\":"
+                builder ++= Bytes.toLong(column.value()).toString
+                tryStartSeqNr = Bytes.toLong(column.value()) + 1
+              }
+              builder ++= ","
+            }
+          }
+          builder.delete(builder.length - 1, builder.length)
+          builder ++= "},"
+          retryTimes = 0
+        }
+      }
+      (false, "", builder.toString())
+    }
+
+    def handleRows(): Future[Unit] = {
       scanner.nextRows() flatMap {
         case null =>
           scanner.close()
-          Future(new StringBuilder())
+          Future(())
         case rows: AsyncBaseRows =>
-          val builder = new StringBuilder()
-          builder ++= getMessages(rows)
-          handleRows() map {
-            res =>
-              builder ++= res
+          val (isFailed, errMsg, writeMsg) = getMessages(rows)
+          if (!writeMsg.isEmpty && tryStartSeqNr > 0) {
+            writeMessages(writeMsg, tryStartSeqNr - 1)
+          }
+          if (isFailed) {
+            sys.error(errMsg)
+            Future.failed(new Exception(errMsg))
+          } else {
+            handleRows()
           }
       }
     }
 
-    handleRows() map {
-      case data if !data.isEmpty =>
-        val writer = new BufferedWriter(new OutputStreamWriter(fs.create(
-          new Path(exportMessagesHdfsDir, s"coinport_events_${pFileMap(processorId)}_${String.valueOf(toSeqNum - 1).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase))))
-        writer.write(s"""{"timestamp": ${System.currentTimeMillis()},\n"events": [""")
-        writer.write(data.substring(0, data.length - 1).toString())
-        writer.write("]}")
-        writer.flush()
-        writer.close()
+    def writeMessages(data: String, seqNum: Long) {
+      val writer = new BufferedWriter(new OutputStreamWriter(fs.create(
+        new Path(exportMessagesHdfsDir, s"coinport_events_${pFileMap(processorId)}_${String.valueOf(seqNum).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase))))
+      writer.write(s"""{"timestamp": ${System.currentTimeMillis()},\n"events": [""")
+      writer.write(data.substring(0, data.length - 1).toString())
+      writer.write("]}")
+      writer.flush()
+      writer.close()
     }
+
+    initScanner
+    handleRows()
   }
 
   def writeSnapshot(outputDir: String, processorId: String, seqNum: Long, snapshot: Snapshot, className: String, isOpen: Boolean = false) {
