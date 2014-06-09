@@ -370,6 +370,24 @@ CryptoProxy.prototype.getUnspentOfAddresses_ = function(addresses, callback) {
     });
 };
 
+CryptoProxy.prototype.getUnspentByUserAddresses_ = function(addresses, callback) {
+    var self = this;
+    var addrArrays = [];
+    for (var i = 0; i < addresses.length; i++) {
+        var addrArray = [];
+        addrArray.push(addresses[i]);
+        addrArrays.push(addrArray);
+    }
+    Async.map(addrArrays, self.getUnspentOfAddresses_.bind(self), function(error, txsArray) {
+        if (error) {
+            self.log(error);
+            callback(error);
+        } else {
+            callback(null, txsArray);
+        }
+    });
+};
+
 CryptoProxy.prototype.getAHotAddressByRandom_ = function(callback) {
     var self = this;
     self.rpc.getAddressesByAccount(CryptoProxy.HOT_ACCOUNT, function(errAddr, retAddr){
@@ -765,6 +783,7 @@ CryptoProxy.prototype.getInputAddress_ = function(vinItem, callback) {
                 self.log.warn('the previous tx\'s output is ' + outIndexes[0].scriptPubKey.type + ', txid: ', tx.result.txid);
                 input.address = outIndexes[0].scriptPubKey.type;
                 input.amount = outIndexes[0].value;
+                callback(null, input);
             }
         }});
     } else {
