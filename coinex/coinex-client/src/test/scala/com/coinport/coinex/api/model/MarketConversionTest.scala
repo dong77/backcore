@@ -25,8 +25,15 @@ class MarketConversionTest extends Specification {
       val backendObj = MarketDepth(Btc ~> Cny, asks = asks, bids = bids)
       val marketDepth = fromMarketDepth(backendObj)
 
-      marketDepth.asks mustEqual List(ApiMarketDepthItem(5500.0, 4.5), ApiMarketDepthItem(6000.0, 5.0), ApiMarketDepthItem(7000.0, 6.0))
-      marketDepth.bids mustEqual List(ApiMarketDepthItem(4500.0, 1.5), ApiMarketDepthItem(3000.0, 2.0), ApiMarketDepthItem(2000.0, 3.0))
+      marketDepth.asks mustEqual List(
+        ApiMarketDepthItem(PriceObject(Btc ~> Cny, 5.5), CurrencyObject(Btc, 450000000)),
+        ApiMarketDepthItem(PriceObject(Btc ~> Cny, 6.0), CurrencyObject(Btc, 500000000)),
+        ApiMarketDepthItem(PriceObject(Btc ~> Cny, 7.0), CurrencyObject(Btc, 600000000)))
+
+      marketDepth.bids mustEqual List(
+        ApiMarketDepthItem(PriceObject(Btc ~> Cny, 4.5), CurrencyObject(Btc, 150000000)),
+        ApiMarketDepthItem(PriceObject(Btc ~> Cny, 3.0), CurrencyObject(Btc, 200000000)),
+        ApiMarketDepthItem(PriceObject(Btc ~> Cny, 2.0), CurrencyObject(Btc, 300000000)))
     }
 
     "market conversion" in {
