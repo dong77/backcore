@@ -58,7 +58,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                 sender ! RequestTransferFailed(UnsupportTransferType)
             }
             handleResList()
-          } else {
+          } else { // No need to send message, as accountProcessor will ignore it, just for integration test
             sender ! RequestTransferSucceeded(event.transfer) // wait for admin confirm
           }
       }

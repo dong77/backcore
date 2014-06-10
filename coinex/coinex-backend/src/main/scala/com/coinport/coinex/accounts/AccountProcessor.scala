@@ -27,7 +27,7 @@ class AccountProcessor(
   marketProcessors: Map[MarketSide, ActorRef],
   marketUpdateProcessoressorPath: ActorPath,
   depositWithdrawProcessorPath: ActorPath,
-  accountConfig: AccountConfig) extends ExtendedProcessor with EventsourcedProcessor with ChannelSupport
+  accountConfig: AccountConfig) extends ExtendedProcessor with EventsourcedProcessor
     with AccountManagerBehavior with ActorLogging {
 
   val feeConfig = accountConfig.feeConfig
@@ -41,8 +41,12 @@ class AccountProcessor(
   val manager = new AccountManager(1E12.toLong, accountConfig.hotColdTransfer)
 
   override def identifyChannel: PartialFunction[Any, String] = {
-    case r: AdminConfirmTransferSuccess => "tsf"
-    case r: AdminConfirmTransferFailure => "tsf"
+    case as: AdminConfirmTransferSuccess => "tsf"
+    case af: AdminConfirmTransferFailure => "tsf"
+    case rt: RequestTransferFailed => "tsf"
+    case cs: CryptoTransferSucceeded => "tsf"
+    case cf: CryptoTransferFailed => "tsf"
+    case cl: DoCancelTransfer => "tsf"
     case OrderSubmitted(originOrderInfo, txs) => "mp_" + originOrderInfo.side.s
     case OrderCancelled(side, order) => "mp_" + side.s
   }
@@ -173,6 +177,9 @@ class AccountProcessor(
 
     case p @ ConfirmablePersistent(m: CryptoTransferFailed, _, _) =>
       persist(m) { event => confirm(p); updateState(event) }
+
+    case p @ ConfirmablePersistent(m: RequestTransferFailed, _, _) =>
+      log.error(s"Failed by AccountTransferProcessor for reason: ${m.error.toString}")
 
     case p @ ConfirmablePersistent(m: DoCancelTransfer, _, _) =>
       persist(m) { event => confirm(p); updateState(event) }

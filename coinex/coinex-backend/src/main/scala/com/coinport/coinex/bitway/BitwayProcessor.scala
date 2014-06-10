@@ -53,6 +53,10 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     scheduleSyncHotAddresses()
   }
 
+  override def identifyChannel: PartialFunction[Any, String] = {
+    case tc: TransferCryptoCurrency => "tsf"
+  }
+
   def receiveRecover = PartialFunction.empty[Any, Unit]
 
   def receiveCommand = LoggingReceive {
