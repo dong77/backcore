@@ -103,13 +103,13 @@ class AccountProcessor(
     }
 
     case p @ ConfirmablePersistent(m: AdminConfirmTransferSuccess, _, _) =>
-      persist(m) { event =>
+      persist(m.copy(transfer = appendFeeIfNecessary(m.transfer))) { event =>
         confirm(p)
         updateState(event)
       }
 
     case p @ ConfirmablePersistent(m: CryptoTransferSucceeded, _, _) =>
-      persist(m) {
+      persist(m.copy(transfers = m.transfers.map(appendFeeIfNecessary(_)))) {
         event =>
           confirm(p)
           updateState(event)
@@ -237,6 +237,14 @@ class AccountProcessor(
 
   private def getProcessorPath(side: MarketSide): ActorPath = {
     marketProcessors.getOrElse(side, marketProcessors(side.reverse)).path
+  }
+
+  private def appendFeeIfNecessary(t: AccountTransfer) = {
+    if ((t.`type` == Withdrawal || t.`type` == Deposit) && !t.fee.isDefined) {
+      countFee(t)
+    } else {
+      t
+    }
   }
 }
 
