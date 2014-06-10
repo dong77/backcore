@@ -127,3 +127,66 @@ object UserOrder {
     }
   }
 }
+
+case class ApiOrder(uid: String,
+  operation: String,
+  subject: String,
+  currency: String,
+  price: Option[PriceObject],
+  amount: Option[CurrencyObject],
+  total: Option[CurrencyObject],
+  status: Int = 0,
+  id: String,
+  submitTime: Long,
+  finishedQuantity: CurrencyObject,
+  finishedAmount: CurrencyObject)
+
+object ApiOrder {
+  def fromOrderInfo(orderInfo: OrderInfo): ApiOrder = {
+    // all are sell-orders
+    val marketSide = orderInfo.side
+    val order = orderInfo.order
+
+    val unit1 = marketSide._1
+    val unit2 = marketSide._2
+    if (marketSide.ordered) {
+      // sell
+      val price: Option[PriceObject] = order.price.map {
+        p: RDouble => PriceObject(marketSide, p.value)
+      }
+      val amount: Option[CurrencyObject] = Some(CurrencyObject(unit1, order.quantity))
+      val total: Option[CurrencyObject] = order.takeLimit.map(t => CurrencyObject(unit2, t))
+
+      // finished quantity = out
+      val finishedQuantity = CurrencyObject(unit1, orderInfo.outAmount)
+      // finished amount = in
+      val finishedAmount = CurrencyObject(unit2, orderInfo.inAmount)
+
+      val status = orderInfo.status
+      val id = order.id
+      val timestamp = order.timestamp.getOrElse(0L)
+
+      ApiOrder(order.userId.toString, "Sell", unit1, unit2, price, amount, total, status.value, id.toString, timestamp, finishedQuantity, finishedAmount)
+    } else {
+      // buy
+      val price: Option[PriceObject] = order.price.map {
+        p: RDouble => PriceObject(marketSide.reverse, p.reciprocal.value)
+      }
+
+      val amount = order.takeLimit.map(t => CurrencyObject(unit2, t))
+      val total = Some(CurrencyObject(unit1, order.quantity))
+
+      // finished quantity = in
+      val finishedQuantity = CurrencyObject(unit2, orderInfo.inAmount)
+
+      // finished amount = out
+      val finishedAmount = CurrencyObject(unit1, orderInfo.outAmount)
+
+      val status = orderInfo.status
+      val id = order.id
+      val timestamp = order.timestamp.getOrElse(0L)
+
+      ApiOrder(order.userId.toString, "Buy", unit2, unit1, price, amount, total, status.value, id.toString, timestamp, finishedQuantity, finishedAmount)
+    }
+  }
+}

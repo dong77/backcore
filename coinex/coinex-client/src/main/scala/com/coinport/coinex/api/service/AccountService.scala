@@ -55,7 +55,7 @@ object AccountService extends AkkaService {
     val command = userOrder.toDoSubmitOrder
     backend ? command map {
       case result: OrderSubmitted =>
-        ApiResult(true, 0, "订单提交成功", Some(UserOrder.fromOrderInfo(result.originOrderInfo)))
+        ApiResult(true, 0, "订单提交成功", Some(ApiOrder.fromOrderInfo(result.originOrderInfo)))
       case failed: SubmitOrderFailed =>
         val message = failed.error match {
           case ErrorCode.InsufficientFund => "余额不足"
@@ -80,7 +80,7 @@ object AccountService extends AkkaService {
     backend ? QueryOrder(uid, id, status.map(_.getValue), querySide, cursor) map {
       case result: QueryOrderResult =>
         val items = result.orderinfos.map {
-          o => UserOrder.fromOrderInfo(o)
+          o => ApiOrder.fromOrderInfo(o)
         }.toSeq
         ApiResult(data = Some(ApiPagingWrapper(skip, limit, items, result.count.toInt)))
       case x => ApiResult(false, -1, x.toString)

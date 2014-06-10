@@ -6,7 +6,7 @@ package com.coinport.coinex.api.model
 
 case class ApiResult(success: Boolean = true, code: Int = 0, message: String = "", data: Option[Any] = None)
 
-case class ApiSubmitOrderResult(order: UserOrder)
+case class ApiSubmitOrderResult(order: ApiOrder)
 
 case class ApiAccountItem(currency: String, available: CurrencyObject, locked: CurrencyObject, pendingWithdrawal: CurrencyObject)
 

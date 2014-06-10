@@ -83,12 +83,6 @@ package object model {
 
   implicit def toJsonSupportWrapper(obj: Any): JsonSupportWrapper = new JsonSupportWrapper(obj)
 
-  implicit def fromOrderSubmitted(obj: OrderSubmitted): ApiSubmitOrderResult = {
-    val orderInfo = obj.originOrderInfo
-    val order = UserOrder.fromOrderInfo(orderInfo)
-    ApiSubmitOrderResult(order)
-  }
-
   def fromUserAccount(account: UserAccount): ApiUserAccount = {
     val userId = account.userId.toString
     val accounts = account.cashAccounts.map {
