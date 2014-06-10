@@ -105,11 +105,12 @@ object MarketService extends AkkaService {
                     case Some(curHisMap) => curHisMap.get(timeSpot).get * volume
                     case None => 0.0
                   }
-                cur.toString.toUpperCase -> amount.externalValue(cur)
+                cur.toString.toUpperCase -> (PriceObject(baseCurrency ~> cur, amount), PriceObject(baseCurrency ~> cur, amount / volume))
             }.toMap
             ApiAssetItem(uid = userId.toString,
-              assetMap = assetMap.map(a => a._1.toString.toUpperCase -> a._2.externalValue(a._1)).toMap,
-              amountMap = amountMap,
+              assetMap = assetMap.map(a => a._1.toString.toUpperCase -> CurrencyObject(a._1, a._2)).toMap,
+              amountMap = amountMap.map(a => a._1 -> a._2._1),
+              priceMap = amountMap.map(a => a._1 -> a._2._2),
               timestamp = timeSpot * timeSkip)
         }
         ApiResult(data = Some(items.reverse))
