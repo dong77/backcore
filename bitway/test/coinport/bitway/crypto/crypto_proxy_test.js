@@ -229,6 +229,43 @@ describe('crypto proxy', function() {
                 done();
             });
         });
+
+
+        it('user to hot(multi addresses)', function(done) {
+            var redisClient = new MockRedis();
+            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+                cryptoRpc: new MockDogRpc({blockCount: 93721}),
+                minConfirm: 1,
+                redis: redisClient
+            });
+            var transferInfoA = {from: "njUFyRxUrD5EgssHhX14Nr31k9piigMwQg", to: "", amount: 10000, id: '10001'};
+            var transferInfoB = {from: "nmoEYptTPTRfzn9U8x58q97vioduyS98dE", to: "", amount: 5, id: '10002'};
+            var transferInfoC = {from: "nmoEYptTPTRfzn9U8x58q97vioduyS98dE", to: "", amount: 5, id: '10003'};
+            var transferInfos = [];
+            transferInfos.push(transferInfoA);
+            transferInfos.push(transferInfoB);
+            transferInfos.push(transferInfoC);
+            var request = {currency: Currency.DOG, transferInfos: transferInfos, type: TransferType.USER_TO_HOT};
+            cryptoProxy.constructRawTransaction_(request, function(error, rawData) {
+                Assert.equal(error, null);
+                Assert.deepEqual(rawData.transactions, [{"txid":"57048399a409eb0778f478e9702b0adcbf4e05726da5659f0dc41606ec9616fb","vout":1},
+                    {"txid":"f72cf190df6c13b704c4830fc043a4b7b0ef56ad3d4bcf0324928365dd82cfdc","vout":0},
+                    {"txid":"854dbdbefde63e0435fee1519e3893860d6687061ebb79624a0542968a29a92b","vout":1}]);
+                Assert.equal(rawData.addresses['njUFyRxUrD5EgssHhX14Nr31k9piigMwQg'], 190000);
+                Assert.equal(rawData.addresses['nmoEYptTPTRfzn9U8x58q97vioduyS98dE'], 5);
+                var hotAddresses = MockDogData.addressesByAccount["hot"];
+                var flag = false;
+                for (var i = 0; i < hotAddresses.length; i++) {
+                    if (rawData.addresses[hotAddresses[i]] == 10009.9999) {
+                        flag = true;
+                        break;
+                    }
+                }
+                Assert.equal(flag, true);
+                done();
+            });
+        });
+
     });
 
     describe('getMissedBlocks', function() {

@@ -47,6 +47,7 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
         opt_config.redis != undefined && (this.redis = opt_config.redis);
         opt_config.minConfirm != undefined && (this.minConfirm = opt_config.minConfirm);
         opt_config.checkInterval != undefined && (this.checkInterval = opt_config.checkInterval);
+        opt_config.minerfee != undefined && (self.minerFee = opt_config.minerFee);
     }
 
     this.currency || (this.currency = currency);
@@ -66,7 +67,7 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
     this.redis.on('end'         , this.logFunction('end'));
 
     this.checkInterval || (this.checkInterval = 5000);
-
+    this.minerFee || (this.minerFee = 0.0001);
     this.processedSigids = this.currency + '_processed_sigids';
     this.lastIndex = this.currency + '_last_index';
     this.log = Logger.logger(this.currency.toString());
@@ -75,7 +76,6 @@ Util.inherits(CryptoProxy, Events.EventEmitter);
 
 CryptoProxy.ACCOUNT = 'customers';
 CryptoProxy.HOT_ACCOUNT = "hot";
-CryptoProxy.TIP = 0.0001;
 CryptoProxy.MIN_GENERATE_ADDR_NUM = 1;
 CryptoProxy.MAX_GENERATE_ADDR_NUM = 1000;
 CryptoProxy.MAX_CONFIRM_NUM = 9999999;
@@ -214,21 +214,26 @@ CryptoProxy.prototype.getMergedTransferInfos_ = function(request) {
     var transferInfos = request.transferInfos;
     transferInfos.sort(this.compareTransferInfo_);
     var newTransferInfos = [];
-    for (var i = 0; i < transferInfos.length - 1;) {
+    for (var i = 0; i < transferInfos.length;) {
         var newTransferInfo = transferInfos[i];
         var start = i;
-        for (var j = start + 1; j < transferInfos.length; j++) {
+        var amount = 0;
+        for (var j = start; j < transferInfos.length; j++) {
             if (newTransferInfo.from == transferInfos[j].from) {
-                newTransferInfo.amount += transferInfos[j].amount;
+                amount += transferInfos[j].amount;
                 i++;
             } else {
-                i++;
                 break;
             }
+            newTransferInfo.amount = amount;
         }
         newTransferInfos.push(newTransferInfo);
     }
     return newTransferInfos;
+};
+
+CryptoProxy.prototype.jsonToAmount_ = function(value) {
+    return Math.round(1e8 * value)/1e8;
 };
 
 CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback) {
@@ -251,11 +256,11 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
                         amountUnspent += unspentTxs[i].amount;
                         var transaction = {txid: unspentTxs[i].txid, vout: unspentTxs[i].vout};
                         transactions.push(transaction);
-                        if (amountUnspent > (amountTotalPay + CryptoProxy.TIP)) {
-                            addresses[changeAddress] = amountUnspent - amountTotalPay - CryptoProxy.TIP;
+                        if (amountUnspent > (amountTotalPay + self.minerFee)) {
+                            addresses[changeAddress] = self.jsonToAmount_(amountUnspent - amountTotalPay - self.minerFee);
                             break;
-                        } else if((amountUnspent < (amountTotalPay + CryptoProxy.TIP) && amountUnspent > amountTotalPay)
-                                || amountUnspent == (amountTotalPay + CryptoProxy.TIP)) {
+                        } else if((amountUnspent < (amountTotalPay + self.minerFee) && amountUnspent > amountTotalPay)
+                                || amountUnspent == (amountTotalPay + self.minerFee)) {
                             break;
                         }
                     }
@@ -285,7 +290,7 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
                 amountTotalPay += transferReq.transferInfos[i].amount;
             }
             Async.parallel ([
-                function (cb) {self.getUnspentOfAddresses_.bind(self)(fromAddresses, cb)},
+                function (cb) {self.getUnspentByUserAddresses_.bind(self)(fromAddresses, cb)},
                 function (cb) {self.getAHotAddressByRandom_.bind(self)(cb)}
                 ], function(err, result){
                     if (err) {
@@ -297,27 +302,21 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
                         var amountTotalUnspent = 0;
                         var transactions = [];
                         var addresses = {};
-                        for (var j = 0; j < unspentTxs.length; j++) {
-                            amountTotalUnspent += unspentTxs[j].amount;
-                            var transaction = {txid: unspentTxs[j].txid, vout: unspentTxs[j].vout};
-                            transactions.push(transaction);
-                        }
-                        if (amountTotalUnspent > amountTotalPay && amountTotalUnspent < amountTotalPay + CryptoProxy.TIP) {
-                            addresses[toAddress] = amountTotalPay;
-                            var rawData = {transactions: transactions, addresses: addresses};
-                            callback(null, rawData);
-                        } else if (amountTotalUnspent == amountTotalPay){
-                            if (amountTotalPay > CryptoProxy.TIP) {
-                                addresses[toAddress] = amountTotalPay - CryptoProxy.TIP;
-                            } else {
-                                addresses[toAddress] = amountTotalPay - amountTotalPay*0.1;
+                        for (var m = 0; m < unspentTxs.length; m++) {
+                            var amountTotalUnspentOfAddr = 0;
+                            var unspentTxsPerAddr = unspentTxs[m];
+                            for (var n =0; n < unspentTxsPerAddr.length; n++) {
+                                amountTotalUnspentOfAddr += unspentTxsPerAddr[n].amount;
+                                var transaction = {txid: unspentTxsPerAddr[n].txid, vout: unspentTxsPerAddr[n].vout};
+                                transactions.push(transaction);
                             }
-                            var rawData = {transactions: transactions, addresses: addresses};
-                            callback(null, rawData);
-                        } else if (amountTotalUnspent > amountTotalPay + CryptoProxy.TIP
-                                || amountTotalUnspent == amountTotalPay + CryptoProxy.TIP){
-                            self.log.warn("User accounts exceed the amount transferred!");
-                            addresses[toAddress] = amountTotalUnspent - CryptoProxy.TIP;
+                            if (amountTotalUnspentOfAddr > newTransferInfos[m].amount) {
+                                addresses[newTransferInfos[m].from] = self.jsonToAmount_(amountTotalUnspentOfAddr - newTransferInfos[m].amount);
+                            }
+                            amountTotalUnspent += amountTotalUnspentOfAddr;
+                        }
+                        if (amountTotalUnspent == amountTotalPay || amountTotalUnspent > amountTotalPay) {
+                            addresses[toAddress] = self.jsonToAmount_((amountTotalPay)- self.minerFee);
                             var rawData = {transactions: transactions, addresses: addresses};
                             callback(null, rawData);
                         } else {
@@ -356,7 +355,7 @@ CryptoProxy.prototype.getUnspentOfAddresses_ = function(addresses, callback) {
     self.rpc.listUnspent(self.minConfirm, CryptoProxy.MAX_CONFIRM_NUM,
         addresses, function(unspentError, unspentReply) {
         if (unspentError) {
-            self.log(unspentError);
+            self.log.error(unspentError);
             callback(unspentError);
         } else {
             var transactions = [];
@@ -380,7 +379,7 @@ CryptoProxy.prototype.getUnspentByUserAddresses_ = function(addresses, callback)
     }
     Async.map(addrArrays, self.getUnspentOfAddresses_.bind(self), function(error, txsArray) {
         if (error) {
-            self.log(error);
+            self.log.error(error);
             callback(error);
         } else {
             callback(null, txsArray);
@@ -418,7 +417,7 @@ CryptoProxy.prototype.generateAHotAddress_ = function(unusedIndex, callback) {
     var self = this;
     self.rpc.getNewAddress(CryptoProxy.HOT_ACCOUNT, function(errPub, replyPub) {
         if (errPub) {
-            self.log.err(errPub);
+            self.log.error(errPub);
             callback(errPub);
         } else {
             self.rpc.dumpPrivKey(replyPub.result, function(errPriv, replyPriv) {
