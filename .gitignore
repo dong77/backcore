@@ -36,4 +36,6 @@ gen-java/
 node_modules/
 gen-nodejs/
 logs
+log/
+*.out
 coinex/.ensime
