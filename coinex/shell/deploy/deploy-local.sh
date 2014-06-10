@@ -48,7 +48,7 @@ git fetch && git rebase origin master
 # get jar versionid ---------------------------------------------------
 version=`grep "val coinexVersion"  /coinport/backcore/coinex/project/Build.scala | cut -d '"' -f2`
 
-COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp /coinport/backcore/coinex/coinex-backend/target/scala-2.10/coinex-backend-assembly-$version.jar -Dconfig.resource=application-test com.coinport.coinex.CoinexApp 25551 127.0.0.1:25551 all 127.0.0.1"
+COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp /coinport/backcore/coinex/coinex-backend/target/scala-2.10/coinex-backend-assembly-$version.jar -Dconfig.resource=application-test.conf com.coinport.coinex.CoinexApp 25551 127.0.0.1:25551 all 127.0.0.1"
 #COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp ./coinex-backend-assembly-1.1.18-SNAPSHOT.jar com.coinport.coinex.CoinexApp 25551 127.0.0.1:25551 all 127.0.0.1"
 
 echo $COMMAND
