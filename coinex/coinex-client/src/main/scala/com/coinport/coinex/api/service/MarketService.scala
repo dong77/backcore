@@ -99,13 +99,15 @@ object MarketService extends AkkaService {
           case (timeSpot, assetMap) =>
             val amountMap = assetMap.map {
               case (cur, volume) =>
-                val amount =
-                  if (cur == baseCurrency) volume * 1
+                val (amount, price) =
+                  if (cur == baseCurrency) (volume, 1.0)
                   else currencyPriceMap.get(cur) match {
-                    case Some(curHisMap) => curHisMap.get(timeSpot).get * volume
-                    case None => 0.0
+                    case Some(curHisMap) =>
+                      val price = curHisMap.get(timeSpot).get
+                      ((BigDecimal(price) * BigDecimal(volume)).longValue(), price)
+                    case None => (0L, 0.0)
                   }
-                cur.toString.toUpperCase -> (PriceObject(baseCurrency ~> cur, amount), PriceObject(baseCurrency ~> cur, amount / volume))
+                cur.toString.toUpperCase -> (CurrencyObject(cur, amount), PriceObject(cur ~> baseCurrency, price))
             }.toMap
             ApiAssetItem(uid = userId.toString,
               assetMap = assetMap.map(a => a._1.toString.toUpperCase -> CurrencyObject(a._1, a._2)).toMap,

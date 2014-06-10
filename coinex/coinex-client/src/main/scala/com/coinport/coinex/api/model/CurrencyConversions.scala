@@ -35,7 +35,8 @@ object CurrencyConversion {
   val priceDecimals = Map[MarketSide, Int](
     Btc ~> Cny -> 4,
     Ltc ~> Btc -> 4,
-    Dog ~> Btc -> 8
+    Dog ~> Btc -> 8,
+    Btc ~> Btc -> 1
   )
 
   def getExponent(currency: Currency) = exponents.get(currency).getOrElse(1.0).toInt
