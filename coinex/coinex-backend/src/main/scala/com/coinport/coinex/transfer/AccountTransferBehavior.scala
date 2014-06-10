@@ -81,7 +81,11 @@ trait AccountTransferBehavior {
         clearResList
         t.`type` match {
           case TransferType.Withdrawal =>
-            val to = CryptoCurrencyTransactionPort(t.address.get, None, Some(t.amount), Some(t.userId))
+            val transferAmount = t.fee match {
+              case Some(withdrawalFee: Fee) if withdrawalFee.amount > 0 => t.amount - withdrawalFee.amount
+              case _ => t.amount
+            }
+            val to = CryptoCurrencyTransactionPort(t.address.get, None, Some(transferAmount), Some(t.userId))
             prepareItemSendToBitway(t, None, Some(to))
           case _ => // Just handle other type, do nothing
         }
