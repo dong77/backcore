@@ -4,7 +4,11 @@ import akka.actor.Actor._
 import akka.event.LoggingAdapter
 import com.coinport.coinex.data._
 import com.coinport.coinex.common.mongo.SimpleJsonMongoCollection
+import com.coinport.coinex.serializers.ThriftEnumJson4sSerialization
 import com.mongodb.casbah.Imports._
+import org.json4s.CustomSerializer
+import org.json4s._
+import org.json4s.ext._
 import scala.collection.mutable.{ Map, ListBuffer }
 
 import TransferStatus._
@@ -376,14 +380,14 @@ trait AccountTransferBehavior {
 
               item.status match {
                 case Some(Confirming) if reOrgHeight < itemHeight =>
-                  logger.info(s"reOrgnize() reOrgnize happened(Confirming) : tx -> ${txs.toString()}, item -> ${item.toString()}")
+                  logger.info(s"reOrgnize() reOrgnize happened(Confirming) : tx -> ${txs.toString()}, item -> ${item.toString()}, reOrgBlock -> ${reOrgBlock.toString}")
                   val confirmingItem: CryptoCurrencyTransferItem = item.copy(includedBlock = None)
                   setResState(Updator.copy(item = confirmingItem, addMongo = true, putItem = true))
                 case Some(Confirmed) if reOrgHeight - itemHeight < confirmableHeight - 1 =>
-                  logger.info(s"reOrgnize() reOrgnize happened(Confirmed) : tx -> ${txs.toString()}, item -> ${item.toString()}")
+                  logger.info(s"reOrgnize() reOrgnize happened(Confirmed) : tx -> ${txs.toString()}, item -> ${item.toString()}, reOrgBlock -> ${reOrgBlock.toString}")
                   setReorg(item)
                 case Some(Reorging) if reOrgHeight < itemHeight =>
-                  logger.info(s"reOrgnize() reOrgnize happened(Reorging) : tx -> ${txs.toString()}, item -> ${item.toString()}")
+                  logger.info(s"reOrgnize() reOrgnize happened(Reorging) : tx -> ${txs.toString()}, item -> ${item.toString()}, reOrgBlock -> ${reOrgBlock.toString}")
                   setReorg(item)
                 case Some(Succeeded) => //Succeeded item has mv to manager.succeededMap, no need to reorging
                 case None =>
@@ -396,7 +400,7 @@ trait AccountTransferBehavior {
           // reorging succeeded item
           item =>
             if (reOrgHeight - item.includedBlock.get.height.get < confirmableHeight - 1) {
-              logger.info(s"reOrgnize() reOrgnize happened(Succeeded) : tx -> ${txs.toString()}, item -> ${item.toString()}")
+              logger.info(s"reOrgnize() reOrgnize happened(Succeeded) : tx -> ${txs.toString()}, item -> ${item.toString()}, reOrgBlock -> ${reOrgBlock.toString}")
               setAccountTransferStatus(manager.succeededMap, item.id, Reorging)
               manager.succeededMap.remove(item.id) //no need to reserve reorging item
             }
@@ -420,7 +424,7 @@ trait AccountTransferBehavior {
 
   val transferHandler = new SimpleJsonMongoCollection[AccountTransfer, AccountTransfer.Immutable]() {
     lazy val coll = db("transfers")
-
+    override implicit val formats: Formats = ThriftEnumJson4sSerialization.formats + new FeeSerializer
     def extractId(item: AccountTransfer) = item.id
 
     def getQueryDBObject(q: QueryTransfer): MongoDBObject = {
@@ -469,3 +473,9 @@ object Updator {
     Updator(item, addMongo, addMsgBox, rmItem, putItem)
   }
 }
+
+class FeeSerializer(implicit man: Manifest[Fee.Immutable]) extends CustomSerializer[Fee](format => ({
+  case obj: JValue => Extraction.extract(obj)(ThriftEnumJson4sSerialization.formats, man)
+}, {
+  case x: Fee => Extraction.decompose(x)(ThriftEnumJson4sSerialization.formats)
+}))
