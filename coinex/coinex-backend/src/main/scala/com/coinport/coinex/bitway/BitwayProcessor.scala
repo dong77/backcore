@@ -195,11 +195,11 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       val TransferCryptoCurrency(currency, infos, t) = m
       val (completedInfos, isFail) = manager.completeTransferInfos(infos, t == TransferType.HotToCold)
       if (isFail) {
-        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.NoAddressFound)
+        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.NoAddressFound, Some(m))
       } else if (manager.includeWithdrawalToDepositAddress(infos)) {
-        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.WithdrawalToDepositAddress)
+        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.WithdrawalToDepositAddress, Some(m))
       } else {
-        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.Ok)
+        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.Ok, Some(m))
         client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
           BitwayRequestType.Transfer, currency, transferCryptoCurrency = Some(m.copy(transferInfos = completedInfos)))))
       }
