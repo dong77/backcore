@@ -174,6 +174,9 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
           }
         case OTHER_BRANCH =>
           throw new RuntimeException("The crypto currency seems has multi branches: " + currency)
+        case BAD =>
+          log.info("bad block received: " + blockMsg)
+          log.info("maintained index list: " + manager.getBlockIndexes)
       }
     case m @ BitwayMessage(currency, None, None, None, Some(res)) =>
       if (res.error == ErrorCode.Ok) {

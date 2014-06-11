@@ -5,6 +5,7 @@
 
 package com.coinport.coinex.bitway
 
+import org.slf4s.Logging
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
@@ -16,10 +17,11 @@ import Currency._
 
 object BlockContinuityEnum extends Enumeration {
   type BlockContinuity = Value
-  val SUCCESSOR, GAP, REORG, OTHER_BRANCH, DUP = Value
+  val SUCCESSOR, GAP, REORG, OTHER_BRANCH, DUP, BAD = Value
 }
 
-class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) extends Manager[TBitwayState] {
+class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int)
+    extends Manager[TBitwayState] with Logging {
 
   import CryptoCurrencyAddressType._
 
@@ -170,16 +172,24 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
       case Some(indexList) if indexList.size > 0 =>
         blockMsg.reorgIndex match {
           case None =>
-            if (blockMsg.block.prevIndex.id == indexList.last.id)
-              SUCCESSOR
-            else if (indexList.exists(i => i.id == blockMsg.block.index.id))
+            if (blockMsg.block.prevIndex == indexList.last)
+              if (blockMsg.block.index.height.get - 1 == indexList.last.height.get)
+                SUCCESSOR
+              else
+                BAD
+            else if (indexList.exists(i => i.id == blockMsg.block.index.id) ||
+              blockMsg.block.index.height.get < indexList.head.height.get)
               DUP
             else
               GAP
-          case Some(BlockIndex(Some(id), _)) =>
-            if (Some(id) == indexList.last.id)
-              SUCCESSOR
-            else if (indexList.exists(i => i.id == blockMsg.block.index.id))
+          case Some(ri @ BlockIndex(Some(id), Some(h))) =>
+            if (ri == indexList.last)
+              if (blockMsg.block.index.height.get - 1 == indexList.last.height.get)
+                SUCCESSOR
+              else
+                BAD
+            else if (indexList.exists(i => i.id == blockMsg.block.index.id) ||
+              blockMsg.block.index.height.get < indexList.head.height.get)
               DUP
             else
               REORG
@@ -337,11 +347,14 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int) ext
     }
   }
 
-  private[bitway] def appendBlockChain(chain: Seq[BlockIndex], startIndex: Option[BlockIndex] = None) {
+  private[bitway] def appendBlockChain(chain: Seq[BlockIndex], startIndex: Option[BlockIndex] = None) = {
     val reorgPos = blockIndexes.indexWhere(Option(_) == startIndex) + 1
-    if (reorgPos > 0) {
-      blockIndexes.remove(reorgPos, blockIndexes.length - reorgPos)
+    if (reorgPos <= 0 && startIndex.isDefined) {
+      log.warn("try to append non-successor block. startIndex: " + startIndex + ", chain: " + chain)
+      log.warn("the maintained index list: " + blockIndexes)
     }
+    if (reorgPos > 0)
+      blockIndexes.remove(reorgPos, blockIndexes.length - reorgPos)
     blockIndexes ++= chain
     if (blockIndexes.length > maintainedChainLength)
       blockIndexes.remove(0, blockIndexes.length - maintainedChainLength)
