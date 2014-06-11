@@ -335,7 +335,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
           case Some(f) if (f.amount > 0) =>
             manager.transferFundFromPendingWithdrawal(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
             manager.updateCashAccount(t.userId, CashAccount(t.currency, 0, 0, f.amount - t.amount))
-            manager.updateHotCashAccount(CashAccount(t.currency, f.amount, 0, f.amount - t.amount))
+            manager.updateHotCashAccount(CashAccount(t.currency, f.amount, 0, - t.amount))
           case _ =>
             manager.updateCashAccount(t.userId, CashAccount(t.currency, 0, 0, -t.amount))
             manager.updateHotCashAccount(CashAccount(t.currency, 0, 0, -t.amount))
