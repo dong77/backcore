@@ -6,15 +6,8 @@
  */
 var Bitcore                       = require('bitcore'),
     Crypto                        = require('crypto'),
-    Redis                         = require('redis'),
     DataTypes                     = require('../../../../gen-nodejs/data_types'),
-    MessageTypes                  = require('../../../../gen-nodejs/message_types'),
-    BitwayMessage                 = MessageTypes.BitwayMessage,
-    CryptoCurrencyBlockMessage    = MessageTypes.CryptoCurrencyBlockMessage,
-    BitwayResponseType            = DataTypes.BitwayResponseType,
-    Currency                      = DataTypes.Currency,
-    BlockIndex                    = DataTypes.BlockIndex,
-    CryptoAddress                 = DataTypes.CryptoAddress;
+    Currency                      = DataTypes.Currency;
 
 var program = require('commander');
 var Async = require('async');
@@ -22,67 +15,74 @@ var fs = require('fs');
 var CryptoProxy = require('./crypto_proxy').CryptoProxy;
 var RpcClient   = require('bitcore').RpcClient;
 var dog = {
-    currency: Currency.DOG,
-    cryptoConfig: {
-        cryptoRpcConfig: {
-            protocol: 'http',
-            user: 'user',
-            pass: 'pass',
-            host: '127.0.0.1',
-            port: '44555',
-        },
-        minConfirm: 1,
-        checkInterval : 5000,
-        dataFile: './dogData'
+    cryptoRpcConfig: {
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: '127.0.0.1',
+        port: '44555',
     },
-    redisProxyConfig: {
-        currency: Currency.DOG,
-        ip: 'bitway',
-        port: '6379',
-    }
+    height: 112750,
 };
 var btc = {
-    currency: Currency.BTC,
-    cryptoConfig: {
-        cryptoRpcConfig: {
-            protocol: 'http',
-            user: 'user',
-            pass: 'pass',
-            host: 'bitway',
-            port: '8332',
-        },
-        height: 305380,
-        checkInterval : 5000,
-        dataFile: './btcData'
+    cryptoRpcConfig: {
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: 'bitway',
+        port: '8332',
     },
-    redisProxyConfig: {
-        currency: Currency.BTC,
-        ip: 'bitway',
-        port: '6379',
-    }
+    height: 305380,
 };
-var cryptoConfig = btc.cryptoConfig;
-var height = cryptoConfig.height;
-var dataFile = cryptoConfig.dataFile;
-//var addr = 'nhS7fCAjLpq1X5udwNZu51HpouY3m5PeT4';
-program.parse(process.argv); 
-var addr = program.args[0];
-var destAddr = program.args[1];
-var amount = program.args[2];
+
+var height = 0;
+var addr = '';
+var destAddr = '';
+var amount = 0;
 var recieves = [];
 var latest = 0;
+var rpc = new Object();
 var timeBegin = new Date().getTime();
-rpc = new RpcClient(cryptoConfig.cryptoRpcConfig);
+
+var initData_ = function() {
+    program.parse(process.argv); 
+    var currency = program.args[0]
+    addr = program.args[1];
+    destAddr = program.args[2];
+    amount = program.args[3];
+    var config = new Object();
+    switch (Number(currency)) {
+        case Currency.BTC:
+            config = btc;
+            break;
+        case 1010:
+            config = ltc;
+            break;
+        case 1100:
+            config = dog;
+            break;
+        default:
+            console.log('unknown currency!');
+    }
+    rpc = new RpcClient(config.cryptoRpcConfig);
+    height = config.height;
+};
 
 var readFile_ = function() {
-    fs.readFile(dataFile, function(err, data){
-        console.log(data.length);
-        if (data.length != 0) {
-            var jsonObj = JSON.parse(data);
-            if (jsonObj) {
-                height = jsonObj.latestHeight; 
-                recieves = jsonObj.recieves;
+    var fileName = './coldWallet/' + addr.toString();
+    console.log(fileName);
+    fs.readFile(fileName, function(error, data){
+        if (!error) {
+            if (data.length != 0) {
+                var jsonObj = JSON.parse(data);
+                console.log('%j', jsonObj);
+                if (jsonObj) {
+                    height = jsonObj.latestHeight; 
+                    recieves = jsonObj.recieves;
+                }
             }
+        } else {
+            console.log(error);
         }
     });
 };
@@ -90,8 +90,12 @@ var readFile_ = function() {
 var writeFile_ = function() {
     var fileData = {latestHeight: latest, recieves: recieves};
     var str = JSON.stringify(fileData);
-    fs.writeFile(dataFile, str, function(error) {
-
+    var fileName = './coldWallet/' + addr.toString();
+    console.log(fileName);
+    fs.writeFile(fileName, str, function(error) {
+        if (error) {
+            console.log(error);
+        }
     });
 };
 
@@ -105,7 +109,6 @@ var getLatestHeight_ = function() {
     });
 };
 
-
 var ifATxBelongToAddr_ = function(tx) {
     for (var i = 0; i < tx.vout.length; i++) {
         if (tx.vout[i].scriptPubKey.addresses != undefined) {
@@ -115,7 +118,6 @@ var ifATxBelongToAddr_ = function(tx) {
                     var recv = {txid: tx.txid, n: tx.vout[i].n,
                         value: tx.vout[i].value, unSpent: true};
                     recieves.push(recv);
-                    console.log('** %j', recieves);
                 } else {
                 }
             }
@@ -135,6 +137,10 @@ var ifATxUnspent_ = function(tx) {
     }
 };
 
+var jsonToAmount_ = function(value) {
+    return Math.round(1e8 * value)/1e8;
+};
+
 var constructRawData_ = function() {
     var transactions = [];
     var addresses = {};
@@ -151,7 +157,7 @@ var constructRawData_ = function() {
     }
     addresses[destAddr] = Number(amount);
     if (spentAmount > amount) {
-        addresses[addr] = Number(spentAmount - amount);
+        addresses[addr] = jsonToAmount_(Number(spentAmount - amount));
     }
     var rawData = {transactions: transactions, addresses: addresses};
     console.log(transactions);
@@ -168,25 +174,6 @@ var createRawTransaction_ = function(transactions, addresses) {
     });
 };
 
-//Async.auto({
-//    readFile: function(callback) {
-//        readFile_();
-//    },
-//    getLatestCount: function(callback) {
-//        getLatestHeight_();
-//    },
-//    initData: ['getLatestCount', 'readFile', function(callback) {
-//        initData_();
-//    }],
-//    getData: function(callback) {
-//        getDate_();
-//    },
-//    writeFile: ['getData', 'initData', function(callback) {
-//        writeFile_();
-//    }]
-//}, function(err, results) {
-//
-//});
 var getBlockHash_ = function(index, callback) {
     rpc.getBlockHash(index, function(error, hash) {
         if (error) {                                                            
@@ -220,14 +207,13 @@ var checkTxs_ = function(block, callback) {
             });
         },
         function(err1) {
-            console.log('inner height: ' + height);
-            //console.log('inner %j', recieves);
+            console.log('height: ' + height);
             callback(true);
         }
     );
 };
 
-//var getData_ = function() {
+var getData_ = function() {
     rpc.getBlockCount(function(errCount, count) {
         var latestHeight = count.result;
         latest = latestHeight;
@@ -251,4 +237,21 @@ var checkTxs_ = function(block, callback) {
             }
         );
     });
-//};
+};
+
+Async.auto({
+    initData: function(callback) {
+        initData_();
+    },
+    readFile: function(callback) {
+        readFile_();
+    },
+    getData: function(callback) {
+        getData_();
+    },
+    writeFile: ['getData', 'readFile', 'initData', function(callback) {
+        writeFile_();
+    }]
+}, function(err, results) {
+
+});
