@@ -150,6 +150,8 @@ object CoinexBuild extends Build {
         "io.spray" % "spray-routing" % sprayVersion,
         "io.spray" % "spray-client" % sprayVersion,
         "io.spray" % "spray-http" % sprayVersion,
+        "io.argonaut" %% "argonaut" % "6.0.4",
+        "net.databinder.dispatch" %% "dispatch-core" % "0.11.1",
         "net.debasishg" % "redisclient_2.10" % "2.12"),
       compile in MultiJvm <<= (compile in MultiJvm) triggeredBy (compile in Test),
       parallelExecution in Test := false,
