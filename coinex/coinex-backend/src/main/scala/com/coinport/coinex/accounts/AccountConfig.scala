@@ -12,4 +12,6 @@ final case class HotColdTransferStrategy(high: Double, low: Double)
 
 final case class AccountConfig(
   feeConfig: FeeConfig,
-  hotColdTransfer: Map[Currency, HotColdTransferStrategy])
+  hotColdTransfer: Map[Currency, HotColdTransferStrategy],
+  enableHotColdTransfer: Boolean = false,
+  hotColdTransferInterval: Long = 0L)

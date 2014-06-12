@@ -33,6 +33,7 @@ class AccountProcessor(
   val feeConfig = accountConfig.feeConfig
 
   private val MAX_PRICE = 1E8.toDouble // 100000000.00000001 can be preserved by toDouble.
+  private var hotColdTransferLastTransferTime = Map.empty[Currency, Long]
 
   override val processorId = ACCOUNT_PROCESSOR <<
   val channelToMarketProcessors = createChannelTo(MARKET_PROCESSOR <<) // DO NOT CHANGE
@@ -113,10 +114,12 @@ class AccountProcessor(
         event =>
           confirm(p)
           updateState(event)
-        /* TODO(c): reopen this after stable
-          if (m.txType == Withdrawal || m.txType == UserToHot)
-            transferHotColdIfNeed(m.transfers(0).currency)
-          */
+          val currency = m.transfers(0).currency
+          if (accountConfig.enableHotColdTransfer && (m.txType == Withdrawal || m.txType == UserToHot) &&
+            System.currentTimeMillis - hotColdTransferLastTransferTime.getOrElse(currency, 0L) > accountConfig.hotColdTransferInterval) {
+            hotColdTransferLastTransferTime += (currency -> System.currentTimeMillis)
+            transferHotColdIfNeed(currency)
+          }
       }
 
     case DoRequestGenerateABCode(userId, amount, _, _) => {

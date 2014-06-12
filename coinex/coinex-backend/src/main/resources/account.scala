@@ -27,5 +27,6 @@ AccountConfig(
 
   hotColdTransfer = Map(
     Btc -> HotColdTransferStrategy(0.25, 0.1)
-  )
+  ),
+  hotColdTransferInterval = 600 * 1000L
 )
