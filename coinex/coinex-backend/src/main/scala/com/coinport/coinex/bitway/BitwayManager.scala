@@ -191,8 +191,10 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int)
             else if (indexList.exists(i => i.id == blockMsg.block.index.id) ||
               blockMsg.block.index.height.get < indexList.head.height.get)
               DUP
-            else
+            else if (indexList.exists(i => i.id == ri.id))
               REORG
+            else
+              BAD
           case Some(BlockIndex(None, _)) => OTHER_BRANCH
         }
       case _ => SUCCESSOR
