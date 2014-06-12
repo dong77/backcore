@@ -67,9 +67,9 @@ var dog = {
     }
 };
 
-// var configs = [ btc, ltc, dog ];
+var configs = [ btc, ltc, dog ];
 // var configs = [ btc ];
-var configs = [ dog ];
+// var configs = [ dog ];
 
 var manager = new CryptoAgentManager(configs);
 manager.start();
