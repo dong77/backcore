@@ -40,7 +40,7 @@ CMSFullGCsBeforeCompaction="-XX:CMSFullGCsBeforeCompaction=${NumOfFullGCBeforeCo
 version=`grep "val coinexVersion"  /home/ubuntu/coinport/backcore/coinex/project/Build.scala | cut -d '"' -f2`
 
 cd /home/ubuntu/coinport/coinex-backend
-COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp /home/ubuntu/coinport/coinex-backend/coinex-backend-assembly-$version.jar -Dconfig.resource=application-prod.conf com.coinport.coinex.CoinexApp 25551 172.31.1.218:25551,172.31.1.67:25551 all 172.31.1.218"
+COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp /home/ubuntu/coinport/coinex-backend/coinex-backend-assembly-$version.jar -Dconfig.resource=application-prod.conf com.coinport.coinex.CoinexApp 25551 172.31.1.218:25552,172.31.1.218:25551 all 172.31.1.218"
 #COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp ./coinex-backend-assembly-1.1.18-SNAPSHOT.jar com.coinport.coinex.CoinexApp 25551 127.0.0.1:25551 all 127.0.0.1"
 
 echo $COMMAND
