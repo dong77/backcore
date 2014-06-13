@@ -21,8 +21,8 @@ object MetricsObserver {
       tmo.side,
       new WindowVector[MarketEvent](ttq.range, ttq.elems.map(e => (e, e.timestamp.get)).to[ArrayBuffer]),
       new StackQueue[Double](tMin.elems.to[ArrayBuffer], ascending),
-      new StackQueue[Double](tMax.elems.to[ArrayBuffer], ascending),
-      new StackQueue[Double](tPre.elems.to[ArrayBuffer], ascending),
+      new StackQueue[Double](tMax.elems.to[ArrayBuffer], descending),
+      new StackQueue[Double](tPre.elems.to[ArrayBuffer], ((l, r) => true)),
       tmo.price, tmo.lastPrice, tmo.volumeMaintainer
     )
   }
