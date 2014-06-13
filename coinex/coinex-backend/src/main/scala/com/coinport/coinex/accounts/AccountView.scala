@@ -42,5 +42,7 @@ class AccountView(accountConfig: AccountConfig) extends ExtendedView with Accoun
     case QueryRCDepositRecord(userId) => sender ! QueryRCDepositRecordResult(manager.getRCDepositRecords(userId))
 
     case QueryRCWithdrawalRecord(userId) => sender ! QueryRCWithdrawalRecordResult(manager.getRCWithdrawalRecords(userId))
+
+    case QueryFeeConfig => sender ! QueryFeeConfigResult(feeConfig.toThrift)
   }
 }

@@ -53,6 +53,8 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cRefund = JsonScalaCodec(Refund)
   lazy val _cSpanCursor = JsonScalaCodec(SpanCursor)
   lazy val _cTAddressStatus = JsonScalaCodec(TAddressStatus)
+  lazy val _cTFeeConfig = JsonScalaCodec(TFeeConfig)
+  lazy val _cTFeeRule = JsonScalaCodec(TFeeRule)
   lazy val _cTMetricsObserver = JsonScalaCodec(TMetricsObserver)
   lazy val _cTRobot = JsonScalaCodec(TRobot)
   lazy val _cTStackQueue = JsonScalaCodec(TStackQueue)
@@ -131,6 +133,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cQueryCryptoCurrencyNetworkStatusResult = JsonScalaCodec(QueryCryptoCurrencyNetworkStatusResult)
   lazy val _cQueryCryptoCurrencyTransfer = JsonScalaCodec(QueryCryptoCurrencyTransfer)
   lazy val _cQueryCryptoCurrencyTransferResult = JsonScalaCodec(QueryCryptoCurrencyTransferResult)
+  lazy val _cQueryFeeConfigResult = JsonScalaCodec(QueryFeeConfigResult)
   lazy val _cQueryMarketDepth = JsonScalaCodec(QueryMarketDepth)
   lazy val _cQueryMarketDepthResult = JsonScalaCodec(QueryMarketDepthResult)
   lazy val _cQueryNotification = JsonScalaCodec(QueryNotification)
@@ -235,6 +238,8 @@ class ThriftJsonSerializer extends Serializer {
     case m: Refund => _cRefund(m)
     case m: SpanCursor => _cSpanCursor(m)
     case m: TAddressStatus => _cTAddressStatus(m)
+    case m: TFeeConfig => _cTFeeConfig(m)
+    case m: TFeeRule => _cTFeeRule(m)
     case m: TMetricsObserver => _cTMetricsObserver(m)
     case m: TRobot => _cTRobot(m)
     case m: TStackQueue => _cTStackQueue(m)
@@ -313,6 +318,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: QueryCryptoCurrencyNetworkStatusResult => _cQueryCryptoCurrencyNetworkStatusResult(m)
     case m: QueryCryptoCurrencyTransfer => _cQueryCryptoCurrencyTransfer(m)
     case m: QueryCryptoCurrencyTransferResult => _cQueryCryptoCurrencyTransferResult(m)
+    case m: QueryFeeConfigResult => _cQueryFeeConfigResult(m)
     case m: QueryMarketDepth => _cQueryMarketDepth(m)
     case m: QueryMarketDepthResult => _cQueryMarketDepthResult(m)
     case m: QueryNotification => _cQueryNotification(m)
@@ -421,6 +427,8 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[Refund.Immutable] => _cRefund.invert(bytes).get
     case Some(c) if c == classOf[SpanCursor.Immutable] => _cSpanCursor.invert(bytes).get
     case Some(c) if c == classOf[TAddressStatus.Immutable] => _cTAddressStatus.invert(bytes).get
+    case Some(c) if c == classOf[TFeeConfig.Immutable] => _cTFeeConfig.invert(bytes).get
+    case Some(c) if c == classOf[TFeeRule.Immutable] => _cTFeeRule.invert(bytes).get
     case Some(c) if c == classOf[TMetricsObserver.Immutable] => _cTMetricsObserver.invert(bytes).get
     case Some(c) if c == classOf[TRobot.Immutable] => _cTRobot.invert(bytes).get
     case Some(c) if c == classOf[TStackQueue.Immutable] => _cTStackQueue.invert(bytes).get
@@ -499,6 +507,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[QueryCryptoCurrencyNetworkStatusResult.Immutable] => _cQueryCryptoCurrencyNetworkStatusResult.invert(bytes).get
     case Some(c) if c == classOf[QueryCryptoCurrencyTransfer.Immutable] => _cQueryCryptoCurrencyTransfer.invert(bytes).get
     case Some(c) if c == classOf[QueryCryptoCurrencyTransferResult.Immutable] => _cQueryCryptoCurrencyTransferResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryFeeConfigResult.Immutable] => _cQueryFeeConfigResult.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepth.Immutable] => _cQueryMarketDepth.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepthResult.Immutable] => _cQueryMarketDepthResult.invert(bytes).get
     case Some(c) if c == classOf[QueryNotification.Immutable] => _cQueryNotification.invert(bytes).get

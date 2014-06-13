@@ -234,6 +234,17 @@ struct MarketSide {
     2: Currency inCurrency
 }
 
+struct TFeeRule {
+    1: optional i64 fee
+    2: optional double percentage
+}
+
+struct TFeeConfig {
+    1: map<MarketSide, TFeeRule> marketFeeRules
+    2: map<i32, TFeeRule> robotFeeRules
+    3: map<Currency, TFeeRule> transferFeeRules
+}
+
 struct Fee {
     1: i64 payer
     2: optional i64 payee  // pay to coinport if None

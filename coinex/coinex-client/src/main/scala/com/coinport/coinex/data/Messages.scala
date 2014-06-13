@@ -30,3 +30,5 @@ case object TrySyncHotAddresses
 case class FetchAddresses(currency: Currency)
 
 case object QueryRecoverStats
+
+case object QueryFeeConfig

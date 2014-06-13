@@ -52,6 +52,7 @@ typedef data.NotificationType                   _NotificationType
 typedef data.CryptoCurrencyNetworkStatus        _CryptoCurrencyNetworkStatus
 typedef data.AddressStatusResult                _AddressStatusResult
 typedef data.CryptoAddress                      _CryptoAddress
+typedef data.TFeeConfig                         _TFeeConfig
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -227,6 +228,7 @@ typedef data.CryptoAddress                      _CryptoAddress
 /* R    */ struct QueryRCDepositRecordResult          {1: list<_ABCodeItem> items}
 /* Q    */ struct QueryRCWithdrawalRecord             {1: i64 userId}
 /* R    */ struct QueryRCWithdrawalRecordResult       {1: list<_ABCodeItem> items}
+/* R    */ struct QueryFeeConfigResult                {1: _TFeeConfig feeConfig}
 
 ////////// MarketDepthView
 /* Q    */ struct QueryMarketDepth                        {1: _MarketSide side, 2: i32 maxDepth}

@@ -58,6 +58,7 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: QueryAccount => routers.accountView forward m
       case m: QueryRCDepositRecord => routers.accountView forward m
       case m: QueryRCWithdrawalRecord => routers.accountView forward m
+      case QueryFeeConfig => routers.accountView forward QueryFeeConfig
 
       // MarketDepthViews
       case m: QueryMarketDepth => routers.marketDepthViews(m.side) forward m
