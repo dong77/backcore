@@ -283,6 +283,12 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int)
     ): _*)
   }
 
+  def getReserveAmounts: Map[CryptoCurrencyAddressType, Long] = Map(
+    User -> getReserveAmount(User),
+    Hot -> getReserveAmount(Hot),
+    Cold -> getReserveAmount(Cold)
+  )
+
   def notProcessed(tx: CryptoCurrencyTransaction): Boolean = {
     tx.sigId.isDefined && !sigIdsSinceLastBlock.contains(tx.sigId.get)
   }
@@ -361,4 +367,6 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int)
     if (blockIndexes.length > maintainedChainLength)
       blockIndexes.remove(0, blockIndexes.length - maintainedChainLength)
   }
+
+  private def getReserveAmount(t: CryptoCurrencyAddressType) = getAddressStatus(t).values.map(_.confirmedAmount).sum
 }

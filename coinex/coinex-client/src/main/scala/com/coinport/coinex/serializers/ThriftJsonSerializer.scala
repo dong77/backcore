@@ -143,6 +143,8 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cQueryRCDepositRecordResult = JsonScalaCodec(QueryRCDepositRecordResult)
   lazy val _cQueryRCWithdrawalRecord = JsonScalaCodec(QueryRCWithdrawalRecord)
   lazy val _cQueryRCWithdrawalRecordResult = JsonScalaCodec(QueryRCWithdrawalRecordResult)
+  lazy val _cQueryReserveStatus = JsonScalaCodec(QueryReserveStatus)
+  lazy val _cQueryReserveStatusResult = JsonScalaCodec(QueryReserveStatusResult)
   lazy val _cQueryTransaction = JsonScalaCodec(QueryTransaction)
   lazy val _cQueryTransactionResult = JsonScalaCodec(QueryTransactionResult)
   lazy val _cQueryTransfer = JsonScalaCodec(QueryTransfer)
@@ -323,6 +325,8 @@ class ThriftJsonSerializer extends Serializer {
     case m: QueryRCDepositRecordResult => _cQueryRCDepositRecordResult(m)
     case m: QueryRCWithdrawalRecord => _cQueryRCWithdrawalRecord(m)
     case m: QueryRCWithdrawalRecordResult => _cQueryRCWithdrawalRecordResult(m)
+    case m: QueryReserveStatus => _cQueryReserveStatus(m)
+    case m: QueryReserveStatusResult => _cQueryReserveStatusResult(m)
     case m: QueryTransaction => _cQueryTransaction(m)
     case m: QueryTransactionResult => _cQueryTransactionResult(m)
     case m: QueryTransfer => _cQueryTransfer(m)
@@ -507,6 +511,8 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[QueryRCDepositRecordResult.Immutable] => _cQueryRCDepositRecordResult.invert(bytes).get
     case Some(c) if c == classOf[QueryRCWithdrawalRecord.Immutable] => _cQueryRCWithdrawalRecord.invert(bytes).get
     case Some(c) if c == classOf[QueryRCWithdrawalRecordResult.Immutable] => _cQueryRCWithdrawalRecordResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryReserveStatus.Immutable] => _cQueryReserveStatus.invert(bytes).get
+    case Some(c) if c == classOf[QueryReserveStatusResult.Immutable] => _cQueryReserveStatusResult.invert(bytes).get
     case Some(c) if c == classOf[QueryTransaction.Immutable] => _cQueryTransaction.invert(bytes).get
     case Some(c) if c == classOf[QueryTransactionResult.Immutable] => _cQueryTransactionResult.invert(bytes).get
     case Some(c) if c == classOf[QueryTransfer.Immutable] => _cQueryTransfer.invert(bytes).get

@@ -24,5 +24,7 @@ class BitwayView(supportedCurrency: Currency, config: BitwayConfig) extends Exte
       sender ! QueryCryptoCurrencyAddressStatusResult(currency, manager.getAddressStatus(addressType))
     case QueryCryptoCurrencyNetworkStatus(currency) =>
       sender ! QueryCryptoCurrencyNetworkStatusResult(currency, manager.getNetworkStatus)
+    case QueryReserveStatus(currency) =>
+      sender ! QueryReserveStatusResult(currency, manager.getReserveAmounts)
   }
 }

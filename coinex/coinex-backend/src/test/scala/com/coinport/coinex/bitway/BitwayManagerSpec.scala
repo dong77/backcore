@@ -223,7 +223,7 @@ class BitwayManagerSpec extends Specification {
           Some(Withdrawal), Confirming, minerFee = getBtcInternalAmount(0.9)))
     }
 
-    "getAddressStatus/getNetworkStatus/adjustAddressAmount test" in {
+    "getAddressStatus/getNetworkStatus/adjustAddressAmount/getReserveAmounts test" in {
       val bwm = new BitwayManager(Btc, 10)
       bwm.faucetAddress(User, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
       bwm.faucetAddress(Hot, Set(CryptoAddress("h1"), CryptoAddress("h2")))
@@ -259,6 +259,7 @@ class BitwayManagerSpec extends Specification {
       bwm.getAddressStatus(Hot) mustEqual Map("h2" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(-0.3).get), "h1" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(-1.1).get))
       bwm.getAddressStatus(User) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(0.2).get), "u1" -> AddressStatusResult(Some("t1"), Some(1), getBtcInternalAmount(1).get))
       bwm.getAddressStatus(Cold) mustEqual Map.empty[String, BlockIndex]
+      bwm.getReserveAmounts mustEqual Map(Hot -> getBtcInternalAmount(-1.4).get, Cold -> 0, User -> getBtcInternalAmount(1.2).get)
 
       bwm.updateBlock(Some(BlockIndex(Some("b1"), Some(1))), CryptoCurrencyBlock(
         index = BlockIndex(Some("b2"), Some(2)),
@@ -281,6 +282,7 @@ class BitwayManagerSpec extends Specification {
       bwm.getAddressStatus(Hot) mustEqual Map("h2" -> AddressStatusResult(Some("t2"), Some(2), 0), "h1" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(-1.6).get))
       bwm.getAddressStatus(User) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(0.4).get), "u1" -> AddressStatusResult(Some("t0"), Some(2), getBtcInternalAmount(26.2).get))
       bwm.getAddressStatus(Cold) mustEqual Map.empty[String, BlockIndex]
+      bwm.getReserveAmounts mustEqual Map(Hot -> getBtcInternalAmount(-1.6).get, Cold -> 0, User -> getBtcInternalAmount(26.6).get)
 
       bwm.getAddressAmount("h1") mustEqual getBtcInternalAmount(-1.6).get
       bwm.canAdjustAddressAmount("h1", getBtcInternalAmount(1.5).get) mustEqual false

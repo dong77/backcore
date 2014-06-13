@@ -180,6 +180,8 @@ typedef data.CryptoAddress                      _CryptoAddress
 /* R    */ struct QueryCryptoCurrencyAddressStatusResult  {1: _Currency currency, 2: map<string, _AddressStatusResult> status}
 /* C    */ struct QueryCryptoCurrencyNetworkStatus        {1: _Currency currency}
 /* R    */ struct QueryCryptoCurrencyNetworkStatusResult  {1: _Currency currency, 2: _CryptoCurrencyNetworkStatus status}
+/* C    */ struct QueryReserveStatus                      {1: _Currency currency}
+/* R    */ struct QueryReserveStatusResult                {1: _Currency currency, 2: map<_CryptoCurrencyAddressType, i64> amounts}
 /* C    */ struct AdjustAddressAmount                     {1: _Currency currency, 2: string address, 3: i64 adjustAmount}
 /* R    */ struct AdjustAddressAmountResult               {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: string address, 4: optional i64 adjustAmount}
 
