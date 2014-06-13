@@ -1,7 +1,7 @@
 /**
  *Author: yangli - yangli@coinport.com
  *Last modified: 2014-06-12 20:39
- *Filename: makeRawTransaction.js
+ *Filename: monitorColdWallet.js
  *Copyright 2014 Coinport Inc. All Rights Reserved.
  */
 var Bitcore                       = require('bitcore'),
@@ -55,10 +55,10 @@ var initData_ = function() {
         case Currency.BTC:
             config = btc;
             break;
-        case 1010:
+        case Currency.LTC:
             config = ltc;
             break;
-        case 1100:
+        case Currency.DOG:
             config = dog;
             break;
         default:
@@ -116,7 +116,9 @@ var ifATxBelongToAddr_ = function(tx) {
                 if (tx.vout[i].scriptPubKey.addresses[j] == addr) {
                     console.log('txid: ' + tx.txid + ', n: ' + tx.vout[i].n);
                     var recv = {txid: tx.txid, n: tx.vout[i].n,
-                        value: tx.vout[i].value, unSpent: true};
+                        value: tx.vout[i].value,
+                        hex: tx.vout[i].scriptPubKey.hex,
+                        unSpent: true};
                     recieves.push(recv);
                 } else {
                 }
