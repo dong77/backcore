@@ -176,11 +176,11 @@ typedef data.CryptoAddress                      _CryptoAddress
 /* C,I  */ struct TransferCryptoCurrency                  {1: _Currency currency, 2: list<_CryptoCurrencyTransferInfo> transferInfos, 3: _TransferType type}
 /* R    */ struct TransferCryptoCurrencyResult            {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional TransferCryptoCurrency request}
 /* I    */ struct MultiCryptoCurrencyTransactionMessage   {1: _Currency currency, 2: list<_CryptoCurrencyTransaction> txs, 3: optional _BlockIndex reorgIndex}
-/* C    */ struct QueryCryptoCurrencyAddressStatus        {1: _Currency currency, 2: _CryptoCurrencyAddressType addressType}
+/* Q    */ struct QueryCryptoCurrencyAddressStatus        {1: _Currency currency, 2: _CryptoCurrencyAddressType addressType}
 /* R    */ struct QueryCryptoCurrencyAddressStatusResult  {1: _Currency currency, 2: map<string, _AddressStatusResult> status}
-/* C    */ struct QueryCryptoCurrencyNetworkStatus        {1: _Currency currency}
+/* Q    */ struct QueryCryptoCurrencyNetworkStatus        {1: _Currency currency}
 /* R    */ struct QueryCryptoCurrencyNetworkStatusResult  {1: _Currency currency, 2: _CryptoCurrencyNetworkStatus status}
-/* C    */ struct QueryReserveStatus                      {1: _Currency currency}
+/* Q    */ struct QueryReserveStatus                      {1: _Currency currency}
 /* R    */ struct QueryReserveStatusResult                {1: _Currency currency, 2: map<_CryptoCurrencyAddressType, i64> amounts}
 /* C    */ struct AdjustAddressAmount                     {1: _Currency currency, 2: string address, 3: i64 adjustAmount}
 /* R    */ struct AdjustAddressAmountResult               {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: string address, 4: optional i64 adjustAmount}
