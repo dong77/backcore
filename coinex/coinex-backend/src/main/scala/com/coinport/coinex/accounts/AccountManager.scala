@@ -145,8 +145,10 @@ class AccountManager(initialLastOrderId: Long = 0L,
   }
 
   def getUserAccounts(userId: Long): UserAccount = {
-    if (userId > 0) accountMap.get(userId).getOrElse(UserAccount(userId))
-    else UserAccount(0L, aggregationAccount)
+    if (userId == -1L)
+      UserAccount(-1L, aggregationAccount)
+    else
+      accountMap.get(userId).getOrElse(UserAccount(userId))
   }
 
   private def getUserCashAccount(userId: Long, currency: Currency): CashAccount =
