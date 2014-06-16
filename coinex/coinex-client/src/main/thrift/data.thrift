@@ -375,6 +375,11 @@ struct AccountTransfer {
     12: optional i64 confirm
 }
 
+struct AccountTransfersWithMinerFee {
+    1: list<AccountTransfer> transfers
+    2: optional i64 minerFee
+}
+
 struct ABCodeItem {
     1: i64 id
     2: optional i64 dUserId

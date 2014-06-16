@@ -19,6 +19,7 @@ typedef data.MarketDepth                        _MarketDepth
 typedef data.UserAccount                        _UserAccount
 typedef data.UserProfile                        _UserProfile
 typedef data.AccountTransfer                    _AccountTransfer
+typedef data.AccountTransfersWithMinerFee       _AccountTransfersWithMinerFee
 typedef data.MarketSide                         _MarketSide
 typedef data.ApiSecret                          _ApiSecret
 typedef data.OrderInfo                          _OrderInfo
@@ -116,6 +117,7 @@ typedef data.TFeeConfig                         _TFeeConfig
 
 /* R-   */ struct CryptoTransferFailed                   {1: _AccountTransfer transfer, 2:_ErrorCode error}
 /* R+   */ struct CryptoTransferSucceeded                {1: _TransferType txType, 2: list<_AccountTransfer> transfers, 3: optional i64 minerFee}
+/* R+   */ struct CryptoTransferResult                    {1: map<_Currency, map<string, _AccountTransfersWithMinerFee>> multiTransfers}
 
 /* C,P  */ struct DoCancelTransfer                        {1: _AccountTransfer transfer}
 /* C,P  */ struct AdminConfirmTransferFailure             {1: _AccountTransfer transfer, 2:_ErrorCode error}
@@ -175,6 +177,7 @@ typedef data.TFeeConfig                         _TFeeConfig
 /* C    */ struct AllocateNewAddress                      {1: _Currency currency, 2: i64 userId, 3: optional string assignedAddress}
 /* R    */ struct AllocateNewAddressResult                {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional string address}
 /* C,I  */ struct TransferCryptoCurrency                  {1: _Currency currency, 2: list<_CryptoCurrencyTransferInfo> transferInfos, 3: _TransferType type}
+/* C,I  */ struct MultiTransferCryptoCurrency             {1: _Currency currency, 2: map<_TransferType, list<_CryptoCurrencyTransferInfo>> transferInfos}
 /* R    */ struct TransferCryptoCurrencyResult            {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional TransferCryptoCurrency request}
 /* I    */ struct MultiCryptoCurrencyTransactionMessage   {1: _Currency currency, 2: list<_CryptoCurrencyTransaction> txs, 3: optional _BlockIndex reorgIndex}
 /* Q    */ struct QueryCryptoCurrencyAddressStatus        {1: _Currency currency, 2: _CryptoCurrencyAddressType addressType}
