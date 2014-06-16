@@ -48,8 +48,6 @@ var initData_ = function() {
     program.parse(process.argv); 
     var currency = program.args[0]
     addr = program.args[1];
-    destAddr = program.args[2];
-    amount = program.args[3];
     var config = new Object();
     switch (Number(currency)) {
         case Currency.BTC:
@@ -231,9 +229,6 @@ var getData_ = function() {
             },
             function(error) {
                 console.log('%j', recieves);
-                var rawData = constructRawData_();
-                console.log('rawData %j', rawData);
-                createRawTransaction_(rawData.transactions, rawData.addresses);
                 writeFile_();
                 console.log('Total time: ' + (new Date().getTime() - timeBegin));
             }

@@ -41,12 +41,15 @@ var privateKeys = [];
 var destAddr = '';
 var amount = 0;
 var recieves = [];
+var transactions = [];
+var addresses = {};
 var prevTxs = [];
 var rpc = new Object();
 var timeBegin = new Date().getTime();
 
-var initData_ = function() {
+var initData_ = function(callback) {
     program.parse(process.argv); 
+    console.log("%j", program);
     var currency = program.args[0]
     coldAddr = program.args[1];
     privateKeys.push(program.args[2]);
@@ -68,23 +71,26 @@ var initData_ = function() {
     }
     rpc = new RpcClient(config.cryptoRpcConfig);
     minerFee = config.minerFee;
+    callback();
 };
 
-var readFile_ = function() {
+var readFile_ = function(callback) {
     var fileName = './coldWallet/' + coldAddr.toString();
     console.log(fileName);
     fs.readFile(fileName, function(error, data){
         if (!error) {
             if (data.length != 0) {
                 var jsonObj = JSON.parse(data);
-                console.log('%j', jsonObj);
+                console.log('raw data in file: %j', jsonObj);
                 if (jsonObj) {
                     height = jsonObj.latestHeight; 
                     recieves = jsonObj.recieves;
                 }
             }
+            callback();
         } else {
             console.log(error);
+            callback(error);
         }
     });
 };
@@ -93,9 +99,7 @@ var jsonToAmount_ = function(value) {
     return Math.round(1e8 * value)/1e8;
 };
 
-var constructRawData_ = function() {
-    var transactions = [];
-    var addresses = {};
+var constructRawData_ = function(callback) {
     var spentAmount = 0;
     for (var i = 0; i < recieves.length; i++) {
         if (recieves[i].unSpent) {
@@ -104,59 +108,69 @@ var constructRawData_ = function() {
             transactions.push(transaction);
             var prevTx = {txid: recieves[i].txid, vout: recieves[i].n, scriptPubKey: recieves[i].hex};
             prevTxs.push(prevTx);
-            if (spentAmount > jsonToAmount(Number(amount + minerFee))
-                || spentAmount == jsonToAmount(Number(amount + minerFee))) {
+            if (spentAmount > jsonToAmount_(Number(amount) + Number(minerFee))
+                || spentAmount == jsonToAmount_(Number(amount) + Number(minerFee))) {
                 break;
             }
         }
     }
+    console.log('spentAmout:', spentAmount);
+    console.log('minerFee:', minerFee);
+    console.log('amount + minerFee:', jsonToAmount_(Number(amount) + Number(minerFee)));
     addresses[destAddr] = Number(amount);
-    if (spentAmount > jsonToAmount(Number(amount + minerFee))) {
-        addresses[coldAddr] = jsonToAmount_(Number(spentAmount - amount - minerFee));
+    if (spentAmount > jsonToAmount_(Number(amount) + Number(minerFee))) {
+        addresses[coldAddr] = jsonToAmount_(Number(spentAmount) - Number(amount) - Number(minerFee));
     }
     var rawData = {transactions: transactions, addresses: addresses};
-    console.log(transactions);
-    console.log(addresses);
+    callback();
     return rawData;
 }
 
-var createRawTransaction_ = function(transactions, addresses) {
+var createRawTransaction_ = function(callback) {
+    console.log("transactions %j", transactions);
+    console.log("addresses %j", addresses);
     rpc.createRawTransaction(transactions, addresses, function(errCreate, createRet) {
         if (errCreate) {
+            console.log("errCreate: %j", errCreate);
+            callback(errCreate);
         } else {
             console.log('%j', createRet);
             hexString = createRet.result;
+            callback();
         }
     });
 };
 
-var signRawTransaction_ = function() {
-    rpc.signRawTransaction(hexString, prevTxs, privateKeys, function(errSign, sign) {
+var signRawTransaction_ = function(callback) {
+    console.log("hexString:", hexString);
+    console.log("prevTxs:", prevTxs);
+    rpc.signRawTransaction(hexString, prev, privateKeys, function(errSign, sign) {
         if (errSign) {
+            callback(errSign);
             console.log('%j', errSign);
         } else {
-            console.log('%j', sign);
+            console.log('sign %j', sign);
+            callback();
         }
     });
-
 };
 
 Async.auto({
     initData: function(callback) {
-        initData_();
+        initData_(callback);
     },
-    readFile: function(callback) {
-        readFile_();
-    },
-    constructRawData: function(callback) {
-        constructRawData_();
-    },
-    createRawTransaction: function(callback) {
-        createRawTransaction_();
-    },   
-    signRawTransaction: ['createRawTransaction', 'constructRawData', 'readFile', 'initData', function(callback) {
-        signRawTransaction_();
+    readFile: ['initData', function(callback) {
+        readFile_(callback);
+    }],
+    constructRawData: ['readFile', function(callback) {
+        constructRawData_(callback);
+    }],
+    createRawTransaction: ['constructRawData', function(callback) {
+        createRawTransaction_(callback);
+    }],   
+    signRawTransaction: ['createRawTransaction', function(callback) {
+        signRawTransaction_(callback);
     }]
 }, function(err, results) {
-
+    console.log(err);
 });
