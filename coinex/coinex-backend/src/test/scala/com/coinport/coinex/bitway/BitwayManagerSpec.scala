@@ -254,7 +254,7 @@ class BitwayManagerSpec extends Specification {
         BlockIndex(Some("b3"), Some(3))))
 
       bwm.updateLastAlive(1234L)
-      bwm.getNetworkStatus mustEqual CryptoCurrencyNetworkStatus(Some("b3"), Some(3L), Some(1234L))
+      bwm.getNetworkStatus.copy(queryTimestamp = None) mustEqual CryptoCurrencyNetworkStatus(Some("b3"), Some(3L), Some(1234L), None)
 
       bwm.getAddressStatus(Hot) mustEqual Map("h2" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(-0.3).get), "h1" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(-1.1).get))
       bwm.getAddressStatus(User) mustEqual Map("u2" -> AddressStatusResult(Some("t2"), Some(2), getBtcInternalAmount(0.2).get), "u1" -> AddressStatusResult(Some("t1"), Some(1), getBtcInternalAmount(1).get))

@@ -562,6 +562,7 @@ struct CryptoCurrencyNetworkStatus {
     1: optional string id
     2: optional i64 height
     3: optional i64 heartbeatTime
+    4: optional i64 queryTimestamp
 }
 
 struct Notification {

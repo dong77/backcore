@@ -270,9 +270,10 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int)
 
   def getNetworkStatus: CryptoCurrencyNetworkStatus = {
     getCurrentBlockIndex match {
-      case None => CryptoCurrencyNetworkStatus(heartbeatTime = if (lastAlive != -1) Some(lastAlive) else None)
+      case None => CryptoCurrencyNetworkStatus(heartbeatTime = if (lastAlive != -1) Some(lastAlive) else None,
+        queryTimestamp = Some(System.currentTimeMillis))
       case Some(index) => CryptoCurrencyNetworkStatus(index.id, index.height,
-        if (lastAlive != -1) Some(lastAlive) else None)
+        if (lastAlive != -1) Some(lastAlive) else None, Some(System.currentTimeMillis))
     }
   }
 
