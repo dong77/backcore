@@ -9,7 +9,10 @@ import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.common.support.ChannelSupport
 import com.coinport.coinex.data._
 import com.mongodb.casbah.Imports._
-import scala.collection.mutable.{ Map, ListBuffer }
+import com.twitter.util.Eval
+import java.io.InputStream
+import org.apache.commons.io.IOUtils
+import scala.collection.mutable.Map
 
 import ErrorCode._
 import Implicits._
@@ -22,19 +25,25 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
 
   lazy implicit val logger: LoggingAdapter = log
 
-  val manager = new AccountTransferManager()
-  val transferDebugConfig = context.system.settings.config.getBoolean("akka.exchange.account-transfer-debug")
-  val transferConfirmableHeight = context.system.settings.config.getInt("akka.exchange.transfer-confirmable-height")
+  implicit val manager = new AccountTransferManager()
+  val accountTransferConfig = loadConfig(context.system.settings.config.getString("akka.exchange.transfer-path"))
+  val transferDebugConfig = accountTransferConfig.transferDebug
   private val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
   private val bitwayChannels = bitwayProcessors.map(kv => kv._1 -> createChannelTo(BITWAY_PROCESSOR << kv._1))
-  private val sigId2ItemListMap = Map.empty[String, ListBuffer[CryptoCurrencyTransferItem]]
 
-  setConfirmableHeight(transferConfirmableHeight)
-  setTransferDebug(transferDebugConfig)
+  setTransferConfig(accountTransferConfig)
+  intTransferHandlerObjectMap()
+
+  private def loadConfig(configPath: String): AccountTransferConfig = {
+    val in: InputStream = this.getClass.getClassLoader.getResourceAsStream(configPath)
+    (new Eval()(IOUtils.toString(in))).asInstanceOf[AccountTransferConfig]
+  }
 
   override def identifyChannel: PartialFunction[Any, String] = {
     case r: DoRequestTransfer => "account"
     case MultiCryptoCurrencyTransactionMessage(currency, _, _) => "bitway_" + currency.toString.toLowerCase()
+    case TransferCryptoCurrencyResult(currency, _, _) => "bitway_" + currency.toString.toLowerCase()
+    case MultiTransferCryptoCurrencyResult(currency, _, _) => "bitway_" + currency.toString.toLowerCase()
   }
 
   def receiveRecover = PartialFunction.empty[Any, Unit]
@@ -57,7 +66,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
               case TransferType.Unknown => // accept wait for admin accept
                 sender ! RequestTransferFailed(UnsupportTransferType)
             }
-            handleResList()
+            sendBitwayMsg(w.currency)
           } else { // No need to send message, as accountProcessor will ignore it, just for integration test
             sender ! RequestTransferSucceeded(event.transfer) // wait for admin confirm
           }
@@ -110,7 +119,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                 persist(AdminConfirmTransferSuccess(updated)) {
                   event =>
                     updateState(event)
-                    handleResList()
+                    sendBitwayMsg(updated.currency)
                     sender ! AdminCommandResult(Ok)
                 }
               case TransferType.ColdToHot =>
@@ -118,7 +127,6 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                 persist(AdminConfirmTransferSuccess(updated)) {
                   event =>
                     updateState(event)
-                    handleResList()
                     sender ! AdminCommandResult(Ok)
                 }
               case _ =>
@@ -142,79 +150,61 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
         event =>
           confirm(p)
           updateState(event)
-          handleResList()
+          sendBitwayMsg(event.currency)
+          sendAccountMsg(event.currency)
+      }
+
+    case msg: MultiCryptoCurrencyTransactionMessage =>
+      persist(msg) {
+        event =>
+          updateState(event)
+          sendBitwayMsg(event.currency)
+          sendAccountMsg(event.currency)
+      }
+
+    case tr: TransferCryptoCurrencyResult =>
+      if (tr.error != ErrorCode.Ok && tr.request.isDefined && !tr.request.get.transferInfos.isEmpty) {
+        persist(tr) {
+          event =>
+            updateState(event)
+            sendBitwayMsg(event.currency)
+            sendAccountMsg(event.currency)
+        }
+      }
+
+    case mr: MultiTransferCryptoCurrencyResult =>
+      if (mr.error != ErrorCode.Ok && mr.transferInfos.isDefined && !mr.transferInfos.get.isEmpty) {
+        persist(mr) {
+          event =>
+            updateState(event)
+            sendBitwayMsg(event.currency)
+            sendAccountMsg(event.currency)
+        }
       }
   }
 
-  private def handleResList() {
-    getMessagesBox foreach {
-      item =>
-        log.info(s" ---------------------------- MessagesBox got item => ${item.toString}")
-        item.txType.get match {
-          case Deposit if item.status.get == Succeeded =>
-            deliverToAccountManager(CryptoTransferSucceeded(item.txType.get, List(transferHandler.get(item.accountTransferId.get).get), None))
-          case UserToHot =>
-            handleMessage(CryptoCurrencyTransferInfo(item.id, None, item.from.get.internalAmount, item.from.get.amount, Some(item.from.get.address)), item)
-          case Withdrawal =>
-            handleMessage(CryptoCurrencyTransferInfo(item.id, Some(item.to.get.address), item.to.get.internalAmount, item.to.get.amount, None), item)
-          case ColdToHot =>
-            handleMessage(CryptoCurrencyTransferInfo(item.id, None, item.to.get.internalAmount, None, None), item)
-          case HotToCold =>
-            handleMessage(CryptoCurrencyTransferInfo(item.id, None, item.to.get.internalAmount, None, None), item)
-          case _ =>
-        }
-    }
-    batchSendMinerFeeTransfer
-    getMongoWriteList foreach {
-      item =>
-        log.info(s" =========================== getMongoWriteList got item => ${item.toString}")
-        transferItemHandler.put(item)
+  private def sendBitwayMsg(currency: Currency) {
+    val transfersToBitway = batchBitwayMessage(currency)
+    if (!transfersToBitway.isEmpty) {
+      deliverToBitwayProcessor(currency, MultiTransferCryptoCurrency(currency, transfersToBitway))
     }
   }
 
-  def handleMessage(info: CryptoCurrencyTransferInfo, item: CryptoCurrencyTransferItem) {
-    item.status.get match {
-      case Confirming =>
-        deliverToBitwayProcessor(item.currency, TransferCryptoCurrency(item.currency, List(info), item.txType.get))
-      case Succeeded => // batch Set miner fee before sent message to accountProcessor
-        batchMinerFeeTransfer(item)
-      case Failed if item.txType.get != UserToHot && item.txType != ColdToHot => //UserToHot fail will do nothing
-        deliverToAccountManager(CryptoTransferFailed(transferHandler.get(item.accountTransferId.get).get, ErrorCode.BitwayProcessFail))
-      case _ =>
+  private def sendAccountMsg(currency: Currency) {
+    val transfersToAccount: Map[String, AccountTransfersWithMinerFee] = batchAccountMessage(currency)
+    if (!transfersToAccount.isEmpty) {
+      deliverToAccountManager(CryptoTransferResult(transfersToAccount))
     }
-  }
-
-  def batchMinerFeeTransfer(item: CryptoCurrencyTransferItem) {
-    item.sigId foreach {
-      sigId =>
-        sigId2ItemListMap.contains(sigId) match {
-          case true =>
-            sigId2ItemListMap(sigId).append(item)
-          case false =>
-            val buffer = ListBuffer.empty[CryptoCurrencyTransferItem]
-            buffer.append(item)
-            sigId2ItemListMap.put(sigId, buffer)
-        }
-    }
-  }
-
-  def batchSendMinerFeeTransfer() {
-    sigId2ItemListMap.keys foreach {
-      sigId =>
-        val transfers = sigId2ItemListMap(sigId).map(item => transferHandler.get(item.accountTransferId.get).get)
-        deliverToAccountManager(CryptoTransferSucceeded(transfers(0).`type`, transfers.toList, manager.sigId2MinerFeeMap.remove(sigId)))
-    }
-    sigId2ItemListMap.clear()
   }
 
   private def deliverToAccountManager(event: Any) = {
     log.info(s">>>>>>>>>>>>>>>>>>>>> deliverToAccountManager => event = ${event.toString}")
-    channelToAccountProcessor forward Deliver(Persistent(event), accountProcessorPath)
+    channelToAccountProcessor ! Deliver(Persistent(event), accountProcessorPath)
   }
 
   private def deliverToBitwayProcessor(currency: Currency, event: Any) = {
     log.info(s">>>>>>>>>>>>>>>>>>>>> deliverToBitwayProcessor => currency = ${currency.toString}, event = ${event.toString}, path = ${bitwayProcessors(currency).path.toString}")
-    bitwayChannels(currency) forward Deliver(Persistent(event), bitwayProcessors(currency).path)
+    bitwayChannels(currency) ! Deliver(Persistent(event), bitwayProcessors(currency).path)
   }
 }
 
@@ -222,32 +212,47 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
   private var lastTransferId = 1E12.toLong
   private var lastTransferItemId = 6E12.toLong
   private var lastBlockHeight = Map.empty[Currency, Long]
-  private val depositSigId2TxPortIdMapInner = Map.empty[String, Map[CryptoCurrencyTransactionPort, Long]]
-  private val coldToHotSigId2TxPortIdMapInner = Map.empty[String, Map[CryptoCurrencyTransactionPort, Long]]
-  private val transferMapInnner = Map.empty[Long, CryptoCurrencyTransferItem]
-  private val succeededMapInnner = Map.empty[Long, CryptoCurrencyTransferItem]
-  private val sigId2MinerFeeMapInnner = Map.empty[String, Long]
+  private val transferMapInnner = Map.empty[TransferType, Map[Long, CryptoCurrencyTransferItem]]
+  private val succeededMapInnner = Map.empty[TransferType, Map[Long, CryptoCurrencyTransferItem]]
+  private val sigId2MinerFeeMapInnner = Map.empty[TransferType, Map[String, Long]]
+  private var transferHandlerObjectMap = Map.empty[TransferType, CryptoCurrencyTransferBase]
 
-  def getSnapshot = TAccountTransferState(
-    lastTransferId,
-    lastTransferItemId,
-    lastBlockHeight,
-    depositSigId2TxPortIdMapInner.clone,
-    coldToHotSigId2TxPortIdMapInner.clone(),
-    transferMapInnner.clone(),
-    succeededMapInnner.clone(),
-    sigId2MinerFeeMapInnner.clone(),
-    getFiltersSnapshot)
+  def setTransferHandlers(transferHandlerObjectMap: Map[TransferType, CryptoCurrencyTransferBase]) {
+    this.transferHandlerObjectMap = transferHandlerObjectMap
+  }
+
+  def getSnapshot = {
+    transferMapInnner.clear()
+    succeededMapInnner.clear()
+    sigId2MinerFeeMapInnner.clear()
+    transferHandlerObjectMap.keys foreach {
+      txType =>
+        val handler = transferHandlerObjectMap(txType)
+        transferMapInnner.put(txType, handler.getTransferItemsMap())
+        succeededMapInnner.put(txType, handler.getSucceededItemsMap())
+        sigId2MinerFeeMapInnner.put(txType, handler.getSigId2MinerFeeMap())
+    }
+    TAccountTransferState(
+      lastTransferId,
+      lastTransferItemId,
+      lastBlockHeight,
+      transferMapInnner,
+      succeededMapInnner,
+      sigId2MinerFeeMapInnner,
+      getFiltersSnapshot)
+  }
 
   def loadSnapshot(s: TAccountTransferState) = {
     lastTransferId = s.lastTransferId
     lastTransferItemId = s.lastTransferItemId
     lastBlockHeight ++= s.lastBlockHeight
-    depositSigId2TxPortIdMapInner ++= s.depositSigId2TxPortIdMapInner map { kv => (kv._1 -> (Map.empty ++ kv._2)) }
-    coldToHotSigId2TxPortIdMapInner ++= s.coldToHotSigId2TxPortIdMapInner map { kv => (kv._1 -> (Map.empty ++ kv._2)) }
-    transferMapInnner ++= s.transferMap
-    succeededMapInnner ++= s.succeededMap
-    sigId2MinerFeeMapInnner ++= s.sigId2MinerFeeMapInnner
+    transferHandlerObjectMap.keys foreach {
+      txType =>
+        val handler = transferHandlerObjectMap(txType)
+        handler.loadSnapshotItems(s.transferMap(txType))
+        handler.loadSnapshotSucceededItems(s.succeededMap(txType))
+        handler.loadSigId2MinerFeeMap(s.sigId2MinerFeeMapInnner(txType))
+    }
     loadFiltersSnapshot(s.filters)
   }
 
@@ -262,40 +267,7 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
     lastTransferItemId
   }
 
-  def transferMap = transferMapInnner
-
-  def succeededMap = succeededMapInnner
-
-  def sigId2MinerFeeMap = sigId2MinerFeeMapInnner
-
   def getLastBlockHeight(currency: Currency): Long = lastBlockHeight.getOrElse(currency, 0L)
 
   def setLastBlockHeight(currency: Currency, height: Long) = { lastBlockHeight.put(currency, height) }
-
-  def depositSigId2TxPortIdMap = depositSigId2TxPortIdMapInner
-
-  def coldToHotSigId2TxPortIdMap = coldToHotSigId2TxPortIdMapInner
-
-  def getItemIdFromMap(operateMap: Map[String, Map[CryptoCurrencyTransactionPort, Long]], sigId: String, port: CryptoCurrencyTransactionPort): Option[Long] = {
-    if (operateMap.contains(sigId) && operateMap(sigId).contains(port))
-      Some(operateMap(sigId)(port))
-    else
-      None
-  }
-
-  def saveItemIdToMap(operateMap: Map[String, Map[CryptoCurrencyTransactionPort, Long]], sigId: String, port: CryptoCurrencyTransactionPort, id: Long) {
-    if (!operateMap.contains(sigId)) {
-      operateMap.put(sigId, Map.empty[CryptoCurrencyTransactionPort, Long])
-    }
-    operateMap(sigId).put(port, id)
-  }
-
-  def removeItemIdFromMap(operateMap: Map[String, Map[CryptoCurrencyTransactionPort, Long]], sigId: String, port: CryptoCurrencyTransactionPort) {
-    if (operateMap.contains(sigId)) {
-      operateMap(sigId).remove(port)
-      if (operateMap(sigId).isEmpty) {
-        operateMap.remove(sigId)
-      }
-    }
-  }
 }

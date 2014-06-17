@@ -5,7 +5,7 @@
 
 package com.coinport.coinex.accounts
 
-import akka.event.LoggingReceive
+import akka.event.{ LoggingAdapter, LoggingReceive }
 import akka.persistence.Persistent
 import com.coinport.coinex.common.ExtendedView
 import com.coinport.coinex.data._
@@ -20,6 +20,7 @@ class AccountView(accountConfig: AccountConfig) extends ExtendedView with Accoun
   override val processorId = ACCOUNT_PROCESSOR <<
   override val viewId = ACCOUNT_VIEW<<
   val manager = new AccountManager(0L, accountConfig.hotColdTransfer)
+  implicit val logger: LoggingAdapter = null
 
   def receive = LoggingReceive {
     case Persistent(msg, _) => updateState(msg)

@@ -11,6 +11,7 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 
 import com.coinport.coinex.api.model._
+import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.common.Manager
 import com.coinport.coinex.data._
 import Currency._
@@ -36,8 +37,8 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
   private[bitway] val privateKeysBackup = Map.empty[String, String]
 
   final val SPECIAL_ACCOUNT_ID: Map[CryptoCurrencyAddressType, Long] = Map(
-    CryptoCurrencyAddressType.Hot -> -1,
-    CryptoCurrencyAddressType.Cold -> -2
+    CryptoCurrencyAddressType.Hot -> HOT_UID,
+    CryptoCurrencyAddressType.Cold -> COLD_UID
   )
 
   val FAUCET_THRESHOLD: Double = 0.5

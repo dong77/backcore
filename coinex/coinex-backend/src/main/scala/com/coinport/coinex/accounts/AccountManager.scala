@@ -134,19 +134,22 @@ class AccountManager(initialLastOrderId: Long = 0L,
 
   def updateCashAccount(userId: Long, adjustment: CashAccount) = {
     assert(userId > 0)
-    val current = getUserCashAccount(userId, adjustment.currency)
-    val updated = current + adjustment
-    assert(updated.isValid)
-    setUserCashAccount(userId, updated)
-
-    val updateAggregation = aggregationAccount.getOrElse(adjustment.currency, CashAccount(adjustment.currency, 0, 0, 0)) + adjustment
-    assert(updateAggregation.isValid)
-    aggregationAccount += (adjustment.currency -> updateAggregation)
+    if (userId == COINPORT_UID) {
+      updateCoinportAccount(adjustment)
+    } else {
+      val current = getUserCashAccount(userId, adjustment.currency)
+      val updated = current + adjustment
+      assert(updated.isValid)
+      setUserCashAccount(userId, updated)
+      val updateAggregation = aggregationAccount.getOrElse(adjustment.currency, CashAccount(adjustment.currency, 0, 0, 0)) + adjustment
+      assert(updateAggregation.isValid)
+      aggregationAccount += (adjustment.currency -> updateAggregation)
+    }
   }
 
   def getUserAccounts(userId: Long): UserAccount = {
-    if (userId == -1L)
-      UserAccount(-1L, aggregationAccount)
+    if (userId == AGGREGATION_UID)
+      UserAccount(AGGREGATION_UID, aggregationAccount)
     else
       accountMap.get(userId).getOrElse(UserAccount(userId))
   }

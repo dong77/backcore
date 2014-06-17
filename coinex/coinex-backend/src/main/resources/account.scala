@@ -28,7 +28,9 @@ AccountConfig(
       Cny -> PercentageFee(0.002))),
 
   hotColdTransfer = Map(
-    Btc -> HotColdTransferStrategy(0.25, 0.1)
+    Btc -> HotColdTransferStrategy(0.25, 0.1),
+    Dog -> HotColdTransferStrategy(0.25, 0.1)
   ),
+  enableHotColdTransfer = true,
   hotColdTransferInterval = 600 * 1000L
 )

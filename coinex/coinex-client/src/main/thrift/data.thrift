@@ -566,6 +566,7 @@ struct CryptoCurrencyTransferItem {
     12: optional i64 accountTransferId
     13: optional i64 created
     14: optional i64 updated
+    15: optional i64 minerFee
 }
 
 struct CryptoCurrencyNetworkStatus {

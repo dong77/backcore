@@ -14,6 +14,10 @@ import Implicits._
 object Constants {
   val COINPORT_UID = 1L
 
+  val HOT_UID = -1L
+  val COLD_UID = -2L
+  val AGGREGATION_UID = -1000L
+
   // WARNING: use an enum somewhere else?
   val STOP_ORDER_ROBOT_TYPE = 1
   val TRAILING_STOP_ORDER_ROBOT_TYPE = 2

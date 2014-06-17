@@ -7,7 +7,7 @@ package com.coinport.coinex.accounts
 
 import akka.actor._
 import akka.actor.Actor.Receive
-import akka.event.LoggingReceive
+import akka.event.{ LoggingAdapter, LoggingReceive }
 import akka.persistence.SnapshotOffer
 import akka.persistence._
 
@@ -31,6 +31,7 @@ class AccountProcessor(
     with AccountManagerBehavior with ActorLogging {
 
   val feeConfig = accountConfig.feeConfig
+  override implicit val logger = log
 
   private val MAX_PRICE = 1E8.toDouble // 100000000.00000001 can be preserved by toDouble.
   private var hotColdTransferLastTransferTime = Map.empty[Currency, Long]
@@ -121,6 +122,13 @@ class AccountProcessor(
             transferHotColdIfNeed(currency)
           }
       }
+
+    case m: CryptoTransferResult =>
+      hanleCryptoTransferResult(m)
+
+    case p @ ConfirmablePersistent(m: CryptoTransferResult, _, _) =>
+      confirm(p)
+      hanleCryptoTransferResult(m)
 
     case DoRequestGenerateABCode(userId, amount, _, _) => {
       val adjustment = CashAccount(Currency.Cny, -amount, amount, 0)
@@ -243,16 +251,41 @@ class AccountProcessor(
   }
 
   private def appendFeeIfNecessary(t: AccountTransfer) = {
-    if ((t.`type` == Withdrawal || t.`type` == Deposit) && !t.fee.isDefined) {
+    if ((t.`type` == Withdrawal || t.`type` == Deposit) && !t.fee.isDefined && t.status == TransferStatus.Succeeded) {
       countFee(t)
     } else {
       t
+    }
+  }
+
+  private def hanleCryptoTransferResult(m: CryptoTransferResult) {
+    persist(m.copy(multiTransfers = m.multiTransfers.map(kv => kv._1 -> kv._2.copy(transfers = kv._2.transfers map { appendFeeIfNecessary(_) })))) {
+      event =>
+        updateState(event)
+        val currency = m.multiTransfers.values.head.transfers(0).currency
+        var needCheckHotColdTransfer = false
+        m.multiTransfers.values.foreach {
+          transferWithMinerFee =>
+            transferWithMinerFee.transfers.foreach {
+              _.`type` match {
+                case Withdrawal => needCheckHotColdTransfer = true
+                case UserToHot => needCheckHotColdTransfer = true
+                case _ =>
+              }
+            }
+        }
+        if (accountConfig.enableHotColdTransfer && needCheckHotColdTransfer &&
+          System.currentTimeMillis - hotColdTransferLastTransferTime.getOrElse(currency, 0L) > accountConfig.hotColdTransferInterval) {
+          hotColdTransferLastTransferTime += (currency -> System.currentTimeMillis)
+          transferHotColdIfNeed(currency)
+        }
     }
   }
 }
 
 trait AccountManagerBehavior extends CountFeeSupport {
   val manager: AccountManager
+  implicit val logger: LoggingAdapter
 
   def updateState: Receive = {
 
@@ -275,8 +308,6 @@ trait AccountManagerBehavior extends CountFeeSupport {
           manager.updateHotCashAccount(CashAccount(t.currency, -t.amount, 0, t.amount))
         case HotToCold =>
           manager.updateHotCashAccount(CashAccount(t.currency, -t.amount, 0, t.amount))
-        case ColdToHot =>
-          manager.updateColdCashAccount(CashAccount(t.currency, -t.amount, 0, t.amount))
         case _ =>
       }
 
@@ -289,6 +320,22 @@ trait AccountManagerBehavior extends CountFeeSupport {
     case CryptoTransferSucceeded(_, t, minerFee) => {
       t foreach { succeededTransfer(_) }
       minerFee foreach { substractMinerFee(t(0).currency, _) }
+    }
+
+    case CryptoTransferResult(multiTransfers) => {
+      //      println(s">>>>>>>>>>>>>>>>>>>>> AccountProcessor got success accountTransfer => ${t.toString}")
+      multiTransfers.values foreach {
+        transferWithFee =>
+          transferWithFee.transfers.foreach {
+            transfer =>
+              transfer.status match {
+                case TransferStatus.Succeeded => succeededTransfer(transfer)
+                case TransferStatus.Failed => failedTransfer(transfer)
+                case _ => logger.error("Unexpected transferStatus" + transfer.toString)
+              }
+          }
+          transferWithFee.minerFee foreach (substractMinerFee(transferWithFee.transfers(0).currency, _))
+      }
     }
 
     case CryptoTransferFailed(t, _) => {
@@ -347,7 +394,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
         manager.updateHotCashAccount(CashAccount(t.currency, 0, 0, -t.amount))
         manager.updateColdCashAccount(CashAccount(t.currency, t.amount, 0, 0))
       case ColdToHot =>
-        manager.updateColdCashAccount(CashAccount(t.currency, 0, 0, -t.amount))
+        manager.updateColdCashAccount(CashAccount(t.currency, -t.amount, 0, 0))
         manager.updateHotCashAccount(CashAccount(t.currency, t.amount, 0, 0))
       case TransferType.Unknown =>
     }
@@ -360,9 +407,10 @@ trait AccountManagerBehavior extends CountFeeSupport {
 
   private def failedTransfer(t: AccountTransfer) {
     t.`type` match {
-      case Withdrawal => manager.updateCashAccount(t.userId, CashAccount(t.currency, t.amount, 0, -t.amount))
+      case Withdrawal =>
+        manager.updateCashAccount(t.userId, CashAccount(t.currency, t.amount, 0, -t.amount))
+        manager.updateHotCashAccount(CashAccount(t.currency, t.amount, 0, -t.amount))
       case HotToCold => manager.updateHotCashAccount(CashAccount(t.currency, t.amount, 0, -t.amount))
-      case ColdToHot => manager.updateColdCashAccount(CashAccount(t.currency, t.amount, 0, -t.amount))
       case _ =>
     }
   }

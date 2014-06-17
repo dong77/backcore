@@ -40,6 +40,7 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: DoRequestBCodeRecharge => routers.accountProcessor forward m
       case m: DoRequestConfirmRC => routers.accountProcessor forward m
       case m: DoSubmitOrder => routers.accountProcessor forward m
+      case m: CryptoTransferResult => routers.accountProcessor forward m
 
       // Market Processors
       case m: DoCancelOrder => routers.marketProcessors(m.side) forward m
@@ -54,6 +55,8 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: AdminConfirmTransferFailure => routers.depositWithdrawProcessor forward m
       case m: AdminConfirmTransferSuccess => routers.depositWithdrawProcessor forward m
       case m: DoCancelTransfer => routers.depositWithdrawProcessor forward m
+      case m: MultiCryptoCurrencyTransactionMessage => routers.depositWithdrawProcessor forward m
+      case m: MultiTransferCryptoCurrencyResult => routers.depositWithdrawProcessor forward m
 
       //-------------------------------------------------------------------------
       // AccountView
@@ -92,6 +95,7 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       // Bitway
       case m: AllocateNewAddress => routers.bitwayProcessors(m.currency) forward m
       case m: TransferCryptoCurrency => routers.bitwayProcessors(m.currency) forward m
+      case m: MultiTransferCryptoCurrency => routers.bitwayProcessors(m.currency) forward m
       case m: BitwayMessage => routers.bitwayProcessors(m.currency) forward m
       case m: AdjustAddressAmount => routers.bitwayProcessors(m.currency) forward m
       case m: QueryCryptoCurrencyAddressStatus => routers.bitwayViews(m.currency) forward m
