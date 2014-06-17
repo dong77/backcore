@@ -6,24 +6,13 @@
  */
 var Bitcore                       = require('bitcore'),
     Crypto                        = require('crypto'),
-    DataTypes                     = require('../../../../gen-nodejs/data_types'),
-    Currency                      = DataTypes.Currency;
+    DataTypes                     = require('../../../../gen-nodejs/data_types');
 
 var program = require('commander');
 var Async = require('async');
 var fs = require('fs');
 var CryptoProxy = require('./crypto_proxy').CryptoProxy;
 var RpcClient   = require('bitcore').RpcClient;
-var dog = {
-    cryptoRpcConfig: {
-        protocol: 'http',
-        user: 'user',
-        pass: 'pass',
-        host: '127.0.0.1',
-        port: '44555',
-    },
-    minerFee: 1,
-};
 var btc = {
     cryptoRpcConfig: {
         protocol: 'http',
@@ -35,6 +24,28 @@ var btc = {
     minerFee: 0.0001,
 };
 
+var ltc = {
+    cryptoRpcConfig: {
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: '127.0.0.1',
+        port: '9332',
+    },
+    minerFee: 0.0001,
+};
+
+
+var dog = {
+    cryptoRpcConfig: {
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: '127.0.0.1',
+        port: '44555',
+    },
+    minerFee: 0.0001,
+};
 var minerFee = 0.0001;
 var coldAddr = '';
 var privateKeys = [];
@@ -56,14 +67,14 @@ var initData_ = function(callback) {
     destAddr = program.args[3];
     amount = program.args[4];
     var config = new Object();
-    switch (Number(currency)) {
-        case Currency.BTC:
+    switch (currency) {
+        case 'btc':
             config = btc;
             break;
-        case Currency.LTC:
+        case 'ltc':
             config = ltc;
             break;
-        case Currency.DOG:
+        case 'dog':
             config = dog;
             break;
         default:
@@ -83,8 +94,8 @@ var readFile_ = function(callback) {
                 var jsonObj = JSON.parse(data);
                 console.log('raw data in file: %j', jsonObj);
                 if (jsonObj) {
-                    height = jsonObj.latestHeight; 
-                    recieves = jsonObj.recieves;
+                    height = jsonObj.txHistory.latestHeight; 
+                    recieves = jsonObj.txHistory.recieves;
                 }
             }
             callback();
@@ -116,7 +127,6 @@ var constructRawData_ = function(callback) {
     }
     console.log('spentAmout:', spentAmount);
     console.log('minerFee:', minerFee);
-    console.log('amount + minerFee:', jsonToAmount_(Number(amount) + Number(minerFee)));
     addresses[destAddr] = Number(amount);
     if (spentAmount > jsonToAmount_(Number(amount) + Number(minerFee))) {
         addresses[coldAddr] = jsonToAmount_(Number(spentAmount) - Number(amount) - Number(minerFee));
@@ -144,7 +154,7 @@ var createRawTransaction_ = function(callback) {
 var signRawTransaction_ = function(callback) {
     console.log("hexString:", hexString);
     console.log("prevTxs:", prevTxs);
-    rpc.signRawTransaction(hexString, prev, privateKeys, function(errSign, sign) {
+    rpc.signRawTransaction(hexString, prevTxs, privateKeys, function(errSign, sign) {
         if (errSign) {
             callback(errSign);
             console.log('%j', errSign);

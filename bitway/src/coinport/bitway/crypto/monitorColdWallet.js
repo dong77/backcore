@@ -32,31 +32,32 @@ var btc = {
         host: 'bitway',
         port: '8332',
     },
-    height: 305380,
+    height: 306050,
 };
 
 var height = 0;
+var currency = '';
 var addr = '';
 var destAddr = '';
 var amount = 0;
 var recieves = [];
+var spentRecs = [];
 var latest = 0;
 var rpc = new Object();
 var timeBegin = new Date().getTime();
 
-var initData_ = function() {
+var initData_ = function(callback) {
     program.parse(process.argv); 
-    var currency = program.args[0]
-    addr = program.args[1];
+    currency = program.args[0]
     var config = new Object();
-    switch (Number(currency)) {
-        case Currency.BTC:
+    switch (currency) {
+        case 'btc':
             config = btc;
             break;
-        case Currency.LTC:
+        case 'ltc':
             config = ltc;
             break;
-        case Currency.DOG:
+        case 'dog':
             config = dog;
             break;
         default:
@@ -64,35 +65,99 @@ var initData_ = function() {
     }
     rpc = new RpcClient(config.cryptoRpcConfig);
     height = config.height;
+    callback();
 };
 
-var readFile_ = function() {
-    var fileName = './coldWallet/' + addr.toString();
+var readHistoryFile_ = function(address, callback) {
+    var fileName = './coldWallet/' + address;
+    console.log(fileName);
+    fs.readFile(fileName, function(error, data){
+        var defaultData = {latestHeight: 0, unspentAmount: 0, spentAmount: 0, recieves: []};
+        var record = {address: address, txHistory: defaultData};
+        if (error) {
+            console.log(error);
+        } else {
+            var jsonData = JSON.parse(data);
+            record = jsonData;
+        }
+        callback(null, record);
+    });
+};
+
+
+var readFile_ = function(callback) {
+    var fileName = './coldWallet/' + currency;
     console.log(fileName);
     fs.readFile(fileName, function(error, data){
         if (!error) {
             if (data.length != 0) {
-                var jsonObj = JSON.parse(data);
-                console.log('%j', jsonObj);
-                if (jsonObj) {
-                    height = jsonObj.latestHeight; 
-                    recieves = jsonObj.recieves;
+                var coldAddrs = JSON.parse(data);
+                console.log('%j', coldAddrs);
+                if (coldAddrs) {
+                    currency = coldAddrs.currency;
+                    addresses = coldAddrs.addresses;
+                    Async.map(coldAddrs.addresses, readHistoryFile_, function(err, records) {
+                        console.log('records: %j', records);
+                        spentRecs = records;
+                        for (var i = 0; i < records.length; i++) {
+                            if (records[i].txHistory && records[i].txHistory.latestHeight) {
+                                console.log(height);
+                                console.log(records[i].txHistory.latestHeight);
+                                height = records[i].txHistory.latestHeight;
+                                
+                            }
+                        }
+                        callback();
+                    });
                 }
             }
         } else {
             console.log(error);
+            callback(error);
         }
     });
 };
 
-var writeFile_ = function() {
-    var fileData = {latestHeight: latest, recieves: recieves};
-    var str = JSON.stringify(fileData);
-    var fileName = './coldWallet/' + addr.toString();
-    console.log(fileName);
+var countTotalAmount_ = function(record) {
+    if (record.txHistory.recieves) {
+        for (var i = 0; i < record.txHistory.recieves.length; i++)
+        {
+            if (record.txHistory.recieves[i].unSpent) {
+                record.txHistory.unspentAmount += Number(record.txHistory.recieves[i].value);
+            } else {
+                record.txHistory.spentAmount += Number(record.txHistory.recieves[i].value);
+            }
+
+        }
+    }
+    return record;
+}
+
+var writeHistoryFile_ = function(record, callback) {
+    var fileName = './coldWallet/' + record.address;
+    record.txHistory.latestHeight = latest;
+    record.txHistory.unspentAmount = 0;
+    record.txHistory.spentAmount = 0;
+    console.log('write file: ', fileName);
+    console.log('record: %j', record);
+    var str = JSON.stringify(countTotalAmount_(record));
     fs.writeFile(fileName, str, function(error) {
         if (error) {
             console.log(error);
+            callbcak(error, null);
+        } else {
+            callback();
+        }
+    });
+};
+
+var writeFile_ = function(callback) {
+    Async.map(spentRecs, writeHistoryFile_, function(error, results) {
+        if (error) {
+            console.log(error);
+            callback(error);
+        } else {
+            callback(null, results);
         }
     });
 };
@@ -111,14 +176,16 @@ var ifATxBelongToAddr_ = function(tx) {
     for (var i = 0; i < tx.vout.length; i++) {
         if (tx.vout[i].scriptPubKey.addresses != undefined) {
             for (var j = 0; j < tx.vout[i].scriptPubKey.addresses.length; j++) {
-                if (tx.vout[i].scriptPubKey.addresses[j] == addr) {
-                    console.log('txid: ' + tx.txid + ', n: ' + tx.vout[i].n);
-                    var recv = {txid: tx.txid, n: tx.vout[i].n,
-                        value: tx.vout[i].value,
-                        hex: tx.vout[i].scriptPubKey.hex,
-                        unSpent: true};
-                    recieves.push(recv);
-                } else {
+                for (var k = 0; k < spentRecs.length; k++) {
+                    if (tx.vout[i].scriptPubKey.addresses[j] == spentRecs[k].address) {
+                        console.log('txid: ' + tx.txid + ', n: ' + tx.vout[i].n);
+                        var recv = {txid: tx.txid, n: tx.vout[i].n,
+                            value: tx.vout[i].value,
+                            hex: tx.vout[i].scriptPubKey.hex,
+                            unSpent: true};
+                        spentRecs[k].txHistory.recieves.push(recv);
+                    } else {
+                    }
                 }
             }
         }
@@ -127,11 +194,17 @@ var ifATxBelongToAddr_ = function(tx) {
 
 var ifATxUnspent_ = function(tx) {
     for (var m = 0; m < tx.vin.length; m++) {
-        for (var n = 0; n < recieves.length; n++) {
-            if (tx.vin[m].txid == recieves[n].txid
-                && tx.vin[m].vout == recieves[n].n) {
-                recieves[n].unSpent = false;
-                console.log('already used: txid(' + recieves[n].txid + ')' + ', n: ' + recieves[n].n);
+        for (var n = 0; n < spentRecs.length; n++) {
+            if (spentRecs[n].txHistory.recieves) {
+                for (var q = 0; q < spentRecs[n].txHistory.recieves.length; q++)
+                {
+                    if (tx.vin[m].txid == spentRecs[n].txHistory.recieves[q].txid
+                        && tx.vin[m].vout == spentRecs[n].txHistory.recieves[q].n) {
+                        spentRecs[n].txHistory.recieves[q].unSpent = false;
+                        console.log('already used: txid(' + spentRecs[n].txHistory.recieves[q].txid + ')' 
+                            + ', n: ' + spentRecs[n].txHistory.recieves[q].n);
+                    }
+                }
             }
         }
     }
@@ -139,39 +212,6 @@ var ifATxUnspent_ = function(tx) {
 
 var jsonToAmount_ = function(value) {
     return Math.round(1e8 * value)/1e8;
-};
-
-var constructRawData_ = function() {
-    var transactions = [];
-    var addresses = {};
-    var spentAmount = 0;
-    for (var i = 0; i < recieves.length; i++) {
-        if (recieves[i].unSpent) {
-            spentAmount += recieves[i].value;
-            var transaction = {txid: recieves[i].txid, vout: recieves[i].n};
-            transactions.push(transaction);
-            if (spentAmount > amount) {
-                break;
-            }
-        }
-    }
-    addresses[destAddr] = Number(amount);
-    if (spentAmount > amount) {
-        addresses[addr] = jsonToAmount_(Number(spentAmount - amount));
-    }
-    var rawData = {transactions: transactions, addresses: addresses};
-    console.log(transactions);
-    console.log(addresses);
-    return rawData;
-}
-
-var createRawTransaction_ = function(transactions, addresses) {
-    rpc.createRawTransaction(transactions, addresses, function(errCreate, createRet) {
-        if (errCreate) {
-        } else {
-            console.log('%j', createRet);
-        }
-    });
 };
 
 var getBlockHash_ = function(index, callback) {
@@ -194,60 +234,80 @@ var getBlock_ = function(hash, callback) {
     });
 };
 
+var getTx_ = function(tx, callback) {
+     rpc.getRawTransaction(tx, 1, function(errTx, txRet) {
+         if (errTx) {
+             callback(error);
+         } else {
+             callback(null, txRet.result);
+         }
+     });
+}
+
+
 var checkTxs_ = function(block, callback) {
     var txCount = 0;
-    Async.whilst(
-        function() {
-            return (txCount < block.tx.length)},
-        function(cb1) {
-            rpc.getRawTransaction(block.tx[txCount++], 1, function(errTx, txRet) {
-                ifATxBelongToAddr_(txRet.result);
-                ifATxUnspent_(txRet.result);
-                setTimeout(cb1, 0);
-            });
-        },
-        function(err1) {
+    if (block.tx.length) {
+        Async.map(block.tx, getTx_, function(error, txs) {
             console.log('height: ' + height);
-            callback(true);
-        }
-    );
+            for (var i = 0; i < txs.length; i++) {
+                ifATxBelongToAddr_(txs[i]);
+                ifATxUnspent_(txs[i]);
+            }
+            if (height%10 == 0) {
+               writeFile_(function(errWrite, results) {
+                   if (errWrite) {
+                       console.log('errWrite: %j', errWrite);
+                   } else {
+
+                   }
+                   callback(true);
+               }); 
+            } else {
+                callback(true);
+            }
+        });
+    }
 };
 
-var getData_ = function() {
+var getData_ = function(callback) {
     rpc.getBlockCount(function(errCount, count) {
-        var latestHeight = count.result;
-        latest = latestHeight;
-        Async.whilst(
-            function() {
-                return (height < latestHeight)},
-            function(cb) {
-                Async.compose(checkTxs_,
-                    getBlock_,
-                    getBlockHash_)(height++, function(errInner) {
-                    setTimeout(cb, 0);
-                });
-            },
-            function(error) {
-                console.log('%j', recieves);
-                writeFile_();
-                console.log('Total time: ' + (new Date().getTime() - timeBegin));
-            }
-        );
+        if (errCount) {
+            console.log('%j', errCount);
+        } else {
+            var latestHeight = count.result;
+            latest = latestHeight;
+            Async.whilst(
+                function() {
+                    return (height < latestHeight)},
+                function(cb) {
+                    Async.compose(checkTxs_,
+                        getBlock_,
+                        getBlockHash_)(height++, function(errInner) {
+                        setTimeout(cb, 0);
+                    });
+                },
+                function(error) {
+                    callback();
+                    console.log('Total time: ' + (new Date().getTime() - timeBegin));
+                }
+            );
+        }
     });
 };
 
 Async.auto({
     initData: function(callback) {
-        initData_();
+        initData_(callback);
     },
-    readFile: function(callback) {
-        readFile_();
-    },
-    getData: function(callback) {
-        getData_();
-    },
-    writeFile: ['getData', 'readFile', 'initData', function(callback) {
-        writeFile_();
+    readFile: ['initData', function(callback) {
+        readFile_(callback);
+    }],
+    getData: ['readFile', function(callback) {
+        getData_(callback);
+    }],
+    writeFile: ['getData', function(callback) {
+        writeFile_(callback);
     }]
 }, function(err, results) {
 
