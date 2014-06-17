@@ -92,8 +92,9 @@ package object model {
           currency,
           CurrencyObject(k, v.available),
           CurrencyObject(k, v.locked),
-          CurrencyObject(k, v.pendingWithdrawal))
-
+          CurrencyObject(k, v.pendingWithdrawal),
+          CurrencyObject(k, v.available + v.locked + v.pendingWithdrawal)
+        )
     }.toMap
     ApiUserAccount(userId, accounts)
   }

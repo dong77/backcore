@@ -8,7 +8,7 @@ case class ApiResult(success: Boolean = true, code: Int = 0, message: String = "
 
 case class ApiSubmitOrderResult(order: ApiOrder)
 
-case class ApiAccountItem(currency: String, available: CurrencyObject, locked: CurrencyObject, pendingWithdrawal: CurrencyObject)
+case class ApiAccountItem(currency: String, available: CurrencyObject, locked: CurrencyObject, pendingWithdrawal: CurrencyObject, total: CurrencyObject)
 
 case class ApiUserAccount(uid: String, accounts: Map[String, ApiAccountItem] = Map())
 
