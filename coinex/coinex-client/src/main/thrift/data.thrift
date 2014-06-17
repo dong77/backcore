@@ -314,6 +314,7 @@ struct UserLogsState {
 struct MarketDepthItem {
     1: double price
     2: i64 quantity
+    3: optional list<i64> orderIds
 }
 
 struct MarketDepth {

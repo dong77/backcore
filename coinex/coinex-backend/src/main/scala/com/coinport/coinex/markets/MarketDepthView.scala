@@ -50,8 +50,9 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
     def takeN(orders: SortedSet[Order], isAsk: Boolean) = {
 
       def convert(order: Order) =
-        if (isAsk) MarketDepthItem(order.price.get.value, order.maxOutAmount(order.price.get))
-        else /* bid */ MarketDepthItem(order.price.get.reciprocal.value, order.maxInAmount(order.price.get))
+        if (isAsk) MarketDepthItem(order.price.get.value, order.maxOutAmount(order.price.get), Some(List(order.id)))
+        /*bid*/
+        else MarketDepthItem(order.price.get.reciprocal.value, order.maxInAmount(order.price.get), Some(List(order.id)))
 
       val buffer = new ListBuffer[MarketDepthItem]
       var index = 0
@@ -61,8 +62,10 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
         if (buffer.isEmpty || buffer.last.price != item.price) buffer += item
         else {
           val last = buffer.last
+          val orderIds = last.orderIds.getOrElse(List.empty[Long]) ++ item.orderIds.getOrElse(List.empty[Long])
           buffer.trimEnd(1)
-          buffer += last.copy(quantity = last.quantity + item.quantity)
+          buffer += last.copy(quantity = last.quantity + item.quantity,
+            orderIds = if (orderIds.size > 0) Some(orderIds) else None)
         }
         index += 1
       }
