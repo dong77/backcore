@@ -9,9 +9,14 @@ object BitwayService extends AkkaService {
   def getNetworkStatus(currency: Currency) = {
     backend ? QueryCryptoCurrencyNetworkStatus(currency) map {
       case result: QueryCryptoCurrencyNetworkStatusResult =>
+        val timestamp = result.status.heartbeatTime.getOrElse(0L)
+        val current = result.status.queryTimestamp.getOrElse(0L)
+        val delay = if (timestamp == 0 || current == 0) -1L else (current - timestamp max 0L)
+
         val data = ApiNetworkStatus(
           currency = result.currency,
-          timestamp = result.status.heartbeatTime.getOrElse(0L),
+          timestamp = timestamp,
+          delay = delay,
           height = result.status.height,
           block = result.status.id
         )
