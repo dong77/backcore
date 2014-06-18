@@ -19,8 +19,8 @@ class AccountConversionTest extends Specification {
 
       userAccount.uid mustEqual "123"
       userAccount.accounts mustEqual Map(
-        "BTC" -> ApiAccountItem("BTC", CurrencyObject(Btc, 8000), CurrencyObject(Btc, 2000), CurrencyObject(Btc, 0)),
-        "CNY" -> ApiAccountItem("CNY", CurrencyObject(Cny, 100000), CurrencyObject(Cny, 0), CurrencyObject(Cny, 0))
+        "BTC" -> ApiAccountItem("BTC", CurrencyObject(Btc, 8000), CurrencyObject(Btc, 2000), CurrencyObject(Btc, 0), CurrencyObject(Btc, 10000)),
+        "CNY" -> ApiAccountItem("CNY", CurrencyObject(Cny, 100000), CurrencyObject(Cny, 0), CurrencyObject(Cny, 0), CurrencyObject(Cny, 100000))
       )
     }
   }
