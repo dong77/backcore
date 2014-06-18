@@ -138,6 +138,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cQueryCryptoCurrencyTransferResult = BinaryScalaCodec(QueryCryptoCurrencyTransferResult)
   lazy val _cQueryFeeConfigResult = BinaryScalaCodec(QueryFeeConfigResult)
   lazy val _cQueryMarketDepth = BinaryScalaCodec(QueryMarketDepth)
+  lazy val _cQueryMarketDepthByPrice = BinaryScalaCodec(QueryMarketDepthByPrice)
   lazy val _cQueryMarketDepthResult = BinaryScalaCodec(QueryMarketDepthResult)
   lazy val _cQueryNotification = BinaryScalaCodec(QueryNotification)
   lazy val _cQueryNotificationResult = BinaryScalaCodec(QueryNotificationResult)
@@ -326,6 +327,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: QueryCryptoCurrencyTransferResult => _cQueryCryptoCurrencyTransferResult(m)
     case m: QueryFeeConfigResult => _cQueryFeeConfigResult(m)
     case m: QueryMarketDepth => _cQueryMarketDepth(m)
+    case m: QueryMarketDepthByPrice => _cQueryMarketDepthByPrice(m)
     case m: QueryMarketDepthResult => _cQueryMarketDepthResult(m)
     case m: QueryNotification => _cQueryNotification(m)
     case m: QueryNotificationResult => _cQueryNotificationResult(m)
@@ -518,6 +520,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[QueryCryptoCurrencyTransferResult.Immutable] => _cQueryCryptoCurrencyTransferResult.invert(bytes).get
     case Some(c) if c == classOf[QueryFeeConfigResult.Immutable] => _cQueryFeeConfigResult.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepth.Immutable] => _cQueryMarketDepth.invert(bytes).get
+    case Some(c) if c == classOf[QueryMarketDepthByPrice.Immutable] => _cQueryMarketDepthByPrice.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketDepthResult.Immutable] => _cQueryMarketDepthResult.invert(bytes).get
     case Some(c) if c == classOf[QueryNotification.Immutable] => _cQueryNotification.invert(bytes).get
     case Some(c) if c == classOf[QueryNotificationResult.Immutable] => _cQueryNotificationResult.invert(bytes).get

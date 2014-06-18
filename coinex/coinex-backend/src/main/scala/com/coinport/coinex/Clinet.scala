@@ -31,7 +31,7 @@ object Client {
   private val config = ConfigFactory.load(configPath)
   private implicit val system = ActorSystem("coinex", config)
   private implicit val cluster = Cluster(system)
-  private val markets = Seq(Btc ~> Ltc, Btc ~> Dog)
+  private val markets = Seq(Ltc ~> Btc, Dog ~> Btc)
   val routers = new LocalRouters(markets)
 
   val backend = system.actorOf(Props(new Coinex(routers)), name = "backend")
@@ -58,25 +58,25 @@ object Client {
     userMap.map(kv => registerUser(kv._2, kv._1 + "@coinport.com", kv._1))
     userMap foreach { kv =>
       AccountService.deposit(kv._2, Btc, 10000 * 1000)
-      AccountService.deposit(kv._2, Cny, 1000000 * 100)
+      AccountService.deposit(kv._2, Ltc, 1000000 * 100)
     }
   }
 
   def addGofvRobots(num: Int) {
 
     1 to num foreach { i =>
-      robotMap += i.toString -> i.toLong
+      robotMap += i.toString -> (10000 + i.toLong)
     }
 
     robotMap foreach { kv =>
-      val uid = (10000 + kv._2).toLong
+      val uid = kv._2
       registerUser(uid, uid + "@coinport.com", uid.toString)
     }
     Thread.sleep(2000)
     robotMap foreach { kv =>
-      val uid = (10000 + kv._2).toLong
+      val uid = kv._2
       AccountService.deposit(uid, Btc, 10000 * 1000)
-      AccountService.deposit(uid, Cny, 1000000 * 100)
+      AccountService.deposit(uid, Ltc, 1000000 * 100)
     }
     Thread.sleep(4000)
 
@@ -93,13 +93,11 @@ object Client {
         import com.coinport.coinex.data._
         import com.coinport.coinex.data.Currency._
 
-        println("*"*40)
         var counter = robot.getPayload[Int]("COUNTER").get
         println(counter)
-        println("*"*40)
         val r = robot.setPayload("COUNTER", Some(counter+1))
-        val btcSide = MarketSide(Btc, Cny)
-        val rmbSide = MarketSide(Cny, Btc)
+        val btcSide = MarketSide(Btc, Ltc)
+        val rmbSide = MarketSide(Ltc, Btc)
         val side = List(btcSide, rmbSide)(Random.nextInt(2))
         val price = metrics match {
           case None => if (side == btcSide) 3000.0 else 1 / 3000.0
@@ -121,7 +119,7 @@ object Client {
           orderPrice = 1.0/(250 + Random.nextInt(100))
         }
         val action = Some(DoSubmitOrder(side,
-	  Order(robot.userId, 0, quantity.toLong, price = Some(RDouble(orderPrice, false)), robotId = Some(robot.robotId))))
+    Order(robot.userId, 0, quantity.toLong, price = Some(RDouble(orderPrice, false)), robotId = Some(robot.robotId))))
         (r -> "LOOP", action)
         """.format(50.0))
 
@@ -147,7 +145,7 @@ object Client {
       Client.backend ! DoCancelRobot(kv._2)
     }
     robotMap foreach { kv =>
-      val uid = (10000 + kv._2).toLong
+      val uid = kv._2
       Client.backend ! DoCancelRobot(uid)
     }
 
@@ -166,7 +164,7 @@ object Client {
   }
 
   def deposit(uid: Long, amount: Double) =
-    AccountService.deposit(uid, Currency.Cny, amount)
+    AccountService.deposit(uid, Currency.Ltc, amount)
 
   def createABCode(wUserId: Long, amount: Long, dUserId: Long) {
     Client.backend ? DoRequestGenerateABCode(wUserId, amount, None, None) map {

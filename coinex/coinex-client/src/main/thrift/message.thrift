@@ -235,6 +235,7 @@ typedef data.TFeeConfig                         _TFeeConfig
 
 ////////// MarketDepthView
 /* Q    */ struct QueryMarketDepth                        {1: _MarketSide side, 2: i32 maxDepth}
+/* Q    */ struct QueryMarketDepthByPrice                 {1: _MarketSide side, 2: double askPrice, 3: double bidPrice}
 /* R    */ struct QueryMarketDepthResult                  {1: _MarketDepth marketDepth}
 
 /* Q    */ struct DoSimulateOrderSubmission               {1: DoSubmitOrder doSubmitOrder}

@@ -287,13 +287,11 @@ trait AccountManagerBehavior extends CountFeeSupport {
       failedTransfer(t)
 
     case CryptoTransferSucceeded(_, t, minerFee) => {
-      //      println(s">>>>>>>>>>>>>>>>>>>>> AccountProcessor got success accountTransfer => ${t.toString}")
       t foreach { succeededTransfer(_) }
       minerFee foreach { substractMinerFee(t(0).currency, _) }
     }
 
     case CryptoTransferFailed(t, _) => {
-      //      println(s">>>>>>>>>>>>>>>>>>>>> AccountProcessor got failed accountTransfer => ${t.toString}")
       failedTransfer(t)
     }
 
