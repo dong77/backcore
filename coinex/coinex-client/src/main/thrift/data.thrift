@@ -374,6 +374,7 @@ struct AccountTransfer {
     10: optional Fee fee
     11: optional string address
     12: optional i64 confirm
+    13: optional string txid
 }
 
 struct AccountTransfersWithMinerFee {
