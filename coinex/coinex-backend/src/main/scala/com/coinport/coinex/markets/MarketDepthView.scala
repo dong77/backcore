@@ -29,8 +29,10 @@ class MarketDepthView(market: MarketSide) extends ExtendedView {
       cacheMap = Map.empty[MarketSide, Cached]
 
     case Persistent(OrderFundFrozen(side, order: Order), _) =>
-      manager.addOrderToMarket(side, order)
-      cacheMap = Map.empty[MarketSide, Cached]
+      if (manager.isOrderPriceInGoodRange(side, order.price)) {
+        manager.addOrderToMarket(side, order)
+        cacheMap = Map.empty[MarketSide, Cached]
+      }
 
     case QueryMarketDepth(side, depth) =>
       cacheMap.get(side) match {
