@@ -56,6 +56,7 @@ enum ErrorCode {
     RPC_ERROR                        = 8003
     NO_ADDRESS_FOUND                 = 8004
     WITHDRAWAL_TO_DEPOSIT_ADDRESS    = 8005
+    ADDRESS_FAIL                     = 8006 // NO_ADDRESS_FOUND or WITHDRAWAL_TO_DEPOSIT_ADDRESS
 
     // Controller && Services
     PARAM_EMPTY                      = 9001
@@ -178,19 +179,20 @@ enum CryptoCurrencyAddressType {
 }
 
 enum BitwayRequestType {
-    GENERATE_ADDRESS        = 0
-    TRANSFER                = 1
-    GET_MISSED_BLOCKS       = 2
-    SYNC_HOT_ADDRESSES      = 3
+    GENERATE_ADDRESS   = 0
+    TRANSFER           = 1
+    GET_MISSED_BLOCKS  = 2
+    SYNC_HOT_ADDRESSES = 3
+    MULTI_TRANSFER     = 4
 }
 
 enum BitwayResponseType {
-    GENERATE_ADDRESS        = 0
-    TRANSACTION             = 1
-    TRANSFER                = 2
-    AUTO_REPORT_BLOCKS      = 3
-    GET_MISSED_BLOCKS       = 4
-    SYNC_HOT_ADDRESSES      = 5
+    GENERATE_ADDRESS   = 0
+    TRANSACTION        = 1
+    TRANSFER           = 2
+    AUTO_REPORT_BLOCKS = 3
+    GET_MISSED_BLOCKS  = 4
+    SYNC_HOT_ADDRESSES = 5
 }
 
 enum NotificationType {

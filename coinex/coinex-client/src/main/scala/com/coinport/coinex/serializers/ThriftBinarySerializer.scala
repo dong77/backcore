@@ -113,6 +113,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cMessageNotSupported = BinaryScalaCodec(MessageNotSupported)
   lazy val _cMultiCryptoCurrencyTransactionMessage = BinaryScalaCodec(MultiCryptoCurrencyTransactionMessage)
   lazy val _cMultiTransferCryptoCurrency = BinaryScalaCodec(MultiTransferCryptoCurrency)
+  lazy val _cMultiTransferCryptoCurrencyResult = BinaryScalaCodec(MultiTransferCryptoCurrencyResult)
   lazy val _cOrderCancelled = BinaryScalaCodec(OrderCancelled)
   lazy val _cOrderFundFrozen = BinaryScalaCodec(OrderFundFrozen)
   lazy val _cOrderSubmissionSimulated = BinaryScalaCodec(OrderSubmissionSimulated)
@@ -302,6 +303,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: MessageNotSupported => _cMessageNotSupported(m)
     case m: MultiCryptoCurrencyTransactionMessage => _cMultiCryptoCurrencyTransactionMessage(m)
     case m: MultiTransferCryptoCurrency => _cMultiTransferCryptoCurrency(m)
+    case m: MultiTransferCryptoCurrencyResult => _cMultiTransferCryptoCurrencyResult(m)
     case m: OrderCancelled => _cOrderCancelled(m)
     case m: OrderFundFrozen => _cOrderFundFrozen(m)
     case m: OrderSubmissionSimulated => _cOrderSubmissionSimulated(m)
@@ -495,6 +497,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[MessageNotSupported.Immutable] => _cMessageNotSupported.invert(bytes).get
     case Some(c) if c == classOf[MultiCryptoCurrencyTransactionMessage.Immutable] => _cMultiCryptoCurrencyTransactionMessage.invert(bytes).get
     case Some(c) if c == classOf[MultiTransferCryptoCurrency.Immutable] => _cMultiTransferCryptoCurrency.invert(bytes).get
+    case Some(c) if c == classOf[MultiTransferCryptoCurrencyResult.Immutable] => _cMultiTransferCryptoCurrencyResult.invert(bytes).get
     case Some(c) if c == classOf[OrderCancelled.Immutable] => _cOrderCancelled.invert(bytes).get
     case Some(c) if c == classOf[OrderFundFrozen.Immutable] => _cOrderFundFrozen.invert(bytes).get
     case Some(c) if c == classOf[OrderSubmissionSimulated.Immutable] => _cOrderSubmissionSimulated.invert(bytes).get

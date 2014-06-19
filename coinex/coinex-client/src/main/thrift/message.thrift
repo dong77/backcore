@@ -177,8 +177,9 @@ typedef data.TFeeConfig                         _TFeeConfig
 /* C    */ struct AllocateNewAddress                      {1: _Currency currency, 2: i64 userId, 3: optional string assignedAddress}
 /* R    */ struct AllocateNewAddressResult                {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional string address}
 /* C,I  */ struct TransferCryptoCurrency                  {1: _Currency currency, 2: list<_CryptoCurrencyTransferInfo> transferInfos, 3: _TransferType type}
-/* C,I  */ struct MultiTransferCryptoCurrency             {1: _Currency currency, 2: map<_TransferType, list<_CryptoCurrencyTransferInfo>> transferInfos}
 /* R    */ struct TransferCryptoCurrencyResult            {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional TransferCryptoCurrency request}
+/* C,I  */ struct MultiTransferCryptoCurrency             {1: _Currency currency, 2: map<_TransferType, list<_CryptoCurrencyTransferInfo>> transferInfos}
+/* R    */ struct MultiTransferCryptoCurrencyResult       {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional map<_TransferType, list<_CryptoCurrencyTransferInfo>> transferInfos}
 /* I    */ struct MultiCryptoCurrencyTransactionMessage   {1: _Currency currency, 2: list<_CryptoCurrencyTransaction> txs, 3: optional _BlockIndex reorgIndex}
 /* Q    */ struct QueryCryptoCurrencyAddressStatus        {1: _Currency currency, 2: _CryptoCurrencyAddressType addressType}
 /* R    */ struct QueryCryptoCurrencyAddressStatusResult  {1: _Currency currency, 2: map<string, _AddressStatusResult> status}
@@ -207,6 +208,7 @@ typedef data.TFeeConfig                         _TFeeConfig
                                                               4: optional GetMissedCryptoCurrencyBlocks getMissedCryptoCurrencyBlocksRequest
                                                               5: optional TransferCryptoCurrency transferCryptoCurrency
                                                               6: optional SyncHotAddresses syncHotAddresses
+                                                              7: optional MultiTransferCryptoCurrency multiTransferCryptoCurrency
                                                           }
 /* I    */ struct BitwayMessage                           {
                                                               1: _Currency currency

@@ -55,6 +55,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
 
   override def identifyChannel: PartialFunction[Any, String] = {
     case tc: TransferCryptoCurrency => "tsf"
+    case mtc: MultiTransferCryptoCurrency => "tsf"
   }
 
   def receiveRecover = PartialFunction.empty[Any, Unit]
@@ -108,12 +109,21 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.NotEnoughAddressInPool, None)
       }
 
+    // deprecated
     case p @ ConfirmablePersistent(m: TransferCryptoCurrency, _, _) =>
       confirm(p)
       sendTransferRequest(m)
 
+    // deprecated
     case m: TransferCryptoCurrency =>
       sendTransferRequest(m)
+
+    case p @ ConfirmablePersistent(m: MultiTransferCryptoCurrency, _, _) =>
+      confirm(p)
+      sendMultiTransferRequest(m)
+
+    case m: MultiTransferCryptoCurrency =>
+      sendMultiTransferRequest(m)
 
     case m @ BitwayMessage(currency, Some(res), None, None, None) =>
       if (res.error == ErrorCode.Ok) {
@@ -199,9 +209,27 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       } else if (manager.includeWithdrawalToDepositAddress(infos)) {
         sender ! TransferCryptoCurrencyResult(currency, ErrorCode.WithdrawalToDepositAddress, Some(m))
       } else {
-        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.Ok, Some(m))
+        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.Ok, None)
         client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
           BitwayRequestType.Transfer, currency, transferCryptoCurrency = Some(m.copy(transferInfos = completedInfos)))))
+      }
+    }
+  }
+
+  private def sendMultiTransferRequest(m: MultiTransferCryptoCurrency) {
+    if (client.isDefined) {
+      val MultiTransferCryptoCurrency(currency, transferInfos) = m
+      val (passedInfos, failedInfos) = transferInfos.map { kv =>
+        (kv._1 -> manager.completeTransferInfos(kv._2, kv._1 == TransferType.HotToCold))
+      }.partition(kv => (kv._2._2 == true) && (manager.includeWithdrawalToDepositAddress(kv._2._1)))
+      if (failedInfos.size > 0) {
+        sender ! MultiTransferCryptoCurrencyResult(currency, ErrorCode.AddressFail,
+          Some(failedInfos.map(kv => (kv._1 -> kv._2._1))))
+      }
+      if (passedInfos.size > 0) {
+        sender ! MultiTransferCryptoCurrencyResult(currency, ErrorCode.Ok, None)
+        client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(BitwayRequestType.MultiTransfer, currency,
+          multiTransferCryptoCurrency = Some(m.copy(transferInfos = passedInfos.map(kv => (kv._1 -> kv._2._1)))))))
       }
     }
   }
