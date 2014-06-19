@@ -44,5 +44,5 @@ case class ApiActorsPath(ip: String, actors: Seq[String])
 
 case class ApiActorsInfo(pathList: Seq[ApiActorsPath])
 
-case class ApiCurrencyReserve(amount: CurrencyObject)
+case class ApiCurrencyReserve(available: CurrencyObject, total: CurrencyObject)
 
