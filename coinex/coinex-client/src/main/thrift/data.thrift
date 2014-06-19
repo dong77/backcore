@@ -66,6 +66,7 @@ enum ErrorCode {
     SMS_CODE_NOT_MATCH               = 9005
     MOBILE_NOT_VERIFIED              = 9006
     SEND_SMS_FREQUENCY_TOO_HIGH      = 9007
+    EMAIL_NOT_BIND_WITH_INVITE_CODE  = 9008
 
     // Transfer
     TRANSFER_REJECT                  = 10001
