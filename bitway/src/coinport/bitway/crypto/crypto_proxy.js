@@ -181,11 +181,13 @@ CryptoProxy.prototype.transfer = function(request, callback) {
         if (error) {
             self.log.error(error);
             self.log.error("Transfer failed! ids: " + ids);
-            var response = new CryptoCurrencyTransaction({ids: ids, status: TransferStatus.FAILED});
+            var response = new CryptoCurrencyTransaction({ids: ids, txType: request.type, 
+                status: TransferStatus.FAILED});
             callback(self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, response));
         } else {
-            cctx.status = TransferStatus.CONFIRMING;
             cctx.ids = ids;
+            cctx.txType = request.type;
+            cctx.status = TransferStatus.CONFIRMING;
             self.log.info("ids: " + ids + " sigId: " + cctx.sigId);
             self.redis.sadd(cctx.sigId, cctx.ids, function(redisError, redisReply){
                 if (redisError) {
