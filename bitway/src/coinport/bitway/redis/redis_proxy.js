@@ -54,6 +54,7 @@ RedisProxy.EventType = {
     TRANSFER : 'transfer',
     GET_MISSED_BLOCKS : 'get_missed_blocks',
     SYNC_HOT_ADDRESSES : 'sync_hot_addresses'
+    MULTI_TRANSFER : 'multi_transfer'
 };
 
 RedisProxy.prototype.logFunction = function log(type) {
@@ -85,6 +86,9 @@ RedisProxy.prototype.listen = function() {
                     break;
                 case BitwayRequestType.TRANSFER:
                     self.emit(RedisProxy.EventType.TRANSFER, bwr.currency, bwr.transferCryptoCurrency);
+                    break;
+                case BitwayRequestType.MULTI_TRANSFER:
+                    self.emit(RedisProxy.EventType.MULTI_TRANSFER, bwr.currency, bwr.multiTransferCryptoCurrency);
                     break;
                 case BitwayRequestType.GET_MISSED_BLOCKS:
                     self.emit(RedisProxy.EventType.GET_MISSED_BLOCKS, bwr.currency,

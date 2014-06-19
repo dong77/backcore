@@ -199,6 +199,21 @@ CryptoProxy.prototype.transfer = function(request, callback) {
     });
 };
 
+CryptoProxy.prototype.multi_transfer = function(request, callback) {
+    var self = this;
+    self.log.info('**Multi Transfer Request Received **');
+    self.log.info("multi transfer req: " + JSON.stringify(request));
+    var requestAarry = [];
+    for (var key in request.transferInfos) {
+        var singleRequest = new TransferCryptoCurrency({currency: self.currency, 
+            transferInfos: request.transferInfos[key], type: key});
+        requestAarry.push(singleRequest);
+    }
+    Async.map(requestAarry, self.transfer.bind(self), function(result) {
+        callback(result);    
+    });
+}
+
 CryptoProxy.prototype.compareTransferInfo_ = function(transferInfoA, transferInfoB) {
     if (transferInfoA.from > transferInfoB.from) {
         return 1;

@@ -23,11 +23,21 @@ var CryptoAgent = module.exports.CryptoAgent = function(cryptoProxy, redisProxy)
             self.redisProxy.publish(message);
         });
     });
+
     self.redisProxy.on(RedisProxy.EventType.TRANSFER, function(currency, request) {
         self.cryptoProxy.transfer(request, function(message) {
             self.redisProxy.publish(message);
         });
     });
+
+    self.redisProxy.on(RedisProxy.EventType.MULTI_TRANSFER, function(currency, request) {
+        self.cryptoProxy.multi_transfer(request, function(message) {
+            for (var i = 0; i < message.length; i++) {
+                self.redisProxy.publish(message[i]);
+            }
+        });
+    });
+
     self.redisProxy.on(RedisProxy.EventType.GET_MISSED_BLOCKS, function(currency, request) {
         self.cryptoProxy.getMissedBlocks(request, function(error, message) {
             if (!error) {
