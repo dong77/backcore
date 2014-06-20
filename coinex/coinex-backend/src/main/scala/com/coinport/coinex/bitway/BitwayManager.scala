@@ -202,17 +202,17 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int)
   }
 
   def completeTransferInfos(infos: Seq[CryptoCurrencyTransferInfo],
-    isHotToCold: Boolean = false): (Seq[CryptoCurrencyTransferInfo], Boolean /* isFail */ ) = {
+    isHotToCold: Boolean = false): (List[CryptoCurrencyTransferInfo], Boolean /* isFail */ ) = {
     if (isHotToCold) {
       if (addresses(Cold).isEmpty) {
         (Nil, true)
       } else {
         (infos.map(info => info.copy(amount = info.internalAmount.map((new CurrencyWrapper(_).externalValue(
-          supportedCurrency))), to = Some(addresses(Cold).head))), false)
+          supportedCurrency))), to = Some(addresses(Cold).head))).toList, false)
       }
     } else {
       (infos.map(info => info.copy(amount = info.internalAmount.map((new CurrencyWrapper(_).externalValue(
-        supportedCurrency))))), false)
+        supportedCurrency))))).toList, false)
     }
   }
 
@@ -250,7 +250,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int)
     }
   }
 
-  def extractTxsFromBlock(block: CryptoCurrencyBlock): Seq[CryptoCurrencyTransaction] = {
+  def extractTxsFromBlock(block: CryptoCurrencyBlock): List[CryptoCurrencyTransaction] = {
     val CryptoCurrencyBlock(index, prevIndex, txsInBlock) = block
     val filteredTxs = txsInBlock.map(completeCryptoCurrencyTransaction(_, Some(prevIndex), Some(index))).filter(
       _.isDefined).map(_.get)
@@ -258,7 +258,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int)
       List(CryptoCurrencyTransaction(prevBlock = Some(prevIndex), includedBlock = Some(index),
         status = TransferStatus.Confirming))
     } else {
-      filteredTxs
+      filteredTxs.toList
     }
   }
 
