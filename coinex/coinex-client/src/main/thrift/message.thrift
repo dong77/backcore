@@ -54,6 +54,7 @@ typedef data.CryptoCurrencyNetworkStatus        _CryptoCurrencyNetworkStatus
 typedef data.AddressStatusResult                _AddressStatusResult
 typedef data.CryptoAddress                      _CryptoAddress
 typedef data.TFeeConfig                         _TFeeConfig
+typedef data.Language                           _Language
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -278,7 +279,7 @@ typedef data.TFeeConfig                         _TFeeConfig
 
 ////////// notification
 /* C    */ struct SetNotification                         {1: _Notification notification}
-/* Q    */ struct QueryNotification                       {1: optional i64 id, 2: optional _NotificationType ntype, 3: optional bool getRemoved, 4: _Cursor cur}
+/* Q    */ struct QueryNotification                       {1: optional i64 id, 2: optional _NotificationType ntype, 3: optional bool getRemoved, 4: optional _Language lang, 5: _Cursor cur}
 /* R    */ struct QueryNotificationResult                 {1: list<_Notification> notifications, 2: i64 count}
 
 ////////// monitor
