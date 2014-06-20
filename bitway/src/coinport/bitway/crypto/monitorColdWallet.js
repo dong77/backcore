@@ -4,15 +4,11 @@
  *Filename: monitorColdWallet.js
  *Copyright 2014 Coinport Inc. All Rights Reserved.
  */
-var Bitcore                       = require('bitcore'),
-    Crypto                        = require('crypto'),
-    DataTypes                     = require('../../../../gen-nodejs/data_types'),
-    Currency                      = DataTypes.Currency;
+var Bitcore                       = require('bitcore');
 
 var program = require('commander');
 var Async = require('async');
 var fs = require('fs');
-var CryptoProxy = require('./crypto_proxy').CryptoProxy;
 var RpcClient   = require('bitcore').RpcClient;
 var dog = {
     cryptoRpcConfig: {
@@ -48,7 +44,7 @@ var timeBegin = new Date().getTime();
 
 var initData_ = function(callback) {
     program.parse(process.argv); 
-    currency = program.args[0]
+    currency = program.args[0];
     var config = new Object();
     switch (currency) {
         case 'btc':

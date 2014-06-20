@@ -48,6 +48,7 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
         opt_config.minConfirm != undefined && (this.minConfirm = opt_config.minConfirm);
         opt_config.checkInterval != undefined && (this.checkInterval = opt_config.checkInterval);
         opt_config.minerfee != undefined && (self.minerFee = opt_config.minerFee);
+        opt_config.walletPassPhrase != undefined && (self.walletPassPhrase = opt_config.walletPassPhrase);
     }
 
     this.currency || (this.currency = currency);
@@ -206,7 +207,7 @@ CryptoProxy.prototype.multi_transfer = function(request, callback) {
     var requestAarry = [];
     for (var key in request.transferInfos) {
         var singleRequest = new TransferCryptoCurrency({currency: self.currency, 
-            transferInfos: request.transferInfos[key], type: key});
+            transferInfos: request.transferInfos[key], type: Number(key)});
         requestAarry.push(singleRequest);
     }
     Async.map(requestAarry, self.transfer.bind(self), function(result) {
@@ -472,9 +473,23 @@ CryptoProxy.prototype.createRawTransaction_ = function(rawData, callback) {
     });
 }
 
-CryptoProxy.prototype.signTransaction_ = function(data, callback) {
+CryptoProxy.prototype.walletPassPhrase_ = function(callback) {
     var self = this;
-    this.rpc.signRawTransaction(data, function(error, signReply) {
+    this.rpc.walletPassPhrase(self.walletPassPhrase, 10,  function(error) {
+        callback(error);
+    });
+};
+
+CryptoProxy.prototype.walletLock_ = function(callback) {
+    var self = this;
+    this.rpc.walletLock(function(error) {
+        callback(error);
+    });
+};
+
+CryptoProxy.prototype.sign_ = function(message, callback) {
+    var self = this;
+    self.rpc.signRawTransaction(data, function(error, signReply) {
         if (error) {
             self.log.error("sign error: " + error);
             callback(error);
@@ -482,11 +497,35 @@ CryptoProxy.prototype.signTransaction_ = function(data, callback) {
             callback(null, signReply.result.hex);
         }
     });
+};
+
+CryptoProxy.prototype.signTransaction_ = function(data, callback) {
+    var self = this;
+    if (self.walletPassPhrase) {
+        Async.series([
+            function(cb) {
+                walletPassPhrase_.bind(self)(cb)},
+            function(cb) {
+                sign_.bind(self)(data, cb)},
+            function(cb) {
+            walletLock_.bind(self)(cb)}
+        ], function(err, values) {
+            if (err) {
+                self.log.error(err);
+                callback(err, null);
+            } else {
+                callback(null, values[1]);
+            }
+        });
+    } else {
+        self.log.warn("no password!");
+        sign_.bind(self)(data, callback);
+    }
 }
 
-CryptoProxy.prototype.sendTransaction_ = function(hex, callback) {
+CryptoProxy.prototype.send_ = function(hex, callback) {
     var self = this;
-    this.rpc.sendRawTransaction(hex, function(error, sendReply) {
+    self.rpc.sendRawTransaction(hex, function(error, sendReply) {
         if (error) {
             self.log.error("send error: " + error);
             callback(error);
@@ -495,6 +534,30 @@ CryptoProxy.prototype.sendTransaction_ = function(hex, callback) {
             callback(null, sendReply.result);
         }
     });
+};
+
+CryptoProxy.prototype.sendTransaction_ = function(hex, callback) {
+    var self = this;
+    if (self.walletPassPhrase) {
+        Async.series([
+            function(cb) {
+                walletPassPhrase_.bind(self)(cb)},
+            function(cb) {
+                send_.bind(self)(hex, cb)},
+            function(cb) {
+            walletLock_.bind(self)(cb)}
+        ], function(err, values) {
+            if (err) {
+                self.log.error(err);
+                callback(err, null);
+            } else {
+                callback(null, values[1]);
+            }
+        });
+    } else {
+        self.log.warn("no password!");
+        send_.bind(self)(hex, callback);
+    }
 };
 
 CryptoProxy.prototype.calTotalPay_ = function(transferReq) {

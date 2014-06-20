@@ -6,7 +6,7 @@
 var CryptoAgentManager = require('./crypto/crypto_agent_manager').CryptoAgentManager,
     DataTypes          = require('../../../gen-nodejs/data_types'),
     Currency           = DataTypes.Currency;
-
+var program = require('commander');
 var btc = {
     currency: Currency.BTC,
     cryptoConfig: {
@@ -70,7 +70,14 @@ var dog = {
 var configs = [ btc, ltc, dog ];
 // var configs = [ btc ];
 // var configs = [ dog ];
-
+program.parse(process.argv);
+if (program.args.lenght != configs.length) {
+    console.log("The num of the passwords isn't correct!");
+} else {
+    for (var i = 0; i < program.args.lenght; i++) {
+        configs[i].cryptoConfig.walletPassPhrase = program.args[0];
+    }
+}
 var manager = new CryptoAgentManager(configs);
 manager.start();
 
