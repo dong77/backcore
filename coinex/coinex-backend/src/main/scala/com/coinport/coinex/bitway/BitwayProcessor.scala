@@ -221,7 +221,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       val MultiTransferCryptoCurrency(currency, transferInfos) = m
       val (passedInfos, failedInfos) = transferInfos.map { kv =>
         (kv._1 -> manager.completeTransferInfos(kv._2, kv._1 == TransferType.HotToCold))
-      }.partition(kv => (kv._2._2 == true) && (manager.includeWithdrawalToDepositAddress(kv._2._1)))
+      }.partition(kv => (!kv._2._2) && (!manager.includeWithdrawalToDepositAddress(kv._2._1)))
       if (failedInfos.size > 0) {
         sender ! MultiTransferCryptoCurrencyResult(currency, ErrorCode.AddressFail,
           Some(failedInfos.map(kv => (kv._1 -> kv._2._1))))
