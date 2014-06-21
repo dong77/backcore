@@ -205,7 +205,7 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int)
     isHotToCold: Boolean = false): (List[CryptoCurrencyTransferInfo], Boolean /* isFail */ ) = {
     if (isHotToCold) {
       if (addresses(Cold).isEmpty) {
-        (Nil, true)
+        (infos.toList, true)
       } else {
         (infos.map(info => info.copy(amount = info.internalAmount.map((new CurrencyWrapper(_).externalValue(
           supportedCurrency))), to = Some(addresses(Cold).head))).toList, false)
