@@ -487,7 +487,7 @@ CryptoProxy.prototype.walletLock_ = function(callback) {
     });
 };
 
-CryptoProxy.prototype.sign_ = function(message, callback) {
+CryptoProxy.prototype.sign_ = function(data, callback) {
     var self = this;
     self.rpc.signRawTransaction(data, function(error, signReply) {
         if (error) {
@@ -504,11 +504,11 @@ CryptoProxy.prototype.signTransaction_ = function(data, callback) {
     if (self.walletPassPhrase) {
         Async.series([
             function(cb) {
-                walletPassPhrase_.bind(self)(cb)},
+                self.walletPassPhrase_.bind(self)(cb)},
             function(cb) {
-                sign_.bind(self)(data, cb)},
+                self.sign_.bind(self)(data, cb)},
             function(cb) {
-            walletLock_.bind(self)(cb)}
+                self.walletLock_.bind(self)(cb)}
         ], function(err, values) {
             if (err) {
                 self.log.error(err);
@@ -519,7 +519,7 @@ CryptoProxy.prototype.signTransaction_ = function(data, callback) {
         });
     } else {
         self.log.warn("no password!");
-        sign_.bind(self)(data, callback);
+        self.sign_.bind(self)(data, callback);
     }
 }
 
@@ -541,11 +541,11 @@ CryptoProxy.prototype.sendTransaction_ = function(hex, callback) {
     if (self.walletPassPhrase) {
         Async.series([
             function(cb) {
-                walletPassPhrase_.bind(self)(cb)},
+                self.walletPassPhrase_.bind(self)(cb)},
             function(cb) {
-                send_.bind(self)(hex, cb)},
+                self.send_.bind(self)(hex, cb)},
             function(cb) {
-            walletLock_.bind(self)(cb)}
+                self.walletLock_.bind(self)(cb)}
         ], function(err, values) {
             if (err) {
                 self.log.error(err);
@@ -556,7 +556,7 @@ CryptoProxy.prototype.sendTransaction_ = function(hex, callback) {
         });
     } else {
         self.log.warn("no password!");
-        send_.bind(self)(hex, callback);
+        self.send_.bind(self)(hex, callback);
     }
 };
 
