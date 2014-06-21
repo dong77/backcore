@@ -11,7 +11,6 @@ var Bitcore                       = require('bitcore'),
 var program = require('commander');
 var Async = require('async');
 var fs = require('fs');
-var CryptoProxy = require('./crypto_proxy').CryptoProxy;
 var RpcClient   = require('bitcore').RpcClient;
 var btc = {
     cryptoRpcConfig: {

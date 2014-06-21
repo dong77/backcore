@@ -18,7 +18,7 @@ var dog = {
         host: '127.0.0.1',
         port: '44555',
     },
-    height: 112750,
+    height: 117750,
 };
 var btc = {
     cryptoRpcConfig: {
@@ -115,6 +115,8 @@ var readFile_ = function(callback) {
 };
 
 var countTotalAmount_ = function(record) {
+    record.txHistory.unspentAmount = 0;
+    record.txHistory.spentAmount = 0;
     if (record.txHistory.recieves) {
         for (var i = 0; i < record.txHistory.recieves.length; i++)
         {
@@ -132,8 +134,6 @@ var countTotalAmount_ = function(record) {
 var writeHistoryFile_ = function(record, callback) {
     var fileName = './coldWallet/' + record.address;
     record.txHistory.latestHeight = latest;
-    record.txHistory.unspentAmount = 0;
-    record.txHistory.spentAmount = 0;
     console.log('write file: ', fileName);
     console.log('record: %j', record);
     var str = JSON.stringify(countTotalAmount_(record));
