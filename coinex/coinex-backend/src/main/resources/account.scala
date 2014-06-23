@@ -4,6 +4,7 @@
  */
 
 import com.coinport.coinex.accounts._
+import com.coinport.coinex.api.model._
 import com.coinport.coinex.common._
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Currency._
@@ -19,10 +20,11 @@ AccountConfig(
 
     robotFeeRules = Map(
       TRAILING_STOP_ORDER_ROBOT_TYPE -> PercentageFee(0.003),
-      STOP_ORDER_ROBOT_TYPE -> ConstantFee(10)),
+      STOP_ORDER_ROBOT_TYPE -> PercentageFee(0.002)),
 
     transferFeeRules = Map(
-      Btc -> ConstantFee(1),
+      Btc -> ConstantFee(0.0002.internalValue(Btc)),
+      Dog -> ConstantFee(0.0002.internalValue(Dog)),
       Cny -> PercentageFee(0.002))),
 
   hotColdTransfer = Map(
