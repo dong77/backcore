@@ -20,7 +20,7 @@ object BlockContinuityEnum extends Enumeration {
   val SUCCESSOR, GAP, REORG, OTHER_BRANCH, DUP, BAD = Value
 }
 
-class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int)
+class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, coldAddresses: List[String])
     extends Manager[TBitwayState] with Logging {
 
   import CryptoCurrencyAddressType._
@@ -42,6 +42,10 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int)
 
   val FAUCET_THRESHOLD: Double = 0.5
   val INIT_ADDRESS_NUM: Int = 100
+
+  if (coldAddresses.nonEmpty)
+    faucetAddress(CryptoCurrencyAddressType.Cold,
+      Set.empty[CryptoAddress] ++ coldAddresses.map(CryptoAddress(_)))
 
   def getSnapshot = TBitwayState(
     supportedCurrency,
@@ -72,6 +76,10 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int)
       privateKeysBackup.clear
       privateKeysBackup ++= s.privateKeysBackup.get
     }
+
+    if (coldAddresses.nonEmpty)
+      faucetAddress(CryptoCurrencyAddressType.Cold,
+        Set.empty[CryptoAddress] ++ coldAddresses.map(CryptoAddress(_)))
   }
 
   def isDryUp = addresses(Unused).size == 0 || addresses(User).size > addresses(Unused).size * FAUCET_THRESHOLD

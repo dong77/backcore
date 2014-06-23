@@ -45,7 +45,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
   override val processorId = BITWAY_PROCESSOR << supportedCurrency
   val channelToTransferProcessor = createChannelTo(ACCOUNT_TRANSFER_PROCESSOR <<) // DO NOT CHANGE
 
-  val manager = new BitwayManager(supportedCurrency, config.maintainedChainLength)
+  val manager = new BitwayManager(supportedCurrency, config.maintainedChainLength, config.coldAddresses)
 
   override def preStart() = {
     super.preStart
