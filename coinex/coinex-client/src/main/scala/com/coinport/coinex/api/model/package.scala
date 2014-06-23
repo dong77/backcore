@@ -156,8 +156,9 @@ package object model {
     val created = t.created.getOrElse(0L)
     val updated = t.updated.getOrElse(0L)
     val operation = t.`type`.getValue
+    val txid = t.txid.getOrElse("")
 
-    ApiTransferItem(id, uid, amount, status, created, updated, operation, t.address.getOrElse(""), t.confirm.getOrElse(0L).toInt)
+    ApiTransferItem(id, uid, amount, status, created, updated, operation, t.address.getOrElse(""), txid)
   }
 
   def fromMarketDepth(depth: MarketDepth) = {

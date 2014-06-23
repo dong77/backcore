@@ -24,7 +24,7 @@ case class ApiOrderState(oid: String, uid: String, preAmount: CurrencyObject, cu
 
 case class ApiAssetItem(uid: String, assetMap: Map[String, CurrencyObject], amountMap: Map[String, CurrencyObject], priceMap: Map[String, PriceObject], timestamp: Long)
 
-case class ApiTransferItem(id: String, uid: String, amount: CurrencyObject, status: Int, created: Long, updated: Long, operation: Int, address: String, confirm: Int)
+case class ApiTransferItem(id: String, uid: String, amount: CurrencyObject, status: Int, created: Long, updated: Long, operation: Int, address: String, txid: String)
 
 case class ApiPagingWrapper(skip: Int, limit: Int, items: Any, count: Int)
 
