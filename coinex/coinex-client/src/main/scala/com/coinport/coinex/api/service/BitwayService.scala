@@ -29,12 +29,15 @@ object BitwayService extends AkkaService {
   def getWallets(currency: Currency, addressType: CryptoCurrencyAddressType) = {
     backend ? QueryCryptoCurrencyAddressStatus(currency, addressType) map {
       case result: QueryCryptoCurrencyAddressStatusResult =>
+        var accumulatedAmount = 0L
         val data = result.status.map {
           case kv =>
+            accumulatedAmount += kv._2.confirmedAmount
             ApiWallet(
               currency = currency,
               address = kv._1,
               amount = CurrencyObject(currency, kv._2.confirmedAmount),
+              accumulated = CurrencyObject(currency, accumulatedAmount),
               walletType = addressType.toString.toLowerCase,
               lastTx = kv._2.txid,
               height = kv._2.height
