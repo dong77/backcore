@@ -121,9 +121,9 @@ var countTotalAmount_ = function(record) {
         for (var i = 0; i < record.txHistory.recieves.length; i++)
         {
             if (record.txHistory.recieves[i].unSpent) {
-                record.txHistory.unspentAmount += Number(record.txHistory.recieves[i].value);
+                record.txHistory.unspentAmount += jsonToAmount_(Number(record.txHistory.recieves[i].value));
             } else {
-                record.txHistory.spentAmount += Number(record.txHistory.recieves[i].value);
+                record.txHistory.spentAmount += jsonToAmount_(Number(record.txHistory.recieves[i].value));
             }
 
         }

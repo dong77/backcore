@@ -4,10 +4,7 @@
  *Filename: makeRawTxOffline.js
  *Copyright 2014 Coinport Inc. All Rights Reserved.
  */
-var Bitcore                       = require('bitcore'),
-    Crypto                        = require('crypto'),
-    DataTypes                     = require('../../../../gen-nodejs/data_types');
-
+var Bitcore = require('bitcore');
 var program = require('commander');
 var Async = require('async');
 var fs = require('fs');
@@ -118,17 +115,17 @@ var constructRawData_ = function(callback) {
             transactions.push(transaction);
             var prevTx = {txid: recieves[i].txid, vout: recieves[i].n, scriptPubKey: recieves[i].hex};
             prevTxs.push(prevTx);
-            if (spentAmount > jsonToAmount_(Number(amount) + Number(minerFee))
-                || spentAmount == jsonToAmount_(Number(amount) + Number(minerFee))) {
+            if (spentAmount > jsonToAmount_(Number(amount))
+                || spentAmount == jsonToAmount_(Number(amount))) {
                 break;
             }
         }
     }
     console.log('spentAmout:', spentAmount);
     console.log('minerFee:', minerFee);
-    addresses[destAddr] = Number(amount);
-    if (spentAmount > jsonToAmount_(Number(amount) + Number(minerFee))) {
-        addresses[coldAddr] = jsonToAmount_(Number(spentAmount) - Number(amount) - Number(minerFee));
+    addresses[destAddr] = jsonToAmount_(Number(amount) - Number(minerFee));
+    if (spentAmount > jsonToAmount_(Number(amount))) {
+        addresses[coldAddr] = jsonToAmount_(Number(spentAmount) - Number(amount));
     }
     var rawData = {transactions: transactions, addresses: addresses};
     callback();
