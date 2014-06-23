@@ -85,6 +85,10 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
           BitwayRequestType.SyncHotAddresses, currency, syncHotAddresses = Some(
             SyncHotAddresses(supportedCurrency)))))
       }
+    case m @ CleanBlockChain(currency) =>
+      persist(m) { event =>
+        updateState(event)
+      }
 
     case m @ AdjustAddressAmount(currency, address, adjustAmount) =>
       if (manager.canAdjustAddressAmount(address, adjustAmount)) {
@@ -263,6 +267,8 @@ trait BitwayManagerBehavior {
     case BitwayMessage(currency, None, None, None, Some(res)) =>
       if (res.addresses.size > 0)
         manager.syncHotAddresses(Set.empty[CryptoAddress] ++ res.addresses)
+    case CleanBlockChain(currency) =>
+      manager.cleanBlockChain()
     case e => println("bitway updateState doesn't handle the message: ", e)
   }
 }

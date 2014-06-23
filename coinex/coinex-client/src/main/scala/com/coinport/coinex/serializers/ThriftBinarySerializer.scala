@@ -78,6 +78,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cBitwayMessage = BinaryScalaCodec(BitwayMessage)
   lazy val _cBitwayRequest = BinaryScalaCodec(BitwayRequest)
   lazy val _cCancelOrderFailed = BinaryScalaCodec(CancelOrderFailed)
+  lazy val _cCleanBlockChain = BinaryScalaCodec(CleanBlockChain)
   lazy val _cCryptoCurrencyBlockMessage = BinaryScalaCodec(CryptoCurrencyBlockMessage)
   lazy val _cCryptoTransferFailed = BinaryScalaCodec(CryptoTransferFailed)
   lazy val _cCryptoTransferResult = BinaryScalaCodec(CryptoTransferResult)
@@ -268,6 +269,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: BitwayMessage => _cBitwayMessage(m)
     case m: BitwayRequest => _cBitwayRequest(m)
     case m: CancelOrderFailed => _cCancelOrderFailed(m)
+    case m: CleanBlockChain => _cCleanBlockChain(m)
     case m: CryptoCurrencyBlockMessage => _cCryptoCurrencyBlockMessage(m)
     case m: CryptoTransferFailed => _cCryptoTransferFailed(m)
     case m: CryptoTransferResult => _cCryptoTransferResult(m)
@@ -462,6 +464,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[BitwayMessage.Immutable] => _cBitwayMessage.invert(bytes).get
     case Some(c) if c == classOf[BitwayRequest.Immutable] => _cBitwayRequest.invert(bytes).get
     case Some(c) if c == classOf[CancelOrderFailed.Immutable] => _cCancelOrderFailed.invert(bytes).get
+    case Some(c) if c == classOf[CleanBlockChain.Immutable] => _cCleanBlockChain.invert(bytes).get
     case Some(c) if c == classOf[CryptoCurrencyBlockMessage.Immutable] => _cCryptoCurrencyBlockMessage.invert(bytes).get
     case Some(c) if c == classOf[CryptoTransferFailed.Immutable] => _cCryptoTransferFailed.invert(bytes).get
     case Some(c) if c == classOf[CryptoTransferResult.Immutable] => _cCryptoTransferResult.invert(bytes).get

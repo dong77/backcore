@@ -192,6 +192,7 @@ typedef data.Language                           _Language
 /* R    */ struct AdjustAddressAmountResult               {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: string address, 4: optional i64 adjustAmount}
 
 ////////// Bitway nodejs
+/* C    */ struct CleanBlockChain                         {1: _Currency currency} // use this only if want re-start up from fatal new branch error. and must make sure the new coming block height is higher than previous highest block height
 /* C    */ struct SyncHotAddresses                        {1: _Currency currency}
 /* R    */ struct SyncHotAddressesResult                  {1: _ErrorCode error, 2: set<_CryptoAddress> addresses}
 /* C    */ struct GetMissedCryptoCurrencyBlocks           {1: list<_BlockIndex> startIndexs, 2: _BlockIndex endIndex} // returned (startIndex, endIndex]

@@ -333,6 +333,10 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
       faucetAddress(Hot, unseenAddresses)
   }
 
+  def cleanBlockChain() {
+    blockIndexes.clear
+  }
+
   private def getCurrentHeight: Option[Long] = {
     blockIndexes.lastOption match {
       case None => None
