@@ -1,7 +1,9 @@
-cd ~/coinport/backcore/coinex
+cd /var/coinport/code/backcore/coinex
 git fetch
 git checkout -b $1 remotes/origin/$1
 git rebase origin/$1
+branch=`git branch | grep "*" | awk '{print $2}'`
+echo "current branch is "$branch
 ./activator clean
 ./activator assembly
-cp ~/coinport/backcore/coinex/coinex-backend/target/scala-2.10/coinex-backend-assembly-* ~/coinport/coinex-backend/
+cp coinex-backend/target/scala-2.10/coinex-backend-assembly-* /var/coinport/backend/
