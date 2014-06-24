@@ -52,7 +52,6 @@ class UserProcessor(mailer: ActorRef, secret: String)
     case m @ DoUpdateUserProfile(userProfile) =>
       manager.getUser(userProfile.email) match {
         case Some(profile) =>
-          sender ! UpdateUserProfileSucceeded(profile)
           val newProfile = profile.copy(
             realName = if (userProfile.realName.isDefined) userProfile.realName else profile.realName,
             nationalId = if (userProfile.nationalId.isDefined) userProfile.nationalId else profile.nationalId,
@@ -62,6 +61,7 @@ class UserProcessor(mailer: ActorRef, secret: String)
             depositAddresses = Some(profile.depositAddresses.getOrElse(Map.empty) ++ userProfile.depositAddresses.getOrElse(Map.empty)),
             withdrawalAddresses = Some(profile.withdrawalAddresses.getOrElse(Map.empty) ++ userProfile.withdrawalAddresses.getOrElse(Map.empty))
           )
+          sender ! UpdateUserProfileSucceeded(newProfile)
           persist(DoUpdateUserProfile(newProfile))(updateState)
         case None =>
           sender ! UpdateUserProfileFailed(UserNotExist)
@@ -88,6 +88,26 @@ class UserProcessor(mailer: ActorRef, secret: String)
           sender ! ResetPasswordSucceeded(profile.id, profile.email)
         case _ =>
           sender ! ResetPasswordFailed(TokenNotMatch)
+      }
+
+    case m @ DoSuspendUser(uid) =>
+      manager.profileMap.get(uid) match {
+        case Some(profile) =>
+          val newProfile = profile.copy(status = UserStatus.Suspended)
+          sender ! SuspendUserResult(Some(newProfile))
+          persist(DoUpdateUserProfile(newProfile))(updateState)
+        case _ =>
+          sender ! SuspendUserResult(None)
+      }
+
+    case m @ DoResumeUser(uid) =>
+      manager.profileMap.get(uid) match {
+        case Some(profile) =>
+          val newProfile = profile.copy(status = UserStatus.Normal)
+          sender ! ResumeUserResult(Some(newProfile))
+          persist(DoUpdateUserProfile(newProfile))(updateState)
+        case _ =>
+          sender ! ResumeUserResult(None)
       }
 
     case m @ VerifyEmail(token) =>

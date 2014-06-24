@@ -101,6 +101,12 @@ typedef data.Language                           _Language
 /* Q    */ struct ValidatePasswordResetToken              {1: string passwordResetToken}
 /* R    */ struct PasswordResetTokenValidationResult      {1: optional _UserProfile userProfile}
 
+/* Q    */ struct DoSuspendUser                           {1: i64 userId}
+/* R    */ struct SuspendUserResult                       {1: optional _UserProfile userProfile}
+
+/* Q    */ struct DoResumeUser                            {1: i64 userId}
+/* R    */ struct ResumeUserResult                        {1: optional _UserProfile userProfile}
+
 /* C,P  */ struct DoResetPassword                         {1: string newPassword, 2: string passwordResetToken}
 /* R-   */ struct ResetPasswordFailed                     {1: _ErrorCode error}
 /* R+   */ struct ResetPasswordSucceeded                  {1: i64 id, 2: string email}
