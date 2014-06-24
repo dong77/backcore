@@ -25,13 +25,13 @@ echo "newest admin branch is "$branch
 # 2. generate new tar and zip package for backend & frontend & admin
 
 # generate coinex-backend tar package
-ssh -i ~/work/xiaolu.pem ubuntu@54.238.180.101 "/var/coinport/code/backcore/coinex/shell/deploy/generateTar.sh $1"
+ssh -i ~/work/xiaolu.pem ubuntu@54.238.180.101 "/var/coinport/code/backcore/coinex/shell/deploy/generateTar.sh $branch"
 
 # generate frontend zip package
-ssh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/frontend/exchange/shell/prod_generateZip.sh $1"
+ssh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/frontend/exchange/shell/prod_generateZip.sh $branch"
 
 # generate admin zip package
-ssh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/admin/shell/prod_generateZip.sh $1"
+ssh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/admin/shell/prod_generateZip.sh $branch"
 
 #-------------------------------------------------------------------
 # 3. restart service
@@ -46,8 +46,8 @@ ssh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/frontend/excha
 ssh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/frontend/exchange/shell/prod_start.sh"
 
 # restart coinport-frontend
-ssh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/admin/exchange/shell/stop.sh"
-ssh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/admin/exchange/shell/prod_start.sh"
+ssh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/admin/shell/stop.sh"
+ssh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/admin/shell/prod_start.sh"
 
 #-------------------------------------------------------------------
 # 4. confirm the deploy
