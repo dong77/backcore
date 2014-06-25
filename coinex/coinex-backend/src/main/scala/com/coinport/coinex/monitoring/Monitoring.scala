@@ -28,6 +28,9 @@ import akka.cluster.Cluster
 import akka.actor.Terminated
 import com.typesafe.config.Config
 import scala.collection.mutable.Set
+import scala.concurrent.Future
+import scala.concurrent.Await
+import java.util.concurrent.TimeoutException
 
 /**
  * TODO(d): finish this class.
@@ -54,7 +57,6 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config, allPat
     case QueryActiveActors() => {
       log.debug("start the actor state fetch")
       sender ! QueryActiveActorsResult(fetchAllActiveState)
-      log.debug("finish the actor state fetch")
     }
   }
 
@@ -95,27 +97,16 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config, allPat
   def fetchAllActiveState: Map[String, Seq[String]] = {
 
     var statesMap = Map.empty[String, Seq[String]]
-    var sendNum = 0
-    var getNum = 0
-
     cluster.state.members map { c =>
       var statesSeq = Set.empty[String]
       allPaths map { p =>
-        sendNum += 1
-        val f = cluster.system.actorSelection(c.address.toString + "/user/" + p).resolveOne(2 seconds)
-        f onSuccess {
-          case m => {
-            getNum += 1
-            statesSeq += m.path.toStringWithoutAddress
-          }
+        val f = cluster.system.actorSelection(c.address.toString + "/user/" + p).resolveOne(1 seconds)
+        try {
+          statesSeq += f.await(0.1 second).path.toStringWithoutAddress
+        } catch {
+          case e: TimeoutException => log.info("get actor timeout")
+          case m: Throwable => log.info(m.toString)
         }
-        f onFailure {
-          case m => getNum += 1
-        }
-      }
-      while (sendNum != getNum) {
-        Thread.sleep(10)
-        // do nothing
       }
       statesMap += c.address.toString -> statesSeq.toSeq
     }
