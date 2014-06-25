@@ -108,13 +108,13 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config, allPat
     futures foreach {
       case f => {
         try {
-          val actor = f._2.await(1 second)
           val k = f._1
-          val v = actor.path.toStringWithoutAddress
-
           if (!statesMap.contains(k)) {
             statesMap += k -> Seq.empty[String]
           }
+          val actor = f._2.await(1 second)
+          val v = actor.path.toStringWithoutAddress
+
           var statesSeq = Seq.empty[String]
           if (statesMap.get(k).isDefined) {
             statesSeq = statesMap.get(k).get
