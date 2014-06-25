@@ -40,7 +40,7 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config, allPat
   val actorRefFactory = context
   implicit def executionContext = context.dispatcher
   implicit val formats = native.Serialization.formats(NoTypeHints)
-  implicit val timeout: Timeout = 1 second
+  implicit val timeout: Timeout = 2 second
 
   override def preStart = {
     super.preStart()
@@ -97,18 +97,37 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config, allPat
   def fetchAllActiveState: Map[String, Seq[String]] = {
 
     var statesMap = Map.empty[String, Seq[String]]
+    var futures = Set.empty[(String, Future[ActorRef])]
     cluster.state.members map { c =>
-      var statesSeq = Set.empty[String]
       allPaths map { p =>
-        val f = cluster.system.actorSelection(c.address.toString + "/user/" + p).resolveOne(1 seconds)
+        val future = (c.address.toString, cluster.system.actorSelection(c.address.toString + "/user/" + p).resolveOne(1 seconds))
+        futures += future
+      }
+    }
+
+    futures foreach {
+      case f => {
         try {
-          statesSeq += f.await(0.1 second).path.toStringWithoutAddress
+          val actor = f._2.await(1 second)
+          val k = f._1
+          val v = actor.path.toStringWithoutAddress
+
+          if (!statesMap.contains(k)) {
+            statesMap += k -> Seq.empty[String]
+          }
+          var statesSeq = Seq.empty[String]
+          if (statesMap.get(k).isDefined) {
+            statesSeq = statesMap.get(k).get
+            println(statesSeq)
+          }
+          statesSeq = statesSeq.+:(v)
+          statesMap += k -> statesSeq.toSeq
+
         } catch {
           case e: TimeoutException => log.info("get actor timeout")
           case m: Throwable => log.info(m.toString)
         }
       }
-      statesMap += c.address.toString -> statesSeq.toSeq
     }
     statesMap
   }
