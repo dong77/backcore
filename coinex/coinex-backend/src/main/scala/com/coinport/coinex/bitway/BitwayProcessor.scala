@@ -286,25 +286,26 @@ class BitwayReceiver(bitwayProcessor: ActorRef, supportedCurrency: Currency, con
 
   override def preStart = {
     super.preStart
-    listenAtRedis()
+    listenAtRedis(10)
   }
 
   def receive = LoggingReceive {
     case ListenAtRedis =>
       if (client.isDefined) {
-        client.get.blpop[String, Array[Byte]](1, getResponseChannel) match {
+        client.get.lpop[Array[Byte]](getResponseChannel) match {
           case Some(s) =>
-            val response = serializer.fromBinary(s._2, classOf[BitwayMessage.Immutable])
+            val response = serializer.fromBinary(s, classOf[BitwayMessage.Immutable])
             bitwayProcessor ! response
-          case None => None
+            listenAtRedis()
+          case None =>
+            listenAtRedis(5)
         }
-        listenAtRedis()
       }
   }
 
   def getResponseChannel = config.responseChannelPrefix + supportedCurrency.value.toString
 
-  private def listenAtRedis() {
-    context.system.scheduler.scheduleOnce(0 seconds, self, ListenAtRedis)(context.system.dispatcher)
+  private def listenAtRedis(timeout: Long = 0) {
+    context.system.scheduler.scheduleOnce(timeout seconds, self, ListenAtRedis)(context.system.dispatcher)
   }
 }
