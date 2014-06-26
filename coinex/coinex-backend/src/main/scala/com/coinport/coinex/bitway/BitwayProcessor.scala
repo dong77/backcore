@@ -165,7 +165,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       }
     case m @ BitwayMessage(currency, None, None, Some(blockMsg), None, None) =>
       val continuity = manager.getBlockContinuity(blockMsg)
-      log.info("receive new block: " + blockMsg.block.index + " which recognizied as " + continuity)
+      log.info("receive new block: " + blockMsg + " which recognizied as " + continuity)
       log.info("maintained index list is: " + manager.getBlockIndexes)
       continuity match {
         case DUP => log.info("receive block which has been seen: " + blockMsg.block.index)
