@@ -48,7 +48,7 @@ var ltc = {
 };
 
 var dog = {
-    currency: Currency.DOG,
+    currency: Currency.DOGE,
     cryptoConfig: {
         cryptoRpcConfig: {
             protocol: 'http',
@@ -61,7 +61,7 @@ var dog = {
         checkInterval : 5000
     },
     redisProxyConfig: {
-        currency: Currency.DOG,
+        currency: Currency.DOGE,
         ip: 'bitway',
         port: '6379',
     }

@@ -8,7 +8,7 @@
 //'BTC' : 1000,
 //'LTC' : 1010,
 //'PTS' : 1200,
-//'DOG' : 1100
+//'DOGE' : 1100
 
 //TRACE,
 //DEBUG,
@@ -41,7 +41,7 @@ log4js.configure({
         },
         {
             type: "dateFile",
-            filename: 'logs/DOG.log',
+            filename: 'logs/DOGE.log',
             pattern: "-yyyy-MM-dd",
             alwaysIncludePattern: true,
             category: "1100"

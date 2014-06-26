@@ -141,7 +141,7 @@ describe('crypto proxy', function() {
     describe('constructRawTransaction_', function() {
         it('withdrawal/hot to cold success', function(done) {
             var redisClient = new MockRedis();
-            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+            var cryptoProxy = new CryptoProxy(Currency.DOGE, {
                 cryptoRpc: new MockDogRpc({blockCount: 93721}),
                 minConfirm: 1,
                 redis: redisClient
@@ -151,7 +151,7 @@ describe('crypto proxy', function() {
             var transferInfos = [];
             transferInfos.push(transferInfoA);
             transferInfos.push(transferInfoB);
-            var request = {currency: Currency.DOG, transferInfos: transferInfos, type: TransferType.WITHDRAWAL};
+            var request = {currency: Currency.DOGE, transferInfos: transferInfos, type: TransferType.WITHDRAWAL};
             cryptoProxy.constructRawTransaction_(request, function(error, rawData) {
                 Assert.deepEqual(rawData.transactions, [
                     {"txid":"6ea96574c2325dd1c2bd00f3d6e8b34dfbedb72593e34f4f15f67cb6295d8cf5","vout":0},
@@ -162,7 +162,7 @@ describe('crypto proxy', function() {
 
         it('withdrawal/hot to cold fail', function(done) {
             var redisClient = new MockRedis();
-            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+            var cryptoProxy = new CryptoProxy(Currency.DOGE, {
                 cryptoRpc: new MockDogRpc({blockCount: 93721}),
                 minConfirm: 1,
                 redis: redisClient
@@ -172,7 +172,7 @@ describe('crypto proxy', function() {
             var transferInfos = [];
             transferInfos.push(transferInfoA);
             transferInfos.push(transferInfoB);
-            var request = {currency: Currency.DOG, transferInfos: transferInfos, type: TransferType.WITHDRAWAL};
+            var request = {currency: Currency.DOGE, transferInfos: transferInfos, type: TransferType.WITHDRAWAL};
             cryptoProxy.constructRawTransaction_(request, function(error, rawData) {
                 Assert.equal(error.code, "Lack of balance!");
                 Assert.equal(error.message, "Lack of balance!");
@@ -183,7 +183,7 @@ describe('crypto proxy', function() {
 
         it('user to hot(single address)', function(done) {
             var redisClient = new MockRedis();
-            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+            var cryptoProxy = new CryptoProxy(Currency.DOGE, {
                 cryptoRpc: new MockDogRpc({blockCount: 93721}),
                 minConfirm: 1,
                 redis: redisClient
@@ -191,7 +191,7 @@ describe('crypto proxy', function() {
             var transferInfoA = {from: "nmoEYptTPTRfzn9U8x58q97vioduyS98dE", to: "", amount: 15, id: '10001'};
             var transferInfos = [];
             transferInfos.push(transferInfoA);
-            var request = {currency: Currency.DOG, transferInfos: transferInfos, type: TransferType.USER_TO_HOT};
+            var request = {currency: Currency.DOGE, transferInfos: transferInfos, type: TransferType.USER_TO_HOT};
             cryptoProxy.constructRawTransaction_(request, function(error, rawData) {
                 Assert.equal(error, null);
                 Assert.deepEqual(rawData.transactions, [{"txid":"f72cf190df6c13b704c4830fc043a4b7b0ef56ad3d4bcf0324928365dd82cfdc","vout":0},
@@ -211,7 +211,7 @@ describe('crypto proxy', function() {
 
         it('user to hot(duplicate addresses)', function(done) {
             var redisClient = new MockRedis();
-            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+            var cryptoProxy = new CryptoProxy(Currency.DOGE, {
                 cryptoRpc: new MockDogRpc({blockCount: 93721}),
                 minConfirm: 1,
                 redis: redisClient
@@ -221,7 +221,7 @@ describe('crypto proxy', function() {
             var transferInfos = [];
             transferInfos.push(transferInfoA);
             transferInfos.push(transferInfoB);
-            var request = {currency: Currency.DOG, transferInfos: transferInfos, type: TransferType.USER_TO_HOT};
+            var request = {currency: Currency.DOGE, transferInfos: transferInfos, type: TransferType.USER_TO_HOT};
             cryptoProxy.constructRawTransaction_(request, function(error, rawData) {
                 Assert.equal(error, null);
                 Assert.deepEqual(rawData.transactions, [{"txid":"f72cf190df6c13b704c4830fc043a4b7b0ef56ad3d4bcf0324928365dd82cfdc","vout":0},
@@ -233,7 +233,7 @@ describe('crypto proxy', function() {
 
         it('user to hot(multi addresses)', function(done) {
             var redisClient = new MockRedis();
-            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+            var cryptoProxy = new CryptoProxy(Currency.DOGE, {
                 cryptoRpc: new MockDogRpc({blockCount: 93721}),
                 minConfirm: 1,
                 redis: redisClient
@@ -245,7 +245,7 @@ describe('crypto proxy', function() {
             transferInfos.push(transferInfoA);
             transferInfos.push(transferInfoB);
             transferInfos.push(transferInfoC);
-            var request = {currency: Currency.DOG, transferInfos: transferInfos, type: TransferType.USER_TO_HOT};
+            var request = {currency: Currency.DOGE, transferInfos: transferInfos, type: TransferType.USER_TO_HOT};
             cryptoProxy.constructRawTransaction_(request, function(error, rawData) {
                 Assert.equal(error, null);
                 Assert.deepEqual(rawData.transactions, [{"txid":"57048399a409eb0778f478e9702b0adcbf4e05726da5659f0dc41606ec9616fb","vout":1},
@@ -271,7 +271,7 @@ describe('crypto proxy', function() {
     describe('getMissedBlocks', function() {
         it('get missed blocks', function(done) {
             var redisClient = new MockRedis();
-            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+            var cryptoProxy = new CryptoProxy(Currency.DOGE, {
                 cryptoRpc: new MockDogRpc({blockCount: 93721}),
                 minConfirm: 1,
                 redis: redisClient
@@ -284,7 +284,7 @@ describe('crypto proxy', function() {
             var endIndex = new BlockIndex({id: 'd661700668f723ea29be1461d6dedd4cd27c52480896ab368fad1100d15f35a5', height:93721});
             var request = new GetMissedCryptoCurrencyBlocks({startIndexs: startIndexs, endIndex: endIndex});
             cryptoProxy.getMissedBlocks(request, function(error, message) {
-                Assert.equal(message.currency, Currency.DOG);
+                Assert.equal(message.currency, Currency.DOGE);
                 Assert.equal(message.blockMsg.reorgIndex.id, "05a23efad2b301d280d5f5379ca5b31d586c685eab2b30ca543f213ce067afc6");
                 Assert.equal(message.blockMsg.reorgIndex.height, 93717);
                 var block = message.blockMsg.block;
@@ -309,7 +309,7 @@ describe('crypto proxy', function() {
     describe('getMissedBlocks', function() {
         it('get the missed bloks while the block chain has forked', function(done) {
             var redisClient = new MockRedis();
-            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+            var cryptoProxy = new CryptoProxy(Currency.DOGE, {
                 cryptoRpc: new MockDogRpc({blockCount: 93721}),
                 minConfirm: 1,
                 redis: redisClient
@@ -322,7 +322,7 @@ describe('crypto proxy', function() {
             var endIndex = new BlockIndex({id: 'd661700668f723ea29be1461d6dedd4cd27c52480896ab368fad1100d15f35a5', height:93721});
             var request = new GetMissedCryptoCurrencyBlocks({startIndexs: startIndexs, endIndex: endIndex});
             cryptoProxy.getMissedBlocks(request, function(error, message) {
-                Assert.equal(message.currency, Currency.DOG);
+                Assert.equal(message.currency, Currency.DOGE);
                 Assert.equal(message.blockMsg.reorgIndex.id, '778835f7edb20df20174afe9316ae2339c9526c9bd2dca9b8d81406f774d6e0b');
                 Assert.equal(message.blockMsg.reorgIndex.height, 93716);
                 var block = message.blockMsg.block;
@@ -347,7 +347,7 @@ describe('crypto proxy', function() {
     describe('getMissedBlocks', function() {
         it('getMissedBlocks while seriously forked', function(done) {
             var redisClient = new MockRedis();
-            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+            var cryptoProxy = new CryptoProxy(Currency.DOGE, {
                 cryptoRpc: new MockDogRpc({blockCount: 93721}),
                 minConfirm: 1,
                 redis: redisClient
@@ -360,7 +360,7 @@ describe('crypto proxy', function() {
             var endIndex = new BlockIndex({id: 'd661700668f723ea29be1461d6dedd4cd27c52480896ab368fad1100d15f35a5', height:93721});
             var request = new GetMissedCryptoCurrencyBlocks({startIndexs: startIndexs, endIndex: endIndex});
             cryptoProxy.getMissedBlocks(request, function(error, message) {
-                Assert.equal(message.currency, Currency.DOG);
+                Assert.equal(message.currency, Currency.DOGE);
                 Assert.equal(message.blockMsg.reorgIndex.id, null)
                 Assert.equal(message.blockMsg.reorgIndex.height, null);
                 var block = message.blockMsg.block;
@@ -374,7 +374,7 @@ describe('crypto proxy', function() {
     describe('getReorgPosition_', function() {
         it('get the reorg position', function(done) {
             var redisClient = new MockRedis();
-            var cryptoProxy = new CryptoProxy(Currency.DOG, {
+            var cryptoProxy = new CryptoProxy(Currency.DOGE, {
                 cryptoRpc: new MockDogRpc({blockCount: 93721}),
                 minConfirm: 1,
                 redis: redisClient
