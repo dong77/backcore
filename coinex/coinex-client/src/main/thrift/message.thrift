@@ -201,6 +201,8 @@ typedef data.Language                           _Language
 /* C    */ struct CleanBlockChain                         {1: _Currency currency} // use this only if want re-start up from fatal new branch error. and must make sure the new coming block height is higher than previous highest block height
 /* C    */ struct SyncHotAddresses                        {1: _Currency currency}
 /* R    */ struct SyncHotAddressesResult                  {1: _ErrorCode error, 2: set<_CryptoAddress> addresses}
+/* C    */ struct SyncPrivateKeys                         {1: _Currency currency, 2: optional set<string> pubKeys}
+/* R    */ struct SyncPrivateKeysResult                   {1: _ErrorCode error, 2: set<_CryptoAddress> addresses}
 /* C    */ struct GetMissedCryptoCurrencyBlocks           {1: list<_BlockIndex> startIndexs, 2: _BlockIndex endIndex} // returned (startIndex, endIndex]
 /* C    */ struct GenerateAddresses                       {1: i32 num}
 /* R    */ struct GenerateAddressesResult                 {
@@ -217,6 +219,7 @@ typedef data.Language                           _Language
                                                               5: optional TransferCryptoCurrency transferCryptoCurrency
                                                               6: optional SyncHotAddresses syncHotAddresses
                                                               7: optional MultiTransferCryptoCurrency multiTransferCryptoCurrency
+                                                              8: optional SyncPrivateKeys syncPrivateKeys
                                                           }
 /* I    */ struct BitwayMessage                           {
                                                               1: _Currency currency
@@ -224,6 +227,7 @@ typedef data.Language                           _Language
                                                               3: optional _CryptoCurrencyTransaction tx
                                                               4: optional CryptoCurrencyBlockMessage blockMsg
                                                               5: optional SyncHotAddressesResult syncHotAddressesResult
+                                                              6: optional SyncPrivateKeysResult syncPrivateKeysResult
                                                           }
 
 ////////////////////////////////////////////////////////////////

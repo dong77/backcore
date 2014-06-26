@@ -186,6 +186,7 @@ enum BitwayRequestType {
     GET_MISSED_BLOCKS  = 2
     SYNC_HOT_ADDRESSES = 3
     MULTI_TRANSFER     = 4
+    SYNC_PRIVATE_KEYS  = 5
 }
 
 enum BitwayResponseType {

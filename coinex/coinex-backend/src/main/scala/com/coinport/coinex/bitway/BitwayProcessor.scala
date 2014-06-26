@@ -89,6 +89,12 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       persist(m) { event =>
         updateState(event)
       }
+    case SyncPrivateKeys(currency, None) =>
+      if (client.isDefined) {
+        client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
+          BitwayRequestType.SyncPrivateKeys, currency, syncPrivateKeys = Some(
+            SyncPrivateKeys(supportedCurrency, Some(manager.getPubKeys()))))))
+      }
 
     case m @ AdjustAddressAmount(currency, address, adjustAmount) =>
       if (manager.canAdjustAddressAmount(address, adjustAmount)) {
@@ -129,7 +135,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     case m: MultiTransferCryptoCurrency =>
       sendMultiTransferRequest(m)
 
-    case m @ BitwayMessage(currency, Some(res), None, None, None) =>
+    case m @ BitwayMessage(currency, Some(res), None, None, None, None) =>
       if (res.error == ErrorCode.Ok) {
         persist(m) { event =>
           updateState(event)
@@ -137,7 +143,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       } else {
         log.error("error occur when fetch addresses: " + res)
       }
-    case m @ BitwayMessage(currency, None, Some(tx), None, None) =>
+    case m @ BitwayMessage(currency, None, Some(tx), None, None, None) =>
       val txWithTime = if (tx.timestamp.isDefined) tx else tx.copy(timestamp = Some(System.currentTimeMillis))
       if (tx.status == TransferStatus.Failed) {
         persist(m.copy(tx = Some(txWithTime))) { event =>
@@ -157,7 +163,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
             }
         }
       }
-    case m @ BitwayMessage(currency, None, None, Some(blockMsg), None) =>
+    case m @ BitwayMessage(currency, None, None, Some(blockMsg), None, None) =>
       val continuity = manager.getBlockContinuity(blockMsg)
       log.info("receive new block: " + blockMsg.block.index + " which recognizied as " + continuity)
       log.info("maintained index list is: " + manager.getBlockIndexes)
@@ -194,13 +200,21 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
           log.info("bad block received: " + blockMsg)
           log.info("maintained index list: " + manager.getBlockIndexes)
       }
-    case m @ BitwayMessage(currency, None, None, None, Some(res)) =>
+    case m @ BitwayMessage(currency, None, None, None, Some(res), None) =>
       if (res.error == ErrorCode.Ok) {
         persist(m) { event =>
           updateState(event)
         }
       } else {
         log.error("error occur when sync hot addresses: " + res)
+      }
+    case m @ BitwayMessage(currency, None, None, None, None, Some(res)) =>
+      if (res.error == ErrorCode.Ok) {
+        persist(m) { event =>
+          updateState(event)
+        }
+      } else {
+        log.error("error occur when sync private keys: " + res)
       }
   }
 
@@ -255,18 +269,21 @@ trait BitwayManagerBehavior {
   def updateState: Receive = {
     case AllocateNewAddress(currency, uid, Some(address)) => manager.addressAllocated(uid, address)
     case AdjustAddressAmount(currency, address, adjustAmount) => manager.adjustAddressAmount(address, adjustAmount)
-    case BitwayMessage(currency, Some(res), None, None, None) =>
+    case BitwayMessage(currency, Some(res), None, None, None, None) =>
       if (res.addressType.isDefined && res.addresses.isDefined && res.addresses.get.size > 0)
         manager.faucetAddress(res.addressType.get, Set.empty[CryptoAddress] ++ res.addresses.get)
-    case BitwayMessage(currency, None, Some(tx), None, None) =>
+    case BitwayMessage(currency, None, Some(tx), None, None, None) =>
       if (tx.timestamp.isDefined) manager.updateLastAlive(tx.timestamp.get)
       manager.rememberTx(tx)
-    case BitwayMessage(currency, None, None, Some(CryptoCurrencyBlockMessage(startIndex, block, timestamp)), None) =>
+    case BitwayMessage(currency, None, None,
+      Some(CryptoCurrencyBlockMessage(startIndex, block, timestamp)), None, None) =>
       if (timestamp.isDefined) manager.updateLastAlive(timestamp.get)
       manager.updateBlock(startIndex, block)
-    case BitwayMessage(currency, None, None, None, Some(res)) =>
+    case BitwayMessage(currency, None, None, None, Some(res), None) =>
       if (res.addresses.size > 0)
         manager.syncHotAddresses(Set.empty[CryptoAddress] ++ res.addresses)
+    case BitwayMessage(currency, None, None, None, None, Some(res)) =>
+      manager.syncPrivateKeys(res.addresses.toList)
     case CleanBlockChain(currency) =>
       manager.cleanBlockChain()
     case e => println("bitway updateState doesn't handle the message: ", e)

@@ -186,6 +186,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cSuspendUserResult = BinaryScalaCodec(SuspendUserResult)
   lazy val _cSyncHotAddresses = BinaryScalaCodec(SyncHotAddresses)
   lazy val _cSyncHotAddressesResult = BinaryScalaCodec(SyncHotAddressesResult)
+  lazy val _cSyncPrivateKeys = BinaryScalaCodec(SyncPrivateKeys)
+  lazy val _cSyncPrivateKeysResult = BinaryScalaCodec(SyncPrivateKeysResult)
   lazy val _cTakeSnapshotNow = BinaryScalaCodec(TakeSnapshotNow)
   lazy val _cTransferCryptoCurrency = BinaryScalaCodec(TransferCryptoCurrency)
   lazy val _cTransferCryptoCurrencyResult = BinaryScalaCodec(TransferCryptoCurrencyResult)
@@ -381,6 +383,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: SuspendUserResult => _cSuspendUserResult(m)
     case m: SyncHotAddresses => _cSyncHotAddresses(m)
     case m: SyncHotAddressesResult => _cSyncHotAddressesResult(m)
+    case m: SyncPrivateKeys => _cSyncPrivateKeys(m)
+    case m: SyncPrivateKeysResult => _cSyncPrivateKeysResult(m)
     case m: TakeSnapshotNow => _cTakeSnapshotNow(m)
     case m: TransferCryptoCurrency => _cTransferCryptoCurrency(m)
     case m: TransferCryptoCurrencyResult => _cTransferCryptoCurrencyResult(m)
@@ -580,6 +584,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[SuspendUserResult.Immutable] => _cSuspendUserResult.invert(bytes).get
     case Some(c) if c == classOf[SyncHotAddresses.Immutable] => _cSyncHotAddresses.invert(bytes).get
     case Some(c) if c == classOf[SyncHotAddressesResult.Immutable] => _cSyncHotAddressesResult.invert(bytes).get
+    case Some(c) if c == classOf[SyncPrivateKeys.Immutable] => _cSyncPrivateKeys.invert(bytes).get
+    case Some(c) if c == classOf[SyncPrivateKeysResult.Immutable] => _cSyncPrivateKeysResult.invert(bytes).get
     case Some(c) if c == classOf[TakeSnapshotNow.Immutable] => _cTakeSnapshotNow.invert(bytes).get
     case Some(c) if c == classOf[TransferCryptoCurrency.Immutable] => _cTransferCryptoCurrency.invert(bytes).get
     case Some(c) if c == classOf[TransferCryptoCurrencyResult.Immutable] => _cTransferCryptoCurrencyResult.invert(bytes).get

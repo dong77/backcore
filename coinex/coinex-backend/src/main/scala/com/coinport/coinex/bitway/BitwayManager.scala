@@ -327,6 +327,13 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
       addresses(Hot).contains(info.from.get) && addresses(User).contains(info.to.get)))
   }
 
+  def syncPrivateKeys(keys: List[CryptoAddress]) {
+    privateKeysBackup.clear
+    privateKeysBackup ++= Map(keys.map(i => (i.address -> i.privateKey.getOrElse("no-priv-key"))): _*)
+  }
+
+  def getPubKeys() = privateKeysBackup.keySet
+
   def syncHotAddresses(addrs: Set[CryptoAddress]) {
     val origAddresses = addresses.getOrElse(Hot, Set.empty[String])
     val unseenAddresses = addrs.filter(i => !origAddresses.contains(i.address))
