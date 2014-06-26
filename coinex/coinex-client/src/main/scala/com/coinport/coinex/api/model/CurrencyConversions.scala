@@ -15,7 +15,7 @@ object CurrencyConversion {
     Btc -> 8,
     Ltc -> 8,
     Pts -> 8,
-    Dog -> 8,
+    Doge -> 8,
     Cny -> 5,
     Usd -> 5
   )
@@ -29,13 +29,13 @@ object CurrencyConversion {
     Cny -> 4,
     Btc -> 4,
     Ltc -> 4,
-    Dog -> 4
+    Doge -> 4
   )
 
   val priceDecimals = Map[MarketSide, Int](
     Btc ~> Cny -> 4,
     Ltc ~> Btc -> 4,
-    Dog ~> Btc -> 8,
+    Doge ~> Btc -> 8,
     Btc ~> Btc -> 1
   )
 

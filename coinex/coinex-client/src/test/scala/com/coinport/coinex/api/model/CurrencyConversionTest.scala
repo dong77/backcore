@@ -39,26 +39,26 @@ class CurrencyConversionTest extends Specification {
     }
 
     "very small number" in {
-      20.00097.internalValue(Dog) mustEqual 2000097000L
-      0.000000123.internalValue(Dog ~> Btc) mustEqual 0.000000123
+      20.00097.internalValue(Doge) mustEqual 2000097000L
+      0.000000123.internalValue(Doge ~> Btc) mustEqual 0.000000123
 
-      2000097000L.externalValue(Dog) mustEqual 20.00097
-      0.000000123.externalValue(Dog ~> Btc) mustEqual 0.000000123
+      2000097000L.externalValue(Doge) mustEqual 20.00097
+      0.000000123.externalValue(Doge ~> Btc) mustEqual 0.000000123
     }
 
     "very big number" in {
-      1234567820.00097.internalValue(Dog) mustEqual 123456782000097000L
-      123456782000097000L.externalValue(Dog) mustEqual 1234567820.00097
+      1234567820.00097.internalValue(Doge) mustEqual 123456782000097000L
+      123456782000097000L.externalValue(Doge) mustEqual 1234567820.00097
     }
 
     "currency object" in {
       CurrencyObject("BTC", 1234500000L) mustEqual CurrencyObject("BTC", 1234500000L, 12.345, "12.3450", "12.35")
-      CurrencyObject("DOG", 1234500000L) mustEqual CurrencyObject("DOG", 1234500000L, 12.345, "12.3450", "12.35")
+      CurrencyObject("DOGE", 1234500000L) mustEqual CurrencyObject("DOGE", 1234500000L, 12.345, "12.3450", "12.35")
     }
 
     "price object" in {
       PriceObject("BTC-CNY", 12.345) mustEqual PriceObject("BTC", "CNY", 12.345, 12345.0, "12345.0000", "12345.00")
-      PriceObject("DOG-BTC", 0.000000234) mustEqual PriceObject("DOG", "BTC", 0.000000234, 0.000000234, "0.00000023", "0.00")
+      PriceObject("DOGE-BTC", 0.000000234) mustEqual PriceObject("DOGE", "BTC", 0.000000234, 0.000000234, "0.00000023", "0.00")
     }
   }
 }

@@ -17,7 +17,7 @@ BitwayConfigs(Map(
     batchFetchAddressNum = 10,
     maintainedChainLength = 10
   ),
-  Dog -> BitwayConfig(
+  Doge -> BitwayConfig(
     ip = "bitway",
     port = 6379,
     maintainedChainLength = 20,

@@ -38,7 +38,7 @@ class FeeCounterSpec extends Specification {
     val maker = Order(userId = 3, id = 3, price = Some(5000 reciprocal), quantity = 10000000, timestamp = Some(0))
     val updatedMaker = maker.copy(quantity = 0) // buy 2
 
-    "transaction btc-rmb with 0.1% fee" in {
+    "transaction btc-cny with 0.1% fee" in {
       val transaction = Transaction(50000, 0, takerSide, taker --> taker.copy(quantity = 98000), maker --> updatedMaker)
       val fees = feeCounter.count(transaction)
       fees mustEqual Seq(Fee(3, None, Btc, 2, None), Fee(5, None, Cny, 10000, None))
@@ -52,7 +52,7 @@ class FeeCounterSpec extends Specification {
       1 mustEqual 1
     }
 
-    "transaction btc-rmb with robot fee" in {
+    "transaction btc-cny with robot fee" in {
       val robotTaker = taker.copy(robotType = Some(STOP_ORDER_ROBOT_TYPE))
       val transaction = Transaction(1, 1, takerSide, robotTaker --> robotTaker.copy(quantity = 98000),
         maker.copy(robotType = Some(3)) --> updatedMaker.copy(robotType = Some(3)))
@@ -60,7 +60,7 @@ class FeeCounterSpec extends Specification {
       fees mustEqual Seq(Fee(3, None, Btc, 2, None), Fee(5, None, Cny, 10010, None))
     }
 
-    "transaction btc-rmb with robot fee" in {
+    "transaction btc-cny with robot fee" in {
       val robotTaker = taker.copy(robotType = Some(STOP_ORDER_ROBOT_TYPE))
       val transaction = Transaction(1, 1, takerSide, robotTaker --> robotTaker.copy(quantity = 98000),
         maker.copy(robotType = Some(TRAILING_STOP_ORDER_ROBOT_TYPE)) -->
@@ -71,7 +71,7 @@ class FeeCounterSpec extends Specification {
   }
 
   "FeeCounter" should {
-    "withdrawal rmb with 0.2% fee" in {
+    "withdrawal cny with 0.2% fee" in {
       val withdrawal = AccountTransfer(1, 2, TransferType.Withdrawal, Cny, 12000, TransferStatus.Pending)
       val fees = feeCounter.count(withdrawal)
       fees mustEqual Seq(Fee(2, None, Cny, 24, None))

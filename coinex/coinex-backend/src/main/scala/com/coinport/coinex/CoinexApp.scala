@@ -22,7 +22,7 @@ import Currency._
 import Implicits._
 
 object CoinexApp extends App {
-  val markets = Seq(Ltc ~> Btc, Dog ~> Btc)
+  val markets = Seq(Ltc ~> Btc, Doge ~> Btc)
   val allRoles = (ConstantRole.values.map(_.<<) ++ MarketRole.values.map { v => markets.map { m => v << m } }.flatten ++
     BitwayRole.values.map { v => markets.toCryptoCurrencySet.map { c => v << c } }.flatten)
 

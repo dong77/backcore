@@ -24,12 +24,12 @@ AccountConfig(
 
     transferFeeRules = Map(
       Btc -> ConstantFee(0.0002.internalValue(Btc)),
-      Dog -> ConstantFee(0.0002.internalValue(Dog)),
+      Doge -> ConstantFee(0.0002.internalValue(Doge)),
       Cny -> PercentageFee(0.002))),
 
   hotColdTransfer = Map(
     Btc -> HotColdTransferStrategy(0.25, 0.1),
-    Dog -> HotColdTransferStrategy(0.25, 0.1)
+    Doge -> HotColdTransferStrategy(0.25, 0.1)
   ),
   enableHotColdTransfer = false,
   hotColdTransferInterval = 600 * 1000L

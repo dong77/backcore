@@ -176,8 +176,8 @@ class OrderConversionTest extends Specification {
       UserOrder.fromOrderInfo(backOrder) mustEqual frontOrder
     }
     "very small number" in {
-      val order = UserOrder("123", Buy, Dog, Btc, Some(0.0000001), Some(100), None)
-      order.toDoSubmitOrder mustEqual DoSubmitOrder(Btc ~> Dog, Order(123L, 0L, 0.00001.internalValue(Btc), Some(0.0000001 reciprocal), Some(100.internalValue(Dog))))
+      val order = UserOrder("123", Buy, Doge, Btc, Some(0.0000001), Some(100), None)
+      order.toDoSubmitOrder mustEqual DoSubmitOrder(Btc ~> Doge, Order(123L, 0L, 0.00001.internalValue(Btc), Some(0.0000001 reciprocal), Some(100.internalValue(Doge))))
     }
   }
 }

@@ -10,7 +10,7 @@ import com.coinport.coinex.api.model.UserOrder
 import com.coinport.coinex.api.model.Operations
 import com.coinport.coinex.api.service.AccountService
 import com.coinport.coinex.data.Currency.Btc
-import com.coinport.coinex.data.Currency.Dog
+import com.coinport.coinex.data.Currency.Doge
 import com.coinport.coinex.data.Currency.Ltc
 import com.coinport.coinex.data.Implicits.currency2Rich
 import com.coinport.coinex.data.MarketSide
@@ -223,7 +223,7 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
 object AutoExchangeRobotExecutor {
 
   def main(args: Array[String]) {
-    val marketUrlMap: Map[MarketSide, String] = Map(Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc", Btc ~> Dog -> "http://data.bter.com/api/1/depth/doge_btc")
+    val marketUrlMap: Map[MarketSide, String] = Map(Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc", Btc ~> Doge -> "http://data.bter.com/api/1/depth/doge_btc")
     val executor = new AutoExchangeRobotExecutor(marketUrlMap, 5000)
     executor.startExecutor
 
@@ -245,7 +245,7 @@ object AutoExchangeRobotExecutor {
   }
 
   def start() {
-    val marketUrlMap: Map[MarketSide, String] = Map(Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc", Btc ~> Dog -> "http://data.bter.com/api/1/depth/doge_btc")
+    val marketUrlMap: Map[MarketSide, String] = Map(Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc", Btc ~> Doge -> "http://data.bter.com/api/1/depth/doge_btc")
     val executor = new AutoExchangeRobotExecutor(marketUrlMap, 5000)
     executor.startExecutor
   }
