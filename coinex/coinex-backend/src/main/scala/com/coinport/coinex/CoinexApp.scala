@@ -32,7 +32,7 @@ object CoinexApp extends App {
         required args(1): seeds - seed note seperated by comma, i.e, "127.0.0.1:25551,127.0.0.1:25552"
         optioanl args(2): roles - "*" for all roles, "" for empty node, and "a,b,c" for 3 roles
         optioanl args(3): hostname - self hostname
-        optioanl args(4): prev-config - previte config
+        optioanl args(4): prev-config - private config
 
         available roles:%s
       """.format(allRoles.mkString("\n\t\t", "\n\t\t", "\n\t\t"))
@@ -59,8 +59,8 @@ object CoinexApp extends App {
     .withFallback(ConfigFactory.parseString("akka.cluster.seed-nodes=[" + seeds + "]"))
 
   if (!prevConfigFile.isDefined) {
-    println("No previte config file found!")
-    println("previte config like this:\n\takka.persistence.encryption-settings=x\n\takka.mongo.username=x\n\takka.mongo.password=x")
+    println("No private config file found!")
+    println("private config like this:\n\takka.persistence.encryption-settings=x\n\takka.mongo.username=x\n\takka.mongo.password=x")
     System.exit(1)
   } else {
     for (line <- Source.fromFile(prevConfigFile.get).getLines) {
