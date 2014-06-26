@@ -196,6 +196,7 @@ enum BitwayResponseType {
     AUTO_REPORT_BLOCKS = 3
     GET_MISSED_BLOCKS  = 4
     SYNC_HOT_ADDRESSES = 5
+    SYNC_PRIVATE_KEYS  = 6
 }
 
 enum NotificationType {

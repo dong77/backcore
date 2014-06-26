@@ -154,16 +154,80 @@ CryptoProxy.prototype.synchronousHotAddr =  function(request, callback) {
     });
 };
 
-CryptoProxy.prototype.getPrivateKey_ = function(address, callback) {
+CryptoProxy.prototype.syncPrivateKeys =  function(request, callback) { 
     var self = this;
+    self.log.info('** Synchronous Addr Request Received **');
+    self.log.info("syncPKs req: " + JSON.stringify(request));
+    var spkr = new SyncPrivateKeysResult({error: ErrorCode.OK, addresses: []});
+    if (!request.pubKeys && request.pubKeys.length > 0) {
+        Async.map(request.pubKeys, getPrivateKey_.bind(self), function(error, cryptoAddrs) {
+            if (error) {
+                spkr.error = ErrorCode.RPC_ERROR;
+            } else {
+                spkr.addresses = cryptoAddrs;
+            }
+            callback(self.makeNormalResponse_(BitwayResponseType.SYNC_PRIVATE_KEYS, self.currency, spkr));
+        });
+    } else {
+        self.log.error("Invalid Request!");
+    }
+};
+
+
+CryptoProxy.prototype.encryptPrivKey_ = function(priv, key) {
+    var cipher = Crypto.createCipher('aes-256-cbc', key);
+    var crypted = cipher.update(priv,'utf8','hex');
+    crypted += cipher.final('hex');
+    var message = crypted;
+    console.log(message);
+    return message;
+}
+
+CryptoProxy.prototype.decrypt_ = function(message, key) {
+    var decipher = Crypto.createDecipher('aes-256-cbc', key);
+    var dec = decipher.update(message,'hex','utf8');
+    dec += decipher.final('utf8');
+    console.log(dec);
+};
+
+CryptoProxy.prototype.dumpPrivateKey_ = function(address, callback) {
+    var self = this;
+    var privateKey = null;
     self.rpc.dumpPrivKey(address, function(errPriv, replyPriv){
         if (errPriv) {
             callback(errPriv);
         } else {
-           var cryptoAddress = new CryptoAddress({address: address, privateKey: replyPriv.result});
+           if (self.walletPassPhrase) { 
+               privateKey = self.encryptPrivKey_(replyPriv.result, self.walletPassPhrase);
+           } else {
+               privateKey = replyPriv.result;
+           }
+           var cryptoAddress = new CryptoAddress({address: address, privateKey: privateKey});
            callback(null, cryptoAddress);
         }
     });
+};
+
+CryptoProxy.prototype.getPrivateKey_ = function(address, callback) {
+    var self = this;
+    if (self.walletPassPhrase) {
+        Async.series([
+            function(cb) {
+                self.walletPassPhrase_.bind(self)(cb)},
+            function(cb) {
+                self.dumpPrivateKey_.bind(self)(address, cb)}
+        ], function(err, values) {
+            if (err) {
+                self.log.error(err);
+                callback(err, null);
+            } else {
+                callback(null, values[1]);
+            }
+        });
+    } else {
+        self.log.warn("no password!");
+        self.dumpPrivateKey_.bind(self)(address, callback);
+    }
 };
 
 CryptoProxy.prototype.transfer = function(request, callback) {
@@ -350,6 +414,27 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
     }
 };
 
+CryptoProxy.prototype.constructTxDataForSendMany_ = function(request, callback) {
+    Async.parallel ([
+        function(cb) {self.getHotBalance_.bind(self)(cb)},
+        function(cb) {self.getAHotAddressByRandom_.bind(self)(cb)}
+        ], function(err, result){
+
+   });
+};
+
+CryptoProxy.prototype.getHotBalance_ = function(callback) {
+    var self = this;
+    this.rpc.getBalance(CryptoProxy.HOT_ACCOUNT, self.minConfirm, function(error, reply) {
+        if (error) {
+            self.log.error(error);
+            callback(error);
+        } else {
+            callback(null, reply.result);
+        }
+    });
+};
+
 CryptoProxy.prototype.getHotUnspent_ = function(callback) {
     var self = this;
     Async.compose(self.getUnspentOfAddresses_.bind(self),
@@ -438,12 +523,12 @@ CryptoProxy.prototype.generateAHotAddress_ = function(unusedIndex, callback) {
             self.log.error(errPub);
             callback(errPub);
         } else {
-            self.rpc.dumpPrivKey(replyPub.result, function(errPriv, replyPriv) {
+            self.dumpPrivateKey_(replyPub.result, function(errPriv, replyPriv) {
                 if (errPriv) {
                     callback(errPriv);
                 } else {
                     var addresses = [];
-                    var cryptoAddress = new CryptoAddress({address: replyPub.result, privateKey: replyPriv.result});
+                    var cryptoAddress = replyPriv;
                     addresses.push(cryptoAddress);
                     self.log.info("generate a hot addr: " + cryptoAddress.address);
                     var gar = new GenerateAddressesResult({error: ErrorCode.OK, addresses: addresses,
@@ -475,7 +560,7 @@ CryptoProxy.prototype.createRawTransaction_ = function(rawData, callback) {
 
 CryptoProxy.prototype.walletPassPhrase_ = function(callback) {
     var self = this;
-    this.rpc.walletPassPhrase(self.walletPassPhrase, 10,  function(error) {
+    this.rpc.walletPassPhrase(self.walletPassPhrase, 900,  function(error) {
         callback(error);
     });
 };
@@ -755,12 +840,11 @@ CryptoProxy.prototype.generateOneAddress_ = function(unusedIndex, callback) {
         if (errPub) {
             callback(errPub);
         } else {
-            self.rpc.dumpPrivKey(replyPub.result, function(errPriv, replyPriv) {
+            self.dumpPrivateKey_(replyPub.result, function(errPriv, replyPriv) {
                 if (errPriv) {
                     callback(errPriv);
                 } else {
-                    var cryptoAddress = new CryptoAddress({address: replyPub.result, privateKey: replyPriv.result});
-                    callback(null, cryptoAddress);
+                    callback(null, replyPriv);
                 }
             });
         }
@@ -941,6 +1025,9 @@ CryptoProxy.prototype.makeNormalResponse_ = function(type, currency, response) {
         case BitwayResponseType.SYNC_HOT_ADDRESSES:
             this.log.info("sync hot addr response");
             return new BitwayMessage({currency: currency, syncHotAddressesResult: response});
+        case BitwayResponseType.SYNC_PRIVATE_KEYS:
+            this.log.info("sync addr response");
+            return new BitwayMessage({currency: currency, syncPrivateKeysResult: response});
         case BitwayResponseType.GENERATE_ADDRESS:
             this.log.info("generate addr response");
             return new BitwayMessage({currency: currency, generateAddressResponse: response});

@@ -18,6 +18,13 @@ var CryptoAgent = module.exports.CryptoAgent = function(cryptoProxy, redisProxy)
         });
     });
 
+    
+    self.redisProxy.on(RedisProxy.EventType.SYNC_PRIVATE_KEYS, function(currency, request) {
+        self.cryptoProxy.syncPrivateKeys(request, function(message) {
+            self.redisProxy.publish(message);
+        });
+    });
+
     self.redisProxy.on(RedisProxy.EventType.GENERATE_ADDRESS, function(currency, request) {
         self.cryptoProxy.generateUserAddress(request, function(message) {
             self.redisProxy.publish(message);
