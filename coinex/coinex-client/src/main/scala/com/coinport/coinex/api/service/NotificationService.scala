@@ -6,9 +6,6 @@ import akka.pattern.ask
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object NotificationService extends AkkaService {
-  // TODO: store notifications in actors
-  val notifications = collection.mutable.HashMap[Long, Notification]()
-
   def getNotifications(lang: Language) = {
     backend ? QueryNotification(getRemoved = Some(false), cur = Cursor(0, 10)) map {
       case rv: QueryNotificationResult =>

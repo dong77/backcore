@@ -20,14 +20,14 @@ object AccountService extends AkkaService {
     }
   }
 
-  // TODO(chunming): merge deposit and withdrawal methods
+  // TODO: remove this function
   def deposit(uid: Long, currency: Currency, amount: Double): Future[ApiResult] = {
     val internalAmount: Long = amount.internalValue(currency)
 
     val deposit = AccountTransfer(0L, uid.toLong, TransferType.Deposit, currency, internalAmount, TransferStatus.Pending)
     backend ? DoRequestTransfer(deposit) map {
       case result: RequestTransferSucceeded =>
-        // TODO: confirm by admin dashboard
+
         backend ! AdminConfirmTransferSuccess(result.transfer)
 
         ApiResult(true, 0, "充值申请已提交", Some(result))
@@ -42,9 +42,6 @@ object AccountService extends AkkaService {
     val withdrawal = AccountTransfer(0L, uid.toLong, TransferType.Withdrawal, currency, internalAmount, TransferStatus.Pending, address = Some(address))
     backend ? DoRequestTransfer(withdrawal) map {
       case result: RequestTransferSucceeded =>
-        // TODO: confirm by admin dashboard
-        //        backend ! AdminConfirmTransferSuccess(result.transfer)
-
         ApiResult(true, 0, "提现申请已提交", Some(result))
       case failed: RequestTransferFailed =>
         ApiResult(false, 1, "提现失败", Some(failed))
