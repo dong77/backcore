@@ -40,6 +40,8 @@ class StackQueue[T](elems: ArrayBuffer[T], ordering: (T, T) => Boolean)(implicit
 
   def toList = elems.toList
 
+  def size = elems.size
+
   override def toString() = "StackQueue%s".format(toList).replace("List", "")
 
   private def lastIndexWhere(predict: (T) => Boolean): Int = {

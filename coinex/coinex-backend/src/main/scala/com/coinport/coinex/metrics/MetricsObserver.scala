@@ -38,7 +38,7 @@ class MetricsObserver(
     var lastPrice: Option[Double] = None,
     var volumeMaintainer: Long = 0L) {
 
-  def pushEvent(event: MarketEvent, tick: Long) {
+  def pushEvent(event: MarketEvent, tick: Long) = {
     transactionQueue.addAtTick(event, tick) foreach { e =>
       e match {
         case null => None
@@ -61,6 +61,7 @@ class MetricsObserver(
         volumeMaintainer += v
       case _ => None
     }
+    this
   }
 
   def getMetrics: MetricsByMarket = {

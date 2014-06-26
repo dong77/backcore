@@ -22,12 +22,13 @@ class MetricsManagerSpec extends Specification {
       manager.update(side, RDouble(0.1, false).reciprocal, 10, 2, 3)
       manager.update(side, RDouble(0.3, false).reciprocal, 10, 2, 4)
       val metrics = Metrics(Map(MarketSide(Btc, Cny) -> MetricsByMarket(MarketSide(Btc, Cny), 3.3333333333333335, Some(2.5), Some(10.0), 40, Some(-0.3333333333333333), Down), MarketSide(Cny, Btc) -> MetricsByMarket(MarketSide(Cny, Btc), 0.3, Some(0.1), Some(0.4), 8, Some(0.4999999999999999), Up)))
-      manager.getMetrics mustEqual metrics
+      manager.getMetrics(4) mustEqual metrics
       val newManager = new MetricsManager()
       newManager.loadSnapshot(manager.getSnapshot)
-      newManager.getMetrics mustEqual metrics
+      newManager.getMetrics(4) mustEqual metrics
       newManager.update(side, RDouble(0.5, false).reciprocal, 10, 2, 5)
-      newManager.getMetrics.metricsByMarket(side).high mustEqual Some(10)
+      newManager.getMetrics(4).metricsByMarket(side).high mustEqual Some(10)
+      newManager.getMetrics(10000000000L) mustEqual Metrics(Map(MarketSide(Btc, Cny) -> MetricsByMarket(MarketSide(Btc, Cny), 2.0, None, None, 0, None, Down), MarketSide(Cny, Btc) -> MetricsByMarket(MarketSide(Cny, Btc), 0.5, None, None, 0, None, Up)))
     }
   }
 }

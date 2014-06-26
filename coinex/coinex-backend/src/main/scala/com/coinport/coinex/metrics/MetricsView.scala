@@ -30,6 +30,6 @@ class MetricsView extends ExtendedView {
         }
       }
     case QueryMetrics =>
-      sender() ! manager.getMetrics
+      sender() ! manager.getMetrics(System.currentTimeMillis)
   }
 }
