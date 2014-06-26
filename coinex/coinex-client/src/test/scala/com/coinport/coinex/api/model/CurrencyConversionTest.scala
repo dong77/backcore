@@ -57,8 +57,8 @@ class CurrencyConversionTest extends Specification {
     }
 
     "price object" in {
-      PriceObject("BTCCNY", 12.345) mustEqual PriceObject("BTC", "CNY", 12.345, 12345.0, "12345.0000", "12345.00")
-      PriceObject("DOGBTC", 0.000000234) mustEqual PriceObject("DOG", "BTC", 0.000000234, 0.000000234, "0.00000023", "0.00")
+      PriceObject("BTC-CNY", 12.345) mustEqual PriceObject("BTC", "CNY", 12.345, 12345.0, "12345.0000", "12345.00")
+      PriceObject("DOG-BTC", 0.000000234) mustEqual PriceObject("DOG", "BTC", 0.000000234, 0.000000234, "0.00000023", "0.00")
     }
   }
 }

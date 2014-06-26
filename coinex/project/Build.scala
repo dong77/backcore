@@ -12,7 +12,7 @@ import com.typesafe.sbt.SbtNativePackager._
 import NativePackagerKeys._
 
 object CoinexBuild extends Build {
-  val coinexVersion = "1.1.22-SNAPSHOT"
+  val coinexVersion = "1.1.23-SNAPSHOT"
 
   val akkaVersion = "2.3.3"
   val bijectionVersion = "0.6.2"

@@ -47,8 +47,8 @@ class RichCurrency(raw: Currency) {
 
 class RichMarketSide(raw: MarketSide) {
   def reverse = MarketSide(raw.inCurrency, raw.outCurrency)
-  def S = "%s%s".format(raw.outCurrency, raw.inCurrency).toUpperCase
-  def s = "%s%s".format(raw.outCurrency, raw.inCurrency).toLowerCase
+  def S = "%s-%s".format(raw.outCurrency, raw.inCurrency).toUpperCase
+  def s = "%s-%s".format(raw.outCurrency, raw.inCurrency).toLowerCase
   def market = Market(raw.outCurrency, raw.inCurrency)
   def ordered = raw.inCurrency.getValue < raw.outCurrency.getValue
   def normalized = if (ordered) raw else reverse
@@ -192,6 +192,10 @@ object Implicits {
   implicit def string2RichMarketSide(raw: String): MarketSide = {
     if (raw == null || raw.isEmpty || raw.length < 6) {
       MarketSide(Currency.Unknown, Currency.Unknown)
+    } else if (raw.contains("-")) {
+      val left = Currency.valueOf(raw.split("-")(0).toLowerCase.capitalize).getOrElse(Currency.Unknown)
+      val right = Currency.valueOf(raw.split("-")(1).toLowerCase.capitalize).getOrElse(Currency.Unknown)
+      MarketSide(left, right)
     } else {
       val left = Currency.valueOf(raw.substring(0, 3).toLowerCase.capitalize).getOrElse(Currency.Unknown)
       val right = Currency.valueOf(raw.substring(3, 6).toLowerCase.capitalize).getOrElse(Currency.Unknown)

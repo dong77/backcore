@@ -39,13 +39,16 @@ class MarketConversionTest extends Specification {
     "market conversion" in {
       Market(Btc, Ltc) mustEqual Market(Ltc, Btc)
 
-      Market(Btc, Usd).toString mustEqual "BTCUSD"
-      Market(Usd, Btc).toString mustEqual "BTCUSD"
+      Market(Btc, Usd).toString mustEqual "BTC-USD"
+      Market(Usd, Btc).toString mustEqual "BTC-USD"
 
-      var market: Market = "LTCBTC"
+      var market: Market = "LTC-BTC"
       market mustEqual Market(Ltc, Btc)
-      market = "XXCXXX"
+      market = "XXC-XXX"
       market mustEqual Market(Unknown, Unknown)
+
+      market = "LTCBTC"
+      market mustEqual Market(Ltc, Btc)
 
       Market(Btc, Usd).getMarketSide() mustEqual Btc ~> Usd
       Market(Btc, Usd).getMarketSide(false) mustEqual Usd ~> Btc

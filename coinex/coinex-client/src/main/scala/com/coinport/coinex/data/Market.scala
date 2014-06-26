@@ -7,7 +7,7 @@ case class Market(currency1: Currency, currency2: Currency) {
 
   override def hashCode = sorted.hashCode
 
-  override def toString = (sorted._1.toString + sorted._2.toString).toUpperCase
+  override def toString = (sorted._1.toString + "-" + sorted._2.toString).toUpperCase
 
   override def equals(obj: Any): Boolean = {
     obj.isInstanceOf[Market] && {

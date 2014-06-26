@@ -22,7 +22,7 @@ class PrettyJsonSerializerTest extends Specification {
     }
 
     "MarketSide to JSON" in {
-      val json = ("side" -> "BTCUSD")
+      val json = ("side" -> "BTC-USD")
       PrettyJsonSerializer.toJson(MarketSideWrapper(Btc ~> Usd)) mustEqual writePretty(json)
     }
 
@@ -33,8 +33,8 @@ class PrettyJsonSerializerTest extends Specification {
       )
 
       val json =
-        ("BTCUSD" -> 456.7) ~
-          ("LTCUSD" -> 12.3)
+        ("BTC-USD" -> 456.7) ~
+          ("LTC-USD" -> 12.3)
 
       PrettyJsonSerializer.toJson(map) mustEqual writePretty(json)
     }
@@ -46,8 +46,8 @@ class PrettyJsonSerializerTest extends Specification {
       )
 
       val json =
-        ("BTCUSD" -> 456.7) ~
-          ("LTCUSD" -> 12.3)
+        ("BTC-USD" -> 456.7) ~
+          ("LTC-USD" -> 12.3)
 
       PrettyJsonSerializer.toJson(map) mustEqual writePretty(json)
     }
@@ -66,8 +66,8 @@ class PrettyJsonSerializerTest extends Specification {
       }
 
       val json =
-        ("BTCUSD" -> list1.map(mapper)) ~
-          ("LTCUSD" -> list2.map(mapper))
+        ("BTC-USD" -> list1.map(mapper)) ~
+          ("LTC-USD" -> list2.map(mapper))
 
       PrettyJsonSerializer.toJson(pools) mustEqual writePretty(json)
     }
