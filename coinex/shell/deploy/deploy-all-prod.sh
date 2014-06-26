@@ -4,8 +4,15 @@
 # Author: xiaolu@coinport.com (Wu Xiaolu)
 
 #-------------------------------------------------------------------
-# 1. push new branch to remote origin
+# 0. backup jar and zip file
+day=`date +%Y%m%d`
 cd ~/work/backcore/coinex/shell/deploy/
+sh -i ~/work/xiaolu.pem ubuntu@54.238.180.101 "/var/coinport/code/backcore/coinex/shell/deploy/backup.sh"
+sh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/frontend/exchange/shell/backup.sh"
+sh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/admin/shell/backup.sh"
+
+#-------------------------------------------------------------------
+# 1. push new branch to remote origin
 # push backend branch
 ./pushReleaseBranch.sh $1
 branch=`git branch | grep "*" | awk '{print $2}'`
@@ -51,3 +58,4 @@ ssh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/admin/shell/pr
 
 #-------------------------------------------------------------------
 # 4. confirm the deploy
+../nagios/check_service.sh
