@@ -86,6 +86,7 @@ enum Currency {
     LTC = 1010
     PTS = 1200
     DOG = 1100
+    DRK = 1300
 }
 
 enum OrderStatus {

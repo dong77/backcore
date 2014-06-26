@@ -45,13 +45,21 @@ log4js.configure({
             pattern: "-yyyy-MM-dd",
             alwaysIncludePattern: true,
             category: "1100"
-        }
+        },
+        {
+            type: "dateFile",
+            filename: 'logs/DRK.log',
+            pattern: "-yyyy-MM-dd",
+            alwaysIncludePattern: true,
+            category: "1300"
+        },
     ],
     replaceConsole: true, //替换console.log
     levels:{
         1000: 'INFO',
         1010: 'INFO',
-        1100: 'DEBUG',
+        1100: 'INFO',
+        1300: 'INFO',
     }
 });
 

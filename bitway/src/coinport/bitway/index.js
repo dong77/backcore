@@ -67,7 +67,26 @@ var dog = {
     }
 };
 
-var configs = [ btc, ltc, dog ];
+var drk = {
+    currency: Currency.DRK,
+    cryptoConfig: {
+        cryptoRpcConfig: {
+            protocol: 'http',
+            user: 'user',
+            pass: 'pass',
+            host: 'bitway',
+            port: '7332',
+        },
+        minConfirm: 1,
+        checkInterval : 5000
+    },
+    redisProxyConfig: {
+        currency: Currency.DRK,
+        ip: 'bitway',
+        port: '6379',
+    }
+};
+var configs = [ btc, ltc, dog, drk ];
 // var configs = [ btc ];
 // var configs = [ dog ];
 program.parse(process.argv);

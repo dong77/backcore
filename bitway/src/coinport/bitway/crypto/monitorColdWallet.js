@@ -135,8 +135,8 @@ var writeHistoryFile_ = function(record, callback) {
     var fileName = './coldWallet/' + record.address;
     record.txHistory.latestHeight = latest;
     console.log('write file: ', fileName);
-    console.log('record: %j', record);
     var str = JSON.stringify(countTotalAmount_(record));
+    console.log('record: %j', str);
     fs.writeFile(fileName, str, function(error) {
         if (error) {
             console.log(error);
@@ -250,7 +250,7 @@ var checkTxs_ = function(block, callback) {
                 ifATxBelongToAddr_(txs[i]);
                 ifATxUnspent_(txs[i]);
             }
-            if (height%10 == 0) {
+            if (height%50 == 0) {
                writeFile_(function(errWrite, results) {
                    if (errWrite) {
                        console.log('errWrite: %j', errWrite);
