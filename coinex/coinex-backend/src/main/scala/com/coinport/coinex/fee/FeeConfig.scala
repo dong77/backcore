@@ -11,7 +11,8 @@ import com.coinport.coinex.data.TFeeConfig
 final case class FeeConfig(
     marketFeeRules: Map[MarketSide, FeeRule],
     robotFeeRules: Map[Int, FeeRule],
-    transferFeeRules: Map[Currency, FeeRule]) {
+    transferFeeRules: Map[Currency, FeeRule],
+    freeOfTxChargeUserIdThreshold: Long = 0L) {
 
   def toThrift = TFeeConfig(
     marketFeeRules = marketFeeRules.map(kv => (kv._1 -> kv._2.toThrift)),

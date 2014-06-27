@@ -17,20 +17,27 @@ final class FeeCounter(feeConfig: FeeConfig) {
       val (takerInAmount, makerInAmount) = (tx.makerUpdate.outAmount, tx.takerUpdate.outAmount)
       var (takerFee, makerFee) = (0L, 0L)
 
-      feeConfig.marketFeeRules.get(tx.side) foreach { rule =>
-        takerFee += rule.getFee(takerInAmount)
-        makerFee += rule.getFee(makerInAmount)
+      if (tx.takerUpdate.userId > feeConfig.freeOfTxChargeUserIdThreshold) {
+        feeConfig.marketFeeRules.get(tx.side) foreach { rule =>
+          takerFee += rule.getFee(takerInAmount)
+        }
+
+        for {
+          robotType <- tx.takerUpdate.current.robotType
+          rule <- feeConfig.robotFeeRules.get(robotType)
+        } { takerFee += rule.getFee(takerInAmount) }
       }
 
-      for {
-        robotType <- tx.takerUpdate.current.robotType
-        rule <- feeConfig.robotFeeRules.get(robotType)
-      } { takerFee += rule.getFee(takerInAmount) }
+      if (tx.makerUpdate.userId > feeConfig.freeOfTxChargeUserIdThreshold) {
+        feeConfig.marketFeeRules.get(tx.side) foreach { rule =>
+          makerFee += rule.getFee(makerInAmount)
+        }
 
-      for {
-        robotType <- tx.makerUpdate.current.robotType
-        rule <- feeConfig.robotFeeRules.get(robotType)
-      } { makerFee += rule.getFee(makerInAmount) }
+        for {
+          robotType <- tx.makerUpdate.current.robotType
+          rule <- feeConfig.robotFeeRules.get(robotType)
+        } { makerFee += rule.getFee(makerInAmount) }
+      }
 
       val result = Seq(Fee(tx.makerUpdate.current.userId, None, tx.side.outCurrency, makerFee),
         Fee(tx.takerUpdate.current.userId, None, tx.side.inCurrency, takerFee))
