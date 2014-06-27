@@ -56,7 +56,7 @@ class AccountProcessor(
   def receiveRecover = PartialFunction.empty[Any, Unit]
 
   def receiveCommand = LoggingReceive {
-    case DoRequestTransfer(t) => t.`type` match {
+    case DoRequestTransfer(t, _) => t.`type` match {
       case Withdrawal =>
         val adjustment = CashAccount(t.currency, -t.amount, 0, t.amount)
         if (!manager.canUpdateCashAccount(t.userId, adjustment)) {
@@ -86,7 +86,7 @@ class AccountProcessor(
         if (!manager.canUpdateHotAccount(CashAccount(t.currency, -t.amount, 0, t.amount))) {
           sender ! RequestTransferFailed(InsufficientHot)
         } else {
-          persist(DoRequestTransfer(t)) { event =>
+          persist(DoRequestTransfer(t.copy(created = Some(System.currentTimeMillis)))) { event =>
             updateState(event)
             channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
           }
@@ -96,7 +96,7 @@ class AccountProcessor(
         if (!manager.canUpdateColdAccount(CashAccount(t.currency, -t.amount, 0, t.amount))) {
           sender ! RequestTransferFailed(InsufficientCold)
         } else {
-          persist(DoRequestTransfer(t)) { event =>
+          persist(DoRequestTransfer(t.copy(created = Some(System.currentTimeMillis)))) { event =>
             updateState(event)
             channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
           }
@@ -301,7 +301,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
         CashAccount(Currency.Cny, amount, 0, 0))
     }
 
-    case DoRequestTransfer(t) =>
+    case DoRequestTransfer(t, _) =>
       t.`type` match {
         case Withdrawal =>
           manager.updateCashAccount(t.userId, CashAccount(t.currency, -t.amount, 0, t.amount))
@@ -311,7 +311,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
         case _ =>
       }
 
-    case AdminConfirmTransferSuccess(t) =>
+    case AdminConfirmTransferSuccess(t, _) =>
       succeededTransfer(t)
 
     case AdminConfirmTransferFailure(t, _) =>

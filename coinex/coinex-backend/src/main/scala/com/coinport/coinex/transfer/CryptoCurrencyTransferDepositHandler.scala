@@ -28,19 +28,18 @@ object CryptoCurrencyTransferDepositHandler extends CryptoCurrencyTransferDeposi
 
 }
 
-class CryptoCurrencyTransferDepositHandler(currency: Currency, outputPort: CryptoCurrencyTransactionPort, tx: CryptoCurrencyTransaction)(implicit env: TransferEnv)
-    extends CryptoCurrencyTransferDepositLikeHandler(currency, outputPort, tx) {
-  setEnv(env)
+class CryptoCurrencyTransferDepositHandler(currency: Currency, outputPort: CryptoCurrencyTransactionPort, tx: CryptoCurrencyTransaction, timestamp: Option[Long])(implicit env: TransferEnv)
+    extends CryptoCurrencyTransferDepositLikeHandler(currency, outputPort, tx, timestamp) {
 
   def this(item: CryptoCurrencyTransferItem)(implicit env: TransferEnv) {
-    this(null, null, null)
+    this(null, null, null, None)
     this.item = item
   }
 
   override def checkConfirm(lastBlockHeight: Long): Boolean = {
     //Reorging item will not confirm again to avoid resend UserToHot message
     if (super.checkConfirm(lastBlockHeight) && item.status.get != Reorging) {
-      CryptoCurrencyTransferUserToHotHandler.createUserToHot(item)
+      CryptoCurrencyTransferUserToHotHandler.createUserToHot(item, getTimestamp())
       return true
     }
     false
@@ -62,7 +61,7 @@ object CryptoCurrencyTransferUnknownHandler extends CryptoCurrencyTransferBase {
     null
   }
 
-  override def handleTx(currency: Currency, tx: CryptoCurrencyTransaction) {
+  override def handleTx(currency: Currency, tx: CryptoCurrencyTransaction, timestamp: Option[Long]) {
     refreshLastBlockHeight(currency, tx)
   }
 

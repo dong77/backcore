@@ -16,11 +16,10 @@ object CryptoCurrencyTransferColdToHotHandler extends CryptoCurrencyTransferDepo
 
 }
 
-class CryptoCurrencyTransferColdToHotHandler(currency: Currency, outputPort: CryptoCurrencyTransactionPort, tx: CryptoCurrencyTransaction)(implicit env: TransferEnv)
-    extends CryptoCurrencyTransferDepositLikeHandler(currency, outputPort, tx) {
+class CryptoCurrencyTransferColdToHotHandler(currency: Currency, outputPort: CryptoCurrencyTransactionPort, tx: CryptoCurrencyTransaction, timestamp: Option[Long])(implicit env: TransferEnv)
+    extends CryptoCurrencyTransferDepositLikeHandler(currency, outputPort, tx, timestamp) {
   if (currency != null && outputPort != null && tx != null && tx.minerFee.isDefined) {
     val hotOutputList = tx.outputs.get filter { out => out.userId.isDefined && out.userId.get == HOT_UID }
-    println("$" * 50 + "hotOutputList = " + hotOutputList.toString() + ", outputPort = " + outputPort.toString + ", tx.minerFee = " + tx.minerFee.toString)
     val outputSize = hotOutputList.size
     val newInternalAmount: Long = {
       outputPort.address.equals(hotOutputList.last.address) match {
@@ -38,7 +37,7 @@ class CryptoCurrencyTransferColdToHotHandler(currency: Currency, outputPort: Cry
   }
 
   def this(item: CryptoCurrencyTransferItem)(implicit env: TransferEnv) {
-    this(null, null, null)
+    this(null, null, null, None)
     this.item = item
   }
 
