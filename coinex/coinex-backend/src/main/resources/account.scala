@@ -25,7 +25,7 @@ AccountConfig(
     transferFeeRules = Map(
       Btc -> ConstantFee(0.0002.internalValue(Btc)),
       Doge -> ConstantFee(0.0002.internalValue(Doge)),
-      Cny -> PercentageFee(0.002))),
+      Cny -> PercentageFee(0.002)),
 
     freeOfTxChargeUserIdThreshold = 1E9.toLong + 1000 // 1 thousand
     ),
