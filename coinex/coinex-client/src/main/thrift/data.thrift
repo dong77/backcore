@@ -238,6 +238,7 @@ struct UserProfile {
     14: UserStatus status
     15: optional map<Currency, string> depositAddresses
     16: optional map<Currency, string> withdrawalAddresses
+    17: optional i64 referralUserId
 }
 
 struct MarketSide {
