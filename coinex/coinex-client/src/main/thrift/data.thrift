@@ -238,7 +238,12 @@ struct UserProfile {
     14: UserStatus status
     15: optional map<Currency, string> depositAddresses
     16: optional map<Currency, string> withdrawalAddresses
-    17: optional i64 referralUserId
+    17: optional i64 referralToken
+    18: optional i64 referralUserId  // this should be hidden for this user
+}
+
+struct ReferralParams {
+    1: optional i64 referralToken
 }
 
 struct MarketSide {

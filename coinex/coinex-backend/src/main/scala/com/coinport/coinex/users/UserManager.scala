@@ -20,12 +20,14 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.common.Manager
 import com.coinport.coinex.util._
 import com.google.common.io.BaseEncoding
+import scala.util.Random
 
 class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: String = "") extends Manager[TUserState] {
   // Internal mutable state ----------------------------------------------
   var lastUserId = 1E9.toLong
   val idMap = Map.empty[Long, Long] // email hash to user Id
-  val profileMap: Map[Long, UserProfile] = Map.empty[Long, UserProfile]
+  val profileMap = Map.empty[Long, UserProfile]
+  val referralTokenMap = Map.empty[Long, Long]
   val passwordResetTokenMap: Map[String, Long] = Map.empty[String, Long]
   val verificationTokenMap: Map[String, Long] = Map.empty[String, Long]
 
@@ -41,10 +43,20 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
   }
 
   // Business logics      ----------------------------------------------
-  def regulateProfile(profile: UserProfile, password: String, verificationToken: String): UserProfile = {
+  def regulateProfile(profile: UserProfile, password: String, verificationToken: String, params: Option[ReferralParams]): UserProfile = {
     val email = profile.email.trim.toLowerCase
     val id = getUserId
     val googleAuthenticatorSecret = googleAuthenticator.createSecret
+
+    val referralUserId = for {
+      p <- params
+      token <- p.referralToken
+      referral <- referralTokenMap.get(token)
+    } yield referral
+
+    var referralToken = Random.nextLong
+    while (referralTokenMap.contains(referralToken)) referralToken = Random.nextLong
+
     profile.copy(
       id = id,
       email = email,
@@ -54,7 +66,9 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
       verificationToken = Some(verificationToken),
       loginToken = None,
       googleAuthenticatorSecret = None,
-      status = UserStatus.Normal)
+      status = UserStatus.Normal,
+      referralToken = Some(referralToken),
+      referralUserId = referralUserId)
   }
 
   def registerUser(profile: UserProfile): UserProfile = {
@@ -122,6 +136,7 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
   private def addUserProfile(profile: UserProfile) = {
     idMap += MHash.murmur3(profile.email) -> profile.id
     profileMap += profile.id -> profile
+    profile.referralToken foreach { referralTokenMap += _ -> profile.id }
   }
 
   private def getUserId = lastUserId

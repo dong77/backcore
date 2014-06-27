@@ -28,14 +28,14 @@ class UserProcessor(mailer: ActorRef, secret: String)
   def receiveRecover = PartialFunction.empty[Any, Unit]
 
   def receiveCommand = LoggingReceive {
-    case m @ DoRegisterUser(userProfile, password) =>
+    case m @ DoRegisterUser(userProfile, password, referralParams) =>
       manager.getUser(userProfile.email) match {
         case Some(_) =>
           sender ! RegisterUserFailed(EmailAlreadyRegistered)
         case None =>
           val verificationToken = generateRandomHexToken(userProfile.email)
-          val profile = manager.regulateProfile(userProfile, password, verificationToken)
-          persist(DoRegisterUser(profile, "" /* ignored */ ))(updateState)
+          val profile = manager.regulateProfile(userProfile, password, verificationToken, referralParams)
+          persist(DoRegisterUser(profile, null, referralParams))(updateState)
           sender ! RegisterUserSucceeded(profile)
           sendEmailVerificationEmail(profile)
       }
@@ -153,7 +153,7 @@ class UserProcessor(mailer: ActorRef, secret: String)
   }
 
   def updateState: Receive = {
-    case DoRegisterUser(profile, _) => manager.registerUser(profile)
+    case m: DoRegisterUser => manager.registerUser(m.userProfile)
     case DoUpdateUserProfile(profile) => manager.updateUser(profile)
 
     case DoRequestPasswordReset(email, token) =>

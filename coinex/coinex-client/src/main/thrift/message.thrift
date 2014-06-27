@@ -55,6 +55,7 @@ typedef data.AddressStatusResult                _AddressStatusResult
 typedef data.CryptoAddress                      _CryptoAddress
 typedef data.TFeeConfig                         _TFeeConfig
 typedef data.Language                           _Language
+typedef data.ReferralParams                     _ReferralParams
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -78,7 +79,7 @@ typedef data.Language                           _Language
 /* C    */ struct DumpStateToFile                         {1: string actorPath}
 
 ////////// UserProcessor
-/* C,P  */ struct DoRegisterUser                          {1: _UserProfile userProfile, 2: string password}
+/* C,P  */ struct DoRegisterUser                          {1: _UserProfile userProfile, 2: string password, 3: optional _ReferralParams rparams}
 /* R-   */ struct RegisterUserFailed                      {1: _ErrorCode error}
 /* R+   */ struct RegisterUserSucceeded                   {1: _UserProfile userProfile}
 
