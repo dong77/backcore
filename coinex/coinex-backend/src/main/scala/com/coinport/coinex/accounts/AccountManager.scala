@@ -124,6 +124,7 @@ class AccountManager(initialLastOrderId: Long = 0L,
     accounts += (adjustment.currency -> updated)
   }
 
+  // The coinport account is used to accumulate all fees (including paid and received)
   def updateCoinportAccount(adjustment: CashAccount) = {
     val current = getUserCashAccount(COINPORT_UID, adjustment.currency)
     val updated = current + adjustment
