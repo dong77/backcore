@@ -224,8 +224,8 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       val (completedInfos, isFail) = manager.completeTransferInfos(infos, t == TransferType.HotToCold)
       if (isFail) {
         sender ! TransferCryptoCurrencyResult(currency, ErrorCode.NoAddressFound, Some(m))
-      } else if (manager.includeWithdrawalToDepositAddress(infos)) {
-        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.WithdrawalToDepositAddress, Some(m))
+      } else if (manager.includeWithdrawalToBadAddress(t, infos)) {
+        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.WithdrawalToBadAddress, Some(m))
       } else {
         sender ! TransferCryptoCurrencyResult(currency, ErrorCode.Ok, None)
         client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
@@ -239,7 +239,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       val MultiTransferCryptoCurrency(currency, transferInfos) = m
       val (passedInfos, failedInfos) = transferInfos.map { kv =>
         (kv._1 -> manager.completeTransferInfos(kv._2, kv._1 == TransferType.HotToCold))
-      }.partition(kv => (!kv._2._2) && (!manager.includeWithdrawalToDepositAddress(kv._2._1)))
+      }.partition(kv => (!kv._2._2) && (!manager.includeWithdrawalToBadAddress(kv._1, kv._2._1)))
       if (failedInfos.size > 0) {
         sender ! MultiTransferCryptoCurrencyResult(currency, ErrorCode.AddressFail,
           Some(failedInfos.map(kv => (kv._1 -> kv._2._1))))

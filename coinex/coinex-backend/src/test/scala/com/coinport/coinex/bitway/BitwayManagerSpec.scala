@@ -297,12 +297,12 @@ class BitwayManagerSpec extends Specification {
       bwm.faucetAddress(Hot, Set(CryptoAddress("h1"), CryptoAddress("h2")))
       bwm.faucetAddress(Cold, Set(CryptoAddress("c1")))
 
-      bwm.includeWithdrawalToDepositAddress(Seq(
+      bwm.includeWithdrawalToBadAddress(HotToCold, Seq(
         CryptoCurrencyTransferInfo(1, from = Some("h1"), to = Some("c1")),
         CryptoCurrencyTransferInfo(2, from = Some("c1"), to = Some("h2"))
       )) mustEqual false
 
-      bwm.includeWithdrawalToDepositAddress(Seq(
+      bwm.includeWithdrawalToBadAddress(Withdrawal, Seq(
         CryptoCurrencyTransferInfo(2, from = Some("c1"), to = Some("h2")),
         CryptoCurrencyTransferInfo(1, from = Some("h1"), to = Some("u1"))
       )) mustEqual true
@@ -316,12 +316,12 @@ class BitwayManagerSpec extends Specification {
       bwm.faucetAddress(Hot, Set(CryptoAddress("h1", Some("ph1")), CryptoAddress("h2", Some("ph2"))))
       bwm.faucetAddress(Cold, Set(CryptoAddress("c1", Some("pc1"))))
 
-      bwm.includeWithdrawalToDepositAddress(Seq(
+      bwm.includeWithdrawalToBadAddress(HotToCold, Seq(
         CryptoCurrencyTransferInfo(1, from = Some("h1"), to = Some("c1")),
         CryptoCurrencyTransferInfo(2, from = Some("c1"), to = Some("h2"))
       )) mustEqual false
 
-      bwm.includeWithdrawalToDepositAddress(Seq(
+      bwm.includeWithdrawalToBadAddress(Withdrawal, Seq(
         CryptoCurrencyTransferInfo(2, from = Some("c1"), to = Some("h2")),
         CryptoCurrencyTransferInfo(1, from = Some("h1"), to = Some("u1"))
       )) mustEqual true

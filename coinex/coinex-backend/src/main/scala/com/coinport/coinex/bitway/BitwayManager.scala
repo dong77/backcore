@@ -157,13 +157,16 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
       Some(TransferType.UserToHot)
     } else if (inputsMatched.contains(HOT)) {
       assert(!outputsMatched.contains(USER))
-      if (outputsMatched.contains(COLD)) {
+      if (outputsMatched.contains(COLD))
         Some(TransferType.HotToCold)
-      } else {
+      else
         Some(TransferType.Withdrawal)
-      }
-    } else if (inputsMatched.contains(COLD) && outputsMatched.contains(HOT)) {
-      Some(TransferType.ColdToHot)
+    } else if (inputsMatched.contains(COLD)) {
+      assert(!outputsMatched.contains(USER))
+      if (outputsMatched.contains(HOT))
+        Some(TransferType.ColdToHot)
+      else
+        Some(TransferType.Withdrawal)
     } else if (outputsMatched.contains(USER)) {
       Some(TransferType.Deposit)
     } else if (inputsMatched.nonEmpty || outputsMatched.nonEmpty) {
@@ -322,9 +325,14 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
     status.getAmount(getCurrentHeight, 1)
   }
 
-  def includeWithdrawalToDepositAddress(infos: Seq[CryptoCurrencyTransferInfo]): Boolean = {
-    infos.exists(info => (info.to.isDefined && info.from.isDefined &&
-      addresses(Hot).contains(info.from.get) && addresses(User).contains(info.to.get)))
+  def includeWithdrawalToBadAddress(transferType: TransferType, infos: Seq[CryptoCurrencyTransferInfo]): Boolean = {
+    if (transferType == TransferType.Withdrawal) {
+      infos.exists(info => (info.to.isDefined && (addresses(User).contains(info.to.get) ||
+        addresses(Hot).contains(info.to.get) || addresses(Cold).contains(info.to.get)
+      )))
+    } else {
+      false
+    }
   }
 
   def syncPrivateKeys(keys: List[CryptoAddress]) {
