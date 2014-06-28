@@ -119,7 +119,7 @@ typedef data.ReferralParams                     _ReferralParams
 /* Q    */ struct VerifyGoogleAuthCode                    {1: string email, 2: i32 code}
 /* R    */ struct GoogleAuthCodeVerificationResult        {1: optional _UserProfile userProfile}
 
-/* C,P  */ struct DoRequestTransfer                       {1: _AccountTransfer transfer, 2: optional bool transferDebug}
+/* C,P  */ struct DoRequestTransfer                       {1: _AccountTransfer transfer}
 /* R-   */ struct RequestTransferFailed                   {1: _ErrorCode error}
 /* R+   */ struct RequestTransferSucceeded                {1: _AccountTransfer transfer}
 
@@ -129,7 +129,7 @@ typedef data.ReferralParams                     _ReferralParams
 
 /* C,P  */ struct DoCancelTransfer                        {1: _AccountTransfer transfer}
 /* C,P  */ struct AdminConfirmTransferFailure             {1: _AccountTransfer transfer, 2:_ErrorCode error}
-/* C,P  */ struct AdminConfirmTransferSuccess             {1: _AccountTransfer transfer, 2: optional bool transferDebug}
+/* C,P  */ struct AdminConfirmTransferSuccess             {1: _AccountTransfer transfer}
 
 /* C,P  */ struct DoRequestGenerateABCode                 {1: i64 userId, 2: i64 amount, 3: optional string a, 4: optional string b}
 /* R-   */ struct RequestGenerateABCodeFailed             {1: _ErrorCode error}
@@ -185,10 +185,10 @@ typedef data.ReferralParams                     _ReferralParams
 /* C    */ struct AllocateNewAddress                      {1: _Currency currency, 2: i64 userId, 3: optional string assignedAddress}
 /* R    */ struct AllocateNewAddressResult                {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional string address}
 /* C,I  */ struct TransferCryptoCurrency                  {1: _Currency currency, 2: list<_CryptoCurrencyTransferInfo> transferInfos, 3: _TransferType type}
-/* R    */ struct TransferCryptoCurrencyResult            {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional TransferCryptoCurrency request, 4: optional i64 timestamp}
+/* R    */ struct TransferCryptoCurrencyResult            {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional TransferCryptoCurrency request}
 /* C,I  */ struct MultiTransferCryptoCurrency             {1: _Currency currency, 2: map<_TransferType, list<_CryptoCurrencyTransferInfo>> transferInfos}
-/* R    */ struct MultiTransferCryptoCurrencyResult       {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional map<_TransferType, list<_CryptoCurrencyTransferInfo>> transferInfos, 4: optional i64 timestamp}
-/* I    */ struct MultiCryptoCurrencyTransactionMessage   {1: _Currency currency, 2: list<_CryptoCurrencyTransaction> txs, 3: optional _BlockIndex reorgIndex, 4: optional i32 confirmNum, 5: optional i64 timestamp}
+/* R    */ struct MultiTransferCryptoCurrencyResult       {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional map<_TransferType, list<_CryptoCurrencyTransferInfo>> transferInfos}
+/* I    */ struct MultiCryptoCurrencyTransactionMessage   {1: _Currency currency, 2: list<_CryptoCurrencyTransaction> txs, 3: optional _BlockIndex reorgIndex}
 /* Q    */ struct QueryCryptoCurrencyAddressStatus        {1: _Currency currency, 2: _CryptoCurrencyAddressType addressType}
 /* R    */ struct QueryCryptoCurrencyAddressStatusResult  {1: _Currency currency, 2: map<string, _AddressStatusResult> status}
 /* Q    */ struct QueryCryptoCurrencyNetworkStatus        {1: _Currency currency}

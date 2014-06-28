@@ -6,7 +6,7 @@ import com.coinport.coinex.data.TransferType.UserToHot
 
 object CryptoCurrencyTransferUserToHotHandler extends CryptoCurrencyTransferBase {
 
-  override def innerHandleTx(currency: Currency, tx: CryptoCurrencyTransaction, timestamp: Option[Long]) {
+  override def innerHandleTx(currency: Currency, tx: CryptoCurrencyTransaction) {
     tx.ids match {
       case Some(idList) if idList.size > 0 =>
         idList foreach {
@@ -14,12 +14,12 @@ object CryptoCurrencyTransferUserToHotHandler extends CryptoCurrencyTransferBase
             if (id2HandlerMap.contains(id)) {
               tx.status match {
                 case Failed =>
-                  handleFailed(id2HandlerMap(id).setTimeStamp(timestamp))
+                  handleFailed(id2HandlerMap(id))
                 case _ =>
-                  id2HandlerMap(id).setTimeStamp(timestamp).onNormal(tx)
+                  id2HandlerMap(id).onNormal(tx)
               }
             } else {
-              logger.warning(s"""${"~" * 50} innerHandleTx() UserToHot item confirm id not contained in id2HandlerMap : ${tx.toString}""")
+              logger.warning(s"""${"~" * 50} innerHandleTx() UserToHot item confirm id contained in id2HandlerMap : ${tx.toString}""")
             }
         }
         updateSigId2MinerFee(tx)
@@ -41,8 +41,8 @@ object CryptoCurrencyTransferUserToHotHandler extends CryptoCurrencyTransferBase
     Some(CryptoCurrencyTransferInfo(item.id, None, item.from.get.internalAmount, item.from.get.amount, Some(item.from.get.address)))
   }
 
-  def createUserToHot(depositItem: CryptoCurrencyTransferItem, timestamp: Option[Long]) {
-    val handler = new CryptoCurrencyTransferUserToHotHandler(depositItem, timestamp)
+  def createUserToHot(depositItem: CryptoCurrencyTransferItem) {
+    val handler = new CryptoCurrencyTransferUserToHotHandler(depositItem)
     id2HandlerMap.put(handler.item.id, handler)
     msgBoxMap.put(handler.item.id, handler.item)
   }
@@ -51,22 +51,23 @@ object CryptoCurrencyTransferUserToHotHandler extends CryptoCurrencyTransferBase
 class CryptoCurrencyTransferUserToHotHandler extends CryptoCurrencyTransferHandler {
   def this(item: CryptoCurrencyTransferItem)(implicit env: TransferEnv) {
     this()
-    setEnv(env, None)
-    this.item = item
+    setEnv(env)
+    item.txType match {
+      case Some(TransferType.UserToHot) =>
+        this.item = item
+      case Some(TransferType.Deposit) =>
+        createItemFromDepositItem(item)
+      case _ =>
+        logger.error(s"""${"~" * 50} Try create UserToHot with not userToHot nor deposit item : ${item.toString}""")
+    }
   }
 
-  def this(item: CryptoCurrencyTransferItem, timestamp: Option[Long])(implicit env: TransferEnv) {
-    this()
-    setEnv(env, timestamp)
-    createItemFromDepositItem(item, timestamp)
-  }
-
-  private def createItemFromDepositItem(depositItem: CryptoCurrencyTransferItem, timestamp: Option[Long]) {
+  private def createItemFromDepositItem(depositItem: CryptoCurrencyTransferItem) {
     val transferId = manager.getTransferId
     manager.setLastTransferId(transferId)
-    transferHandler.put(AccountTransfer(transferId, depositItem.userId.get, TransferType.UserToHot, depositItem.currency, depositItem.to.get.internalAmount.get, Confirming, timestamp, address = Some(depositItem.to.get.address)))
+    transferHandler.put(AccountTransfer(transferId, depositItem.userId.get, TransferType.UserToHot, depositItem.currency, depositItem.to.get.internalAmount.get, Confirming, Some(System.currentTimeMillis()), address = Some(depositItem.to.get.address)))
     // id, currency, sigId, txid, userId, from, to(hot address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
-    item = CryptoCurrencyTransferItem(manager.getNewTransferItemId, depositItem.currency, None, None, depositItem.userId, depositItem.to, None, None, Some(UserToHot), Some(Confirming), Some(depositItem.id), Some(transferId), timestamp)
+    item = CryptoCurrencyTransferItem(manager.getNewTransferItemId, depositItem.currency, None, None, depositItem.userId, depositItem.to, None, None, Some(UserToHot), Some(Confirming), Some(depositItem.id), Some(transferId), Some(System.currentTimeMillis()))
     saveItemToMongo()
   }
 

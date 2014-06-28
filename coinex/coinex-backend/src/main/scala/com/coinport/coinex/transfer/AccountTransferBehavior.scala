@@ -16,11 +16,15 @@ trait AccountTransferBehavior {
   val db: MongoDB
   implicit val manager: AccountTransferManager
   implicit val logger: LoggingAdapter
-  var succeededRetainNum = collection.Map.empty[Currency, Int]
+  var transferDebug: Boolean = false
+  var confirmableHeight = collection.Map.empty[Currency, Int]
+  var succeededRetainHeight = collection.Map.empty[Currency, Int]
   val transferHandlerObjectMap = Map.empty[TransferType, CryptoCurrencyTransferBase]
 
-  def setSucceededRetainNum(succeededRetainNum: collection.Map[Currency, Int]) = {
-    this.succeededRetainNum ++= succeededRetainNum
+  def setTransferConfig(transferConfig: AccountTransferConfig) = {
+    transferDebug = transferConfig.transferDebug
+    confirmableHeight ++= transferConfig.confirmableHeight
+    succeededRetainHeight ++= transferConfig.succeededRetainHeight
   }
 
   def isCryptoCurrency(currency: Currency): Boolean = {
@@ -28,7 +32,7 @@ trait AccountTransferBehavior {
   }
 
   def intTransferHandlerObjectMap() {
-    val env = new TransferEnv(manager, transferHandler, transferItemHandler, logger, succeededRetainNum)
+    val env = new TransferEnv(manager, transferHandler, transferItemHandler, logger, confirmableHeight, succeededRetainHeight)
     transferHandlerObjectMap += Deposit -> CryptoCurrencyTransferDepositHandler.setEnv(env)
     transferHandlerObjectMap += UserToHot -> CryptoCurrencyTransferUserToHotHandler.setEnv(env)
     transferHandlerObjectMap += Withdrawal -> CryptoCurrencyTransferWithdrawalHandler.setEnv(env)
@@ -40,8 +44,8 @@ trait AccountTransferBehavior {
 
   def updateState: Receive = {
 
-    case DoRequestTransfer(t, transferDebug) =>
-      if (isCryptoCurrency(t.currency) && !(transferDebug.isDefined && transferDebug.get)) {
+    case DoRequestTransfer(t) =>
+      if (isCryptoCurrency(t.currency) && !transferDebug) {
         t.`type` match {
           case TransferType.Deposit => //Do nothing
           case TransferType.UserToHot =>
@@ -53,7 +57,7 @@ trait AccountTransferBehavior {
             transferHandler.put(t)
             val from = CryptoCurrencyTransactionPort("", None, Some(t.amount), Some(t.userId))
             val to = CryptoCurrencyTransactionPort("", None, Some(t.amount), Some(t.userId))
-            prepareBitwayMsg(t, Some(from), Some(to), transferHandlerObjectMap(HotToCold).asInstanceOf[CryptoCurrencyTransferWithdrawalLikeBase], t.created)
+            prepareBitwayMsg(t, Some(from), Some(to), transferHandlerObjectMap(HotToCold).asInstanceOf[CryptoCurrencyTransferWithdrawalLikeBase])
           case TransferType.Unknown =>
             transferHandler.put(t)
         }
@@ -66,8 +70,8 @@ trait AccountTransferBehavior {
 
     case DoCancelTransfer(t) => transferHandler.put(t)
 
-    case AdminConfirmTransferSuccess(t, transferDebug) => {
-      if (isCryptoCurrency(t.currency) && !(transferDebug.isDefined && transferDebug.get)) {
+    case AdminConfirmTransferSuccess(t) => {
+      if (isCryptoCurrency(t.currency) && !transferDebug) {
         t.`type` match {
           case TransferType.Withdrawal =>
             val transferAmount = t.fee match {
@@ -75,19 +79,19 @@ trait AccountTransferBehavior {
               case _ => t.amount
             }
             val to = CryptoCurrencyTransactionPort(t.address.get, None, Some(transferAmount), Some(t.userId))
-            prepareBitwayMsg(t, None, Some(to), transferHandlerObjectMap(Withdrawal).asInstanceOf[CryptoCurrencyTransferWithdrawalLikeBase], t.updated)
+            prepareBitwayMsg(t, None, Some(to), transferHandlerObjectMap(Withdrawal).asInstanceOf[CryptoCurrencyTransferWithdrawalLikeBase])
           case _ => // Just handle other type, do nothing
         }
       }
       transferHandler.put(t)
     }
 
-    case m @ MultiCryptoCurrencyTransactionMessage(currency, txs, newIndex: Option[BlockIndex], confirmNum, timestamp) =>
+    case m @ MultiCryptoCurrencyTransactionMessage(currency, txs, newIndex: Option[BlockIndex]) =>
       logger.info(s">>>>>>>>>>>>>>>>>>>>> updateState  => ${m.toString}")
       if (manager.getLastBlockHeight(currency) > 0) newIndex foreach {
         reOrgBlockIndex =>
           transferHandlerObjectMap.values foreach {
-            _.reOrganize(currency, reOrgBlockIndex, manager, timestamp)
+            _.reOrganize(currency, reOrgBlockIndex, manager)
           }
       }
 
@@ -98,42 +102,42 @@ trait AccountTransferBehavior {
           tx.txType match {
             case None =>
               logger.warning(s"Unexpected tx meet : ${tx.toString}")
-              CryptoCurrencyTransferUnknownHandler.handleTx(currency, tx, None)
+              CryptoCurrencyTransferUnknownHandler.handleTx(currency, tx)
             case Some(txType) =>
               transferHandlerObjectMap.contains(txType) match {
                 case true =>
-                  transferHandlerObjectMap(txType).handleTx(currency, tx, timestamp)
+                  transferHandlerObjectMap(txType).handleTx(currency, tx)
                 case _ =>
                   logger.warning(s"Unknown tx meet : ${tx.toString}")
               }
           }
       }
-      transferHandlerObjectMap.values foreach { _.checkConfirm(currency, timestamp, confirmNum) }
+      transferHandlerObjectMap.values foreach { _.checkConfirm(currency) }
 
-    case rs @ TransferCryptoCurrencyResult(currency, _, request, timestamp) =>
+    case rs @ TransferCryptoCurrencyResult(currency, _, request) =>
       logger.info(s">>>>>>>>>>>>>>>>>>>>> updateState  => ${rs.toString}")
       transferHandlerObjectMap.values foreach { _.init() }
       request.get.transferInfos foreach {
         info =>
-          transferHandlerObjectMap(request.get.`type`).handleBitwayFail(info, currency, timestamp)
+          transferHandlerObjectMap(request.get.`type`).handleBitwayFail(info, currency)
       }
 
-    case mr @ MultiTransferCryptoCurrencyResult(currency, _, transferInfos, timestamp) =>
+    case mr @ MultiTransferCryptoCurrencyResult(currency, _, transferInfos) =>
       logger.info(s">>>>>>>>>>>>>>>>>>>>> updateState  => ${mr.toString}")
       transferHandlerObjectMap.values foreach { _.init() }
       transferInfos.get.keys foreach {
         txType =>
           transferInfos.get.get(txType).get foreach {
             info =>
-              transferHandlerObjectMap(txType).handleBitwayFail(info, currency, timestamp)
+              transferHandlerObjectMap(txType).handleBitwayFail(info, currency)
           }
       }
   }
 
   def prepareBitwayMsg(transfer: AccountTransfer, from: Option[CryptoCurrencyTransactionPort],
-    to: Option[CryptoCurrencyTransactionPort], handler: CryptoCurrencyTransferWithdrawalLikeBase, timestamp: Option[Long]) {
+    to: Option[CryptoCurrencyTransactionPort], handler: CryptoCurrencyTransferWithdrawalLikeBase) {
     handler.init()
-    handler.newHandlerFromAccountTransfer(transfer, from, to, timestamp)
+    handler.newHandlerFromAccountTransfer(transfer, from, to)
   }
 
   def batchBitwayMessage(currency: Currency): Map[TransferType, List[CryptoCurrencyTransferInfo]] = {
@@ -209,5 +213,6 @@ class TransferEnv(val manager: AccountTransferManager,
   val transferHandler: SimpleJsonMongoCollection[AccountTransfer, AccountTransfer.Immutable],
   val transferItemHandler: SimpleJsonMongoCollection[CryptoCurrencyTransferItem, CryptoCurrencyTransferItem.Immutable],
   val logger: LoggingAdapter,
-  val succeededRetainNum: collection.immutable.Map[Currency, Int])
+  val confirmableHeight: collection.immutable.Map[Currency, Int],
+  val succeededRetainHeight: collection.immutable.Map[Currency, Int])
 
