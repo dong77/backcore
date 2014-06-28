@@ -48,7 +48,7 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
         opt_config.minConfirm != undefined && (this.minConfirm = opt_config.minConfirm);
         opt_config.checkInterval != undefined && (this.checkInterval = opt_config.checkInterval);
         opt_config.minerfee != undefined && (self.minerFee = opt_config.minerFee);
-        opt_config.walletPassPhrase != undefined && (self.walletPassPhrase = opt_config.walletPassPhrase);
+        opt_config.walletPassPhrase != undefined && (this.walletPassPhrase = opt_config.walletPassPhrase);
     }
 
     this.currency || (this.currency = currency);
@@ -523,7 +523,7 @@ CryptoProxy.prototype.generateAHotAddress_ = function(unusedIndex, callback) {
             self.log.error(errPub);
             callback(errPub);
         } else {
-            self.dumpPrivateKey_(replyPub.result, function(errPriv, replyPriv) {
+            self.getPrivateKey_(replyPub.result, function(errPriv, replyPriv) {
                 if (errPriv) {
                     callback(errPriv);
                 } else {
@@ -840,7 +840,7 @@ CryptoProxy.prototype.generateOneAddress_ = function(unusedIndex, callback) {
         if (errPub) {
             callback(errPub);
         } else {
-            self.dumpPrivateKey_(replyPub.result, function(errPriv, replyPriv) {
+            self.getPrivateKey_(replyPub.result, function(errPriv, replyPriv) {
                 if (errPriv) {
                     callback(errPriv);
                 } else {
