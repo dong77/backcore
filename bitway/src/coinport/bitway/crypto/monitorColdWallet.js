@@ -10,16 +10,6 @@ var program = require('commander');
 var Async = require('async');
 var fs = require('fs');
 var RpcClient   = require('bitcore').RpcClient;
-var dog = {
-    cryptoRpcConfig: {
-        protocol: 'http',
-        user: 'user',
-        pass: 'pass',
-        host: '127.0.0.1',
-        port: '44555',
-    },
-    height: 117750,
-};
 var btc = {
     cryptoRpcConfig: {
         protocol: 'http',
@@ -28,7 +18,51 @@ var btc = {
         host: 'bitway',
         port: '8332',
     },
-    height: 306050,
+    height: 308251, //2014-06-28 16:26
+};
+
+var ltc = {
+    cryptoRpcConfig: {
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: 'bitway',
+        port: '9332',
+    },
+    height: 593978, //2014-06-28 16:26
+};
+
+var dog = {
+    cryptoRpcConfig: {
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: '127.0.0.1',
+        port: '22555',
+    },
+    height: 278109, //2014-06-28 16:26
+};
+
+var drk = {
+    cryptoRpcConfig: {
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: '127.0.0.1',
+        port: '7332',
+    },
+    height: 93011, //2014-06-28 16:26
+};
+
+var bc = {
+    cryptoRpcConfig: {
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: '127.0.0.1',
+        port: '15715',
+    },
+    height: 237401, //2014-06-28 16:26
 };
 
 var height = 0;
@@ -55,6 +89,12 @@ var initData_ = function(callback) {
             break;
         case 'dog':
             config = dog;
+            break;
+        case 'drk':
+            config = drk;
+            break;
+        case 'bc':
+            config = bc;
             break;
         default:
             console.log('unknown currency!');

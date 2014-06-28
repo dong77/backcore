@@ -31,17 +31,40 @@ var ltc = {
     minerFee: 0.0001,
 };
 
-
 var dog = {
     cryptoRpcConfig: {
         protocol: 'http',
         user: 'user',
         pass: 'pass',
         host: '127.0.0.1',
-        port: '44555',
+        port: '22555',
     },
     minerFee: 0.0001,
 };
+
+
+var drk = {
+    cryptoRpcConfig: {
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: '127.0.0.1',
+        port: '7332',
+    },
+    minerFee: 0.0001,
+};
+
+var bt = {
+    cryptoRpcConfig: {
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: '127.0.0.1',
+        port: '15715',
+    },
+    minerFee: 0.0001,
+};
+
 var minerFee = 0.0001;
 var coldAddr = '';
 var privateKeys = [];
@@ -72,6 +95,12 @@ var initData_ = function(callback) {
             break;
         case 'dog':
             config = dog;
+            break;
+        case 'drk':
+            config = drk;
+            break;
+        case 'bc':
+            config = bc;
             break;
         default:
             console.log('unknown currency!');
