@@ -51,6 +51,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cRDouble = JsonScalaCodec(RDouble)
   lazy val _cRedeliverFilterData = JsonScalaCodec(RedeliverFilterData)
   lazy val _cRedeliverFilters = JsonScalaCodec(RedeliverFilters)
+  lazy val _cReferralParams = JsonScalaCodec(ReferralParams)
   lazy val _cRefund = JsonScalaCodec(Refund)
   lazy val _cSpanCursor = JsonScalaCodec(SpanCursor)
   lazy val _cTAddressStatus = JsonScalaCodec(TAddressStatus)
@@ -248,6 +249,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: RDouble => _cRDouble(m)
     case m: RedeliverFilterData => _cRedeliverFilterData(m)
     case m: RedeliverFilters => _cRedeliverFilters(m)
+    case m: ReferralParams => _cReferralParams(m)
     case m: Refund => _cRefund(m)
     case m: SpanCursor => _cSpanCursor(m)
     case m: TAddressStatus => _cTAddressStatus(m)
@@ -449,6 +451,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[RDouble.Immutable] => _cRDouble.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilterData.Immutable] => _cRedeliverFilterData.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilters.Immutable] => _cRedeliverFilters.invert(bytes).get
+    case Some(c) if c == classOf[ReferralParams.Immutable] => _cReferralParams.invert(bytes).get
     case Some(c) if c == classOf[Refund.Immutable] => _cRefund.invert(bytes).get
     case Some(c) if c == classOf[SpanCursor.Immutable] => _cSpanCursor.invert(bytes).get
     case Some(c) if c == classOf[TAddressStatus.Immutable] => _cTAddressStatus.invert(bytes).get
