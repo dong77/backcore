@@ -15,7 +15,7 @@ var btc = {
             user: 'user',
             pass: 'pass',
             host: 'bitway',
-            port: '18332',
+            port: '8332',
         },
         minConfirm: 1,
         checkInterval : 5000
@@ -35,7 +35,7 @@ var ltc = {
             user: 'user',
             pass: 'pass',
             host: 'bitway',
-            port: '19332',
+            port: '9332',
         },
         minConfirm: 1,
         checkInterval : 5000
@@ -55,7 +55,7 @@ var dog = {
             user: 'user',
             pass: 'pass',
             host: 'bitway',
-            port: '44555',
+            port: '22555',
         },
         minConfirm: 1,
         checkInterval : 5000
@@ -110,12 +110,12 @@ var configs = [ btc, ltc, dog, drk, bc ];
 // var configs = [ btc ];
 // var configs = [ dog ];
 program.parse(process.argv);
-if (program.args.lenght != 1 && program.args[0].length < 8) {
-    console.log("Password isn't correct!");
-} else {
+if (program.args.length == 1 && program.args[0] && program.args[0].length > 8) {
     for (var i = 0; i < program.args.lenght; i++) {
         configs[i].cryptoConfig.walletPassPhrase = program.args[0];
     }
+} else {
+    console.log("Password isn't correct!");
 }
 var manager = new CryptoAgentManager(configs);
 manager.start();
