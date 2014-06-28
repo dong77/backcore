@@ -29,7 +29,7 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
     m -> routerForSingleton(market_processor << m)
   }: _*))
 
-  val robotProcessor = routerForSingleton(robot_processor<<)
+  // val robotProcessor = routerForSingleton(robot_processor<<)
   val depositWithdrawProcessor = routerForSingleton(account_transfer_processor <<)
 
   val accountView = routerFor(account_view <<)
