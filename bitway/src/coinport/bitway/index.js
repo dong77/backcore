@@ -86,12 +86,32 @@ var drk = {
         port: '6379',
     }
 };
-var configs = [ btc, ltc, dog, drk ];
+
+var bc = {
+    currency: Currency.BC,
+    cryptoConfig: {
+        cryptoRpcConfig: {
+            protocol: 'http',
+            user: 'user',
+            pass: 'pass',
+            host: 'bitway',
+            port: '15715',
+        },
+        minConfirm: 1,
+        checkInterval : 5000
+    },
+    redisProxyConfig: {
+        currency: Currency.BC,
+        ip: 'bitway',
+        port: '6379',
+    }
+};
+var configs = [ btc, ltc, dog, drk, bc ];
 // var configs = [ btc ];
 // var configs = [ dog ];
 program.parse(process.argv);
-if (program.args.lenght != configs.length) {
-    console.log("The num of the passwords isn't correct!");
+if (program.args.lenght != 1 && program.args[0].length < 8) {
+    console.log("Password isn't correct!");
 } else {
     for (var i = 0; i < program.args.lenght; i++) {
         configs[i].cryptoConfig.walletPassPhrase = program.args[0];

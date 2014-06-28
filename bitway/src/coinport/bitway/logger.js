@@ -53,6 +53,13 @@ log4js.configure({
             alwaysIncludePattern: true,
             category: "1300"
         },
+        {
+            type: "dateFile",
+            filename: 'logs/BC.log',
+            pattern: "-yyyy-MM-dd",
+            alwaysIncludePattern: true,
+            category: "1400"
+        }
     ],
     replaceConsole: true, //替换console.log
     levels:{
@@ -60,6 +67,7 @@ log4js.configure({
         1010: 'INFO',
         1100: 'INFO',
         1300: 'INFO',
+        1400: 'INFO',
     }
 });
 

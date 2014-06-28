@@ -84,9 +84,10 @@ enum Currency {
     // must make sure that the min index of crypto currency is 1000
     BTC  = 1000
     LTC  = 1010
-    PTS  = 1200
     DOGE = 1100
+    PTS  = 1200
     DRK  = 1300
+    BC   = 1400
 }
 
 enum OrderStatus {
