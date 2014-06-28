@@ -40,7 +40,7 @@ CMSFullGCsBeforeCompaction="-XX:CMSFullGCsBeforeCompaction=${NumOfFullGCBeforeCo
 version=`grep "val coinexVersion"  /var/coinport/code/backcore/coinex/project/Build.scala | cut -d '"' -f2`
 
 cd /var/coinport/backend
-COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp coinex-backend-assembly-$version.jar -Dconfig.resource=application-prod.conf com.coinport.coinex.CoinexApp 25551 172.31.10.47:25552,172.31.10.47:25551 all 172.31.10.47"
+COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp coinex-backend-assembly-$version.jar -Dconfig.resource=application-prod.conf com.coinport.coinex.CoinexApp 25551 172.31.10.47:25551 all 172.31.10.47 /var/coinport/private/encrypt.conf"
 # COMMAND="java -server $Xms $Xmx $NewSize $MaxNewSize $PermSize $MaxPermSize $UseParNewGC $UseConcMarkSweepGc $CMSInitOccupancyFraction $GCLog $GCStopTime $GCTimeStamps $GCDetails $CMSFullGCsBeforeCompaction -cp ./coinex-backend-assembly-1.1.18-SNAPSHOT.jar com.coinport.coinex.CoinexApp 25551 127.0.0.1:25551 all 127.0.0.1"
 
 echo $COMMAND
