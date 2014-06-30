@@ -22,6 +22,7 @@ import com.coinport.coinex.common.RedeliverFilter
 import com.coinport.coinex.data._
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
+import org.slf4s.Logging
 import Implicits._
 import OrderStatus._
 import RefundReason._
@@ -38,7 +39,7 @@ object MarketManager {
   }
 }
 
-class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
+class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] with Logging {
   // The following are part of persistent state.
   private[markets] var orderPools = Map.empty[MarketSide, SortedSet[Order]]
   private[markets] var orderMap = Map.empty[Long, Order]
@@ -234,6 +235,17 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] {
     } else {
       assert(updatedTakerToAdd.isEmpty)
       assert(txs.lastOption.map(_.takerUpdate.current).getOrElse(orderInfo.order).canBecomeMaker == false)
+    }
+
+    for {
+      headSidePool <- orderPools.get(headSide)
+      headSideHeadOrder <- headSidePool.headOption
+      reverseSidePool <- orderPools.get(headSide.reverse)
+      reverseSideHeadOrder <- reverseSidePool.headOption
+      if headSideHeadOrder.price.get * reverseSideHeadOrder.price.get >= 1.0
+    } {
+      log.error(s"top buying and selling orders have conflict prices:\n${headSide}: ${headSideHeadOrder.toString}\n${headSide.reverse}: ${reverseSideHeadOrder.toString}")
+      assert(false)
     }
 
     OrderSubmitted(orderInfo, txs)
