@@ -15,7 +15,8 @@ BitwayConfigs(Map(
     ip = "bitway",
     port = 6379,
     batchFetchAddressNum = 10,
-    maintainedChainLength = 10
+    maintainedChainLength = 10,
+    coldAddresses = List("morrnAssmf3LP2UkXST7i3UpKcUbBQX4GU")
   ),
   Doge -> BitwayConfig(
     ip = "bitway",
