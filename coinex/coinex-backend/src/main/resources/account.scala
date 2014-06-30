@@ -36,13 +36,13 @@ AccountConfig(
       STOP_ORDER_ROBOT_TYPE -> PercentageFee(0.002)),
 
     transferFeeRules = Map(
-      Btc -> ConstantFee(0.0001.internalValue(Btc)),
-      Ltc -> ConstantFee(0.0001.internalValue(Ltc)),
-      Doge -> ConstantFee(0.0001.internalValue(Doge)),
-      Pts -> ConstantFee(0.0001.internalValue(Pts)),
-      Drk -> ConstantFee(0.0001.internalValue(Drk)),
-      Bc -> ConstantFee(0.0001.internalValue(Bc)),
-      Cny -> PercentageFee(0.002)),
+      Btc -> ConstantFee(0.0002.internalValue(Btc)),
+      Ltc -> ConstantFee(0.0002.internalValue(Ltc)),
+      Doge -> ConstantFee(0.0002.internalValue(Doge)),
+      Pts -> ConstantFee(0.0002.internalValue(Pts)),
+      Drk -> ConstantFee(0.0002.internalValue(Drk)),
+      Bc -> ConstantFee(0.0002.internalValue(Bc)),
+      Cny -> PercentageFee(0.005)),
 
     freeOfTxChargeUserIdThreshold = 1E9.toLong + 1000 // 1 thousand
     ),
