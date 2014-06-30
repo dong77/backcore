@@ -12,7 +12,8 @@ import Implicits._
 // TRY TO AVOID USING THIS CLASS!!!!!!!!!!!!!!!!!!!!!!!!
 
 object Constants {
-  val COINPORT_UID = 1L
+  val CRYPTO_UID = 1L
+  val COINPORT_UID = 2L
 
   val HOT_UID = -1L
   val COLD_UID = -2L

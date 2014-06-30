@@ -129,16 +129,20 @@ class AccountManager(initialLastOrderId: Long = 0L,
     val current = getUserCashAccount(COINPORT_UID, adjustment.currency)
     val updated = current + adjustment
     setUserCashAccount(COINPORT_UID, updated, false)
-    /*
-    val updateAggregation = aggregationAccount.getOrElse(adjustment.currency, CashAccount(adjustment.currency, 0, 0, 0)) + adjustment
-    aggregationAccount += (adjustment.currency -> updateAggregation)
-    */
+  }
+
+  def updateCryptoAccount(adjustment: CashAccount) = {
+    val current = getUserCashAccount(CRYPTO_UID, adjustment.currency)
+    val updated = current + adjustment
+    setUserCashAccount(CRYPTO_UID, updated, false)
   }
 
   def updateCashAccount(userId: Long, adjustment: CashAccount) = {
     assert(userId > 0)
     if (userId == COINPORT_UID) {
       updateCoinportAccount(adjustment)
+    } else if (userId == CRYPTO_UID) {
+      updateCryptoAccount(adjustment)
     } else {
       val current = getUserCashAccount(userId, adjustment.currency)
       val updated = current + adjustment
