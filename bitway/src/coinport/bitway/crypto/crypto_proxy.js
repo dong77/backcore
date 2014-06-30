@@ -883,7 +883,15 @@ CryptoProxy.prototype.getTxidsSinceBlockHash_ = function(hash, callback) {
         if (error) {
             callback(error);
         } else {
-            var txids = txs.result.transactions.map(function(element) {return element.txid});
+            var txids = [];
+            for (var i = 0; i < txs.result.transactions.length; i++) {
+                if (txs.result.transactions[i].confirmations > 0 || txs.result.transactions[i].confirmations == 0) {
+                    txids.push(txs.result.transactions[i].txid);
+                } else {
+                    self.log.warn("Invalid txid: ", txs.result.transactions[i].txid);
+                    self.log.warn("valid txid: ", txs.result.transactions[i].walletconflicts);
+                }
+            }
             callback(null, hash.index, txids);
         }
     });

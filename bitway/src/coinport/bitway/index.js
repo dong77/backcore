@@ -18,7 +18,8 @@ var btc = {
             port: '8332',
         },
         minConfirm: 1,
-        checkInterval : 5000
+        checkInterval : 5000,
+        walletPassPhrase: ""
     },
     redisProxyConfig: {
         currency: Currency.BTC,
@@ -38,7 +39,8 @@ var ltc = {
             port: '9332',
         },
         minConfirm: 1,
-        checkInterval : 5000
+        checkInterval : 5000,
+        walletPassPhrase: ""
     },
     redisProxyConfig: {
         currency: Currency.LTC,
@@ -58,7 +60,8 @@ var dog = {
             port: '22555',
         },
         minConfirm: 1,
-        checkInterval : 5000
+        checkInterval : 5000,
+        walletPassPhrase: ""
     },
     redisProxyConfig: {
         currency: Currency.DOGE,
@@ -78,7 +81,8 @@ var drk = {
             port: '7332',
         },
         minConfirm: 1,
-        checkInterval : 5000
+        checkInterval : 5000,
+        walletPassPhrase: ""
     },
     redisProxyConfig: {
         currency: Currency.DRK,
@@ -98,7 +102,8 @@ var bc = {
             port: '15715',
         },
         minConfirm: 1,
-        checkInterval : 5000
+        checkInterval : 5000,
+        walletPassPhrase: ""
     },
     redisProxyConfig: {
         currency: Currency.BC,
@@ -110,12 +115,13 @@ var configs = [ btc, ltc, dog, drk, bc ];
 // var configs = [ btc ];
 // var configs = [ dog ];
 program.parse(process.argv);
-if (program.args.length == 1 && program.args[0] && program.args[0].length > 8) {
-    for (var i = 0; i < program.args.lenght; i++) {
+if (program.args.length == 1 && program.args[0] && program.args[0].length > 7) {
+    for (var i = 0; i < configs.length; i++) {
         configs[i].cryptoConfig.walletPassPhrase = program.args[0];
     }
 } else {
     console.log("Password isn't correct!");
+    console.log("node index.js [password]");
 }
 var manager = new CryptoAgentManager(configs);
 manager.start();

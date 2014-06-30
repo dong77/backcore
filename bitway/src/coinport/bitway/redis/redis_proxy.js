@@ -34,15 +34,15 @@ var RedisProxy = module.exports.RedisProxy = function(currency, ip, port) {
 
     this.pollClient = Redis.createClient(port, ip, { return_buffers: true });
     this.pushClient = Redis.createClient(port, ip, { return_buffers: true });
-    this.pollClient.on('ready'       , this.logFunction('ready'));
+    this.pollClient.on('ready'       , this.logFunction('pollClient ready'));
     this.pollClient.on('reconnecting', this.logFunction('reconnecting'));
-    this.pollClient.on('error'       , this.logFunction('error'));
+    this.pollClient.on('error'       , this.logFunction('pollClient error'));
     this.pollClient.on('end'         , this.logFunction('end'));
 
     this.pushClient.on('connect'     , this.logFunction('connect'));
-    this.pushClient.on('ready'       , this.logFunction('ready'));
+    this.pushClient.on('ready'       , this.logFunction('pushClient ready'));
     this.pushClient.on('reconnecting', this.logFunction('reconnecting'));
-    this.pushClient.on('error'       , this.logFunction('error'));
+    this.pushClient.on('error'       , this.logFunction('pushClient error'));
     this.pushClient.on('end'         , this.logFunction('end'));
     this.serializer = new Serializer();
     this.log = Logger.logger(this.currency.toString());
