@@ -36,6 +36,11 @@ class CryptoCurrencyTransferDepositHandler(currency: Currency, outputPort: Crypt
     this.item = item
   }
 
+  override def onNormal(tx: CryptoCurrencyTransaction) {
+    // ignore minerFee for Deposit, as it is payed by user
+    super.onNormal(tx.copy(minerFee = None))
+  }
+
   override def checkConfirm(lastBlockHeight: Long): Boolean = {
     //Reorging item will not confirm again to avoid resend UserToHot message
     if (super.checkConfirm(lastBlockHeight) && item.status.get != Reorging) {
