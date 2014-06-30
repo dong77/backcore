@@ -50,8 +50,8 @@ AccountConfig(
   hotColdTransfer = Map(
     Btc -> HotColdTransferStrategy(0.2, 0.1),
     Ltc -> HotColdTransferStrategy(0.2, 0.1),
-    Doge -> HotColdTransferStrategy(0.2, 0.1)
-    Drk -> HotColdTransferStrategy(0.2, 0.1)
+    Doge -> HotColdTransferStrategy(0.2, 0.1),
+    Drk -> HotColdTransferStrategy(0.2, 0.1),
     Bc -> HotColdTransferStrategy(0.2, 0.1)
   ),
   enableHotColdTransfer = true,
