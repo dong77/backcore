@@ -61,8 +61,6 @@ class AccountProcessor(
         val adjustment = CashAccount(t.currency, -t.amount, 0, t.amount)
         if (!manager.canUpdateCashAccount(t.userId, adjustment)) {
           sender ! RequestTransferFailed(InsufficientFund)
-        } else if (!manager.canUpdateHotAccount(adjustment)) {
-          sender ! RequestTransferFailed(InsufficientHot)
         } else {
           val updated = countFee(t.copy(created = Some(System.currentTimeMillis)))
           persist(DoRequestTransfer(updated)) { event =>
