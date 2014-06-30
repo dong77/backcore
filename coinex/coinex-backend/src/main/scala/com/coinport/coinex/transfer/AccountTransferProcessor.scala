@@ -48,7 +48,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
 
   def receiveCommand = LoggingReceive {
     case p @ ConfirmablePersistent(DoRequestTransfer(w, _), _, _) =>
-      persist(DoRequestTransfer(w.copy(id = manager.getTransferId), transferDebug = Some(transferDebugConfig))) {
+      persist(DoRequestTransfer(w.copy(id = manager.getTransferId, updated = w.created), transferDebug = Some(transferDebugConfig))) {
         event =>
           confirm(p)
           updateState(event)
