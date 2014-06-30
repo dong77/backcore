@@ -73,7 +73,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
     case AdminConfirmTransferFailure(t, error) =>
       transferHandler.get(t.id) match {
         case Some(transfer) if transfer.status == Pending =>
-          val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Failed, reason = Some(error))
+          val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Rejected, reason = Some(error))
           persist(AdminConfirmTransferFailure(updated, error)) {
             event =>
               sender ! AdminCommandResult(Ok)
@@ -88,7 +88,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
       transferHandler.get(t.id) match {
         case Some(transfer) if transfer.status == Pending =>
           if (t.userId == transfer.userId) {
-            val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Failed, reason = Some(ErrorCode.UserCanceled))
+            val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Cancelled, reason = Some(ErrorCode.UserCanceled))
             if (transfer.`type` == ColdToHot || transfer.`type` == Withdrawal) {
               persist(DoCancelTransfer(updated)) {
                 event =>

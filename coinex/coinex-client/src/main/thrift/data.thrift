@@ -159,6 +159,8 @@ enum TransferStatus {
     FAILED               = 5 // this will happen when confirmation satisfied but can't spend it
     REORGING             = 6
     REORGING_SUCCEEDED   = 7
+    CANCELLED            = 8
+    REJECTED             = 9
 }
 
 enum ExportedEventType {
