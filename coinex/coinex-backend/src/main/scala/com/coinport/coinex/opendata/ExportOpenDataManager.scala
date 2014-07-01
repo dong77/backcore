@@ -9,9 +9,8 @@ import akka.persistence.hbase.common.Columns._
 import akka.persistence.serialization.Snapshot
 import com.coinport.coinex.common.Manager
 import com.coinport.coinex.data.ExportOpenDataMap
-import com.coinport.coinex.serializers._
 import java.util.{ ArrayList => JArrayList }
-import java.io.{ Closeable, OutputStreamWriter, BufferedWriter, BufferedInputStream }
+import java.io.BufferedInputStream
 import org.apache.commons.io.IOUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{ Path, FileSystem }
@@ -20,33 +19,27 @@ import org.hbase.async.KeyValue
 import scala.concurrent.Future
 import scala.collection.mutable
 import scala.collection.mutable.Map
+import scala.collection.mutable.ListBuffer
 import scala.collection.JavaConverters._
 
 import DeferredConversions._
 
-class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context: ActorContext, val openDataConfig: OpenDataConfig)
-    extends Manager[ExportOpenDataMap] {
+class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context: ActorContext, implicit val openDataConfig: OpenDataConfig)
+    extends Manager[ExportOpenDataMap] with EventWriter {
   private val config = context.system.settings.config
-  private lazy val fs: FileSystem = openHdfsSystem(openDataConfig.hdfsHost)
-  private val exportSnapshotHdfsDir = openDataConfig.exportSnapshotHdfsDir
-  private val exportMessagesHdfsDir = openDataConfig.exportMessagesHdfsDir
-  private val debugSnapshotHdfsDir = openDataConfig.debugSnapshotHdfsDir
-  private val openSnapshotSerializerMap = openDataConfig.openSnapshotSerializerMap
-  private val openSnapshotFilterMap = openDataConfig.openSnapshotFilterMap
+  implicit lazy val fs: FileSystem = openHdfsSystem(openDataConfig.hdfsHost)
   private val snapshotHdfsDir: String = config.getString("hadoop-snapshot-store.snapshot-dir")
   private val messagesTable = config.getString("hbase-journal.table")
   private val messagesFamily = config.getString("hbase-journal.family")
   private val cryptKey = config.getString("akka.persistence.encryption-settings")
-  private val BUFFER_SIZE = 2048
   private val SCAN_MAX_NUM_ROWS = 5
   private val ReplayGapRetry = 5
-
   implicit var pluginPersistenceSettings = PluginPersistenceSettings(config, JOURNAL_CONFIG)
   implicit var executionContext = context.system.dispatcher
   implicit var serialization = EncryptingSerializationExtension(context.system, cryptKey)
 
   // [pid, dumpFileName]
-  private val pFileMap = openDataConfig.pFileMap
+  implicit val pFileMap: mutable.Map[String, String] = openDataConfig.pFileMap
   // [pId, (seqNum, timestamp)]
   private val pSeqMap = Map.empty[String, Long]
   pFileMap.keySet foreach { key => pSeqMap.put(key, 1L) }
@@ -103,9 +96,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
             withStream(new BufferedInputStream(fs.open(path, BUFFER_SIZE), BUFFER_SIZE)) {
               IOUtils.toByteArray
             }, classOf[Snapshot])
-        val className = snapshot.data.getClass.getEnclosingClass.getSimpleName
-        writeSnapshot(exportSnapshotHdfsDir, processorId, seqNum, snapshot, className, true)
-        writeSnapshot(debugSnapshotHdfsDir, processorId, seqNum, snapshot, className)
+        writeSnapshot(processorId, seqNum, snapshot)
         seqNum
       case _ => processedSeqNum - 1
     }
@@ -153,44 +144,40 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
       0L
     }
 
-    def getMessages(rows: AsyncBaseRows): (Boolean, String, String) = {
-      val builder = new StringBuilder()
+    def getMessages(rows: AsyncBaseRows): (Boolean, String, List[(Long, Any)]) = {
+      val messages = ListBuffer.empty[(Long, Any)]
       for (row <- rows.asScala) {
         if (hasSequenceGap(row.asScala) && retryTimes < ReplayGapRetry) {
           if (isDuplicate) {
-            return (true, "Duplicated message", builder.toString())
+            return (true, "Duplicated message", List.empty[(Long, Any)])
           }
           sys.error(s"Meet gap at ${tryStartSeqNr}")
           retryTimes += 1
           Thread.sleep(100)
           initScanner()
-          return (false, "", builder.toString())
+          return (false, "", List.empty[(Long, Any)])
         } else {
           if (retryTimes >= ReplayGapRetry) {
-            return (true, s"Gap retry times reach ${ReplayGapRetry}", builder.toString())
+            return (true, s"Gap retry times reach ${ReplayGapRetry}", List.empty[(Long, Any)])
           }
-          builder ++= "{"
+          var seqNum = 0L
+          var payload: Any = null
           for (column <- row.asScala) {
             if (java.util.Arrays.equals(column.qualifier, Message) || java.util.Arrays.equals(column.qualifier, SequenceNr)) {
               if (java.util.Arrays.equals(column.qualifier, Message)) {
                 // will throw an exception if failed
-                val msg = serialization.deserialize(column.value(), classOf[PersistentRepr])
-                builder ++= "\"" ++= msg.payload.getClass.getEnclosingClass.getSimpleName ++= "\":"
-                builder ++= PrettyJsonSerializer.toJson(msg.payload)
+                payload = serialization.deserialize(column.value(), classOf[PersistentRepr]).payload
               } else {
-                builder ++= "\"" ++= Bytes.toString(column.qualifier) ++= "\":"
-                builder ++= Bytes.toLong(column.value()).toString
-                tryStartSeqNr = Bytes.toLong(column.value()) + 1
+                seqNum = Bytes.toLong(column.value())
+                tryStartSeqNr = seqNum + 1
               }
-              builder ++= ","
             }
           }
-          builder.delete(builder.length - 1, builder.length)
-          builder ++= "},"
+          messages.append((seqNum, payload))
           retryTimes = 0
         }
       }
-      (false, "", builder.toString())
+      (false, "", messages.toList)
     }
 
     def handleRows(): Future[Unit] = {
@@ -199,9 +186,9 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
           scanner.close()
           Future(())
         case rows: AsyncBaseRows =>
-          val (isFailed, errMsg, writeMsg) = getMessages(rows)
-          if (!writeMsg.isEmpty && tryStartSeqNr > 0) {
-            writeMessages(writeMsg, tryStartSeqNr - 1)
+          val (isFailed, errMsg, messages) = getMessages(rows)
+          if (!messages.isEmpty && tryStartSeqNr > 0) {
+            writeMessages(processorId, tryStartSeqNr - 1, messages)
           }
           if (isFailed) {
             sys.error(errMsg)
@@ -212,34 +199,23 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
       }
     }
 
-    def writeMessages(data: String, seqNum: Long) {
-      val writer = new BufferedWriter(new OutputStreamWriter(fs.create(
-        new Path(exportMessagesHdfsDir, s"coinport_events_${pFileMap(processorId)}_${String.valueOf(seqNum).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase))))
-      writer.write(s"""{"timestamp": ${System.currentTimeMillis()},\n"events": [""")
-      writer.write(data.substring(0, data.length - 1).toString())
-      writer.write("]}")
-      writer.flush()
-      writer.close()
-    }
-
     initScanner
     handleRows()
   }
 
-  def writeSnapshot(outputDir: String, processorId: String, seqNum: Long, snapshot: Snapshot, className: String, isOpen: Boolean = false) {
-    val serializer = isOpen match {
-      case false => PrettyJsonSerializer
-      case true if openSnapshotSerializerMap.contains(className) => openSnapshotSerializerMap(className)
-      case _ => OpenDataJsonSerializer
+  private def writeMessages(processorId: String, lastSeqNum: Long, messages: List[(Long, Any)]) {
+    MessageJsonWriter.writeMessages(processorId, lastSeqNum, messages)
+    if (openDataConfig.messageWriterMap.contains(processorId)) {
+      openDataConfig.messageWriterMap(processorId).writeMessages(processorId, lastSeqNum, messages)
     }
-    val json = isOpen match {
-      case true if openSnapshotFilterMap.contains(className) => serializer.toJson(openSnapshotFilterMap(className).filter(snapshot.data))
-      case _ => serializer.toJson(snapshot.data)
+  }
+
+  private def writeSnapshot(processorId: String, seqNum: Long, snapshot: Snapshot) {
+    SnapshotJsonWriter.writeSnapshot(processorId, seqNum, snapshot)
+    val className = snapshot.data.getClass.getEnclosingClass.getSimpleName
+    if (openDataConfig.snapshotWriterMap.contains(className)) {
+      openDataConfig.snapshotWriterMap(className).writeSnapshot(processorId, seqNum, snapshot)
     }
-    val jsonSnapshot = s"""{"timestamp": ${System.currentTimeMillis()},\n"${className}": ${json}}"""
-    val exportSnapshotPath = new Path(outputDir,
-      s"coinport_snapshot_${pFileMap(processorId)}_${String.valueOf(seqNum).reverse.padTo(16, "0").reverse.mkString}_v1.json".toLowerCase)
-    withStream(new BufferedWriter(new OutputStreamWriter(fs.create(exportSnapshotPath, true)), BUFFER_SIZE))(IOUtils.write(jsonSnapshot, _))
   }
 
   private def openHdfsSystem(defaultName: String): FileSystem = {
@@ -247,9 +223,6 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
     conf.set("fs.default.name", defaultName)
     FileSystem.get(conf)
   }
-
-  private def withStream[S <: Closeable, A](stream: S)(fun: S => A): A =
-    try fun(stream) finally stream.close()
 
   private def listSnapshots(snapshotDir: String, processorId: String): Seq[HdfsSnapshotDescriptor] = {
     val descs = fs.listStatus(new Path(snapshotDir)) flatMap {

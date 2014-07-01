@@ -1,0 +1,55 @@
+package com.coinport.coinex.opendata
+
+import org.apache.hadoop.fs.{ Path, FileSystem }
+import com.coinport.coinex.data._
+import scala.collection.mutable.ListBuffer
+import java.io.{ OutputStreamWriter, BufferedWriter }
+import com.coinport.coinex.api.model.CurrencyWrapper
+
+object AccountMessageWriter extends MessageWriter {
+
+  def writeMessages(processorId: String, lastSeqNum: Long, messages: List[(Long, Any)])(implicit config: OpenDataConfig, pFileMap: collection.mutable.Map[String, String], fs: FileSystem) {
+    val currencyTransferMap = collection.mutable.Map.empty[Currency, ListBuffer[AccountTransfer]]
+    messages.foreach {
+      info =>
+        val msg = info._2
+        msg match {
+          case adm: AdminConfirmTransferSuccess =>
+            appendTransfer(adm.transfer, currencyTransferMap)
+          case cs: CryptoTransferSucceeded =>
+            cs.transfers.foreach(appendTransfer(_, currencyTransferMap))
+          case cr: CryptoTransferResult =>
+            cr.multiTransfers.values.foreach {
+              tmf =>
+                tmf.transfers.filter {
+                  tf =>
+                    tf.status == TransferStatus.Succeeded && (tf.`type` == TransferType.Deposit || tf.`type` == TransferType.Withdrawal)
+                } foreach {
+                  appendTransfer(_, currencyTransferMap)
+                }
+            }
+        }
+    }
+    if (!currencyTransferMap.isEmpty) {
+      currencyTransferMap.keys foreach {
+        cy =>
+          writeTransfers(processorId, cy, currencyTransferMap(cy).toList)
+      }
+    }
+  }
+
+  private def appendTransfer(transfer: AccountTransfer, transferMap: collection.mutable.Map[Currency, ListBuffer[AccountTransfer]]) {
+    transferMap.getOrElse(transfer.currency, ListBuffer.empty[AccountTransfer]).append(transfer)
+  }
+
+  private def writeTransfers(processorId: String, currency: Currency, transfers: List[AccountTransfer])(implicit config: OpenDataConfig, pFileMap: collection.mutable.Map[String, String], fs: FileSystem) {
+    val writer = new BufferedWriter(new OutputStreamWriter(fs.create(
+      new Path(config.csvDwDir + "/" + currency.toString, s"coinport_${currency}_${pFileMap(processorId)}_${currentTime()}.cvs".toLowerCase))))
+    writer.write(s""""User Id","Transaction Type",Amount,Time\n""")
+    for (tf <- transfers) {
+      writer.write(s"${String.valueOf(tf.userId)},${tf.`type`.toString},${String.valueOf(new CurrencyWrapper(tf.amount).externalValue(currency))},${new java.util.Date(tf.updated.get).toString}\n")
+    }
+    writer.flush()
+    writer.close()
+  }
+}
