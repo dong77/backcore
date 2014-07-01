@@ -48,7 +48,7 @@ object UserService extends AkkaService {
     backend ? command map {
       case succeeded: RegisterUserSucceeded =>
         val returnProfile = succeeded.userProfile
-        ApiResult(true, 0, returnProfile.id.toString, Some(returnProfile))
+        ApiResult(true, 0, returnProfile.id.toString)
       case failed: RegisterUserFailed =>
         ApiResult(false, failed.error.value, failed.toString)
       case x =>
@@ -169,7 +169,7 @@ object UserService extends AkkaService {
     backend ? command map {
       case succeeded: UpdateUserProfileSucceeded =>
         val returnProfile = succeeded.userProfile
-        ApiResult(true, 0, returnProfile.id.toString, Some(returnProfile))
+        ApiResult(true, 0, returnProfile.id.toString)
       case failed: UpdateUserProfileFailed =>
         ApiResult(false, failed.error.value, failed.toString)
       case x =>
@@ -222,7 +222,7 @@ object UserService extends AkkaService {
     backend ? command map {
       case result: PasswordResetTokenValidationResult =>
         result.userProfile match {
-          case Some(profile) => ApiResult(true, 0, "", Some(profile))
+          case Some(profile) => ApiResult(true, 0, "")
           case None => ApiResult(false, -1, "")
         }
     }
