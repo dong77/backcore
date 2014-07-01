@@ -159,8 +159,8 @@ CryptoProxy.prototype.syncPrivateKeys =  function(request, callback) {
     self.log.info('** Synchronous Addr Request Received **');
     self.log.info("syncPKs req: " + JSON.stringify(request));
     var spkr = new SyncPrivateKeysResult({error: ErrorCode.OK, addresses: []});
-    if (!request.pubKeys && request.pubKeys.length > 0) {
-        Async.map(request.pubKeys, getPrivateKey_.bind(self), function(error, cryptoAddrs) {
+    if (request.pubKeys && request.pubKeys.length > 0) {
+        Async.map(request.pubKeys, self.getPrivateKey_.bind(self), function(error, cryptoAddrs) {
             if (error) {
                 spkr.error = ErrorCode.RPC_ERROR;
             } else {
