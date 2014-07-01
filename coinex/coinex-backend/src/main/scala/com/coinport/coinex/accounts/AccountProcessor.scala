@@ -314,9 +314,11 @@ trait AccountManagerBehavior extends CountFeeSupport {
     case AdminConfirmTransferFailure(t, _) =>
       failedTransfer(t)
 
-    case CryptoTransferSucceeded(_, t, minerFee) => {
+    case CryptoTransferSucceeded(txType, t, minerFee) => {
       t foreach { succeededTransfer(_) }
-      minerFee foreach { substractMinerFee(t(0).currency, _) }
+      if (txType != Deposit) {
+        minerFee foreach { substractMinerFee(t(0).currency, _) }
+      }
     }
 
     case CryptoTransferResult(multiTransfers) => {
@@ -331,7 +333,9 @@ trait AccountManagerBehavior extends CountFeeSupport {
                 case _ => logger.error("Unexpected transferStatus" + transfer.toString)
               }
           }
-          transferWithFee.minerFee foreach (substractMinerFee(transferWithFee.transfers(0).currency, _))
+          if (transferWithFee.transfers(0).`type` != Deposit) {
+            transferWithFee.minerFee foreach (substractMinerFee(transferWithFee.transfers(0).currency, _))
+          }
       }
     }
 
