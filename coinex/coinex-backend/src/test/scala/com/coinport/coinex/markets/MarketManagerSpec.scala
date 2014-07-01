@@ -47,8 +47,8 @@ class MarketManagerSpec extends Specification {
       // println(Debugger.prettyOutput(sellSide, manager.getSnapshot))
       // println(Debugger.prettyOutput(manager.headSide, os))
       manager.getSnapshot mustEqual TMarketState(Map(MarketSide(Cny, Btc) -> List(), MarketSide(Btc, Cny) -> List(
-        Order(7410102373723916141L, 0, 9865, Some(10.0), None, Some(1397829427785L), None, None, None, 766228, None))),
-        Map(0L -> Order(7410102373723916141L, 0, 9865, Some(10.0), None, Some(1397829427785L), None, None, None, 766228, None)), None, RedeliverFilters(Map()))
+        Order(7410102373723916141L, 0, 9865, Some(10.0), None, Some(1397829427785L), None, None, None, 766230, None))),
+        Map(0L -> Order(7410102373723916141L, 0, 9865, Some(10.0), None, Some(1397829427785L), None, None, None, 766230, None)), None, RedeliverFilters(Map()))
     }
 
     "take limit can't block the current transaction" in {
@@ -105,19 +105,19 @@ class MarketManagerSpec extends Specification {
       manager.addOrderToMarket(makerSide, Order(12345, 32, 21930, Some(1.1499999999999999E-4), None, Some(1397457555749L), None, Some(12345), None, 0))
       manager.addOrderToMarket(takerSide, Order(456789, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 0)) mustEqual
         OrderSubmitted(
-          OrderInfo(MarketSide(Btc, Cny), Order(456789, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 0), 2, 17391, PartiallyExecuted, Some(1397457555805L)),
+          OrderInfo(MarketSide(Btc, Cny), Order(456789, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 0), 2, 17392, PartiallyExecuted, Some(1397457555805L)),
           List(
             Transaction(33001, 1397457555805L, MarketSide(Btc, Cny),
               OrderUpdate(
                 Order(456789, 33, 8, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 0),
-                Order(456789, 33, 6, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 17391)),
+                Order(456789, 33, 6, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 17392)),
               OrderUpdate(
                 Order(12345, 32, 21930, Some(1.1499999999999999E-4), None, Some(1397457555749L), None, Some(12345), None, 0),
-                Order(12345, 32, 4539, Some(1.1499999999999999E-4), None, Some(1397457555749L), None, Some(12345), None, 2, Some(Refund(Dust, 4539)))), None)))
+                Order(12345, 32, 4538, Some(1.1499999999999999E-4), None, Some(1397457555749L), None, Some(12345), None, 2, Some(Refund(Dust, 4538)))), None)))
 
-      manager.orderMap mustEqual Map(33 -> Order(456789, 33, 6, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 17391))
+      manager.orderMap mustEqual Map(33 -> Order(456789, 33, 6, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 17392))
       manager.orderPool(makerSide) mustEqual SortedSet.empty[Order]
-      manager.orderPool(takerSide) mustEqual SortedSet(Order(456789, 33, 6, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 17391))
+      manager.orderPool(takerSide) mustEqual SortedSet(Order(456789, 33, 6, Some(4920.0), None, Some(1397457555805L), None, Some(456789), None, 17392))
     }
 
     "match limit-price order market-price orders can't exists in the market" in {
@@ -522,6 +522,49 @@ class MarketManagerSpec extends Specification {
         OrderInfo(takerSide, taker, 150, 1000, PartiallyExecutedThenCancelledByMarket, Some(0)),
         Seq(Transaction(2001, 0, takerSide, taker --> updatedTaker.copy(refund = Some(Refund(AutoCancelled, 30))),
           maker --> updatedMaker)))
+    }
+  }
+
+  "MarketManager" should {
+    "bug fix which first seller's price is lower than the first buyer's price" in {
+      val side = (Btc ~> Ltc)
+      val manager = new MarketManager(Btc ~> Ltc)
+      val maker1 = Order(1000000000L, 1000000001459L, 1, Some(RDouble(0.0140198, true)), Some(19), Some(1404157826550L), None, None, None, 7502602172L, None)
+
+      var orderSubmitted = manager.addOrderToMarket(side.reverse, maker1)
+
+      /*
+      var sb = new StringBuilder()
+      sb.append("\n" + "~" * 100 + "\n")
+      sb.append(Debugger.prettyOutput(manager.headSide, manager.getSnapshot) + "\n\n")
+      sb.append(Debugger.prettyOutput(manager.headSide, orderSubmitted))
+      sb.append("~" * 100 + "\n")
+      println(sb.toString)
+      */
+
+      val taker = Order(1000000001L, 1000000001463L, 2433960000L, Some(RDouble(0.0136, false)), None, Some(1404157830926L), None, None, None, 0, None)
+
+      orderSubmitted = manager.addOrderToMarket(side, taker)
+      /*
+      sb = new StringBuilder()
+      sb.append("\n" + "~" * 100 + "\n")
+      sb.append(Debugger.prettyOutput(manager.headSide, manager.getSnapshot) + "\n\n")
+      sb.append(Debugger.prettyOutput(manager.headSide, orderSubmitted))
+      sb.append("~" * 100 + "\n")
+      println(sb.toString)
+      */
+
+      orderSubmitted mustEqual OrderSubmitted(OrderInfo(MarketSide(Btc, Ltc),
+        Order(1000000001L, 1000000001463L, 2433960000L, Some(RDouble(0.0136, false)), None, Some(1404157830926L), None, None, None, 0, None),
+        71, 1, PartiallyExecuted, Some(1404157830926L)), List(
+        Transaction(1000000001463001L, 1404157830926L, MarketSide(Btc, Ltc),
+          OrderUpdate(
+            Order(1000000001L, 1000000001463L, 2433960000L, Some(RDouble(0.0136, false)), None, Some(1404157830926L), None, None, None, 0, None),
+            Order(1000000001L, 1000000001463L, 2433959929L, Some(RDouble(0.0136, false)), None, Some(1404157830926L), None, None, None, 1, None)),
+          OrderUpdate(
+            Order(1000000000L, 1000000001459L, 1, Some(RDouble(0.0140198, true)), Some(19), Some(1404157826550L), None, None, None, 7502602172L, None),
+            Order(1000000000L, 1000000001459L, 0, Some(RDouble(0.0140198, true)), Some(0), Some(1404157826550L), None, None, None, 7502602243L, None)),
+          None)))
     }
   }
 

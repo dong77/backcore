@@ -115,14 +115,13 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] with
 
         // If we see the taker order as a order of selling BTC for CNY, then txOutAmount is 'the amount
         // of BTC in the new transaction'.
-        val txOutAmount = Math.min(takerOrder.maxOutAmount(price), makerOrder.maxInAmount(makerOrder.vprice))
+        var txOutAmount = Math.min(takerOrder.maxOutAmount(price), makerOrder.maxInAmount(makerOrder.vprice))
 
         // txInAmount is 'the amount of CNY in the same transaction'.
-        var txInAmount = Math.round(price.value * txOutAmount)
+        val txInAmount = Math.min(makerOrder.maxOutAmount(makerOrder.vprice),
+          Math.ceil(price.value * txOutAmount).toLong)
 
-        // Because of precision problems introduced by Double math operations, we have to adjust txInAmount
-        // by -1 to make sure the maker order can afford that much of CNY.
-        if (makerOrder.maxOutAmount(makerOrder.vprice) < txInAmount) txInAmount -= 1
+        txOutAmount = Math.min(takerOrder.maxOutAmount(price), Math.round(txInAmount / price.value))
 
         if (txOutAmount == 0 || txInAmount == 0) {
           state
@@ -242,8 +241,10 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] with
       headSideHeadOrder <- headSidePool.headOption
       reverseSidePool <- orderPools.get(headSide.reverse)
       reverseSideHeadOrder <- reverseSidePool.headOption
-      if headSideHeadOrder.price.get * reverseSideHeadOrder.price.get >= 1.0
+      product = headSideHeadOrder.price.get * reverseSideHeadOrder.price.get
+      if product <= 1.0
     } {
+      log.error(s"price product: ${headSideHeadOrder.price.get} * ${reverseSideHeadOrder.price.get} = ${product}")
       log.error(s"top buying and selling orders have conflict prices:\n${headSide}: ${headSideHeadOrder.toString}\n${headSide.reverse}: ${reverseSideHeadOrder.toString}")
       assert(false)
     }
