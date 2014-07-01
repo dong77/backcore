@@ -212,9 +212,11 @@ trait CryptoCurrencyTransferBase {
   protected def updateSigId2MinerFee(tx: CryptoCurrencyTransaction) {
     tx.minerFee match {
       case Some(fee) if tx.sigId.isDefined =>
-        tx.status match {
-          case Failed => sigId2MinerFeeMap.remove(tx.sigId.get)
-          case _ => sigId2MinerFeeMap.put(tx.sigId.get, fee)
+        if (tx.txType.isDefined && tx.txType.get != Deposit) { //Deposit should ignore minerFee
+          tx.status match {
+            case Failed => sigId2MinerFeeMap.remove(tx.sigId.get)
+            case _ => sigId2MinerFeeMap.put(tx.sigId.get, fee)
+          }
         }
       case Some(_) =>
         logger.error(s"""${"~" * 50} updateSigId2MinerFee minerFee defined without sigId defined : ${tx.toString}""")
