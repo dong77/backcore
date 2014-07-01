@@ -118,7 +118,6 @@ class Monitor(actorPaths: List[String], mailer: ActorRef, config: Config, allPat
           var statesSeq = Seq.empty[String]
           if (statesMap.get(k).isDefined) {
             statesSeq = statesMap.get(k).get
-            println(statesSeq)
           }
           statesSeq = statesSeq.+:(v)
           statesMap += k -> statesSeq.toSeq
