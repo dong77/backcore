@@ -32,16 +32,16 @@ object CurrencyConversion {
     Btc -> 4,
     Ltc -> 4,
     Doge -> 4,
-    Drk -> 4,
-    Bc -> 4
+    Drk -> 2,
+    Bc -> 3
   )
 
   val priceDecimals = Map[MarketSide, Int](
     Btc ~> Cny -> 4,
     Ltc ~> Btc -> 4,
     Doge ~> Btc -> 8,
-    Drk ~> Btc -> 4,
-    Bc ~> Btc -> 4,
+    Drk ~> Btc -> 6,
+    Bc ~> Btc -> 8,
     Btc ~> Btc -> 1
   )
 
