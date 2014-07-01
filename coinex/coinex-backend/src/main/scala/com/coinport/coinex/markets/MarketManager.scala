@@ -123,6 +123,18 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] with
 
         txOutAmount = Math.min(takerOrder.maxOutAmount(price), Math.round(txInAmount / price.value))
 
+        // The ABOVE calculation of txOutAmount and txInAmount can be sumarrized as follows:
+        // Step-1: calculate the min of taker's `maxOut` and maker's `maxIn` as `out1`
+        // Step-2: calculate `in1` = `out1` * (maker's price)
+        // Step-3: get the min of `in1` and maker's `maxOut` as `finalIn`
+        // Step-4: calculate a `out2` = `finalIn` / (maker's price)
+        // Finally: get the min of `finalOut` = the min of `out2` and taker's `maxOut`
+        // In the end, we use `finalOut' as the amount that taker will pay for maker;
+        // and `finalIn` as the amount that maker will pay taker.
+        // All these calculations are to take care of the precion problem of math calculation
+        // inloving Double and Long, as well as the fact that price is natually Double type but
+        // amount is natually individable Long type.
+
         if (txOutAmount == 0 || txInAmount == 0) {
           state
         } else {
