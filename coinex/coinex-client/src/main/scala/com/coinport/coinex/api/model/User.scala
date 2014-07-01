@@ -15,4 +15,5 @@ case class User(id: Long,
   mobile: Option[String] = None,
   depositAddress: Option[Map[Currency, String]] = None,
   withdrawalAddress: Option[Map[Currency, String]] = None,
+  referedToken: Option[String] = None,
   status: UserStatus = UserStatus.Normal)

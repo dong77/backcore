@@ -20,6 +20,10 @@ object UserService extends AkkaService {
     val realName = user.realName
     val nationalId = user.nationalId
     val password = user.password
+    val referralParams = user.referedToken match {
+      case Some(token) => try { Some(ReferralParams(Some(token.toLong))) } catch { case _: Throwable => None }
+      case None => None
+    }
 
     val profile = UserProfile(
       id = id,
@@ -39,7 +43,7 @@ object UserService extends AkkaService {
       withdrawalAddresses = None
     )
 
-    val command = DoRegisterUser(profile, password)
+    val command = DoRegisterUser(profile, password, referralParams)
 
     backend ? command map {
       case succeeded: RegisterUserSucceeded =>
@@ -76,7 +80,7 @@ object UserService extends AkkaService {
               // allocate new address
               val future =
                 backend ? AllocateNewAddress(currency, userId, None) map {
-                  case result: AllocateNewAddressResult =>
+                  case result: AllocateNewAddressResult if result.address.isDefined =>
                     val ana = result.address.get
 
                     // update profile with updated deposit address
@@ -88,13 +92,15 @@ object UserService extends AkkaService {
                     val newProfile = profile.copy(depositAddresses = Some(addrMap))
                     backend ! DoUpdateUserProfile(newProfile)
                     ana
-                  case x => x.toString
+                  case x => "" //x.toString
                 }
               result[String](future, (2 seconds))
             } else profile.depositAddresses.get.get(currency).get
-          case None =>
+          case None => ""
         }
-        ApiResult(true, 0, "", Some(addr))
+        if (addr != null && addr.trim.length > 0)
+          ApiResult(true, 0, "", Some(addr))
+        else ApiResult(false, -1, "get deposit address failed.")
       case x => ApiResult(false, -1, x.toString)
     }
   }

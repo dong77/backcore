@@ -122,7 +122,7 @@ class UserProcessor(mailer: ActorRef, secret: String)
     case Login(email, password) =>
       manager.checkLogin(email, password) match {
         case Left(error) => sender ! LoginFailed(error)
-        case Right(profile) => sender ! LoginSucceeded(profile.id, profile.email)
+        case Right(profile) => sender ! LoginSucceeded(profile.id, profile.email, profile.referralToken)
       }
 
     case ValidatePasswordResetToken(token) =>
