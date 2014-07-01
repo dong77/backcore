@@ -263,42 +263,45 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
   override def innerHandleTx(currency: Currency, tx: CryptoCurrencyTransaction, timestamp: Option[Long]) {
     tx.outputs match {
       case Some(outputList) if outputList.size > 0 =>
-        outputList filter (out => out.userId.isDefined && out.userId.get != COLD_UID) foreach {
-          //ColdToHot transfer should ignore cold outputPort
-          outputPort =>
-            tx.status match {
-              case Failed =>
-                getItemHandlerFromMap(tx.sigId.get, outputPort) match {
-                  case Some(handler) =>
-                    handleFailed(handler.setTimeStamp(timestamp))
-                  case None =>
-                }
-              case _ =>
-                getItemHandlerFromMap(tx.sigId.get, outputPort) match {
-                  case Some(handler) =>
-                    handler.setTimeStamp(timestamp).onNormal(tx)
-                  case _ =>
-                    val handler: Option[CryptoCurrencyTransferHandler] =
-                      tx.txType match {
-                        case Some(Deposit) =>
-                          // Set minerFee to None, as Deposit should not handle it
-                          Some(new CryptoCurrencyTransferDepositHandler(currency, outputPort, tx.copy(minerFee = None), timestamp))
-                        case Some(ColdToHot) if outputPort.userId.get == HOT_UID =>
-                          Some(new CryptoCurrencyTransferColdToHotHandler(currency, outputPort, tx, timestamp))
+        val validOutputs = outputList filter (out => out.userId.isDefined && out.userId.get != COLD_UID)
+        if (!validOutputs.isEmpty) {
+          validOutputs foreach {
+            //ColdToHot transfer should ignore cold outputPort
+            outputPort =>
+              tx.status match {
+                case Failed =>
+                  getItemHandlerFromMap(tx.sigId.get, outputPort) match {
+                    case Some(handler) =>
+                      handleFailed(handler.setTimeStamp(timestamp))
+                    case None =>
+                  }
+                case _ =>
+                  getItemHandlerFromMap(tx.sigId.get, outputPort) match {
+                    case Some(handler) =>
+                      handler.setTimeStamp(timestamp).onNormal(tx)
+                    case _ =>
+                      val handler: Option[CryptoCurrencyTransferHandler] =
+                        tx.txType match {
+                          case Some(Deposit) =>
+                            // Set minerFee to None, as Deposit should not handle it
+                            Some(new CryptoCurrencyTransferDepositHandler(currency, outputPort, tx.copy(minerFee = None), timestamp))
+                          case Some(ColdToHot) if outputPort.userId.get == HOT_UID =>
+                            Some(new CryptoCurrencyTransferColdToHotHandler(currency, outputPort, tx, timestamp))
+                          case _ =>
+                            logger.error(s"""${"~" * 50} innerHandleTx() ${tx.txType.get.toString} tx is not valid txType : ${tx.toString}""")
+                            None
+                        }
+                      handler match {
+                        case Some(hd) =>
+                          saveItemHandlerToMap(tx.sigId.get, outputPort, hd)
+                          id2HandlerMap.put(hd.item.id, hd)
                         case _ =>
-                          logger.error(s"""${"~" * 50} innerHandleTx() ${tx.txType.get.toString} tx is not valid txType : ${tx.toString}""")
-                          None
                       }
-                    handler match {
-                      case Some(hd) =>
-                        saveItemHandlerToMap(tx.sigId.get, outputPort, hd)
-                        id2HandlerMap.put(hd.item.id, hd)
-                      case _ =>
-                    }
-                }
-            }
+                  }
+              }
+          }
+          updateSigId2MinerFee(tx)
         }
-        updateSigId2MinerFee(tx)
       case _ =>
         logger.warning(s"""${"~" * 50} innerHandleTx() ${tx.txType.get.toString} tx not define outputs : ${tx.toString}""")
     }
