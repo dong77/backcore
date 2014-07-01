@@ -559,7 +559,10 @@ CryptoProxy.prototype.createRawTransaction_ = function(rawData, callback) {
 CryptoProxy.prototype.walletPassPhrase_ = function(callback) {
     var self = this;
     this.rpc.walletPassPhrase(self.walletPassPhrase, 900,  function(error) {
-        callback(error);
+        if (error) {
+            self.log.error("walletPassPhrase error: " + error);
+        }
+        callback(null);
     });
 };
 
