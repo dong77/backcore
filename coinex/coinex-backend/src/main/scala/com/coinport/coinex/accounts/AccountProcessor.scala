@@ -303,14 +303,13 @@ trait AccountManagerBehavior extends CountFeeSupport {
       t.`type` match {
         case Withdrawal =>
           manager.updateCashAccount(t.userId, CashAccount(t.currency, -t.amount, 0, t.amount))
-          manager.updateHotCashAccount(CashAccount(t.currency, -t.amount, 0, t.amount))
         case HotToCold =>
           manager.updateHotCashAccount(CashAccount(t.currency, -t.amount, 0, t.amount))
         case _ =>
       }
 
-    case AdminConfirmTransferSuccess(t, _) =>
-      succeededTransfer(t)
+    case AdminConfirmTransferSuccess(t, transferDebug) =>
+      succeededTransfer(t, transferDebug.isDefined && transferDebug.get)
 
     case AdminConfirmTransferFailure(t, _) =>
       failedTransfer(t)
@@ -367,7 +366,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
       manager.conditionalRefund(true)(side.outCurrency, order)
   }
 
-  private def succeededTransfer(t: AccountTransfer) {
+  private def succeededTransfer(t: AccountTransfer, transferDebug: Boolean = false) {
     t.`type` match {
       case Deposit =>
         manager.updateCashAccount(t.userId, CashAccount(t.currency, t.amount, 0, 0))
@@ -381,10 +380,14 @@ trait AccountManagerBehavior extends CountFeeSupport {
           case Some(f) if (f.amount > 0) =>
             manager.transferFundFromPendingWithdrawal(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
             manager.updateCashAccount(t.userId, CashAccount(t.currency, 0, 0, f.amount - t.amount))
-            manager.updateHotCashAccount(CashAccount(t.currency, f.amount, 0, -t.amount))
+            if (!transferDebug) {
+              manager.updateHotCashAccount(CashAccount(t.currency, f.amount - t.amount, 0, 0))
+            }
           case _ =>
             manager.updateCashAccount(t.userId, CashAccount(t.currency, 0, 0, -t.amount))
-            manager.updateHotCashAccount(CashAccount(t.currency, 0, 0, -t.amount))
+            if (!transferDebug) {
+              manager.updateHotCashAccount(CashAccount(t.currency, -t.amount, 0, 0))
+            }
         }
       case UserToHot =>
         manager.updateHotCashAccount(CashAccount(t.currency, t.amount, 0, 0))
@@ -405,9 +408,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
 
   private def failedTransfer(t: AccountTransfer) {
     t.`type` match {
-      case Withdrawal =>
-        manager.updateCashAccount(t.userId, CashAccount(t.currency, t.amount, 0, -t.amount))
-        manager.updateHotCashAccount(CashAccount(t.currency, t.amount, 0, -t.amount))
+      case Withdrawal => manager.updateCashAccount(t.userId, CashAccount(t.currency, t.amount, 0, -t.amount))
       case HotToCold => manager.updateHotCashAccount(CashAccount(t.currency, t.amount, 0, -t.amount))
       case _ =>
     }
