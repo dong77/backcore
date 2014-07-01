@@ -142,7 +142,7 @@ package object model {
     val volume = CurrencyObject(currency, metrics.volume)
     val high = PriceObject(side, metrics.high.getOrElse(0.0))
     val low = PriceObject(side, metrics.low.getOrElse(0.0))
-    val gain = metrics.gain
+    val gain = metrics.gain.getOrElse(0.0)
     val trend = Some(metrics.direction.toString.toLowerCase)
 
     ApiTicker(market, price, high, low, volume, gain, trend)
