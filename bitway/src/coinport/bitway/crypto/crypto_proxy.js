@@ -118,6 +118,7 @@ CryptoProxy.prototype.generateUserAddress = function(request, callback) {
 CryptoProxy.prototype.synchronousHotAddr =  function(request, callback) {
     var self = this;
     self.log.info('** Synchronous Hot Addr Request Received **');
+    self.log.info("Synchronous Hot Addr Request: " + JSON.stringify(request));
     var shr = new SyncHotAddressesResult({error: ErrorCode.OK, addresses: []});
     self.getAllHotAddresses_.bind(self)(function(errHot, addresses){
         if (errHot) {
@@ -560,7 +561,7 @@ CryptoProxy.prototype.walletPassPhrase_ = function(callback) {
     var self = this;
     this.rpc.walletPassPhrase(self.walletPassPhrase, 900,  function(error) {
         if (error) {
-            self.log.error("walletPassPhrase error: " + error);
+            self.log.warn("walletPassPhrase error: " + error);
         }
         callback(null);
     });

@@ -122,18 +122,31 @@ var rl = readline.createInterface({
     terminal: true
 });
  
-// 设置命令提示符
-rl.setPrompt('bitway> ');
-// 提示
-rl.prompt(true);
- 
-rl.question("Input wallet password:", function(u) {
-    var password = u;
+function hidden(query, callback) {
+    var stdin = process.openStdin();
+    process.stdin.on("data", function(char) {
+        char = char + "";
+        switch (char) {
+            case "\n":
+            case "\r":
+            case "\u0004":
+                stdin.pause();
+                break;
+            default:
+                process.stdout.write("\033[2K\033[200D" + query + Array(rl.line.length+1).join("*"));
+                break;
+        }
+    });
+
+    rl.question(query, callback);
+}
+
+hidden("password : ", function(password) {
+    console.log("Your password : " + password);
     if (password && password.length > 7) {
         for (var i = 0; i < configs.length; i++) {
             configs[i].cryptoConfig.walletPassPhrase = password;
         }
-        rl.prompt(false);
     } else {
         console.log("Password isn't correct!");
         console.log("node index.js [password]");
@@ -150,10 +163,5 @@ rl.question("Input wallet password:", function(u) {
     "                        |__/  \n";
     console.log(logo);
 });
- 
-// Ctrl + d
-rl.on('close', function() {
-    console.log('欢迎再次使用bitway!');
-    process.exit(0);
-});
+
 
