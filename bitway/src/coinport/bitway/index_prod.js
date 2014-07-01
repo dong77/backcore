@@ -111,14 +111,13 @@ var bc = {
         port: '6379',
     }
 };
-var configs = [ btc, ltc, dog ];
+var configs = [ btc, ltc, dog, drk, bc ];
 // var configs = [ btc ];
 // var configs = [ dog ];
 program.parse(process.argv);
 if (program.args.length == 1 && program.args[0] && program.args[0].length > 7) {
     for (var i = 0; i < configs.length; i++) {
         configs[i].cryptoConfig.walletPassPhrase = program.args[0];
-        console.log(program.args[0]);
     }
 } else {
     console.log("Password isn't correct!");

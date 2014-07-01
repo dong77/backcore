@@ -6,7 +6,7 @@
 var CryptoAgentManager = require('./crypto/crypto_agent_manager').CryptoAgentManager,
     DataTypes          = require('../../../gen-nodejs/data_types'),
     Currency           = DataTypes.Currency;
-var program = require('commander');
+
 var btc = {
     currency: Currency.BTC,
     cryptoConfig: {
@@ -114,22 +114,46 @@ var bc = {
 var configs = [ btc, ltc, dog, drk, bc ];
 // var configs = [ btc ];
 // var configs = [ dog ];
-program.parse(process.argv);
-if (program.args.length == 1 && program.args[0] && program.args[0].length > 7) {
-    for (var i = 0; i < configs.length; i++) {
-        configs[i].cryptoConfig.walletPassPhrase = program.args[0];
-    }
-} else {
-    console.log("Password isn't correct!");
-    console.log("node index.js [password]");
-}
-var manager = new CryptoAgentManager(configs);
-manager.start();
 
-var logo = "\n" +
-" _    _ _                     \n" +
-"| |__(_) |___ __ ____ _ _  _  \n" +
-"| '_ \\ |  _\\ V  V / _` | || | \n" +
-"|_.__/_|\\__|\\_/\\_/\\__,_|\\_, | \n" +
-"                        |__/  \n";
-console.log(logo);
+var readline = require('readline');
+var rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: true
+});
+ 
+// 设置命令提示符
+rl.setPrompt('bitway> ');
+// 提示
+rl.prompt(true);
+ 
+rl.question("Input wallet password:", function(u) {
+    var password = u;
+    if (password && password.length > 7) {
+        for (var i = 0; i < configs.length; i++) {
+            configs[i].cryptoConfig.walletPassPhrase = password;
+        }
+        rl.prompt(false);
+    } else {
+        console.log("Password isn't correct!");
+        console.log("node index.js [password]");
+        process.exit(0);
+    }
+    var manager = new CryptoAgentManager(configs);
+    manager.start();
+
+    var logo = "\n" +
+    " _    _ _                     \n" +
+    "| |__(_) |___ __ ____ _ _  _  \n" +
+    "| '_ \\ |  _\\ V  V / _` | || | \n" +
+    "|_.__/_|\\__|\\_/\\_/\\__,_|\\_, | \n" +
+    "                        |__/  \n";
+    console.log(logo);
+});
+ 
+// Ctrl + d
+rl.on('close', function() {
+    console.log('欢迎再次使用bitway!');
+    process.exit(0);
+});
+
