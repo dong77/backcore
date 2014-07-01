@@ -179,7 +179,6 @@ CryptoProxy.prototype.encryptPrivKey_ = function(priv, key) {
     var crypted = cipher.update(priv,'utf8','hex');
     crypted += cipher.final('hex');
     var message = crypted;
-    console.log(message);
     return message;
 }
 
@@ -187,7 +186,6 @@ CryptoProxy.prototype.decrypt_ = function(message, key) {
     var decipher = Crypto.createDecipher('aes-256-cbc', key);
     var dec = decipher.update(message,'hex','utf8');
     dec += decipher.final('utf8');
-    console.log(dec);
 };
 
 CryptoProxy.prototype.dumpPrivateKey_ = function(address, callback) {
