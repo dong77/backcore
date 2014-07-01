@@ -55,5 +55,5 @@ AccountConfig(
     Bc -> HotColdTransferStrategy(0.2, 0.1)
   ),
   enableHotColdTransfer = true,
-  hotColdTransferInterval = 600 * 1000L
+  hotColdTransferInterval = 24 * 3600 * 1000L
 )
