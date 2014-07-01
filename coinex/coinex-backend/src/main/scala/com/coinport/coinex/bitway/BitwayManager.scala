@@ -156,13 +156,11 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
     if (inputsMatched.contains(USER) && outputsMatched.contains(HOT)) {
       Some(TransferType.UserToHot)
     } else if (inputsMatched.contains(HOT)) {
-      assert(!outputsMatched.contains(USER))
       if (outputsMatched.contains(COLD))
         Some(TransferType.HotToCold)
       else
         Some(TransferType.Withdrawal)
     } else if (inputsMatched.contains(COLD)) {
-      assert(!outputsMatched.contains(USER))
       if (outputsMatched.contains(HOT))
         Some(TransferType.ColdToHot)
       else
