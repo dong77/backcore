@@ -37,6 +37,19 @@ class AssetView extends ExtendedView {
         case _ =>
       }
 
+    case Persistent(result: CryptoTransferResult, _) =>
+      result.multiTransfers.values foreach {
+        tmf =>
+          tmf.transfers.filter(_.status == TransferStatus.Succeeded).foreach {
+            t =>
+              t.`type` match {
+                case Deposit => manager.updateAsset(t.userId, t.updated.get, t.currency, t.amount)
+                case Withdrawal => manager.updateAsset(t.userId, t.updated.get, t.currency, -t.amount)
+                case _ =>
+              }
+          }
+      }
+
     case e @ Persistent(OrderSubmitted(originOrderInfo, txs), _) =>
       if (!txs.isEmpty) {
         val side = originOrderInfo.side
