@@ -41,5 +41,5 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     coldAddresses = List("B4h1qQkghc8gwNWqEfHNyVi4DvjnJhPCs1")
-  ),
+  )
 ))

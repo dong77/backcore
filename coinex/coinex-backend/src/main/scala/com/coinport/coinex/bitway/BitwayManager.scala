@@ -44,11 +44,8 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
   val FAUCET_THRESHOLD: Double = 0.5
   val INIT_ADDRESS_NUM: Int = 100
 
-  /*
   if (coldAddresses.nonEmpty)
-    faucetAddress(CryptoCurrencyAddressType.Cold,
-      Set.empty[CryptoAddress] ++ coldAddresses.map(CryptoAddress(_)))
-    */
+    syncColdAddresses(coldAddresses)
 
   def getSnapshot = TBitwayState(
     supportedCurrency,
@@ -80,11 +77,8 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
       privateKeysBackup ++= s.privateKeysBackup.get
     }
 
-    /*
     if (coldAddresses.nonEmpty)
-      faucetAddress(CryptoCurrencyAddressType.Cold,
-        Set.empty[CryptoAddress] ++ coldAddresses.map(CryptoAddress(_)))
-      */
+      syncColdAddresses(coldAddresses)
   }
 
   def isDryUp = addresses(Unused).size == 0 || addresses(User).size > addresses(Unused).size * FAUCET_THRESHOLD
@@ -349,6 +343,13 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
     val unseenAddresses = addrs.filter(i => !origAddresses.contains(i.address))
     if (unseenAddresses.size > 0)
       faucetAddress(Hot, unseenAddresses)
+  }
+
+  def syncColdAddresses(addrs: List[String]) {
+    val origAddresses = addresses.getOrElse(Cold, Set.empty[String])
+    val unseenAddresses = addrs.filter(i => !origAddresses.contains(i))
+    if (unseenAddresses.size > 0)
+      faucetAddress(Cold, Set.empty[CryptoAddress] ++ unseenAddresses.map(CryptoAddress(_)))
   }
 
   def cleanBlockChain() {
