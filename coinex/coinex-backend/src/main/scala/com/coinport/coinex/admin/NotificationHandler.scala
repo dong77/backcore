@@ -13,11 +13,11 @@ trait NotificationHandler {
 
     def getQueryDBObject(q: QueryNotification): MongoDBObject = {
       var query = MongoDBObject()
+
       if (q.id.isDefined) query ++= MongoDBObject(DATA + "." + Notification.IdField.name -> q.id.get)
       if (q.ntype.isDefined) query ++= MongoDBObject(DATA + "." + Notification.NTypeField.name -> q.ntype.get)
       if (q.getRemoved.isDefined) query ++= MongoDBObject(DATA + "." + Notification.RemovedField.name -> q.getRemoved.get)
-      if (q.lang.isDefined) query ++= MongoDBObject(DATA + "." + Notification.LangField -> q.lang.get)
-      println("query>>>>>>>>>>>>>" + query)
+      if (q.lang.isDefined) query ++= MongoDBObject(DATA + "." + Notification.LangField.name -> q.lang.get.name)
       query
     }
   }
