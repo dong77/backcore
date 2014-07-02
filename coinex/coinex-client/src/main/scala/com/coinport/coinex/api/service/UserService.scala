@@ -127,20 +127,26 @@ object UserService extends AkkaService {
             map
           case None => Map.empty[Currency, String]
         }
-        ApiResult(true, 0, "", Some(addr))
+
+        val rv = currencySeq.map { c =>
+          val s: String = c
+          s -> addr.getOrElse(c, "")
+        }.toMap
+
+        ApiResult(true, 0, "", Some(rv))
       case x => ApiResult(false, -1, x.toString)
     }
   }
 
-  def getDepositAddressFromBackend(currencySeq: Seq[Currency], userId: Long): Map[Currency, String] = {
-    val ListOfFuture = currencySeq.map(c => backend ? AllocateNewAddress(c, userId))
-    val futureList = scala.concurrent.Future.sequence(ListOfFuture)
-    Await.result(futureList.map { rvs =>
-      rvs.map {
+  private def getDepositAddressFromBackend(currencySeq: Seq[Currency], userId: Long): Map[Currency, String] = {
+    val ListOfFuture = currencySeq.map { c =>
+      backend ? AllocateNewAddress(c, userId) map {
         case rv: AllocateNewAddressResult =>
           (rv.currency, rv.address.getOrElse(""))
-      }.asInstanceOf[List[(Currency, String)]].toMap
-    }, 3 second)
+      }
+    }
+    val futureList = scala.concurrent.Future.sequence(ListOfFuture)
+    Await.result(futureList.map(x => x.toMap), 3 second)
   }
 
   def setDepositAddressToBackend(profile: UserProfile, addrMap: Map[Currency, String]) = {
