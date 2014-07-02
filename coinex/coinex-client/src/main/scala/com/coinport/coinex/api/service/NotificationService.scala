@@ -7,7 +7,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object NotificationService extends AkkaService {
   def getNotifications(lang: Language) = {
-    backend ? QueryNotification(getRemoved = Some(false), cur = Cursor(0, 10)) map {
+    backend ? QueryNotification(getRemoved = Some(false), lang = Some(lang), cur = Cursor(0, 10)) map {
       case rv: QueryNotificationResult =>
         ApiResult(data = Some(rv.notifications.map(fromNotification)))
     }
