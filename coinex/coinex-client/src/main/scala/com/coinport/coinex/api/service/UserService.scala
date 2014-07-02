@@ -10,6 +10,7 @@ import akka.pattern.ask
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.Await.result
+import scala.concurrent.Await
 
 object UserService extends AkkaService {
   override def hashCode(): Int = super.hashCode()
@@ -71,38 +72,80 @@ object UserService extends AkkaService {
     }
   }
 
-  def getDepositAddress(currency: Currency, userId: Long) = {
+  //  def getDepositAddress(currency: Seq[Currency], userId: Long) = {
+  //    backend ? QueryProfile(Some(userId)) map {
+  //      case qpr: QueryProfileResult =>
+  //        val addr = qpr.userProfile match {
+  //          case Some(profile) =>
+  //            val addrMap =
+  //              if (!profile.depositAddresses.isDefined) {
+  //                // allocate new address
+  //                val future =
+  //                  backend ? AllocateNewAddress(currency, userId, None) map {
+  //                    case result: AllocateNewAddressResult if result.address.isDefined =>
+  //                      val ana = result.address.get
+  //
+  //                      // update profile with updated deposit address
+  //                      val addrMap = profile.depositAddresses match {
+  //                        case Some(depositMap) => depositMap ++ Map(currency -> ana)
+  //                        case None => Map(currency -> ana)
+  //                      }
+  //
+  //                      val newProfile = profile.copy(depositAddresses = Some(addrMap))
+  //                      backend ! DoUpdateUserProfile(newProfile)
+  //                      ana
+  //                    case x => "" //x.toString
+  //                  }
+  //                result[String](future, (2 seconds))
+  //              } else
+  //
+  //                profile.depositAddresses.get.get(currency).get
+  //          case None => ""
+  //        }
+  //        if (addr != null && addr.trim.length > 0)
+  //          ApiResult(true, 0, "", Some(addr))
+  //        else ApiResult(false, -1, "get deposit address failed.")
+  //      case x => ApiResult(false, -1, x.toString)
+  //    }
+  //  }
+
+  def getDepositAddress(currencySeq: Seq[Currency], userId: Long) = {
     backend ? QueryProfile(Some(userId)) map {
       case qpr: QueryProfileResult =>
         val addr = qpr.userProfile match {
           case Some(profile) =>
-            if (!profile.depositAddresses.isDefined || !profile.depositAddresses.get.get(currency).isDefined) {
-              // allocate new address
-              val future =
-                backend ? AllocateNewAddress(currency, userId, None) map {
-                  case result: AllocateNewAddressResult if result.address.isDefined =>
-                    val ana = result.address.get
+            // allocate new address
+            val map: Map[Currency, String] = if (!profile.depositAddresses.isDefined) {
+              getDepositAddressFromBackend(currencySeq, userId)
+            } else {
+              val currencyDiff = currencySeq.diff(profile.depositAddresses.get.keys.toSeq)
+              val mapFromBackend = getDepositAddressFromBackend(currencyDiff, userId)
+              (profile.depositAddresses.get ++ mapFromBackend).toMap
+            }
 
-                    // update profile with updated deposit address
-                    val addrMap = profile.depositAddresses match {
-                      case Some(depositMap) => depositMap ++ Map(currency -> ana)
-                      case None => Map(currency -> ana)
-                    }
-
-                    val newProfile = profile.copy(depositAddresses = Some(addrMap))
-                    backend ! DoUpdateUserProfile(newProfile)
-                    ana
-                  case x => "" //x.toString
-                }
-              result[String](future, (2 seconds))
-            } else profile.depositAddresses.get.get(currency).get
-          case None => ""
+            setDepositAddressToBackend(profile, map)
+            map
+          case None => Map.empty[Currency, String]
         }
-        if (addr != null && addr.trim.length > 0)
-          ApiResult(true, 0, "", Some(addr))
-        else ApiResult(false, -1, "get deposit address failed.")
+        ApiResult(true, 0, "", Some(addr))
       case x => ApiResult(false, -1, x.toString)
     }
+  }
+
+  def getDepositAddressFromBackend(currencySeq: Seq[Currency], userId: Long): Map[Currency, String] = {
+    val ListOfFuture = currencySeq.map(c => backend ? AllocateNewAddress(c, userId))
+    val futureList = scala.concurrent.Future.sequence(ListOfFuture)
+    Await.result(futureList.map { rvs =>
+      rvs.map {
+        case rv: AllocateNewAddressResult =>
+          (rv.currency, rv.address.getOrElse(""))
+      }.asInstanceOf[List[(Currency, String)]].toMap
+    }, 3 second)
+  }
+
+  def setDepositAddressToBackend(profile: UserProfile, addrMap: Map[Currency, String]) = {
+    val newProfile = profile.copy(depositAddresses = Some(addrMap))
+    backend ! DoUpdateUserProfile(newProfile)
   }
 
   def setWithdrawalAddress(uid: Long, currency: Currency, address: String) = {
