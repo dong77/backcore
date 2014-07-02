@@ -79,6 +79,10 @@ class AssetView extends ExtendedView {
         manager.updatePrice(side.reverse, timestamp, txs.last.makerUpdate.current.price.get.value)
       }
 
+    case Persistent(m: DoRequestPayment, _) =>
+      manager.updateAsset(m.payment.payer, m.payment.created.getOrElse(0), m.payment.currency, -m.payment.amount)
+      manager.updateAsset(m.payment.payee, m.payment.created.getOrElse(0), m.payment.currency, m.payment.amount)
+
     case q: QueryAsset =>
       val start = Math.min(q.from, q.to)
       val stop = Math.max(q.from, q.to)
