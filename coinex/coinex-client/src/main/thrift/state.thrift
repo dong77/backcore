@@ -52,6 +52,7 @@ struct TAccountState {
     7: map<string, i64> codeBIndexMap
     8: map<Currency, CashAccount> hotWalletAccount
     9: map<Currency, CashAccount> coldWalletAccount
+    10: optional i64 lastPaymentId
 }
 
 struct TMarketState {

@@ -47,6 +47,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cOrder = BinaryScalaCodec(Order)
   lazy val _cOrderInfo = BinaryScalaCodec(OrderInfo)
   lazy val _cOrderUpdate = BinaryScalaCodec(OrderUpdate)
+  lazy val _cPayment = BinaryScalaCodec(Payment)
   lazy val _cQueryMarketSide = BinaryScalaCodec(QueryMarketSide)
   lazy val _cRDouble = BinaryScalaCodec(RDouble)
   lazy val _cRedeliverFilterData = BinaryScalaCodec(RedeliverFilterData)
@@ -96,6 +97,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cDoRequestConfirmRC = BinaryScalaCodec(DoRequestConfirmRC)
   lazy val _cDoRequestGenerateABCode = BinaryScalaCodec(DoRequestGenerateABCode)
   lazy val _cDoRequestPasswordReset = BinaryScalaCodec(DoRequestPasswordReset)
+  lazy val _cDoRequestPayment = BinaryScalaCodec(DoRequestPayment)
   lazy val _cDoRequestTransfer = BinaryScalaCodec(DoRequestTransfer)
   lazy val _cDoResendVerifyEmail = BinaryScalaCodec(DoResendVerifyEmail)
   lazy val _cDoResetPassword = BinaryScalaCodec(DoResetPassword)
@@ -175,6 +177,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cRequestGenerateABCodeSucceeded = BinaryScalaCodec(RequestGenerateABCodeSucceeded)
   lazy val _cRequestPasswordResetFailed = BinaryScalaCodec(RequestPasswordResetFailed)
   lazy val _cRequestPasswordResetSucceeded = BinaryScalaCodec(RequestPasswordResetSucceeded)
+  lazy val _cRequestPaymentResult = BinaryScalaCodec(RequestPaymentResult)
   lazy val _cRequestTransferFailed = BinaryScalaCodec(RequestTransferFailed)
   lazy val _cRequestTransferSucceeded = BinaryScalaCodec(RequestTransferSucceeded)
   lazy val _cResendVerifyEmailFailed = BinaryScalaCodec(ResendVerifyEmailFailed)
@@ -245,6 +248,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: Order => _cOrder(m)
     case m: OrderInfo => _cOrderInfo(m)
     case m: OrderUpdate => _cOrderUpdate(m)
+    case m: Payment => _cPayment(m)
     case m: QueryMarketSide => _cQueryMarketSide(m)
     case m: RDouble => _cRDouble(m)
     case m: RedeliverFilterData => _cRedeliverFilterData(m)
@@ -294,6 +298,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: DoRequestConfirmRC => _cDoRequestConfirmRC(m)
     case m: DoRequestGenerateABCode => _cDoRequestGenerateABCode(m)
     case m: DoRequestPasswordReset => _cDoRequestPasswordReset(m)
+    case m: DoRequestPayment => _cDoRequestPayment(m)
     case m: DoRequestTransfer => _cDoRequestTransfer(m)
     case m: DoResendVerifyEmail => _cDoResendVerifyEmail(m)
     case m: DoResetPassword => _cDoResetPassword(m)
@@ -373,6 +378,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: RequestGenerateABCodeSucceeded => _cRequestGenerateABCodeSucceeded(m)
     case m: RequestPasswordResetFailed => _cRequestPasswordResetFailed(m)
     case m: RequestPasswordResetSucceeded => _cRequestPasswordResetSucceeded(m)
+    case m: RequestPaymentResult => _cRequestPaymentResult(m)
     case m: RequestTransferFailed => _cRequestTransferFailed(m)
     case m: RequestTransferSucceeded => _cRequestTransferSucceeded(m)
     case m: ResendVerifyEmailFailed => _cResendVerifyEmailFailed(m)
@@ -447,6 +453,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[Order.Immutable] => _cOrder.invert(bytes).get
     case Some(c) if c == classOf[OrderInfo.Immutable] => _cOrderInfo.invert(bytes).get
     case Some(c) if c == classOf[OrderUpdate.Immutable] => _cOrderUpdate.invert(bytes).get
+    case Some(c) if c == classOf[Payment.Immutable] => _cPayment.invert(bytes).get
     case Some(c) if c == classOf[QueryMarketSide.Immutable] => _cQueryMarketSide.invert(bytes).get
     case Some(c) if c == classOf[RDouble.Immutable] => _cRDouble.invert(bytes).get
     case Some(c) if c == classOf[RedeliverFilterData.Immutable] => _cRedeliverFilterData.invert(bytes).get
@@ -496,6 +503,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[DoRequestConfirmRC.Immutable] => _cDoRequestConfirmRC.invert(bytes).get
     case Some(c) if c == classOf[DoRequestGenerateABCode.Immutable] => _cDoRequestGenerateABCode.invert(bytes).get
     case Some(c) if c == classOf[DoRequestPasswordReset.Immutable] => _cDoRequestPasswordReset.invert(bytes).get
+    case Some(c) if c == classOf[DoRequestPayment.Immutable] => _cDoRequestPayment.invert(bytes).get
     case Some(c) if c == classOf[DoRequestTransfer.Immutable] => _cDoRequestTransfer.invert(bytes).get
     case Some(c) if c == classOf[DoResendVerifyEmail.Immutable] => _cDoResendVerifyEmail.invert(bytes).get
     case Some(c) if c == classOf[DoResetPassword.Immutable] => _cDoResetPassword.invert(bytes).get
@@ -575,6 +583,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[RequestGenerateABCodeSucceeded.Immutable] => _cRequestGenerateABCodeSucceeded.invert(bytes).get
     case Some(c) if c == classOf[RequestPasswordResetFailed.Immutable] => _cRequestPasswordResetFailed.invert(bytes).get
     case Some(c) if c == classOf[RequestPasswordResetSucceeded.Immutable] => _cRequestPasswordResetSucceeded.invert(bytes).get
+    case Some(c) if c == classOf[RequestPaymentResult.Immutable] => _cRequestPaymentResult.invert(bytes).get
     case Some(c) if c == classOf[RequestTransferFailed.Immutable] => _cRequestTransferFailed.invert(bytes).get
     case Some(c) if c == classOf[RequestTransferSucceeded.Immutable] => _cRequestTransferSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ResendVerifyEmailFailed.Immutable] => _cResendVerifyEmailFailed.invert(bytes).get

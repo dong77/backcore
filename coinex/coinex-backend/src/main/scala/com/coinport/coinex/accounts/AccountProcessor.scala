@@ -34,6 +34,7 @@ class AccountProcessor(
   override implicit val logger = log
 
   private val MAX_PRICE = 1E8.toDouble // 100000000.00000001 can be preserved by toDouble.
+  private val FIRST_USER_ID = 1000000000
   private var hotColdTransferLastTransferTime = Map.empty[Currency, Long]
 
   override val processorId = ACCOUNT_PROCESSOR <<
@@ -101,6 +102,22 @@ class AccountProcessor(
         }
       case _ => // frontend can't send UserToHot
     }
+
+    case DoRequestPayment(payment) =>
+      val adjustment = CashAccount(payment.currency, -payment.amount, 0, 0)
+      if (payment.payer < FIRST_USER_ID || payment.payee < FIRST_USER_ID) {
+        sender ! RequestPaymentResult(payment.currency, ErrorCode.InvalidUser)
+      } else if (payment.amount <= 0) {
+        sender ! RequestPaymentResult(payment.currency, ErrorCode.InvalidAmount)
+      } else if (!manager.canUpdateCashAccount(payment.payer, adjustment)) {
+        sender ! RequestPaymentResult(payment.currency, ErrorCode.InsufficientFund)
+      } else {
+        val updated = payment.copy(id = manager.getLastPaymentId(), created = Some(System.currentTimeMillis))
+        persist(DoRequestPayment(updated)) { event =>
+          updateState(event)
+          sender ! RequestPaymentResult(payment.currency, ErrorCode.Ok)
+        }
+      }
 
     case p @ ConfirmablePersistent(m: AdminConfirmTransferSuccess, _, _) =>
       persist(m.copy(transfer = appendFeeIfNecessary(m.transfer))) { event =>
@@ -368,6 +385,11 @@ trait AccountManagerBehavior extends CountFeeSupport {
 
     case OrderCancelled(side, order) =>
       manager.conditionalRefund(true)(side.outCurrency, order)
+
+    case DoRequestPayment(payment) =>
+      manager.setLastPaymentId(payment.id)
+      manager.updateCashAccount(payment.payer, CashAccount(payment.currency, -payment.amount, 0, 0))
+      manager.updateCashAccount(payment.payee, CashAccount(payment.currency, payment.amount, 0, 0))
   }
 
   private def succeededTransfer(t: AccountTransfer, transferDebug: Boolean = false) {

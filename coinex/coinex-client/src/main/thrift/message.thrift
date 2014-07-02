@@ -56,6 +56,7 @@ typedef data.CryptoAddress                      _CryptoAddress
 typedef data.TFeeConfig                         _TFeeConfig
 typedef data.Language                           _Language
 typedef data.ReferralParams                     _ReferralParams
+typedef data.Payment                            _Payment
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -118,6 +119,9 @@ typedef data.ReferralParams                     _ReferralParams
 
 /* Q    */ struct VerifyGoogleAuthCode                    {1: string email, 2: i32 code}
 /* R    */ struct GoogleAuthCodeVerificationResult        {1: optional _UserProfile userProfile}
+
+/* C,P  */ struct DoRequestPayment                        {1: _Payment payment}
+/* R    */ struct RequestPaymentResult                    {1: _Currency currency, 2: _ErrorCode error}
 
 /* C,P  */ struct DoRequestTransfer                       {1: _AccountTransfer transfer, 2: optional bool transferDebug}
 /* R-   */ struct RequestTransferFailed                   {1: _ErrorCode error}

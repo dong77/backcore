@@ -31,6 +31,7 @@ class AccountManager(initialLastOrderId: Long = 0L,
   private val accountMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]
   var aggregationAccount = Map.empty[Currency, CashAccount]
   var lastOrderId = initialLastOrderId
+  var lastPaymentId = 0L
   val abCodeMap: Map[Long, ABCodeItem] = Map.empty[Long, ABCodeItem]
   val codeAIndexMap: Map[String, Long] = Map.empty[String, Long]
   val codeBIndexMap: Map[String, Long] = Map.empty[String, Long]
@@ -47,7 +48,8 @@ class AccountManager(initialLastOrderId: Long = 0L,
     codeAIndexMap.clone,
     codeBIndexMap.clone,
     hotWalletAccount.clone,
-    coldWalletAccount.clone)
+    coldWalletAccount.clone,
+    Some(lastPaymentId))
 
   def loadSnapshot(snapshot: TAccountState) = {
     accountMap.clear
@@ -66,6 +68,7 @@ class AccountManager(initialLastOrderId: Long = 0L,
     hotWalletAccount ++= snapshot.hotWalletAccount
     coldWalletAccount.clear
     coldWalletAccount ++= snapshot.coldWalletAccount
+    lastPaymentId = snapshot.lastPaymentId.getOrElse(0)
   }
 
   // Business logics      ----------------------------------------------
@@ -175,6 +178,9 @@ class AccountManager(initialLastOrderId: Long = 0L,
 
   def getOrderId(): Long = lastOrderId + 1
   def setLastOrderId(id: Long) = { lastOrderId = id }
+
+  def getLastPaymentId(): Long = lastPaymentId + 1
+  def setLastPaymentId(id: Long) = { lastPaymentId = id }
 
   def createABCodeTransaction(userId: Long, codeA: String, codeB: String, amount: Long) {
     val timestamp = System.currentTimeMillis

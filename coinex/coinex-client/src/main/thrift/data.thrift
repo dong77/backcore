@@ -32,6 +32,7 @@ enum ErrorCode {
     BITWAY_PROCESS_FAIL              = 2009
     INSUFFICIENT_HOT                 = 2010
     INSUFFICIENT_COLD                = 2011
+    INVALID_USER                     = 2012
 
     // Market related
     ORDER_NOT_EXIST                  = 3001
@@ -401,6 +402,17 @@ struct AccountTransfer {
 struct AccountTransfersWithMinerFee {
     1: list<AccountTransfer> transfers
     2: optional i64 minerFee
+}
+
+struct Payment {
+    1: i64 id
+    2: i64 payer
+    3: i64 payee
+    4: Currency currency
+    5: i64 amount
+    6: optional i64 created
+    7: optional Fee fee
+    8: optional string reason
 }
 
 struct ABCodeItem {
