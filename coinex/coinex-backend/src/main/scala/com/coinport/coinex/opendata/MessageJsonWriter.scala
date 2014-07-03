@@ -22,7 +22,7 @@ object MessageJsonWriter extends MessageWriter {
   private def getMessages(messages: List[(Long, Any)]): String = {
     val builder = new StringBuilder()
     for ((seqNum, msg) <- messages) {
-      builder ++= s"""{"${msg.getClass.getEnclosingClass.getSimpleName}":${PrettyJsonSerializer.toJson(msg)}," ${Bytes.toString(SequenceNr)}":${seqNum.toString}},"""
+      builder ++= s"""{"${msg.getClass.getEnclosingClass.getSimpleName}":${PrettyJsonSerializer.toJson(msg)},"${Bytes.toString(SequenceNr)}":${seqNum.toString}},"""
     }
     builder.toString()
   }
