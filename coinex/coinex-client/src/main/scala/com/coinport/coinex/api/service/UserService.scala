@@ -173,6 +173,36 @@ object UserService extends AkkaService {
     }
   }
 
+  def bindGoogleAuth(uid: Long, key: String) = {
+    //update withdrawal address of user profile
+    backend ? QueryProfile(Some(uid)) map {
+      case qpr: QueryProfileResult =>
+        qpr.userProfile match {
+          case Some(profile) =>
+            val newPro = profile.copy(googleAuthenticatorSecret = Some(key))
+            backend ! DoUpdateUserProfile(newPro)
+          case None =>
+        }
+        ApiResult(true, 0, "", None)
+      case x => ApiResult(false, -1, x.toString)
+    }
+  }
+
+  def unbindGoogleAuth(uid: Long) = {
+    //update withdrawal address of user profile
+    backend ? QueryProfile(Some(uid)) map {
+      case qpr: QueryProfileResult =>
+        qpr.userProfile match {
+          case Some(profile) =>
+            val newPro = profile.copy(googleAuthenticatorSecret = None)
+            backend ! DoUpdateUserProfile(newPro)
+          case None =>
+        }
+        ApiResult(true, 0, "", None)
+      case x => ApiResult(false, -1, x.toString)
+    }
+  }
+
   def getWithdrawalAddress(userId: Long, currency: Currency) = {
     backend ? QueryProfile(Some(userId)) map {
       case qpr: QueryProfileResult =>
