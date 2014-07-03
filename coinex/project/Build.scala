@@ -27,6 +27,7 @@ object CoinexBuild extends Build {
     initialCommands in console := """
       import com.coinport.coinex.Client
       import com.coinport.coinex.monitoring.MonitorTest
+      import com.coinport.coinex.robot.exchange.AutoExchangeRobotExecutor
       import com.coinport.coinex.data._
       import com.coinport.coinex.data.Currency._
       import com.coinport.coinex.robot.sample._
