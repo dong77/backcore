@@ -1,9 +1,9 @@
 package com.coinport.coinex.opendata
 
-import org.hbase.async.HBaseClient
 import akka.persistence.hbase.journal.{ PluginPersistenceSettings, HBaseClientFactory }
 import akka.actor.ExtendedActorSystem
 import akka.persistence.PersistenceSettings
+import org.hbase.async.HBaseClient
 
 class AsyncHBaseClient(implicit val system: ExtendedActorSystem) {
   private val config = system.settings.config

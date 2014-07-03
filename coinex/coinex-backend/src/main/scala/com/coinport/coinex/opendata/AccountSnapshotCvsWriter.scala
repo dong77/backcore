@@ -46,7 +46,7 @@ object AccountSnapshotCvsWriter extends SnapshotWriter {
 
   private def writeAsset(currency: Currency, accounts: List[(Long, CashAccount)])(implicit config: OpenDataConfig, pFileMap: collection.mutable.Map[String, String], fs: FileSystem) {
     val writer = new BufferedWriter(new OutputStreamWriter(fs.create(
-      new Path(s"${config.csvAssetDir}/${currency.toString.toLowerCase()}/", s"coinport_${currency.toString}_asset_${currentTime()}.csv".toLowerCase))))
+      new Path(s"${config.csvAssetDir}/${currency.toString.toLowerCase()}/", s"${currency.toString}_balance_${currentTime()}.csv".toLowerCase))))
     writer.write(s""""User Id",Amount\n""")
     var sum = 0L
     for (act <- accounts) {

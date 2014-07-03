@@ -1,10 +1,10 @@
 package com.coinport.coinex.opendata
 
-import com.coinport.coinex.serializers._
 import akka.persistence.serialization.Snapshot
-import org.apache.hadoop.fs.{ Path, FileSystem }
+import com.coinport.coinex.serializers._
 import java.io.{ OutputStreamWriter, BufferedWriter }
 import org.apache.commons.io.IOUtils
+import org.apache.hadoop.fs.{ Path, FileSystem }
 
 object SnapshotJsonWriter extends SnapshotWriter {
 

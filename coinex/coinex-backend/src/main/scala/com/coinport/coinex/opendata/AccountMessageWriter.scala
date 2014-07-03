@@ -1,10 +1,10 @@
 package com.coinport.coinex.opendata
 
-import org.apache.hadoop.fs.{ Path, FileSystem }
-import com.coinport.coinex.data._
-import scala.collection.mutable.ListBuffer
-import java.io.{ OutputStreamWriter, BufferedWriter }
 import com.coinport.coinex.api.model.CurrencyWrapper
+import com.coinport.coinex.data._
+import java.io.{ OutputStreamWriter, BufferedWriter }
+import org.apache.hadoop.fs.{ Path, FileSystem }
+import scala.collection.mutable.ListBuffer
 
 object AccountMessageWriter extends MessageWriter {
 

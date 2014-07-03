@@ -1,10 +1,10 @@
 package com.coinport.coinex.opendata
 
+import akka.persistence.hbase.common.Columns._
+import com.coinport.coinex.serializers.PrettyJsonSerializer
 import java.io.{ OutputStreamWriter, BufferedWriter }
 import org.apache.hadoop.fs.{ FileSystem, Path }
-import com.coinport.coinex.serializers.PrettyJsonSerializer
 import org.apache.hadoop.hbase.util.Bytes
-import akka.persistence.hbase.common.Columns._
 
 object MessageJsonWriter extends MessageWriter {
 
@@ -20,16 +20,10 @@ object MessageJsonWriter extends MessageWriter {
   }
 
   private def getMessages(messages: List[(Long, Any)]): String = {
-    val builder = new StringBuilder("{")
+    val builder = new StringBuilder()
     for ((seqNum, msg) <- messages) {
-      builder ++= "\"" ++= msg.getClass.getEnclosingClass.getSimpleName ++= "\":"
-      builder ++= PrettyJsonSerializer.toJson(msg)
-      builder ++= "\"" ++= Bytes.toString(SequenceNr) ++= "\":"
-      builder ++= seqNum.toString
-      builder ++= ","
+      builder ++= s"""{"${msg.getClass.getEnclosingClass.getSimpleName}":${PrettyJsonSerializer.toJson(msg)}," ${Bytes.toString(SequenceNr)}":${seqNum.toString}},"""
     }
-    builder.delete(builder.length - 1, builder.length)
-    builder ++= "},"
     builder.toString()
   }
 

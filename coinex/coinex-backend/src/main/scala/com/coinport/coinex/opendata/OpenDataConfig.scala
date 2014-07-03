@@ -1,8 +1,8 @@
 package com.coinport.coinex.opendata
 
-import scala.concurrent.duration._
 import com.coinport.coinex.serializers.BaseJsonSerializer
 import com.coinport.coinex.data.TAccountState
+import scala.concurrent.duration._
 
 class OpenDataConfig() {
   val enableExportData: Boolean = false
