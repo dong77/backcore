@@ -59,7 +59,8 @@ class UserProcessor(mailer: ActorRef, secret: String)
             mobileVerified = if (userProfile.mobile.isDefined) true else profile.mobileVerified,
             status = userProfile.status,
             depositAddresses = Some(profile.depositAddresses.getOrElse(Map.empty) ++ userProfile.depositAddresses.getOrElse(Map.empty)),
-            withdrawalAddresses = Some(profile.withdrawalAddresses.getOrElse(Map.empty) ++ userProfile.withdrawalAddresses.getOrElse(Map.empty))
+            withdrawalAddresses = Some(profile.withdrawalAddresses.getOrElse(Map.empty) ++ userProfile.withdrawalAddresses.getOrElse(Map.empty)),
+            googleAuthenticatorSecret = profile.googleAuthenticatorSecret
           )
           sender ! UpdateUserProfileSucceeded(newProfile)
           persist(DoUpdateUserProfile(newProfile))(updateState)
