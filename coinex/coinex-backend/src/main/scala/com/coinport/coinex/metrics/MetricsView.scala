@@ -1,8 +1,6 @@
 /**
  * Copyright 2014 Coinport Inc. All Rights Reserved.
  * Author: c@coinport.com (Chao Ma)
- *
- * TODO(c) need call MetricsState snapshot method when snapshoting
  */
 
 package com.coinport.coinex.metrics
@@ -22,11 +20,14 @@ class MetricsView extends ExtendedView {
   val manager = new MetricsManager()
 
   def receive = LoggingReceive {
-    case e @ Persistent(OrderSubmitted(orderInfo, txs), _) =>
+    case e @ Persistent(OrderSubmitted(_, txs), _) =>
       txs foreach { tx =>
         val Transaction(_, _, _, _, makerOrderUpdate, _) = tx
         makerOrderUpdate.current.price foreach { price =>
-          manager.update(orderInfo.side, price.reciprocal, orderInfo.outAmount, orderInfo.inAmount, tx.timestamp)
+          manager.update(tx.side, price.reciprocal,
+            makerOrderUpdate.current.inAmount - makerOrderUpdate.previous.inAmount,
+            makerOrderUpdate.previous.quantity - makerOrderUpdate.current.quantity,
+            tx.timestamp)
         }
       }
     case QueryMetrics =>
