@@ -7,9 +7,9 @@
 # 0. backup jar and zip file
 day=`date +%Y%m%d`
 cd ~/work/backcore/coinex/shell/deploy/
-sh -i ~/work/xiaolu.pem ubuntu@54.238.180.101 "/var/coinport/code/backcore/coinex/shell/deploy/backup.sh"
-sh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/frontend/exchange/shell/backup.sh"
-sh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/admin/shell/backup.sh"
+ssh -i ~/work/xiaolu.pem ubuntu@54.238.180.101 "/var/coinport/code/backcore/coinex/shell/deploy/backup.sh"
+ssh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/frontend/exchange/shell/backup.sh"
+ssh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/admin/shell/backup.sh"
 
 #-------------------------------------------------------------------
 # 1. push new branch to remote origin
@@ -32,7 +32,7 @@ echo "newest admin branch is "$branch
 # 2. generate new tar and zip package for backend & frontend & admin
 
 # generate coinex-backend tar package
-ssh -i ~/work/xiaolu.pem ubuntu@54.238.180.101 "/var/coinport/code/backcore/coinex/shell/deploy/generateTar.sh $branch"
+ssh -i ~/work/xiaolu.pem ubuntu@54.238.180.101 "/var/coinport/code/backcore/coinex/shell/deploy/generateJar.sh $branch"
 
 # generate frontend zip package
 ssh -i ~/work/xiaolu.pem ubuntu@54.199.252.18 "/var/coinport/code/frontend/exchange/shell/prod_generateZip.sh $branch"
