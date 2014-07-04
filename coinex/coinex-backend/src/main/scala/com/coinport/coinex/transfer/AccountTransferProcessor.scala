@@ -59,6 +59,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
               case TransferType.UserToHot =>
                 sender ! RequestTransferFailed(UnsupportTransferType)
               case TransferType.Withdrawal => // accept wait for admin accept
+                sender ! RequestTransferSucceeded(event.transfer) // wait for admin confirm
               case TransferType.ColdToHot => // accept, wait for admin confirm
               case TransferType.HotToCold => // accept, save request to map
               case TransferType.Unknown => // accept wait for admin accept

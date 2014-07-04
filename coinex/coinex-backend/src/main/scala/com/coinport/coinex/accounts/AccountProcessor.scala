@@ -67,7 +67,6 @@ class AccountProcessor(
           persist(DoRequestTransfer(updated)) { event =>
             updateState(event)
             channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
-            sender ! RequestTransferSucceeded(t)
           }
         }
 
@@ -79,7 +78,6 @@ class AccountProcessor(
           persist(DoRequestTransfer(updated)) { event =>
             updateState(event)
             channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
-            sender ! RequestTransferSucceeded(t)
           }
         }
 

@@ -190,7 +190,7 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
       1000000453L -> User("dong"),
       1000000340L -> User("xiaolu"),
       // 1000000001L -> User("dong3"))
-      
+
       1000000008L -> User("xiaolu"))
   }
 
@@ -200,12 +200,12 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
       val a = f(0) match {
         case i: String => roundByMarketSide(i.toDouble, side)
         case i: Double => roundByMarketSide(i, side)
-        case _         => 0.0
+        case _ => 0.0
       }
       val b = f(1) match {
         case i: String => roundByMarketSide(i.toDouble, side)
         case i: Double => roundByMarketSide(i, side)
-        case _         => 0.0
+        case _ => 0.0
       }
       depthList = DepthElem(a, b) :: depthList
     }
@@ -214,19 +214,19 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
 
   def roundByMarketSide(src: Double, side: MarketSide) = {
     side match {
-      case MarketSide(Btc, Ltc)  => roundDouble(src, 4)
+      case MarketSide(Btc, Ltc) => roundDouble(src, 4)
       case MarketSide(Btc, Doge) => roundDouble(src, 8)
-      case MarketSide(Btc, Bc)   => roundDouble(src, 8)
-      case MarketSide(Btc, Drk)  => roundDouble(src, 6)
+      case MarketSide(Btc, Bc) => roundDouble(src, 8)
+      case MarketSide(Btc, Drk) => roundDouble(src, 6)
     }
   }
 
   def quantityRoundByMarketSide(src: Double, side: MarketSide) = {
     side match {
-      case MarketSide(Btc, Ltc)  => roundDouble(src, 4)
+      case MarketSide(Btc, Ltc) => roundDouble(src, 4)
       case MarketSide(Btc, Doge) => roundDouble(src, 4)
-      case MarketSide(Btc, Bc)   => roundDouble(src, 3)
-      case MarketSide(Btc, Drk)  => roundDouble(src, 2)
+      case MarketSide(Btc, Bc) => roundDouble(src, 3)
+      case MarketSide(Btc, Drk) => roundDouble(src, 2)
     }
   }
 
@@ -370,36 +370,36 @@ object AutoExchangeRobotExecutor {
 
   def main(args: Array[String]) {
     val marketUrlMap: Map[MarketSide, String] = Map(
-//      Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc",
-//      Btc ~> Doge -> "http://data.bter.com/api/1/depth/doge_btc",
+      //      Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc",
+      //      Btc ~> Doge -> "http://data.bter.com/api/1/depth/doge_btc",
       Btc ~> Bc -> "http://data.bter.com/api/1/depth/bc_btc")
-//      Btc ~> Drk -> "http://data.bter.com/api/1/depth/drk_btc")
+    //      Btc ~> Drk -> "http://data.bter.com/api/1/depth/drk_btc")
     val executor = new AutoExchangeRobotExecutor(marketUrlMap, 10000)
     executor.startExecutor
   }
-//
-//  def start() {
-//    val marketUrlMap: Map[MarketSide, String] = Map(Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc", Btc ~> Doge -> "http://data.bter.com/api/1/depth/doge_btc")
-//    val executor = new AutoExchangeRobotExecutor(marketUrlMap, 10000)
-//    executor.startExecutor
-//  }
-//
-//  def deposit() {
-//    val user1 = User(1000001001L, "xiaolu@coinport.com", None, "123456")
-//    val user2 = User(1000002001L, "jaice_229@163.com", None, "123456")
-//    val user3 = User(1000003001L, "mmmmmagina@163.com", None, "123456")
-//    UserService.register(user1)
-//    UserService.register(user2)
-//    UserService.register(user3)
-//    Thread.sleep(1000)
-//    AccountService.deposit(1000000000L, Btc, 0.3300)
-//    AccountService.deposit(1000000000L, Ltc, 19.0000)
-//    AccountService.deposit(1000000000L, Doge, 99.0000)
-//    AccountService.deposit(1000000001L, Btc, 0.0017)
-//    AccountService.deposit(1000000001L, Ltc, 0.3752)
-//    AccountService.deposit(1000000001L, Doge, 4123.9800)
-//    AccountService.deposit(1000000002L, Bc, 50)
-//    AccountService.deposit(1000000002L, Drk, 50)
-//  }
+  //
+  //  def start() {
+  //    val marketUrlMap: Map[MarketSide, String] = Map(Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc", Btc ~> Doge -> "http://data.bter.com/api/1/depth/doge_btc")
+  //    val executor = new AutoExchangeRobotExecutor(marketUrlMap, 10000)
+  //    executor.startExecutor
+  //  }
+  //
+  //  def deposit() {
+  //    val user1 = User(1000001001L, "xiaolu@coinport.com", None, "123456")
+  //    val user2 = User(1000002001L, "jaice_229@163.com", None, "123456")
+  //    val user3 = User(1000003001L, "mmmmmagina@163.com", None, "123456")
+  //    UserService.register(user1)
+  //    UserService.register(user2)
+  //    UserService.register(user3)
+  //    Thread.sleep(1000)
+  //    AccountService.deposit(1000000000L, Btc, 0.3300)
+  //    AccountService.deposit(1000000000L, Ltc, 19.0000)
+  //    AccountService.deposit(1000000000L, Doge, 99.0000)
+  //    AccountService.deposit(1000000001L, Btc, 0.0017)
+  //    AccountService.deposit(1000000001L, Ltc, 0.3752)
+  //    AccountService.deposit(1000000001L, Doge, 4123.9800)
+  //    AccountService.deposit(1000000002L, Bc, 50)
+  //    AccountService.deposit(1000000002L, Drk, 50)
+  //  }
 
 }
