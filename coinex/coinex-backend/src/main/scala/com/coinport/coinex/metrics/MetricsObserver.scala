@@ -28,9 +28,7 @@ object MetricsObserver {
   }
 }
 
-class MetricsObserver(
-    side: MarketSide,
-    transactionQueue: WindowVector[MarketEvent] = new WindowVector[MarketEvent](_24_HOURS),
+class MetricsObserver(side: MarketSide, transactionQueue: WindowVector[MarketEvent],
     minMaintainer: StackQueue[Double] = new StackQueue[Double](ascending),
     maxMaintainer: StackQueue[Double] = new StackQueue[Double](descending),
     preMaintainer: StackQueue[Double] = new StackQueue[Double]((l, r) => true),

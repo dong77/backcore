@@ -97,6 +97,7 @@ struct TSimpleState {
 struct TMetricsState {
     1: map<MarketSide, TMetricsObserver> observers
     2: RedeliverFilters filters
+    3: optional i64 window
 }
 
 struct TRobotState {

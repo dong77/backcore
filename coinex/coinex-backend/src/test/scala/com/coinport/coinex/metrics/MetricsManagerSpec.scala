@@ -30,5 +30,17 @@ class MetricsManagerSpec extends Specification {
       newManager.getMetrics(4).metricsByMarket(side).high mustEqual Some(10)
       newManager.getMetrics(10000000000L) mustEqual Metrics(Map(MarketSide(Btc, Cny) -> MetricsByMarket(MarketSide(Btc, Cny), 2.0, None, None, 0, None, Down), MarketSide(Cny, Btc) -> MetricsByMarket(MarketSide(Cny, Btc), 0.5, None, None, 0, None, Up)))
     }
+
+    "handle the case of multi items with the same price" in {
+      val side = (Btc ~> Cny)
+      val manager = new MetricsManager(3)
+      manager.update(side, RDouble(0.1, false), 12, 120, 1)
+      manager.update(side, RDouble(0.1, false), 12, 120, 1)
+      manager.update(side, RDouble(0.1, false), 13, 130, 1)
+      manager.update(side, RDouble(0.1, false), 12, 120, 2)
+      manager.update(side, RDouble(0.1, false), 14, 140, 2)
+
+      manager.getMetrics(4) mustEqual Metrics(Map(MarketSide(Btc, Cny) -> MetricsByMarket(MarketSide(Btc, Cny), 0.1, Some(0.1), Some(0.1), 26, Some(0.0), Keep), MarketSide(Cny, Btc) -> MetricsByMarket(MarketSide(Cny, Btc), 10.0, Some(10.0), Some(10.0), 260, Some(0.0), Keep)))
+    }
   }
 }

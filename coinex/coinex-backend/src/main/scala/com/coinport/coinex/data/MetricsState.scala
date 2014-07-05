@@ -10,17 +10,16 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.metrics._
 
 object MetricsState {
-  def apply(tms: TMetricsState): MetricsState = MetricsState(
-    Map.empty ++ tms.observers.map(kv => (kv._1 -> MetricsObserver(kv._2)))
-  )
+  def apply(tms: TMetricsState): MetricsState = MetricsState(tms.window.getOrElse(_24_HOURS),
+    Map.empty ++ tms.observers.map(kv => (kv._1 -> MetricsObserver(kv._2))))
 }
 
 // MetricsObserver is mutable and need clone when snapshoting
-case class MetricsState(
+case class MetricsState(window: Long,
     observers: Map[MarketSide, MetricsObserver] = Map.empty[MarketSide, MetricsObserver]) {
 
   def pushEvent(side: MarketSide, event: MarketEvent, tick: Long): MetricsState = {
-    val observer = observers.getOrElse(side, new MetricsObserver(side))
+    val observer = observers.getOrElse(side, new MetricsObserver(side, new WindowVector[MarketEvent](window)))
     observer.pushEvent(event, tick)
     copy(observers = observers + (side -> observer))
   }
@@ -33,8 +32,8 @@ case class MetricsState(
 
   def snapshot: MetricsState = {
     val newObservers = observers map (item => (item._1 -> item._2.copy))
-    copy(observers = newObservers)
+    copy(observers = newObservers, window = window)
   }
 
-  def toThrift: TMetricsState = TMetricsState(observers.map(kv => (kv._1 -> kv._2.toThrift)), null)
+  def toThrift: TMetricsState = TMetricsState(observers.map(kv => (kv._1 -> kv._2.toThrift)), null, Some(window))
 }

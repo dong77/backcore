@@ -5,13 +5,14 @@
 
 package com.coinport.coinex.metrics
 
+import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.common.Manager
 import com.coinport.coinex.data._
 import Implicits._
 
-class MetricsManager extends Manager[TMetricsState] {
+class MetricsManager(window: Long = _24_HOURS) extends Manager[TMetricsState] {
 
-  var state = MetricsState()
+  var state = MetricsState(window)
 
   override def getSnapshot = state.toThrift.copy(filters = getFiltersSnapshot)
 
