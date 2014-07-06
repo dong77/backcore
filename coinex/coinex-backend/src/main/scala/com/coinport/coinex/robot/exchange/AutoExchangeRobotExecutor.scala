@@ -30,7 +30,7 @@ import dispatch.url
 
 class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpdateInterval: Long, adjustUserId: Long = 1000000000L) {
 
-  case class User(email: String, exchangeFrequency: Int = 180, takerPercentage: Int = 90, riskPercentage: Int = 10, buyPercentage: Int = 50)
+  case class User(email: String, exchangeFrequency: Int = 5, takerPercentage: Int = 90, riskPercentage: Int = 10, buyPercentage: Int = 50)
   case class DepthElem(price: Double, quantity: Double)
 
   var depthBuy: Map[MarketSide, List[DepthElem]] = Map.empty[MarketSide, List[DepthElem]]
@@ -87,8 +87,9 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
                     q =>
                       {
                         val reverseSide = MarketSide(side._2, side._1)
-                        if (quantity > q) quantity = quantity - q
-                        val order = Some(UserOrder(kv._1.toString, Operations.Sell, side._1.name, side._2.name, Some(externalHighestBid), Some(quantityRoundByMarketSide(q, reverseSide)), None))
+                        if (quantity > q) quantity = quantity - q * 0.5
+                        val order = Some(UserOrder(kv._1.toString, Operations.Sell, side._1.name, side._2.name, Some(externalHighestBid), Some(quantityRoundByMarketSide(q * 0.5, reverseSide)), None))
+                        Thread.sleep(Random.nextInt(3) * 1000)
                         println("adjust order : " + order)
                         submitOrder(order)
                       }
@@ -116,6 +117,7 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
                         val reverseSide = MarketSide(side._2, side._1)
                         if (quantity * externalHighestBid > q) quantity = quantity - q / externalHighestBid
                         val order = Some(UserOrder(kv._1.toString, Operations.Buy, side._1.name, side._2.name, Some(externalHighestBid), Some(quantityRoundByMarketSide(q / externalHighestBid, reverseSide)), None))
+                        Thread.sleep(Random.nextInt(3) * 1000)
                         println("adjust order : " + order)
                         submitOrder(order)
                       }
@@ -154,16 +156,16 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
     Thread.sleep(marketUpdateInterval * 2)
 
     // start depth adjust thread
-    new Thread(new Runnable {
-      def run() {
-        while (true) {
-          // merge depth
-          Thread.sleep(20000)
-          adjustMarket()
-
-        }
-      }
-    }).start()
+    //    new Thread(new Runnable {
+    //      def run() {
+    //        while (true) {
+    //          // merge depth
+    //          Thread.sleep(20000)
+    //          adjustMarket()
+    //
+    //        }
+    //      }
+    //    }).start()
 
     // add default users
     initDefaultUser
@@ -186,9 +188,9 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
 
   def initDefaultUser() {
     userMap ++= Map(
-      1000000002L -> User("dong"),
-      1000000453L -> User("dong"),
-      1000000340L -> User("xiaolu"),
+      1000000000L -> User("dong"),
+      1000000001L -> User("dong"),
+      1000000002L -> User("xiaolu"),
       // 1000000001L -> User("dong3"))
 
       1000000008L -> User("xiaolu"))
@@ -261,7 +263,7 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
         operationsType = Operations.Buy
         val item = depthSell(side).drop(Random.nextInt(priceTerm)).head
         price = item.price
-        quantity = quantityRoundByMarketSide(item.quantity * (600 + Random.nextInt(400)) / 1000, side)
+        quantity = randomQuantityBySide(side)
         getAccount(uid, side._1.name.toUpperCase) map {
           q =>
             {
@@ -274,7 +276,7 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
         operationsType = Operations.Sell
         val item = depthBuy(side).drop(Random.nextInt(priceTerm)).head
         price = item.price
-        quantity = quantityRoundByMarketSide(item.quantity * (600 + Random.nextInt(400)) / 1000, side)
+        quantity = randomQuantityBySide(side)
         getAccount(uid, side._2.name.toUpperCase) map {
           q =>
             {
@@ -300,7 +302,7 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
           quantity = iterateList.head.quantity
           iterateList = iterateList.tail
         }
-        quantity = quantityRoundByMarketSide(quantity * (950 + Random.nextInt(50)) / 1000, side)
+        quantity = randomQuantityBySide(side)
         getAccount(uid, side._1.name.toUpperCase) map {
           q =>
             {
@@ -320,13 +322,10 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
           quantity = iterateList.head.quantity
           iterateList = iterateList.tail
         }
-        quantity = quantityRoundByMarketSide(quantity * (950 + Random.nextInt(50)) / 1000, side)
+        quantity = randomQuantityBySide(side)
         getAccount(uid, side._2.name.toUpperCase) map {
           q =>
             {
-              println(quantity)
-              println(price)
-              println(q)
               if (quantity > q * 0.1) quantity = quantityRoundByMarketSide(q * 0.1, side)
               Some(UserOrder(uid.toString, operationsType, side._2.name, side._1.name, Some(price), Some(quantity), None))
             }
@@ -340,6 +339,15 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
     if (order.isDefined && order.get.amount.get > 0.0) {
       println("submit order : " + order.get)
       AccountService.submitOrder(order.get)
+    }
+  }
+
+  def randomQuantityBySide(side: MarketSide): Double = {
+    side match {
+      case MarketSide(Btc, Ltc) => roundDouble(Random.nextDouble() / 5, 4)
+      case MarketSide(Btc, Doge) => roundDouble(Random.nextDouble() * 10000, 4)
+      case MarketSide(Btc, Bc) => roundDouble(Random.nextDouble() * 10, 3)
+      case MarketSide(Btc, Drk) => roundDouble(Random.nextDouble() / 5, 2)
     }
   }
 
@@ -370,36 +378,36 @@ object AutoExchangeRobotExecutor {
 
   def main(args: Array[String]) {
     val marketUrlMap: Map[MarketSide, String] = Map(
-      //      Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc",
-      //      Btc ~> Doge -> "http://data.bter.com/api/1/depth/doge_btc",
-      Btc ~> Bc -> "http://data.bter.com/api/1/depth/bc_btc")
-    //      Btc ~> Drk -> "http://data.bter.com/api/1/depth/drk_btc")
+      Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc",
+      Btc ~> Doge -> "http://data.bter.com/api/1/depth/doge_btc",
+      Btc ~> Bc -> "http://data.bter.com/api/1/depth/bc_btc",
+      Btc ~> Drk -> "http://data.bter.com/api/1/depth/drk_btc")
     val executor = new AutoExchangeRobotExecutor(marketUrlMap, 10000)
     executor.startExecutor
   }
-  //
-  //  def start() {
-  //    val marketUrlMap: Map[MarketSide, String] = Map(Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc", Btc ~> Doge -> "http://data.bter.com/api/1/depth/doge_btc")
-  //    val executor = new AutoExchangeRobotExecutor(marketUrlMap, 10000)
-  //    executor.startExecutor
-  //  }
-  //
-  //  def deposit() {
-  //    val user1 = User(1000001001L, "xiaolu@coinport.com", None, "123456")
-  //    val user2 = User(1000002001L, "jaice_229@163.com", None, "123456")
-  //    val user3 = User(1000003001L, "mmmmmagina@163.com", None, "123456")
-  //    UserService.register(user1)
-  //    UserService.register(user2)
-  //    UserService.register(user3)
-  //    Thread.sleep(1000)
-  //    AccountService.deposit(1000000000L, Btc, 0.3300)
-  //    AccountService.deposit(1000000000L, Ltc, 19.0000)
-  //    AccountService.deposit(1000000000L, Doge, 99.0000)
-  //    AccountService.deposit(1000000001L, Btc, 0.0017)
-  //    AccountService.deposit(1000000001L, Ltc, 0.3752)
-  //    AccountService.deposit(1000000001L, Doge, 4123.9800)
-  //    AccountService.deposit(1000000002L, Bc, 50)
-  //    AccountService.deposit(1000000002L, Drk, 50)
-  //  }
+
+  def start() {
+    val marketUrlMap: Map[MarketSide, String] = Map(Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc", Btc ~> Doge -> "http://data.bter.com/api/1/depth/doge_btc")
+    val executor = new AutoExchangeRobotExecutor(marketUrlMap, 10000)
+    executor.startExecutor
+  }
+
+  def deposit() {
+    val user1 = User(1000001001L, "xiaolu@coinport.com", None, "123456")
+    val user2 = User(1000002001L, "jaice_229@163.com", None, "123456")
+    val user3 = User(1000003001L, "mmmmmagina@163.com", None, "123456")
+    UserService.register(user1)
+    UserService.register(user2)
+    UserService.register(user3)
+    Thread.sleep(1000)
+    AccountService.deposit(1000000000L, Btc, 0.3300)
+    AccountService.deposit(1000000000L, Ltc, 19.0000)
+    AccountService.deposit(1000000000L, Doge, 99.0000)
+    AccountService.deposit(1000000001L, Btc, 0.0017)
+    AccountService.deposit(1000000001L, Ltc, 0.3752)
+    AccountService.deposit(1000000001L, Doge, 4123.9800)
+    AccountService.deposit(1000000002L, Bc, 50)
+    AccountService.deposit(1000000002L, Drk, 50)
+  }
 
 }
