@@ -36,7 +36,7 @@ class StackQueue[T](elems: ArrayBuffer[T], ordering: (T, T) => Boolean)(implicit
 
   def front: Option[T] = if (elems.length == 0) None else Some(elems(0))
 
-  def copy = new StackQueue[T](elems, ordering)
+  def copy = new StackQueue[T](elems.clone, ordering)
 
   def toList = elems.toList
 
