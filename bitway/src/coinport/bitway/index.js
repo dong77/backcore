@@ -17,7 +17,7 @@ var btc = {
             host: 'bitway',
             port: '8332',
         },
-        minConfirm: 1,
+        minConfirm: 2,
         checkInterval : 5000,
         walletPassPhrase: ""
     },
@@ -38,7 +38,7 @@ var ltc = {
             host: 'bitway',
             port: '9332',
         },
-        minConfirm: 1,
+        minConfirm: 4,
         checkInterval : 5000,
         walletPassPhrase: ""
     },
@@ -59,7 +59,7 @@ var dog = {
             host: 'bitway',
             port: '22555',
         },
-        minConfirm: 1,
+        minConfirm: 4,
         checkInterval : 5000,
         walletPassPhrase: ""
     },
@@ -80,7 +80,7 @@ var drk = {
             host: 'bitway',
             port: '7332',
         },
-        minConfirm: 1,
+        minConfirm: 4,
         checkInterval : 5000,
         walletPassPhrase: ""
     },
@@ -101,7 +101,7 @@ var bc = {
             host: 'bitway',
             port: '15715',
         },
-        minConfirm: 1,
+        minConfirm: 4,
         checkInterval : 5000,
         walletPassPhrase: ""
     },
