@@ -44,7 +44,7 @@ AccountConfig(
       Bc -> ConstantFee(0.0002.internalValue(Bc)),
       Cny -> PercentageFee(0.005)),
 
-    freeOfTxChargeUserIdThreshold = 1E9.toLong + 1000 // 1 thousand
+    freeOfTxChargeUserIdThreshold = 1E9.toLong + 2000 // 1 thousand
     ),
 
   hotColdTransfer = Map(
