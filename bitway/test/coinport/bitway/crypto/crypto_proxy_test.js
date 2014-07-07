@@ -154,8 +154,7 @@ describe('crypto proxy', function() {
             var request = {currency: Currency.DOGE, transferInfos: transferInfos, type: TransferType.WITHDRAWAL};
             cryptoProxy.constructRawTransaction_(request, function(error, rawData) {
                 Assert.deepEqual(rawData.transactions, [
-                    {"txid":"6ea96574c2325dd1c2bd00f3d6e8b34dfbedb72593e34f4f15f67cb6295d8cf5","vout":0},
-                    {"txid":"854dbdbefde63e0435fee1519e3893860d6687061ebb79624a0542968a29a92b","vout":0}]);
+                    {"txid":"fca649288b456891a17f3997f6a772a4890cb15a025cfffe13e4896b5a53da2a","vout":0}]);
                 done();
             });
         });

@@ -288,6 +288,17 @@ CryptoProxy.prototype.compareTransferInfo_ = function(transferInfoA, transferInf
     }
 };
 
+
+CryptoProxy.prototype.compareUnspentTx_ = function(unspentTxA, unspentTxB) {
+    if (unspentTxA.amount < unspentTxB.amount) {
+        return 1;
+    } else if (unspentTxA.amount > unspentTxB.amount) {
+        return -1;
+    } else {
+        return 0;
+    }
+};
+
 CryptoProxy.prototype.getMergedTransferInfos_ = function(request) {
     if (request.transferInfos.length < 2) {
         return request.transferInfos;
@@ -460,6 +471,9 @@ CryptoProxy.prototype.getUnspentOfAddresses_ = function(addresses, callback) {
             self.log.error(unspentError);
             callback(unspentError);
         } else {
+            if (unspentReply.result.length > 1) {
+                unspentReply.result.sort(self.compareUnspentTx_);
+            }
             var transactions = [];
             for (var i = 0; i < unspentReply.result.length; i++) {
                 var transaction = {txid: unspentReply.result[i].txid,
