@@ -67,7 +67,7 @@ trait CryptoCurrencyTransferBase {
     succeededId2HandlerMap.values filter (_.item.currency == currency) foreach {
       handler =>
         if (handler.checkRemoveSucceeded(lastBlockHeight)) {
-          id2HandlerMap.remove(handler.item.id)
+          succeededId2HandlerMap.remove(handler.item.id)
         }
     }
   }
