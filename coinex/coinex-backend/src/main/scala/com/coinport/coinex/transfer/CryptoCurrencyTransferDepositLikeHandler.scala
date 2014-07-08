@@ -14,6 +14,8 @@ class CryptoCurrencyTransferDepositLikeHandler(currency: Currency, outputPort: C
     // id, currency, sigId, txid, userId, from, to(user's internal address), includedBlock, txType, status, userToHotMapedDepositId, accountTransferId, created, updated
     item = CryptoCurrencyTransferItem(newTransferItemId, currency, tx.sigId, tx.txid, outputPort.userId, None, Some(outputPort), tx.includedBlock, tx.txType, Some(Confirming), None, Some(transferId), getTimestamp(), None, tx.minerFee)
     saveItemToMongo()
+    // set txid and updated time on create
+    setAccountTransferStatus(Confirming)
   }
 
   def this(item: CryptoCurrencyTransferItem)(implicit env: TransferEnv) {

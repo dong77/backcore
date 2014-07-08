@@ -131,7 +131,7 @@ trait CryptoCurrencyTransferHandler {
     transferItemHandler.put(item.copy(updated = getTimestamp()))
   }
 
-  private def setAccountTransferStatus(status: TransferStatus) {
+  protected def setAccountTransferStatus(status: TransferStatus) {
     item.accountTransferId foreach {
       accountTransferId =>
         transferHandler.get(accountTransferId) foreach {
