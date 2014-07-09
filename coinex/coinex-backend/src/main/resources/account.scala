@@ -64,6 +64,6 @@ AccountConfig(
     Vrc -> HotColdTransferStrategy(0.2, 0.1),
     Zet -> HotColdTransferStrategy(0.2, 0.1)
   ),
-  enableHotColdTransfer = false,
+  enableHotColdTransfer = true,
   hotColdTransferInterval = 24 * 3600 * 1000L
 )
