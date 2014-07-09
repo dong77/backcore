@@ -68,7 +68,6 @@ class MandrillMailHandler(mandrillApiKey: String)(implicit val system: ActorSyst
     def trySendMail(maxTry: Int): Unit = {
       if (maxTry > 0) pipeline { Post(url, req) } onComplete {
         case Success(response) if response.status == StatusCodes.OK =>
-          println("email send for request: " + req.copy(key = "").toJson + ". response is: " + response)
           log.debug("email send for request: " + req.copy(key = "").toJson + ". response is: " + response)
 
         case Success(response) =>

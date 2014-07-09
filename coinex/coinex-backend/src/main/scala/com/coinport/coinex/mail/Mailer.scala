@@ -29,7 +29,6 @@ class Mailer(handler: MailHandler) extends Actor with ActorLogging {
           handler.sendMonitor(email, params.toSeq)
 
         case EmailType.VerificationCode =>
-          println("email: %s, VerificationCode: %s".format(email, params))
           handler.sendVerificationCodeEmail(email, params.toSeq)
       }
   }
