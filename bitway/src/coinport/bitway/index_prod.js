@@ -17,7 +17,7 @@ var btc = {
             host: 'bitway',
             port: '8332',
         },
-        minConfirm: 2,
+        minConfirm: 1,
         checkInterval : 5000,
         walletPassPhrase: ""
     },
@@ -101,7 +101,7 @@ var bc = {
             host: 'bitway',
             port: '15715',
         },
-        minConfirm: 4,
+        minConfirm: 10,
         checkInterval : 5000,
         walletPassPhrase: ""
     },
@@ -111,7 +111,50 @@ var bc = {
         port: '6379',
     }
 };
-var configs = [ btc, ltc, dog, drk, bc ];
+
+var vrc = {
+    currency: Currency.VRC,
+    cryptoConfig: {
+        cryptoRpcConfig: {
+            protocol: 'http',
+            user: 'user',
+            pass: 'pass',
+            host: 'bitway',
+            port: '58683',
+        },
+        minConfirm: 4,
+        checkInterval : 5000,
+        walletPassPhrase: ""
+    },
+    redisProxyConfig: {
+        currency: Currency.VRC,
+        ip: 'bitway',
+        port: '6379',
+    }
+};
+
+var zet = {
+    currency: Currency.ZET,
+    cryptoConfig: {
+        cryptoRpcConfig: {
+            protocol: 'http',
+            user: 'user',
+            pass: 'pass',
+            host: 'bitway',
+            port: '6332',
+        },
+        minConfirm: 10,
+        checkInterval : 5000,
+        walletPassPhrase: ""
+    },
+    redisProxyConfig: {
+        currency: Currency.ZET,
+        ip: 'bitway',
+        port: '6379',
+    }
+};
+
+var configs = [ btc, ltc, dog, drk, bc, vrc, zet ];
 // var configs = [ btc ];
 // var configs = [ dog ];
 program.parse(process.argv);
