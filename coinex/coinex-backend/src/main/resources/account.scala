@@ -28,7 +28,13 @@ AccountConfig(
       (Drk ~> Btc) -> PercentageFee(0.001),
 
       (Btc ~> Bc) -> PercentageFee(0.001),
-      (Bc ~> Btc) -> PercentageFee(0.001)
+      (Bc ~> Btc) -> PercentageFee(0.001),
+
+      (Btc ~> Vrc) -> PercentageFee(0.001),
+      (Vrc ~> Btc) -> PercentageFee(0.001),
+
+      (Btc ~> Zet) -> PercentageFee(0.001),
+      (Zet ~> Btc) -> PercentageFee(0.001)
     ),
 
     robotFeeRules = Map(
@@ -42,6 +48,8 @@ AccountConfig(
       Pts -> ConstantFee(0.0002.internalValue(Pts)),
       Drk -> ConstantFee(0.0002.internalValue(Drk)),
       Bc -> ConstantFee(0.0002.internalValue(Bc)),
+      Vrc -> ConstantFee(0.0002.internalValue(Vrc)),
+      Zet -> ConstantFee(0.0002.internalValue(Zet)),
       Cny -> PercentageFee(0.005)),
 
     freeOfTxChargeUserIdThreshold = 1E9.toLong + 2000 // 1 thousand
@@ -52,7 +60,9 @@ AccountConfig(
     Ltc -> HotColdTransferStrategy(0.2, 0.1),
     Doge -> HotColdTransferStrategy(0.2, 0.1),
     Drk -> HotColdTransferStrategy(0.2, 0.1),
-    Bc -> HotColdTransferStrategy(0.2, 0.1)
+    Bc -> HotColdTransferStrategy(0.2, 0.1),
+    Vrc -> HotColdTransferStrategy(0.2, 0.1),
+    Zet -> HotColdTransferStrategy(0.2, 0.1)
   ),
   enableHotColdTransfer = true,
   hotColdTransferInterval = 24 * 3600 * 1000L

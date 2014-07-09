@@ -15,25 +15,25 @@ BitwayConfigs(Map(
     ip = "bitway",
     port = 6379,
     batchFetchAddressNum = 10,
-    maintainedChainLength = 10,
+    maintainedChainLength = 120,
     coldAddresses = List("1GbJtdiidFnbsGfuC5VtMKrRaoyrP2rRXk")
   ),
   Ltc -> BitwayConfig(
     ip = "bitway",
     port = 6379,
-    maintainedChainLength = 20,
+    maintainedChainLength = 120,
     coldAddresses = List("LTaaHE4JpeMFuexYZi19wJxbWqcHAC4DFp")
   ),
   Doge -> BitwayConfig(
     ip = "bitway",
     port = 6379,
-    maintainedChainLength = 60,
+    maintainedChainLength = 120,
     coldAddresses = List("D8mHXhuo9XFH5VKVWVWa25eCHbAPu3iGyp")
   ),
   Drk -> BitwayConfig(
     ip = "bitway",
     port = 6379,
-    maintainedChainLength = 20,
+    maintainedChainLength = 120,
     coldAddresses = List("XjDSA4wfcigb9a13yoT4tQrS31dDuMzRp8")
   ),
   Bc -> BitwayConfig(
@@ -41,5 +41,17 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     coldAddresses = List("B4h1qQkghc8gwNWqEfHNyVi4DvjnJhPCs1")
+  ),
+  Vrc -> BitwayConfig(
+    ip = "bitway",
+    port = 6379,
+    maintainedChainLength = 120,
+    coldAddresses = List("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+  ),
+  Zet -> BitwayConfig(
+    ip = "bitway",
+    port = 6379,
+    maintainedChainLength = 120,
+    coldAddresses = List("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
   )
 ))

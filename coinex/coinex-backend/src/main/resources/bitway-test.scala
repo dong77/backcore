@@ -27,5 +27,17 @@ BitwayConfigs(Map(
       "nmC5w3P33fqeKX8mcbHMFJzcurrkwZBZsK",
       "nkWbaspLDKqt4q8c7N8Eizzom27tJffgAX",
       "nhS7fCAjLpq1X5udwNZu51HpouY3m5PeT4")
+  ),
+  Vrc -> BitwayConfig(
+    ip = "bitway",
+    port = 6379,
+    maintainedChainLength = 120,
+    coldAddresses = List("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+  ),
+  Zet -> BitwayConfig(
+    ip = "bitway",
+    port = 6379,
+    maintainedChainLength = 120,
+    coldAddresses = List("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
   )
 ))
