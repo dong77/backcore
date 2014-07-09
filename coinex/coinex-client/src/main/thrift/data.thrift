@@ -92,6 +92,8 @@ enum Currency {
     PTS  = 1200
     DRK  = 1300
     BC   = 1400
+    VRC  = 1500
+    ZET  = 1600
 }
 
 enum OrderStatus {

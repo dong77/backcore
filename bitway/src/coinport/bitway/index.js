@@ -111,58 +111,52 @@ var bc = {
         port: '6379',
     }
 };
-var configs = [ btc, ltc, dog, drk, bc ];
+
+var vrc = {
+    currency: Currency.VRC,
+    cryptoConfig: {
+        cryptoRpcConfig: {
+            protocol: 'http',
+            user: 'user',
+            pass: 'pass',
+            host: 'bitway',
+            port: '58683',
+        },
+        minConfirm: 4,
+        checkInterval : 5000,
+        walletPassPhrase: ""
+    },
+    redisProxyConfig: {
+        currency: Currency.VRC,
+        ip: 'bitway',
+        port: '6379',
+    }
+};
+
+var zet = {
+    currency: Currency.ZET,
+    cryptoConfig: {
+        cryptoRpcConfig: {
+            protocol: 'http',
+            user: 'user',
+            pass: 'pass',
+            host: 'bitway',
+            port: '6332',
+        },
+        minConfirm: 4,
+        checkInterval : 5000,
+        walletPassPhrase: ""
+    },
+    redisProxyConfig: {
+        currency: Currency.ZET,
+        ip: 'bitway',
+        port: '6379',
+    }
+};
+var configs = [ btc, ltc, dog, drk, bc, vrc, zet ];
 // var configs = [ btc ];
 // var configs = [ dog ];
 
-//var readline = require('readline');
-//var rl = readline.createInterface({
-//    input: process.stdin,
-//    output: process.stdout,
-//    terminal: true
-//});
-// 
-//function hidden(query, callback) {
-//    var stdin = process.openStdin();
-//    process.stdin.on("data", function(char) {
-//        char = char + "";
-//        switch (char) {
-//            case "\n":
-//            case "\r":
-//            case "\u0004":
-//                stdin.pause();
-//                break;
-//            default:
-//                process.stdout.write("\033[2K\033[200D" + query + Array(rl.line.length+1).join("*"));
-//                break;
-//        }
-//    });
-//
-//    rl.question(query, callback);
-//}
-
-//hidden("password : ", function(password) {
-//    console.log("Your password : " + password);
-//    if (password && password.length > 7) {
-//        for (var i = 0; i < configs.length; i++) {
-//            configs[i].cryptoConfig.walletPassPhrase = password;
-//        }
-//    } else {
-//        console.log("Password isn't correct!");
-//        console.log("node index.js [password]");
-//        process.exit(0);
-//    }
-//    var manager = new CryptoAgentManager(configs);
-//    manager.start();
-//
-//    var logo = "\n" +
-//    " _    _ _                     \n" +
-//    "| |__(_) |___ __ ____ _ _  _  \n" +
-//    "| '_ \\ |  _\\ V  V / _` | || | \n" +
-//    "|_.__/_|\\__|\\_/\\_/\\__,_|\\_, | \n" +
-//    "                        |__/  \n";
-//    console.log(logo);
-//});
 
 fs.readFile('./pw', function(error, data){
     if (!error) {

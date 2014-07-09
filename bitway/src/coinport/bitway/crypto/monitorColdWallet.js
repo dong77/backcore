@@ -65,6 +65,28 @@ var bc = {
     height: 237401, //2014-06-28 16:26
 };
 
+var vrc = {
+    cryptoRpcConfig: {
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: '127.0.0.1',
+        port: '58683',
+    },
+    height: 100160, //2014-07-09 16:31
+};
+
+var zet = {
+    cryptoRpcConfig: {
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: '127.0.0.1',
+        port: '6332',
+    },
+    height: 1338458, //2014-07-09 16:31
+};
+
 var height = 0;
 var currency = '';
 var addr = '';
@@ -95,6 +117,12 @@ var initData_ = function(callback) {
             break;
         case 'bc':
             config = bc;
+            break;
+        case 'vrc':
+            config = vrc;
+            break;
+        case 'zet':
+            config = zet;
             break;
         default:
             console.log('unknown currency!');

@@ -65,6 +65,28 @@ var bt = {
     minerFee: 0.0001,
 };
 
+var vrc = {
+    cryptoRpcConfig: {
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: '127.0.0.1',
+        port: '58683',
+    },
+    minerFee: 0.0001,
+};
+
+var zet = {
+    cryptoRpcConfig: {
+        protocol: 'http',
+        user: 'user',
+        pass: 'pass',
+        host: '127.0.0.1',
+        port: '6332',
+    },
+    minerFee: 0.0001,
+};
+
 var minerFee = 0.0001;
 var coldAddr = '';
 var privateKeys = [];
@@ -101,6 +123,12 @@ var initData_ = function(callback) {
             break;
         case 'bc':
             config = bc;
+            break;
+        case 'vrc':
+            config = vrc;
+            break;
+        case 'zet':
+            config = zet;
             break;
         default:
             console.log('unknown currency!');

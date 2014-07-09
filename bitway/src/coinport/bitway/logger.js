@@ -59,6 +59,20 @@ log4js.configure({
             pattern: "-yyyy-MM-dd",
             alwaysIncludePattern: true,
             category: "1400"
+        },
+        {
+            type: "dateFile",
+            filename: 'logs/VRC.log',
+            pattern: "-yyyy-MM-dd",
+            alwaysIncludePattern: true,
+            category: "1500"
+        },
+        {
+            type: "dateFile",
+            filename: 'logs/ZET.log',
+            pattern: "-yyyy-MM-dd",
+            alwaysIncludePattern: true,
+            category: "1600"
         }
     ],
     replaceConsole: true, //替换console.log
@@ -68,6 +82,8 @@ log4js.configure({
         1100: 'INFO',
         1300: 'INFO',
         1400: 'INFO',
+        1500: 'INFO',
+        1600: 'INFO',
     }
 });
 
