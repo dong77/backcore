@@ -71,6 +71,7 @@ enum ErrorCode {
     INVALID_PHONE_NUMBER_FORMAT      = 9009
     INVALID_GOOGLE_VERIFY_CODE       = 9010
     INVALID_GOOGLE_SECRET            = 9011
+    INVALID_EMAIL_VERIFY_CODE        = 9012
 
     // Transfer
     TRANSFER_REJECT                  = 10001

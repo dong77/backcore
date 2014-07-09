@@ -89,6 +89,9 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cDoAddRobotDNA = JsonScalaCodec(DoAddRobotDNA)
   lazy val _cDoCancelOrder = JsonScalaCodec(DoCancelOrder)
   lazy val _cDoCancelTransfer = JsonScalaCodec(DoCancelTransfer)
+  lazy val _cDoChangePassword = JsonScalaCodec(DoChangePassword)
+  lazy val _cDoChangePasswordFailed = JsonScalaCodec(DoChangePasswordFailed)
+  lazy val _cDoChangePasswordSucceeded = JsonScalaCodec(DoChangePasswordSucceeded)
   lazy val _cDoDeleteApiSecret = JsonScalaCodec(DoDeleteApiSecret)
   lazy val _cDoRegisterUser = JsonScalaCodec(DoRegisterUser)
   lazy val _cDoRemoveRobotDNA = JsonScalaCodec(DoRemoveRobotDNA)
@@ -293,6 +296,9 @@ class ThriftJsonSerializer extends Serializer {
     case m: DoAddRobotDNA => _cDoAddRobotDNA(m)
     case m: DoCancelOrder => _cDoCancelOrder(m)
     case m: DoCancelTransfer => _cDoCancelTransfer(m)
+    case m: DoChangePassword => _cDoChangePassword(m)
+    case m: DoChangePasswordFailed => _cDoChangePasswordFailed(m)
+    case m: DoChangePasswordSucceeded => _cDoChangePasswordSucceeded(m)
     case m: DoDeleteApiSecret => _cDoDeleteApiSecret(m)
     case m: DoRegisterUser => _cDoRegisterUser(m)
     case m: DoRemoveRobotDNA => _cDoRemoveRobotDNA(m)
@@ -501,6 +507,9 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[DoAddRobotDNA.Immutable] => _cDoAddRobotDNA.invert(bytes).get
     case Some(c) if c == classOf[DoCancelOrder.Immutable] => _cDoCancelOrder.invert(bytes).get
     case Some(c) if c == classOf[DoCancelTransfer.Immutable] => _cDoCancelTransfer.invert(bytes).get
+    case Some(c) if c == classOf[DoChangePassword.Immutable] => _cDoChangePassword.invert(bytes).get
+    case Some(c) if c == classOf[DoChangePasswordFailed.Immutable] => _cDoChangePasswordFailed.invert(bytes).get
+    case Some(c) if c == classOf[DoChangePasswordSucceeded.Immutable] => _cDoChangePasswordSucceeded.invert(bytes).get
     case Some(c) if c == classOf[DoDeleteApiSecret.Immutable] => _cDoDeleteApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoRegisterUser.Immutable] => _cDoRegisterUser.invert(bytes).get
     case Some(c) if c == classOf[DoRemoveRobotDNA.Immutable] => _cDoRemoveRobotDNA.invert(bytes).get
