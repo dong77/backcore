@@ -140,7 +140,6 @@ var readFile_ = function(callback) {
                                 console.log(height);
                                 console.log(records[i].txHistory.latestHeight);
                                 height = records[i].txHistory.latestHeight;
-                                
                             }
                         }
                         callback();
@@ -173,7 +172,7 @@ var countTotalAmount_ = function(record) {
 
 var writeHistoryFile_ = function(record, callback) {
     var fileName = './coldWallet/' + record.address;
-    record.txHistory.latestHeight = latest;
+    record.txHistory.latestHeight = height;
     console.log('write file: ', fileName);
     var str = JSON.stringify(countTotalAmount_(record));
     console.log('record: %j', str);
