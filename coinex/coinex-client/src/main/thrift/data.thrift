@@ -116,6 +116,7 @@ enum EmailType {
     LOGIN_TOKEN = 2
     PASSWORD_RESET_TOKEN = 3
     MONITOR = 4
+    VERIFICATION_CODE = 5
 }
 
 enum ChartTimeDimension {

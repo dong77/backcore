@@ -10,4 +10,5 @@ trait MailHandler {
   def sendLoginToken(to: String, params: Seq[(String, String)]): Unit
   def sendPasswordReset(to: String, params: Seq[(String, String)]): Unit
   def sendMonitor(to: String, params: Seq[(String, String)]): Unit
+  def sendVerificationCodeEmail(to: String, params: Seq[(String, String)]): Unit
 }

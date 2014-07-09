@@ -40,6 +40,14 @@ class UserProcessor(mailer: ActorRef, secret: String)
           sendEmailVerificationEmail(profile)
       }
 
+    case m @ DoSendVerificationCodeEmail(email, code) =>
+      manager.getUser(email) match {
+        case Some(profile) =>
+          sender ! SendVerificationCodeEmailSucceeded(profile.id, profile.email)
+          sendVerificationCodeEmail(email, code)
+        case None => sender ! SendVerificationCodeEmailFailed(UserNotExist)
+      }
+
     case m @ DoResendVerifyEmail(email) =>
       manager.getUser(email) match {
         case Some(profile) =>
@@ -163,6 +171,10 @@ class UserProcessor(mailer: ActorRef, secret: String)
 
     case DoResetPassword(password, token) => manager.resetPassword(password, token)
     case VerifyEmail(token) => manager.verifyEmail(token)
+  }
+
+  private def sendVerificationCodeEmail(email: String, code: String) {
+    mailer ! DoSendEmail(email, EmailType.VerificationCode, Map("CODE" -> code))
   }
 
   private def sendEmailVerificationEmail(profile: UserProfile) {

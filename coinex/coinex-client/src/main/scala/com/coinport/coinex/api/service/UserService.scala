@@ -361,4 +361,13 @@ object UserService extends AkkaService {
         ApiResult(false, -1, e.toString)
     }
   }
+
+  def sendVerificationCodeEmail(email: String, code: String) = {
+    backend ? DoSendVerificationCodeEmail(email, code) map {
+      case result: SendVerificationCodeEmailSucceeded =>
+        ApiResult(true, 0, "")
+      case e =>
+        ApiResult(false, -1, e.toString)
+    }
+  }
 }

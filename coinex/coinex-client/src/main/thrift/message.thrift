@@ -88,6 +88,10 @@ typedef data.Payment                            _Payment
 /* R-   */ struct ResendVerifyEmailFailed                 {1: _ErrorCode error}
 /* R+   */ struct ResendVerifyEmailSucceeded              {1: i64 id, 2: string email}
 
+/* C,P  */ struct DoSendVerificationCodeEmail             {1: string email, 2: string verificationCode}
+/* R-   */ struct SendVerificationCodeEmailFailed         {1: _ErrorCode error}
+/* R+   */ struct SendVerificationCodeEmailSucceeded      {1: i64 id, 2: string email}
+
 /* C,P  */ struct VerifyEmail                             {1: string token}
 /* R-   */ struct VerifyEmailFailed                       {1: _ErrorCode error}
 /* R+   */ struct VerifyEmailSucceeded                    {1: i64 id, 2: string email}
