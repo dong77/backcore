@@ -46,12 +46,12 @@ BitwayConfigs(Map(
     ip = "bitway",
     port = 6379,
     maintainedChainLength = 120,
-    coldAddresses = List("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+    coldAddresses = List("VEb5y22HNyRvhiT28jGNjpRVxBE6x4FJyt")
   ),
   Zet -> BitwayConfig(
     ip = "bitway",
     port = 6379,
     maintainedChainLength = 120,
-    coldAddresses = List("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
+    coldAddresses = List("ZKa4mZ2K9J9SJKFNGwFT55SjR3BzNd7LLP")
   )
 ))
