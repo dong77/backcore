@@ -31,7 +31,7 @@ class MandrillMailHandler(mandrillApiKey: String)(implicit val system: ActorSyst
   val loginTokenTemplate = "logintoken"
   val passwordResetTemplate = "passwordreset"
   val monitorTemplate = "monitor"
-  val codeTemplate = "code"
+  val codeTemplate = "verificationcode"
 
   case class TemplateContent(name: String, content: String)
   case class To(email: String)
@@ -68,6 +68,7 @@ class MandrillMailHandler(mandrillApiKey: String)(implicit val system: ActorSyst
     def trySendMail(maxTry: Int): Unit = {
       if (maxTry > 0) pipeline { Post(url, req) } onComplete {
         case Success(response) if response.status == StatusCodes.OK =>
+          println("email send for request: " + req.copy(key = "").toJson + ". response is: " + response)
           log.debug("email send for request: " + req.copy(key = "").toJson + ". response is: " + response)
 
         case Success(response) =>

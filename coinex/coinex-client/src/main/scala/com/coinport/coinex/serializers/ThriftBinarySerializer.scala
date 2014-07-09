@@ -103,6 +103,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cDoResetPassword = BinaryScalaCodec(DoResetPassword)
   lazy val _cDoResumeUser = BinaryScalaCodec(DoResumeUser)
   lazy val _cDoSendEmail = BinaryScalaCodec(DoSendEmail)
+  lazy val _cDoSendVerificationCodeEmail = BinaryScalaCodec(DoSendVerificationCodeEmail)
   lazy val _cDoSimulateOrderSubmission = BinaryScalaCodec(DoSimulateOrderSubmission)
   lazy val _cDoSubmitOrder = BinaryScalaCodec(DoSubmitOrder)
   lazy val _cDoSuspendUser = BinaryScalaCodec(DoSuspendUser)
@@ -185,6 +186,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cResetPasswordFailed = BinaryScalaCodec(ResetPasswordFailed)
   lazy val _cResetPasswordSucceeded = BinaryScalaCodec(ResetPasswordSucceeded)
   lazy val _cResumeUserResult = BinaryScalaCodec(ResumeUserResult)
+  lazy val _cSendVerificationCodeEmailFailed = BinaryScalaCodec(SendVerificationCodeEmailFailed)
+  lazy val _cSendVerificationCodeEmailSucceeded = BinaryScalaCodec(SendVerificationCodeEmailSucceeded)
   lazy val _cSetNotification = BinaryScalaCodec(SetNotification)
   lazy val _cSubmitOrderFailed = BinaryScalaCodec(SubmitOrderFailed)
   lazy val _cSuspendUserResult = BinaryScalaCodec(SuspendUserResult)
@@ -304,6 +307,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: DoResetPassword => _cDoResetPassword(m)
     case m: DoResumeUser => _cDoResumeUser(m)
     case m: DoSendEmail => _cDoSendEmail(m)
+    case m: DoSendVerificationCodeEmail => _cDoSendVerificationCodeEmail(m)
     case m: DoSimulateOrderSubmission => _cDoSimulateOrderSubmission(m)
     case m: DoSubmitOrder => _cDoSubmitOrder(m)
     case m: DoSuspendUser => _cDoSuspendUser(m)
@@ -386,6 +390,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: ResetPasswordFailed => _cResetPasswordFailed(m)
     case m: ResetPasswordSucceeded => _cResetPasswordSucceeded(m)
     case m: ResumeUserResult => _cResumeUserResult(m)
+    case m: SendVerificationCodeEmailFailed => _cSendVerificationCodeEmailFailed(m)
+    case m: SendVerificationCodeEmailSucceeded => _cSendVerificationCodeEmailSucceeded(m)
     case m: SetNotification => _cSetNotification(m)
     case m: SubmitOrderFailed => _cSubmitOrderFailed(m)
     case m: SuspendUserResult => _cSuspendUserResult(m)
@@ -509,6 +515,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[DoResetPassword.Immutable] => _cDoResetPassword.invert(bytes).get
     case Some(c) if c == classOf[DoResumeUser.Immutable] => _cDoResumeUser.invert(bytes).get
     case Some(c) if c == classOf[DoSendEmail.Immutable] => _cDoSendEmail.invert(bytes).get
+    case Some(c) if c == classOf[DoSendVerificationCodeEmail.Immutable] => _cDoSendVerificationCodeEmail.invert(bytes).get
     case Some(c) if c == classOf[DoSimulateOrderSubmission.Immutable] => _cDoSimulateOrderSubmission.invert(bytes).get
     case Some(c) if c == classOf[DoSubmitOrder.Immutable] => _cDoSubmitOrder.invert(bytes).get
     case Some(c) if c == classOf[DoSuspendUser.Immutable] => _cDoSuspendUser.invert(bytes).get
@@ -591,6 +598,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[ResetPasswordFailed.Immutable] => _cResetPasswordFailed.invert(bytes).get
     case Some(c) if c == classOf[ResetPasswordSucceeded.Immutable] => _cResetPasswordSucceeded.invert(bytes).get
     case Some(c) if c == classOf[ResumeUserResult.Immutable] => _cResumeUserResult.invert(bytes).get
+    case Some(c) if c == classOf[SendVerificationCodeEmailFailed.Immutable] => _cSendVerificationCodeEmailFailed.invert(bytes).get
+    case Some(c) if c == classOf[SendVerificationCodeEmailSucceeded.Immutable] => _cSendVerificationCodeEmailSucceeded.invert(bytes).get
     case Some(c) if c == classOf[SetNotification.Immutable] => _cSetNotification.invert(bytes).get
     case Some(c) if c == classOf[SubmitOrderFailed.Immutable] => _cSubmitOrderFailed.invert(bytes).get
     case Some(c) if c == classOf[SuspendUserResult.Immutable] => _cSuspendUserResult.invert(bytes).get
