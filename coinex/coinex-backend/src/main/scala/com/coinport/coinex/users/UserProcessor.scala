@@ -123,7 +123,7 @@ class UserProcessor(mailer: ActorRef, secret: String)
     case Login(email, password) =>
       manager.checkLogin(email, password) match {
         case Left(error) => sender ! LoginFailed(error)
-        case Right(profile) => sender ! LoginSucceeded(profile.id, profile.email, profile.referralToken, profile.mobile, profile.realName)
+        case Right(profile) => sender ! LoginSucceeded(profile.id, profile.email, profile.referralToken, profile.mobile, profile.realName, profile.googleAuthenticatorSecret)
       }
 
     case ValidatePasswordResetToken(token) =>

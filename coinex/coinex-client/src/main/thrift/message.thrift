@@ -115,7 +115,7 @@ typedef data.Payment                            _Payment
 
 /* C    */ struct Login                                   {1: string email, 2: string password} // TODO: this may also be a persistent command
 /* R-   */ struct LoginFailed                             {1: _ErrorCode error}
-/* R+   */ struct LoginSucceeded                          {1: i64 id, 2: string email, 3: optional i64 referralToken, 4: optional string mobile, 5: optional string realName}
+/* R+   */ struct LoginSucceeded                          {1: i64 id, 2: string email, 3: optional i64 referralToken, 4: optional string mobile, 5: optional string realName, 6: optional string googleSecret}
 
 /* Q    */ struct VerifyGoogleAuthCode                    {1: string email, 2: i32 code}
 /* R    */ struct GoogleAuthCodeVerificationResult        {1: optional _UserProfile userProfile}
