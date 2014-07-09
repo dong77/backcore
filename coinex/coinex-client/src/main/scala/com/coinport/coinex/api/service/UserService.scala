@@ -332,6 +332,18 @@ object UserService extends AkkaService {
     }
   }
 
+  def changePassword(email: String, oldPassword: String, newPassword: String) = {
+    val command = DoChangePassword(email, oldPassword, newPassword)
+    backend ? command map {
+      case succeeded: DoChangePasswordSucceeded =>
+        ApiResult(true, 0, "")
+      case failed: DoChangePasswordFailed =>
+        ApiResult(false, failed.error.value, failed.toString)
+      case e =>
+        ApiResult(false, -1, e.toString)
+    }
+  }
+
   def resendVerifyEmail(email: String) = {
     val command = DoResendVerifyEmail(email)
     backend ? command map {

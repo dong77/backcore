@@ -99,6 +99,14 @@ class UserProcessor(mailer: ActorRef, secret: String)
           sender ! ResetPasswordFailed(TokenNotMatch)
       }
 
+    case m @ DoChangePassword(email, oldPassword, newPassword) =>
+      manager.checkLogin(email, oldPassword) match {
+        case Left(error) => sender ! DoChangePasswordFailed(error)
+        case Right(profile) =>
+          persist(m)(updateState)
+          sender ! DoChangePasswordSucceeded(profile.id, profile.email)
+      }
+
     case m @ DoSuspendUser(uid) =>
       manager.profileMap.get(uid) match {
         case Some(profile) =>
@@ -170,6 +178,7 @@ class UserProcessor(mailer: ActorRef, secret: String)
       if (recoveryFinished) sendRequestPasswordResetEmail(manager.getUser(email).get)
 
     case DoResetPassword(password, token) => manager.resetPassword(password, token)
+    case DoChangePassword(email, oldPassword, newPassword) => manager.changePassword(email, newPassword)
     case VerifyEmail(token) => manager.verifyEmail(token)
   }
 

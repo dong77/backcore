@@ -103,6 +103,14 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
     updatedProfile
   }
 
+  def changePassword(email: String, newPassword: String): UserProfile = {
+    val profile = getUser(email).get
+    val passwordHash = computePassword(profile.id, profile.email, newPassword)
+    val updatedProfile = profile.copy(passwordHash = Some(passwordHash))
+    profileMap += profile.id -> updatedProfile
+    updatedProfile
+  }
+
   def verifyEmail(verificationToken: String): UserProfile = {
     val id = verificationTokenMap(verificationToken)
     val profile = profileMap(id).copy(emailVerified = true, verificationToken = None)
