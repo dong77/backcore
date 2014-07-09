@@ -46,8 +46,8 @@ object CurrencyConversion {
     Doge ~> Btc -> 8,
     Drk ~> Btc -> 6,
     Bc ~> Btc -> 8,
-    Vrc ~> Btc -> 4,
-    Zet ~> Btc -> 4,
+    Vrc ~> Btc -> 8,
+    Zet ~> Btc -> 8,
     Btc ~> Btc -> 1
   )
 
