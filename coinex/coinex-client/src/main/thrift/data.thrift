@@ -75,6 +75,11 @@ enum ErrorCode {
 
     // Transfer
     TRANSFER_REJECT                  = 10001
+
+    // Common
+    PARTIALLY_FAILED                 = 11001
+    ALL_FAILED                       = 11002
+
 }
 
 
@@ -169,6 +174,7 @@ enum TransferStatus {
     REORGING_SUCCEEDED   = 7
     CANCELLED            = 8
     REJECTED             = 9
+    HOT_INSUFFICIENT     = 10
 }
 
 enum ExportedEventType {
@@ -561,6 +567,7 @@ struct CryptoCurrencyTransferInfo {
     3: optional i64 internalAmount
     4: optional double amount
     5: optional string from
+    6: optional ErrorCode error
 }
 
 struct CryptoCurrencyTransaction {

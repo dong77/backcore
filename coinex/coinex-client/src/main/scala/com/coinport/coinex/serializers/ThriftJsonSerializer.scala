@@ -87,6 +87,9 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cCryptoTransferSucceeded = JsonScalaCodec(CryptoTransferSucceeded)
   lazy val _cDoAddNewApiSecret = JsonScalaCodec(DoAddNewApiSecret)
   lazy val _cDoAddRobotDNA = JsonScalaCodec(DoAddRobotDNA)
+  lazy val _cDoBindMobile = JsonScalaCodec(DoBindMobile)
+  lazy val _cDoBindMobileFailed = JsonScalaCodec(DoBindMobileFailed)
+  lazy val _cDoBindMobileSucceeded = JsonScalaCodec(DoBindMobileSucceeded)
   lazy val _cDoCancelOrder = JsonScalaCodec(DoCancelOrder)
   lazy val _cDoCancelTransfer = JsonScalaCodec(DoCancelTransfer)
   lazy val _cDoChangePassword = JsonScalaCodec(DoChangePassword)
@@ -294,6 +297,9 @@ class ThriftJsonSerializer extends Serializer {
     case m: CryptoTransferSucceeded => _cCryptoTransferSucceeded(m)
     case m: DoAddNewApiSecret => _cDoAddNewApiSecret(m)
     case m: DoAddRobotDNA => _cDoAddRobotDNA(m)
+    case m: DoBindMobile => _cDoBindMobile(m)
+    case m: DoBindMobileFailed => _cDoBindMobileFailed(m)
+    case m: DoBindMobileSucceeded => _cDoBindMobileSucceeded(m)
     case m: DoCancelOrder => _cDoCancelOrder(m)
     case m: DoCancelTransfer => _cDoCancelTransfer(m)
     case m: DoChangePassword => _cDoChangePassword(m)
@@ -505,6 +511,9 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[CryptoTransferSucceeded.Immutable] => _cCryptoTransferSucceeded.invert(bytes).get
     case Some(c) if c == classOf[DoAddNewApiSecret.Immutable] => _cDoAddNewApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoAddRobotDNA.Immutable] => _cDoAddRobotDNA.invert(bytes).get
+    case Some(c) if c == classOf[DoBindMobile.Immutable] => _cDoBindMobile.invert(bytes).get
+    case Some(c) if c == classOf[DoBindMobileFailed.Immutable] => _cDoBindMobileFailed.invert(bytes).get
+    case Some(c) if c == classOf[DoBindMobileSucceeded.Immutable] => _cDoBindMobileSucceeded.invert(bytes).get
     case Some(c) if c == classOf[DoCancelOrder.Immutable] => _cDoCancelOrder.invert(bytes).get
     case Some(c) if c == classOf[DoCancelTransfer.Immutable] => _cDoCancelTransfer.invert(bytes).get
     case Some(c) if c == classOf[DoChangePassword.Immutable] => _cDoChangePassword.invert(bytes).get
