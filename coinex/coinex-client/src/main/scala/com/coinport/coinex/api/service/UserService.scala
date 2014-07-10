@@ -118,7 +118,7 @@ object UserService extends AkkaService {
             val map: Map[Currency, String] = if (!profile.depositAddresses.isDefined) {
               getDepositAddressFromBackend(currencySeq, userId)
             } else {
-              val currencyDiff = currencySeq.diff(profile.depositAddresses.get.keys.toSeq)
+              val currencyDiff = currencySeq.diff(profile.depositAddresses.get.filter(_._2 != "").keys.toSeq)
               val mapFromBackend = getDepositAddressFromBackend(currencyDiff, userId)
               (profile.depositAddresses.get ++ mapFromBackend).toMap
             }
