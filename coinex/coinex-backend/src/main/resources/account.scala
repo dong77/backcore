@@ -53,17 +53,5 @@ AccountConfig(
       Cny -> PercentageFee(0.005)),
 
     freeOfTxChargeUserIdThreshold = 1E9.toLong + 2000 // 1 thousand
-    ),
-
-  hotColdTransfer = Map(
-    Btc -> HotColdTransferStrategy(0.2, 0.1),
-    Ltc -> HotColdTransferStrategy(0.2, 0.1),
-    Doge -> HotColdTransferStrategy(0.2, 0.1),
-    Drk -> HotColdTransferStrategy(0.2, 0.1),
-    Bc -> HotColdTransferStrategy(0.2, 0.1),
-    Vrc -> HotColdTransferStrategy(0.2, 0.1),
-    Zet -> HotColdTransferStrategy(0.2, 0.1)
-  ),
-  enableHotColdTransfer = true,
-  hotColdTransferInterval = 24 * 3600 * 1000L
+    )
 )

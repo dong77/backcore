@@ -25,9 +25,5 @@ AccountConfig(
 
     transferFeeRules = Map(
       Btc -> ConstantFee(1),
-      Cny -> PercentageFee(0.002))),
-
-  hotColdTransfer = Map(
-    Btc -> HotColdTransferStrategy(0.25, 0.1)
-  )
+      Cny -> PercentageFee(0.002)))
 )

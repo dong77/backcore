@@ -20,7 +20,7 @@ class OpenDataConfig() {
   val csvDwDir = "/export/csv/dw"
   val csvTxDir = "/export/csv/tx"
   val snapshotWriterMap: Map[String, SnapshotWriter] = Map.empty[String, SnapshotWriter]
-  val messageWriterMap: collection.mutable.Map[String, MessageWriter] = collection.mutable.Map.empty[String, MessageWriter]
+  val messageWriterMap: Map[String, MessageWriter] = Map.empty[String, MessageWriter]
 }
 
 trait BaseJsonFilter {

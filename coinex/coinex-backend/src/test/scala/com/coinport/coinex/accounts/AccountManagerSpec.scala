@@ -169,24 +169,4 @@ class AccountManagerSpec extends Specification {
     }
   }
 
-  "hot cold transfer test" should {
-    "get corrent transfer amount as well as direction" in {
-      val manager = new AccountManager(0L, Map(Btc -> HotColdTransferStrategy(0.5, 0.3)))
-      manager.needHotColdTransfer(Btc) mustEqual None
-      manager.updateHotCashAccount(CashAccount(Btc, 10, 0, 0))
-      manager.needHotColdTransfer(Btc) mustEqual Some(6)
-      manager.updateHotCashAccount(CashAccount(Btc, -10, 0, 0))
-      manager.needHotColdTransfer(Btc) mustEqual None
-      manager.updateColdCashAccount(CashAccount(Btc, 10, 0, 0))
-      manager.needHotColdTransfer(Btc) mustEqual Some(-4)
-      manager.updateColdCashAccount(CashAccount(Btc, -4, 0, 0))
-      manager.updateHotCashAccount(CashAccount(Btc, 4, 0, 0))
-      manager.updateHotCashAccount(CashAccount(Btc, 10, 0, 0))
-      manager.needHotColdTransfer(Btc) mustEqual Some(6)
-      manager.updateColdCashAccount(CashAccount(Btc, 6, 0, 0))
-      manager.updateHotCashAccount(CashAccount(Btc, -6, 0, 0))
-      manager.updateColdCashAccount(CashAccount(Btc, 100, 0, 0))
-      manager.needHotColdTransfer(Btc) mustEqual Some(-40)
-    }
-  }
 }

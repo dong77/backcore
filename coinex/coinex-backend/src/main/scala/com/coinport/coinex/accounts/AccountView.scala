@@ -19,26 +19,13 @@ class AccountView(accountConfig: AccountConfig) extends ExtendedView with Accoun
   val feeConfig = accountConfig.feeConfig
   override val processorId = ACCOUNT_PROCESSOR <<
   override val viewId = ACCOUNT_VIEW<<
-  val manager = new AccountManager(0L, accountConfig.hotColdTransfer)
+  val manager = new AccountManager(0L)
   implicit val logger: LoggingAdapter = null
 
   def receive = LoggingReceive {
     case Persistent(msg, _) => updateState(msg)
 
     case QueryAccount(userId) => sender ! QueryAccountResult(manager.getUserAccounts(userId))
-
-    case QueryAccountStatistics(currency) =>
-      val (aggregation, hotWallet, coldWallet) = (manager.aggregationAccount.get(currency),
-        manager.hotWalletAccount.get(currency), manager.coldWalletAccount.get(currency))
-
-      val reserveRatio = if (aggregation.isDefined && hotWallet.isDefined && coldWallet.isDefined) {
-        Some((hotWallet.get.available + hotWallet.get.locked + hotWallet.get.pendingWithdrawal +
-          coldWallet.get.available + coldWallet.get.locked + coldWallet.get.pendingWithdrawal).toDouble /
-          (aggregation.get.available + aggregation.get.locked + aggregation.get.pendingWithdrawal))
-      } else {
-        None
-      }
-      sender ! QueryAccountStatisticsResult(aggregation, hotWallet, coldWallet, reserveRatio)
 
     case QueryRCDepositRecord(userId) => sender ! QueryRCDepositRecordResult(manager.getRCDepositRecords(userId))
 

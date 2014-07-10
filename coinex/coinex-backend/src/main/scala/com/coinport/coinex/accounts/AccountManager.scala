@@ -16,7 +16,6 @@
 package com.coinport.coinex.accounts
 
 import scala.collection.mutable.Map
-import scala.collection.immutable.{ Map => IMap }
 
 import com.coinport.coinex.data._
 import com.coinport.coinex.common._
@@ -24,9 +23,7 @@ import Implicits._
 import ErrorCode._
 import com.coinport.coinex.common.Constants._
 
-class AccountManager(initialLastOrderId: Long = 0L,
-  hotColdTransfer: IMap[Currency, HotColdTransferStrategy] = IMap.empty)
-    extends Manager[TAccountState] {
+class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountState] {
   // Internal mutable state ----------------------------------------------
   private val accountMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]
   var aggregationAccount = Map.empty[Currency, CashAccount]
@@ -35,8 +32,6 @@ class AccountManager(initialLastOrderId: Long = 0L,
   val abCodeMap: Map[Long, ABCodeItem] = Map.empty[Long, ABCodeItem]
   val codeAIndexMap: Map[String, Long] = Map.empty[String, Long]
   val codeBIndexMap: Map[String, Long] = Map.empty[String, Long]
-  val hotWalletAccount = Map.empty[Currency, CashAccount]
-  val coldWalletAccount = Map.empty[Currency, CashAccount]
 
   // Thrift conversions     ----------------------------------------------
   def getSnapshot = TAccountState(
@@ -47,8 +42,8 @@ class AccountManager(initialLastOrderId: Long = 0L,
     abCodeMap.clone,
     codeAIndexMap.clone,
     codeBIndexMap.clone,
-    hotWalletAccount.clone,
-    coldWalletAccount.clone,
+    Map.empty,
+    Map.empty,
     Some(lastPaymentId))
 
   def loadSnapshot(snapshot: TAccountState) = {
@@ -64,10 +59,6 @@ class AccountManager(initialLastOrderId: Long = 0L,
     codeAIndexMap ++= snapshot.codeAIndexMap
     codeBIndexMap ++= snapshot.codeBIndexMap
     loadFiltersSnapshot(snapshot.filters)
-    hotWalletAccount.clear
-    hotWalletAccount ++= snapshot.hotWalletAccount
-    coldWalletAccount.clear
-    coldWalletAccount ++= snapshot.coldWalletAccount
     lastPaymentId = snapshot.lastPaymentId.getOrElse(0)
   }
 
@@ -87,14 +78,6 @@ class AccountManager(initialLastOrderId: Long = 0L,
     updateCashAccount(to, CashAccount(currency, amount, 0, 0))
   }
 
-  def updateHotCashAccount(adjustment: CashAccount) {
-    updateCashAccount(hotWalletAccount, adjustment)
-  }
-
-  def updateColdCashAccount(adjustment: CashAccount) {
-    updateCashAccount(coldWalletAccount, adjustment)
-  }
-
   def conditionalRefund(condition: Boolean)(currency: Currency, order: Order) = {
     if (condition && order.quantity > 0) refund(order.userId, currency, order.quantity)
   }
@@ -106,18 +89,6 @@ class AccountManager(initialLastOrderId: Long = 0L,
   def canUpdateCashAccount(userId: Long, adjustment: CashAccount) = {
     val current = getUserCashAccount(userId, adjustment.currency)
     (current + adjustment).isValid
-  }
-
-  def canUpdateHotAccount(adjustment: CashAccount) = canUpdateCryptoAccount(adjustment, hotWalletAccount)
-
-  def canUpdateColdAccount(adjustment: CashAccount) = canUpdateCryptoAccount(adjustment, coldWalletAccount)
-
-  private def canUpdateCryptoAccount(adjustment: CashAccount, cryptoAccount: Map[Currency, CashAccount]) = {
-    if (adjustment.currency.value < Currency.Btc.value) {
-      true
-    } else {
-      (cryptoAccount.get(adjustment.currency).getOrElse(CashAccount(adjustment.currency, 0, 0, 0)) + adjustment).isValid
-    }
   }
 
   def updateCashAccount(accounts: Map[Currency, CashAccount], adjustment: CashAccount) = {
@@ -279,26 +250,4 @@ class AccountManager(initialLastOrderId: Long = 0L,
     System.currentTimeMillis / 1000
   }
 
-  // for return value amount, +amount means transfer from hot to cold;
-  //                          -amount means transfer from cold to hot.
-  def needHotColdTransfer(currency: Currency): Option[Long] = {
-    val hot = hotWalletAccount.getOrElse(currency, CashAccount(currency, 0, 0, 0))
-    val cold = coldWalletAccount.getOrElse(currency, CashAccount(currency, 0, 0, 0))
-    val hotAmount = hot.available + cold.pendingWithdrawal
-    val coldAmount = cold.available + hot.pendingWithdrawal
-    val HotColdTransferStrategy(highThreshold, lowThreshold) = hotColdTransfer.getOrElse(
-      currency, HotColdTransferStrategy(1, 0))
-    val mid = (highThreshold + lowThreshold) / 2
-    val allAmount = hotAmount + coldAmount
-    if (allAmount == 0) {
-      None
-    } else {
-      val hotPercent = hotAmount.toDouble / allAmount
-      if (hotPercent <= highThreshold && hotPercent >= lowThreshold) {
-        None
-      } else {
-        Some((hotAmount - allAmount * mid).toLong)
-      }
-    }
-  }
 }

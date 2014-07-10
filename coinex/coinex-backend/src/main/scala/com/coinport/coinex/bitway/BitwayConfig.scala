@@ -7,6 +7,8 @@ package com.coinport.coinex.bitway
 
 import com.coinport.coinex.data.Currency
 
+final case class HotColdTransferStrategy(high: Double, low: Double)
+
 final case class BitwayConfig(
   ip: String = "bitway",
   port: Int = 6379,
@@ -14,7 +16,11 @@ final case class BitwayConfig(
   requestChannelPrefix: String = "creq_",
   responseChannelPrefix: String = "cres_",
   maintainedChainLength: Int = 20,
-  coldAddresses: List[String] = Nil)
+  coldAddresses: List[String] = Nil,
+  hotColdTransfer: Option[HotColdTransferStrategy] = Some(HotColdTransferStrategy(0.2, 0.1)),
+  enableHotColdTransfer: Boolean = true,
+  hotColdTransferNumThreshold: Long = 20L,
+  hotColdTransferInterval: Long = 24 * 3600 * 1000L)
 
 final case class BitwayConfigs(
   configs: Map[Currency, BitwayConfig] = Map.empty)

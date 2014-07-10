@@ -115,7 +115,7 @@ trait AccountTransferBehavior {
       transferHandlerObjectMap.values foreach { _.init() }
       request.get.transferInfos foreach {
         info =>
-          transferHandlerObjectMap(request.get.`type`).handleBitwayFail(info, currency, timestamp)
+          transferHandlerObjectMap(request.get.`type`).handleBitwayFail(info, currency, timestamp, info.error.get)
       }
 
     case mr @ MultiTransferCryptoCurrencyResult(currency, _, transferInfos, timestamp) =>
@@ -125,7 +125,7 @@ trait AccountTransferBehavior {
         txType =>
           transferInfos.get.get(txType).get foreach {
             info =>
-              transferHandlerObjectMap(txType).handleBitwayFail(info, currency, timestamp)
+              transferHandlerObjectMap(txType).handleBitwayFail(info, currency, timestamp, info.error.get)
           }
       }
   }

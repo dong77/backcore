@@ -45,9 +45,9 @@ trait CryptoCurrencyTransferBase {
     innerHandleTx(currency, tx, timestamp)
   }
 
-  def handleBitwayFail(info: CryptoCurrencyTransferInfo, currency: Currency, timestamp: Option[Long]) {
+  def handleBitwayFail(info: CryptoCurrencyTransferInfo, currency: Currency, timestamp: Option[Long], error: ErrorCode) {
     if (id2HandlerMap.contains(info.id)) {
-      handleFailed(id2HandlerMap(info.id).setTimeStamp(timestamp))
+      handleFailed(id2HandlerMap(info.id).setTimeStamp(timestamp), error)
     } else {
       logger.warning(s"""${"~" * 50} bitway Fail not match existing item : id2HandleMap.size = ${id2HandlerMap.size}, info = ${info.toString}""")
     }
@@ -187,7 +187,7 @@ trait CryptoCurrencyTransferBase {
     item.status match {
       case Some(Succeeded) => // batch Set miner fee before sent message to accountProcessor
         transferHandler.get(item.accountTransferId.get)
-      case Some(Failed) if item.txType.get != UserToHot && item.txType.get != ColdToHot => //UserToHot fail will do nothing
+      case Some(Failed) if item.txType.get != UserToHot && item.txType.get != ColdToHot && item.txType.get != HotToCold => //UserToHot fail will do nothing
         transferHandler.get(item.accountTransferId.get)
       case _ =>
         logger.warning(s"""${"~" * 50} item2AccountTransfer() meet unexpected item : ${item.toString}""")
@@ -207,7 +207,7 @@ trait CryptoCurrencyTransferBase {
     }
   }
 
-  protected def handleFailed(handler: CryptoCurrencyTransferHandler) {}
+  protected def handleFailed(handler: CryptoCurrencyTransferHandler, error: ErrorCode = ErrorCode.Unknown) {}
 
   protected def updateSigId2MinerFee(tx: CryptoCurrencyTransaction) {
     tx.minerFee match {
@@ -242,7 +242,7 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
     super.handleSucceeded(itemId)
   }
 
-  override def handleFailed(handler: CryptoCurrencyTransferHandler) {
+  override def handleFailed(handler: CryptoCurrencyTransferHandler, error: ErrorCode = ErrorCode.Unknown) {
     handler.onFail()
     id2HandlerMap.remove(handler.item.id)
     removeItemHandlerFromMap(handler.item.sigId.get, handler.item.to.get)
@@ -343,10 +343,11 @@ trait CryptoCurrencyTransferWithdrawalLikeBase extends CryptoCurrencyTransferBas
     new CryptoCurrencyTransferWithdrawalLikeHandler(item)
   }
 
-  override def handleFailed(handler: CryptoCurrencyTransferHandler) {
-    handler.onFail()
+  override def handleFailed(handler: CryptoCurrencyTransferHandler, error: ErrorCode = ErrorCode.Unknown) {
     val item = id2HandlerMap.remove(handler.item.id).get.item
-    msgBoxMap.put(item.id, item)
+    if (error != ErrorCode.InsufficientHot) { // withdrawal and hotToCold should do nothing when meet insufficient hot error
+      msgBoxMap.put(item.id, item)
+    }
   }
 
   override def innerHandleTx(currency: Currency, tx: CryptoCurrencyTransaction, timestamp: Option[Long]) {

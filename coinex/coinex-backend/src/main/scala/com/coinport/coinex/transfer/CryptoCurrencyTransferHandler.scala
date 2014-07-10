@@ -43,9 +43,9 @@ trait CryptoCurrencyTransferHandler {
     saveItemToMongo()
   }
 
-  def onFail() {
-    item = item.copy(status = Some(Failed), updated = getTimestamp())
-    setAccountTransferStatus(Failed)
+  def onFail(failStatus: TransferStatus = Failed) {
+    item = item.copy(status = Some(failStatus), updated = getTimestamp())
+    setAccountTransferStatus(failStatus)
     saveItemToMongo()
   }
 

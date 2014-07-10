@@ -40,7 +40,12 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   }
 
   override def identifyChannel: PartialFunction[Any, String] = {
-    case r: DoRequestTransfer => "account"
+    case r: DoRequestTransfer =>
+      r.transfer.`type` match {
+        case HotToCold => "bitway_" + r.transfer.currency.toString.toLowerCase()
+        case ColdToHot => "bitway_" + r.transfer.currency.toString.toLowerCase()
+        case _ => "account"
+      }
     case MultiCryptoCurrencyTransactionMessage(currency, _, _, _, _) => "bitway_" + currency.toString.toLowerCase()
   }
 
@@ -109,7 +114,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
 
     case AdminConfirmTransferSuccess(t, _) =>
       transferHandler.get(t.id) match {
-        case Some(transfer) if transfer.status == Pending =>
+        case Some(transfer) if transfer.status == Pending || transfer.status == HotInsufficient =>
           if (isCryptoCurrency(transfer.currency) && !transferDebugConfig) {
             transfer.`type` match {
               case TransferType.Deposit => sender ! RequestTransferFailed(UnsupportTransferType)

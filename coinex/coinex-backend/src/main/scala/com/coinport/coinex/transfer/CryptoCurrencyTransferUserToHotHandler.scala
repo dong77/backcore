@@ -32,7 +32,7 @@ object CryptoCurrencyTransferUserToHotHandler extends CryptoCurrencyTransferBase
     new CryptoCurrencyTransferUserToHotHandler(item)
   }
 
-  override def handleFailed(handler: CryptoCurrencyTransferHandler) {
+  override def handleFailed(handler: CryptoCurrencyTransferHandler, error: ErrorCode = ErrorCode.Unknown) {
     handler.onFail()
     id2HandlerMap.remove(handler.item.id)
   }
@@ -70,7 +70,7 @@ class CryptoCurrencyTransferUserToHotHandler extends CryptoCurrencyTransferHandl
     saveItemToMongo()
   }
 
-  override def onFail() {
+  override def onFail(failStatus: TransferStatus = Failed) {
     super.onFail()
     updateDepositTx()
   }

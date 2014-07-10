@@ -25,6 +25,7 @@ import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
 import com.coinport.coinex.serializers._
 import Implicits._
+import com.coinport.coinex.data.TransferType._
 
 class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, config: BitwayConfig)
     extends ExtendedProcessor with EventsourcedProcessor with BitwayManagerBehavior with ActorLogging {
@@ -33,7 +34,9 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
 
   var sendGetMissedBlockTime = 0L
   val RESEND_GET_MISSED_BLOCK_TIMEOUT = 30 * 1000L
+  val HOT_RESERVE_INTERNAL_AMOUNT = 10000 * 1000L
 
+  private var hotColdTransferLastTransferTime: Option[Long] = None
   val serializer = new ThriftBinarySerializer()
   val client: Option[RedisClient] = try {
     Some(new RedisClient(config.ip, config.port))
@@ -45,7 +48,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
   override val processorId = BITWAY_PROCESSOR << supportedCurrency
   val channelToTransferProcessor = createChannelTo(ACCOUNT_TRANSFER_PROCESSOR <<) // DO NOT CHANGE
 
-  val manager = new BitwayManager(supportedCurrency, config.maintainedChainLength, config.coldAddresses)
+  val manager = new BitwayManager(supportedCurrency, config.maintainedChainLength, config.coldAddresses, config.hotColdTransfer, config.hotColdTransferNumThreshold)
 
   override def preStart() = {
     super.preStart
@@ -86,8 +89,9 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
             SyncHotAddresses(supportedCurrency)))))
       }
     case m @ CleanBlockChain(currency) =>
-      persist(m) { event =>
-        updateState(event)
+      persist(m) {
+        event =>
+          updateState(event)
       }
     case SyncPrivateKeys(currency, None) =>
       if (client.isDefined) {
@@ -98,10 +102,11 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
 
     case m @ AdjustAddressAmount(currency, address, adjustAmount) =>
       if (manager.canAdjustAddressAmount(address, adjustAmount)) {
-        persist(m) { event =>
-          updateState(event)
-          sender ! AdjustAddressAmountResult(
-            supportedCurrency, ErrorCode.Ok, address, Some(manager.getAddressAmount(address)))
+        persist(m) {
+          event =>
+            updateState(event)
+            sender ! AdjustAddressAmountResult(
+              supportedCurrency, ErrorCode.Ok, address, Some(manager.getAddressAmount(address)))
         }
       } else {
         sender ! AdjustAddressAmountResult(supportedCurrency, ErrorCode.InvalidAmount, address)
@@ -111,9 +116,10 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       val (address, needFetch) = manager.allocateAddress
       if (needFetch) self ! FetchAddresses(currency)
       if (address.isDefined) {
-        persist(m.copy(assignedAddress = address)) { event =>
-          updateState(event)
-          sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.Ok, address)
+        persist(m.copy(assignedAddress = address)) {
+          event =>
+            updateState(event)
+            sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.Ok, address)
         }
       } else {
         sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.NotEnoughAddressInPool, None)
@@ -137,8 +143,9 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
 
     case m @ BitwayMessage(currency, Some(res), None, None, None, None) =>
       if (res.error == ErrorCode.Ok) {
-        persist(m) { event =>
-          updateState(event)
+        persist(m) {
+          event =>
+            updateState(event)
         }
       } else {
         log.error("error occur when fetch addresses: " + res)
@@ -146,19 +153,21 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     case m @ BitwayMessage(currency, None, Some(tx), None, None, None) =>
       val txWithTime = if (tx.timestamp.isDefined) tx else tx.copy(timestamp = Some(System.currentTimeMillis))
       if (tx.status == TransferStatus.Failed) {
-        persist(m.copy(tx = Some(txWithTime))) { event =>
-          channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(
-            currency, List(tx))), transferProcessor.path)
+        persist(m.copy(tx = Some(txWithTime))) {
+          event =>
+            channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(
+              currency, List(tx))), transferProcessor.path)
         }
       } else {
         manager.completeCryptoCurrencyTransaction(tx) match {
           case None => log.debug("unrelated tx received")
           case Some(completedTx) =>
             if (manager.notProcessed(completedTx)) {
-              persist(m.copy(tx = Some(txWithTime))) { event =>
-                updateState(event)
-                channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
-                  List(completedTx))), transferProcessor.path)
+              persist(m.copy(tx = Some(completedTx))) {
+                event =>
+                  updateState(event)
+                  channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
+                    List(completedTx))), transferProcessor.path)
               }
             }
         }
@@ -172,20 +181,24 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         case SUCCESSOR | REORG =>
           sendGetMissedBlockTime = 0
           val blocksMsgWithTime = if (blockMsg.timestamp.isDefined)
-            blockMsg else blockMsg.copy(timestamp = Some(System.currentTimeMillis))
-          persist(m.copy(blockMsg = Some(blocksMsgWithTime))) { event =>
-            updateState(event)
-            val relatedTxs = manager.extractTxsFromBlock(blockMsg.block)
-            if (relatedTxs.nonEmpty) {
-              val reorgIndex = if (continuity == REORG) {
-                log.info("reorg to index: " + blockMsg.reorgIndex)
-                log.info("maintained index list: " + manager.getBlockIndexes)
-                log.info("new block index: " + blockMsg.block.index)
-                blockMsg.reorgIndex
-              } else None
-              channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
-                relatedTxs, reorgIndex)), transferProcessor.path)
-            }
+            blockMsg
+          else blockMsg.copy(timestamp = Some(System.currentTimeMillis))
+          persist(m.copy(blockMsg = Some(blocksMsgWithTime))) {
+            event =>
+              updateState(event)
+              val relatedTxs = manager.extractTxsFromBlock(blockMsg.block)
+              if (relatedTxs.nonEmpty) {
+                val reorgIndex = if (continuity == REORG) {
+                  log.info("reorg to index: " + blockMsg.reorgIndex)
+                  log.info("maintained index list: " + manager.getBlockIndexes)
+                  log.info("new block index: " + blockMsg.block.index)
+                  blockMsg.reorgIndex
+                } else None
+                val msg = MultiCryptoCurrencyTransactionMessage(currency,
+                  relatedTxs, reorgIndex)
+                channelToTransferProcessor forward Deliver(Persistent(msg), transferProcessor.path)
+                checkTransferHotCold(msg)
+              }
           }
         case GAP =>
           if (client.isDefined && System.currentTimeMillis - sendGetMissedBlockTime > RESEND_GET_MISSED_BLOCK_TIMEOUT) {
@@ -202,34 +215,49 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       }
     case m @ BitwayMessage(currency, None, None, None, Some(res), None) =>
       if (res.error == ErrorCode.Ok) {
-        persist(m) { event =>
-          updateState(event)
+        persist(m) {
+          event =>
+            updateState(event)
         }
       } else {
         log.error("error occur when sync hot addresses: " + res)
       }
     case m @ BitwayMessage(currency, None, None, None, None, Some(res)) =>
       if (res.error == ErrorCode.Ok) {
-        persist(m) { event =>
-          updateState(event)
+        persist(m) {
+          event =>
+            updateState(event)
         }
       } else {
         log.error("error occur when sync private keys: " + res)
+      }
+    case m @ DoRequestTransfer(t, _) =>
+      persist(m) {
+        event =>
+          updateState(event)
+          t.`type` match {
+            case HotToCold => channelToTransferProcessor forward Deliver(Persistent(event), transferProcessor.path)
+            case ColdToHot => channelToTransferProcessor forward Deliver(Persistent(event), transferProcessor.path)
+            case _ =>
+              log.error("Get unexpected DoRequestTransfer transfer type : " + event.toString)
+          }
       }
   }
 
   private def sendTransferRequest(m: TransferCryptoCurrency) {
     if (client.isDefined) {
       val TransferCryptoCurrency(currency, infos, t) = m
-      val (completedInfos, isFail) = manager.completeTransferInfos(infos, t == TransferType.HotToCold)
-      if (isFail) {
-        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.NoAddressFound, Some(m))
-      } else if (manager.includeWithdrawalToBadAddress(t, infos)) {
-        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.WithdrawalToBadAddress, Some(m))
-      } else {
-        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.Ok, None)
+      val (passedInfos, failedInfos, _) = partitionInfos(t, infos)
+      if (passedInfos.size > 0) {
+        if (failedInfos.size > 0) {
+          sender ! TransferCryptoCurrencyResult(currency, ErrorCode.PartiallyFailed, Some(TransferCryptoCurrency(currency, failedInfos, t)))
+        } else {
+          sender ! TransferCryptoCurrencyResult(currency, ErrorCode.Ok, None)
+        }
         client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
-          BitwayRequestType.Transfer, currency, transferCryptoCurrency = Some(m.copy(transferInfos = completedInfos)))))
+          BitwayRequestType.Transfer, currency, transferCryptoCurrency = Some(m.copy(transferInfos = passedInfos)))))
+      } else {
+        sender ! TransferCryptoCurrencyResult(currency, ErrorCode.AllFailed, Some(m.copy(transferInfos = failedInfos)))
       }
     }
   }
@@ -237,19 +265,71 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
   private def sendMultiTransferRequest(m: MultiTransferCryptoCurrency) {
     if (client.isDefined) {
       val MultiTransferCryptoCurrency(currency, transferInfos) = m
-      val (passedInfos, failedInfos) = transferInfos.map { kv =>
-        (kv._1 -> manager.completeTransferInfos(kv._2, kv._1 == TransferType.HotToCold))
-      }.partition(kv => (!kv._2._2) && (!manager.includeWithdrawalToBadAddress(kv._1, kv._2._1)))
-      if (failedInfos.size > 0) {
-        sender ! MultiTransferCryptoCurrencyResult(currency, ErrorCode.AddressFail,
-          Some(failedInfos.map(kv => (kv._1 -> kv._2._1))))
+      val passedInfos = collection.mutable.Map.empty[TransferType, Seq[CryptoCurrencyTransferInfo]]
+      val failedInfos = collection.mutable.Map.empty[TransferType, Seq[CryptoCurrencyTransferInfo]]
+      var hotAmount: Option[Long] = None
+
+      transferInfos.toSeq.sortBy(_._1.value).foreach {
+        kv =>
+          val (ps, fs, hm) = partitionInfos(kv._1, kv._2, hotAmount)
+          hotAmount = hm
+          if (ps.nonEmpty)
+            passedInfos += kv._1 -> ps.toSeq
+          if (fs.nonEmpty)
+            failedInfos += kv._1 -> fs.toSeq
       }
       if (passedInfos.size > 0) {
-        sender ! MultiTransferCryptoCurrencyResult(currency, ErrorCode.Ok, None)
+        if (failedInfos.size > 0) {
+          sender ! MultiTransferCryptoCurrencyResult(currency, ErrorCode.PartiallyFailed, Some(failedInfos))
+        } else {
+          sender ! MultiTransferCryptoCurrencyResult(currency, ErrorCode.Ok, None)
+        }
         client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(BitwayRequestType.MultiTransfer, currency,
-          multiTransferCryptoCurrency = Some(m.copy(transferInfos = passedInfos.map(kv => (kv._1 -> kv._2._1)))))))
+          multiTransferCryptoCurrency = Some(m.copy(transferInfos = passedInfos)))))
+      } else {
+        sender ! MultiTransferCryptoCurrencyResult(currency, ErrorCode.AllFailed, Some(failedInfos))
       }
     }
+  }
+
+  private def partitionInfos(transferType: TransferType, infos: Seq[CryptoCurrencyTransferInfo], hotAmount: Option[Long] = None): (List[CryptoCurrencyTransferInfo], List[CryptoCurrencyTransferInfo], Option[Long]) = {
+    val passedInfos = collection.mutable.ListBuffer.empty[CryptoCurrencyTransferInfo]
+    val failedInfos = collection.mutable.ListBuffer.empty[CryptoCurrencyTransferInfo]
+    val (resInfos, isFail) = manager.completeTransferInfos(infos, transferType == HotToCold)
+    var hotAmountRes: Option[Long] = hotAmount
+
+    def subHotAmount(info: CryptoCurrencyTransferInfo) {
+      val hm = hotAmountRes.getOrElse(manager.getReserveAmount(CryptoCurrencyAddressType.Hot))
+      (info.internalAmount.get + HOT_RESERVE_INTERNAL_AMOUNT) > hm match {
+        case true =>
+          failedInfos.append(info.copy(error = Some(ErrorCode.InsufficientHot)))
+        case _ =>
+          passedInfos.append(info)
+          hotAmountRes = Some(hm - info.internalAmount.get)
+      }
+    }
+
+    transferType match {
+      case HotToCold =>
+        isFail match {
+          case true => failedInfos ++= resInfos
+          case _ => resInfos foreach subHotAmount
+        }
+      case Withdrawal =>
+        resInfos foreach {
+          resInfo =>
+            manager.isWithdrawalToBadAddress(resInfo) match {
+              case true =>
+                failedInfos.append(resInfo.copy(error = Some(ErrorCode.WithdrawalToBadAddress)))
+              case false =>
+                subHotAmount(resInfo)
+            }
+        }
+      case _ =>
+        passedInfos ++= resInfos
+    }
+
+    (passedInfos.toList, failedInfos.toList, hotAmountRes)
   }
 
   private def scheduleTryPour() = {
@@ -261,6 +341,29 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
   }
 
   private def getRequestChannel = config.requestChannelPrefix + supportedCurrency.value.toString
+
+  private def checkTransferHotCold(msg: MultiCryptoCurrencyTransactionMessage) {
+    var needCheckHotColdTransfer = false
+    if (msg.txs.filter(tx => tx.txType == Some(TransferType.Withdrawal) || tx.txType == Some(TransferType.UserToHot)).nonEmpty) {
+      needCheckHotColdTransfer = true
+    }
+    if (config.enableHotColdTransfer && needCheckHotColdTransfer &&
+      System.currentTimeMillis - hotColdTransferLastTransferTime.getOrElse(0L) > config.hotColdTransferInterval) {
+      hotColdTransferLastTransferTime = Some(System.currentTimeMillis)
+      transferHotColdIfNeed()
+    }
+  }
+
+  private def transferHotColdIfNeed() {
+    manager.needHotColdTransfer match {
+      case None =>
+      case Some(amount) if amount == 0 =>
+      case Some(amount) if amount > 0 =>
+        self ! DoRequestTransfer(AccountTransfer(0, 0, HotToCold, supportedCurrency, amount, created = Some(System.currentTimeMillis)))
+      case Some(amount) if amount < 0 =>
+        self ! DoRequestTransfer(AccountTransfer(0, 0, ColdToHot, supportedCurrency, -amount, created = Some(System.currentTimeMillis)))
+    }
+  }
 }
 
 trait BitwayManagerBehavior {
@@ -286,6 +389,7 @@ trait BitwayManagerBehavior {
       manager.syncPrivateKeys(res.addresses.toList)
     case CleanBlockChain(currency) =>
       manager.cleanBlockChain()
+    case DoRequestTransfer(_, _) =>
     case e => println("bitway updateState doesn't handle the message: ", e)
   }
 }

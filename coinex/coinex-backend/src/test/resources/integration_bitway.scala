@@ -14,11 +14,13 @@ BitwayConfigs(Map(
   Btc -> BitwayConfig(
     ip = "127.0.0.1",
     port = 6379,
-    maintainedChainLength = 10
+    maintainedChainLength = 10,
+    enableHotColdTransfer = false
   ),
   Ltc -> BitwayConfig(
     ip = "127.0.0.1",
     port = 6379,
-    maintainedChainLength = 20
+    maintainedChainLength = 20,
+    enableHotColdTransfer = false
   )
 ))

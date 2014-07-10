@@ -12,8 +12,7 @@ object AccountMessageWriter extends MessageWriter {
     val currencyTransferMap = collection.mutable.Map.empty[Currency, ListBuffer[AccountTransfer]]
     messages.foreach {
       info =>
-        val msg = info._2
-        msg match {
+        info._2 match {
           case adm: AdminConfirmTransferSuccess =>
             appendTransfer(adm.transfer, currencyTransferMap)
           case cs: CryptoTransferSucceeded =>
@@ -46,8 +45,9 @@ object AccountMessageWriter extends MessageWriter {
     val writer = new BufferedWriter(new OutputStreamWriter(fs.create(
       new Path(config.csvDwDir + "/" + currency.toString, s"coinport_${currency}_${pFileMap(processorId)}_${currentTime()}.cvs".toLowerCase))))
     writer.write(s""""User Id","Transaction Type",Amount,Time\n""")
+    val formatter = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
     for (tf <- transfers) {
-      writer.write(s"${String.valueOf(tf.userId)},${tf.`type`.toString},${String.valueOf(new CurrencyWrapper(tf.amount).externalValue(currency))},${new java.util.Date(tf.updated.get).toString}\n")
+      writer.write(s"${String.valueOf(tf.userId)},${tf.`type`.toString},${String.valueOf(new CurrencyWrapper(tf.amount).externalValue(currency))},${formatter.format(new java.util.Date(tf.updated.get))}\n")
     }
     writer.flush()
     writer.close()

@@ -58,6 +58,11 @@ object CryptoCurrencyTransferHotToColdHandler extends CryptoCurrencyTransferWith
     Some(CryptoCurrencyTransferInfo(item.id, None, item.to.get.internalAmount, item.to.get.amount, None))
   }
 
+  override def handleFailed(handler: CryptoCurrencyTransferHandler, error: ErrorCode = ErrorCode.Unknown) {
+    handler.onFail()
+    super.handleFailed(handler, error)
+  }
+
 }
 
 object CryptoCurrencyTransferUnknownHandler extends CryptoCurrencyTransferBase {
@@ -73,6 +78,15 @@ object CryptoCurrencyTransferUnknownHandler extends CryptoCurrencyTransferBase {
 }
 
 object CryptoCurrencyTransferWithdrawalHandler extends CryptoCurrencyTransferWithdrawalLikeBase {
+
+  override def handleFailed(handler: CryptoCurrencyTransferHandler, error: ErrorCode = ErrorCode.Unknown) {
+    if (error == ErrorCode.InsufficientHot) {
+      handler.onFail(HotInsufficient)
+    } else {
+      handler.onFail()
+    }
+    super.handleFailed(handler, error)
+  }
 
   override def item2CryptoCurrencyTransferInfo(item: CryptoCurrencyTransferItem): Option[CryptoCurrencyTransferInfo] = {
     Some(CryptoCurrencyTransferInfo(item.id, Some(item.to.get.address), item.to.get.internalAmount, item.to.get.amount, None))
