@@ -68,7 +68,8 @@ class UserProcessor(mailer: ActorRef, secret: String)
             status = userProfile.status,
             depositAddresses = Some(profile.depositAddresses.getOrElse(Map.empty) ++ userProfile.depositAddresses.getOrElse(Map.empty)),
             withdrawalAddresses = Some(profile.withdrawalAddresses.getOrElse(Map.empty) ++ userProfile.withdrawalAddresses.getOrElse(Map.empty)),
-            googleAuthenticatorSecret = userProfile.googleAuthenticatorSecret
+            googleAuthenticatorSecret = userProfile.googleAuthenticatorSecret,
+            securityPreference = userProfile.securityPreference
           )
           sender ! UpdateUserProfileSucceeded(newProfile)
           persist(DoUpdateUserProfile(newProfile))(updateState)
@@ -139,7 +140,7 @@ class UserProcessor(mailer: ActorRef, secret: String)
     case Login(email, password) =>
       manager.checkLogin(email, password) match {
         case Left(error) => sender ! LoginFailed(error)
-        case Right(profile) => sender ! LoginSucceeded(profile.id, profile.email, profile.referralToken, profile.mobile, profile.realName, profile.googleAuthenticatorSecret)
+        case Right(profile) => sender ! LoginSucceeded(profile.id, profile.email, profile.referralToken, profile.mobile, profile.realName, profile.googleAuthenticatorSecret, profile.securityPreference)
       }
 
     case ValidatePasswordResetToken(token) =>

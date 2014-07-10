@@ -382,4 +382,19 @@ object UserService extends AkkaService {
         ApiResult(false, -1, e.toString)
     }
   }
+
+  def setUserSecurityPreference(uid: Long, preference: String) = {
+    //update withdrawal address of user profile
+    backend ? QueryProfile(Some(uid)) map {
+      case qpr: QueryProfileResult =>
+        qpr.userProfile match {
+          case Some(profile) =>
+            val newPro = profile.copy(securityPreference = Some(preference))
+            backend ! DoUpdateUserProfile(newPro)
+          case None =>
+        }
+        ApiResult(true, 0, "", None)
+      case x => ApiResult(false, -1, x.toString)
+    }
+  }
 }

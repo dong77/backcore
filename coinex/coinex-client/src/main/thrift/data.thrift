@@ -251,6 +251,7 @@ struct UserProfile {
     16: optional map<Currency, string> withdrawalAddresses
     17: optional i64 referralToken
     18: optional i64 referralUserId  // this should be hidden for this user
+    19: optional string securityPreference // 1:email 10:sms 11: email && sms
 }
 
 struct ReferralParams {
