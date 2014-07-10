@@ -108,6 +108,16 @@ class UserProcessor(mailer: ActorRef, secret: String)
           sender ! DoChangePasswordSucceeded(profile.id, profile.email)
       }
 
+    case m @ DoBindMobile(email, newMobile) =>
+      manager.getUser(email) match {
+        case Some(profile) =>
+          val newProfile = profile.copy(mobile = Some(newMobile), mobileVerified = true)
+          sender ! DoBindMobileSucceeded(profile.id, newMobile)
+          persist(DoUpdateUserProfile(newProfile))(updateState)
+        case None =>
+          sender ! DoBindMobileFailed(UserNotExist)
+      }
+
     case m @ DoSuspendUser(uid) =>
       manager.profileMap.get(uid) match {
         case Some(profile) =>

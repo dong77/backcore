@@ -121,6 +121,10 @@ typedef data.Payment                            _Payment
 /* R-   */ struct DoChangePasswordFailed                   {1: _ErrorCode error}
 /* R+   */ struct DoChangePasswordSucceeded                {1: i64 id, 2: string email}
 
+/* C,P  */ struct DoBindMobile                             {1: string email, 2: string newMobile}
+/* R-   */ struct DoBindMobileFailed                       {1: _ErrorCode error}
+/* R+   */ struct DoBindMobileSucceeded                    {1: i64 id, 2: string mobile}
+
 /* C    */ struct Login                                   {1: string email, 2: string password} // TODO: this may also be a persistent command
 /* R-   */ struct LoginFailed                             {1: _ErrorCode error}
 /* R+   */ struct LoginSucceeded                          {1: i64 id, 2: string email, 3: optional i64 referralToken, 4: optional string mobile, 5: optional string realName, 6: optional string googleSecret, 7: optional string perference}

@@ -344,6 +344,18 @@ object UserService extends AkkaService {
     }
   }
 
+  def bindOrUpdateMobile(email: String, newMobile: String) = {
+    val command = DoBindMobile(email, newMobile)
+    backend ? command map {
+      case succeeded: DoBindMobileSucceeded =>
+        ApiResult(true, 0, "")
+      case failed: DoBindMobileFailed =>
+        ApiResult(false, failed.error.value, failed.toString)
+      case e =>
+        ApiResult(false, -1, e.toString)
+    }
+  }
+
   def resendVerifyEmail(email: String) = {
     val command = DoResendVerifyEmail(email)
     backend ? command map {
