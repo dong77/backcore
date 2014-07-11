@@ -165,7 +165,10 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
       else
         Some(TransferType.Withdrawal)
     } else if (outputsMatched.contains(USER)) {
-      Some(TransferType.Deposit)
+      if (!inputsMatched.contains(USER))
+        Some(TransferType.Deposit)
+      else
+        Some(TransferType.Unknown)
     } else if (inputsMatched.nonEmpty || outputsMatched.nonEmpty) {
       Some(TransferType.Unknown)
     } else {
@@ -233,8 +236,12 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
     if (!inputs.isDefined || !outputs.isDefined) {
       None
     } else {
-      val txType = getTransferType(Set.empty[String] ++ inputs.get.map(_.address),
-        Set.empty[String] ++ outputs.get.map(_.address))
+      val txType =
+        if (tx.txType.isDefined)
+          tx.txType
+        else
+          getTransferType(Set.empty[String] ++ inputs.get.map(_.address),
+            Set.empty[String] ++ outputs.get.map(_.address))
       if (txType.isDefined) {
         val regularizeInputs = inputs.map(_.map(i => i.copy(
           internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)),
