@@ -44,7 +44,7 @@ object AccountService extends AkkaService {
       case result: RequestTransferSucceeded =>
         ApiResult(true, 0, "提现申请已提交", Some(result))
       case failed: RequestTransferFailed =>
-        ApiResult(false, 1, "提现失败", Some(failed))
+        ApiResult(false, failed.error.getValue(), "提现失败", Some(failed))
     }
   }
 
