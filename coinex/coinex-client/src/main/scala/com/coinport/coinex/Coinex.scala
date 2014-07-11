@@ -39,6 +39,7 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       // Account Processor
       case m: DoRequestTransfer => {
         m.transfer.`type` match {
+          case TransferType.Deposit => routers.accountProcessor forward m
           case TransferType.Withdrawal => routers.accountProcessor forward m
           case TransferType.ColdToHot => routers.bitwayProcessors(m.transfer.currency) forward m
           case TransferType.HotToCold => routers.bitwayProcessors(m.transfer.currency) forward m
