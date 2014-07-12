@@ -15,6 +15,7 @@
 
 package com.coinport.coinex.accounts
 
+import org.slf4s.Logging
 import scala.collection.mutable.Map
 
 import com.coinport.coinex.data._
@@ -23,7 +24,7 @@ import Implicits._
 import ErrorCode._
 import com.coinport.coinex.common.Constants._
 
-class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountState] {
+class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountState] with Logging {
   // Internal mutable state ----------------------------------------------
   private val accountMap: Map[Long, UserAccount] = Map.empty[Long, UserAccount]
   var aggregationAccount = Map.empty[Currency, CashAccount]
@@ -83,7 +84,12 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
   }
 
   def refund(uid: Long, currency: Currency, quantity: Long) = {
-    updateCashAccount(uid, CashAccount(currency, quantity, -quantity, 0))
+    val current = getUserCashAccount(uid, currency)
+    val refundQuantity = scala.math.min(current.locked, quantity)
+    if (refundQuantity < quantity) {
+      log.warn(s"uid: {$uid} try to refund: {$quantity} in currency: {$currency} which more than locked: {$refundQuantity}")
+    }
+    updateCashAccount(uid, CashAccount(currency, refundQuantity, -refundQuantity, 0))
   }
 
   def canUpdateCashAccount(userId: Long, adjustment: CashAccount) = {
