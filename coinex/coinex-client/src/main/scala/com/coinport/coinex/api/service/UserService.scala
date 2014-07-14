@@ -72,43 +72,6 @@ object UserService extends AkkaService {
     }
   }
 
-  //  def getDepositAddress(currency: Seq[Currency], userId: Long) = {
-  //    backend ? QueryProfile(Some(userId)) map {
-  //      case qpr: QueryProfileResult =>
-  //        val addr = qpr.userProfile match {
-  //          case Some(profile) =>
-  //            val addrMap =
-  //              if (!profile.depositAddresses.isDefined) {
-  //                // allocate new address
-  //                val future =
-  //                  backend ? AllocateNewAddress(currency, userId, None) map {
-  //                    case result: AllocateNewAddressResult if result.address.isDefined =>
-  //                      val ana = result.address.get
-  //
-  //                      // update profile with updated deposit address
-  //                      val addrMap = profile.depositAddresses match {
-  //                        case Some(depositMap) => depositMap ++ Map(currency -> ana)
-  //                        case None => Map(currency -> ana)
-  //                      }
-  //
-  //                      val newProfile = profile.copy(depositAddresses = Some(addrMap))
-  //                      backend ! DoUpdateUserProfile(newProfile)
-  //                      ana
-  //                    case x => "" //x.toString
-  //                  }
-  //                result[String](future, (2 seconds))
-  //              } else
-  //
-  //                profile.depositAddresses.get.get(currency).get
-  //          case None => ""
-  //        }
-  //        if (addr != null && addr.trim.length > 0)
-  //          ApiResult(true, 0, "", Some(addr))
-  //        else ApiResult(false, -1, "get deposit address failed.")
-  //      case x => ApiResult(false, -1, x.toString)
-  //    }
-  //  }
-
   def getDepositAddress(currencySeq: Seq[Currency], userId: Long) = {
     backend ? QueryProfile(Some(userId)) map {
       case qpr: QueryProfileResult =>
@@ -409,4 +372,19 @@ object UserService extends AkkaService {
       case x => ApiResult(false, -1, x.toString)
     }
   }
+
+  def updateNickName(uid: Long, nickname: String) = {
+    backend ? QueryProfile(Some(uid)) map {
+      case qpr: QueryProfileResult =>
+        qpr.userProfile match {
+          case Some(profile) =>
+            val newPro = profile.copy(realName = Some(nickname))
+            backend ! DoUpdateUserProfile(newPro)
+            ApiResult(true, 0, "", None)
+          case None => ApiResult(false, ErrorCode.UserNotExist.value, "user not exist")
+        }
+      case x => ApiResult(false, -1, x.toString)
+    }
+  }
+
 }
