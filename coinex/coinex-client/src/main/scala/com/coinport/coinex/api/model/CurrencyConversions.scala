@@ -65,6 +65,10 @@ class CurrencyWrapper(val value: Double) {
     (BigDecimal(value) * CurrencyConversion.multipliers(currency)).toLong
   }
 
+  def ceiledInternalValue(currency: Currency): Long = {
+    (BigDecimal(value) * CurrencyConversion.multipliers(currency)).doubleValue().ceil.toLong
+  }
+
   def E(currency: Currency) = externalValue(currency)
 
   def I(currency: Currency) = internalValue(currency)

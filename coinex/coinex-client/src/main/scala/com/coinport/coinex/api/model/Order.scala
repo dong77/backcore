@@ -53,7 +53,7 @@ case class UserOrder(
         // regard total as quantity
         val quantity: Long = total match {
           case Some(t) => t.internalValue(currency2)
-          case None => (BigDecimal(amount.get) * BigDecimal(price.get)).doubleValue().internalValue(currency2)
+          case None => (BigDecimal(amount.get) * BigDecimal(price.get)).doubleValue().ceiledInternalValue(currency2)
         }
         val limit = amount.map(_.internalValue(currency1))
         DoSubmitOrder(marketSide, Order(uid.toLong, id.toLong, quantity, newPrice, limit))
@@ -65,7 +65,7 @@ case class UserOrder(
           case None =>
             if (total.isDefined && price.isDefined) {
               val totalValue = BigDecimal(total.get) / BigDecimal(price.get)
-              totalValue.doubleValue().internalValue(currency1)
+              totalValue.doubleValue().ceiledInternalValue(currency1)
             } else 0
         }
         val limit = total map {
