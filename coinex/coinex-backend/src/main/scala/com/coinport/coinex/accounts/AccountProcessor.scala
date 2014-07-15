@@ -209,16 +209,16 @@ class AccountProcessor(
       }
 
     case p @ ConfirmablePersistent(event: OrderSubmitted, seq, _) =>
+      confirm(p)
       persist(countFee(event)) { event =>
-        confirm(p)
         sender ! event
         updateState(event)
         channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)
       }
 
     case p @ ConfirmablePersistent(event: OrderCancelled, seq, _) =>
+      confirm(p)
       persist(countFee(event)) { event =>
-        confirm(p)
         sender ! event
         updateState(event)
         channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)
@@ -316,8 +316,8 @@ trait AccountManagerBehavior extends CountFeeSupport {
       val side = originOrderInfo.side
       txs foreach { tx =>
         val (takerUpdate, makerUpdate, fees) = (tx.takerUpdate, tx.makerUpdate, tx.fees)
-        manager.transferFundFromLocked(takerUpdate.userId, makerUpdate.userId, side.outCurrency, takerUpdate.outAmount)
-        manager.transferFundFromLocked(makerUpdate.userId, takerUpdate.userId, side.inCurrency, makerUpdate.outAmount)
+        manager.transferFundFromLocked(from = takerUpdate.userId, to = makerUpdate.userId, side.outCurrency, takerUpdate.outAmount)
+        manager.transferFundFromLocked(from = makerUpdate.userId, to = takerUpdate.userId, side.inCurrency, makerUpdate.outAmount)
         refund(side.inCurrency, makerUpdate.current)
 
         tx.fees.getOrElse(Nil) foreach { f =>

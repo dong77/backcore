@@ -230,16 +230,15 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] with
         OrderStatus.Unknown
     }
 
-    val updatedOriginalOrder =
-      if (txsBuffer.nonEmpty && refund.isDefined) {
-        val lastTx = txsBuffer.last
-        val updatedTaker = lastTx.takerUpdate.current.copy(refund = refund)
+    if (txsBuffer.nonEmpty && refund.isDefined) {
+      val lastTx = txsBuffer.last
+      val updatedTaker = lastTx.takerUpdate.current.copy(refund = refund)
 
-        txsBuffer.trimEnd(1)
-        // If there is a over-charge refund, the current order in takerUpdate will still
-        // show the quantity before the refund.
-        txsBuffer += lastTx.copy(takerUpdate = lastTx.takerUpdate.copy(current = updatedTaker))
-      }
+      txsBuffer.trimEnd(1)
+      // If there is a over-charge refund, the current order in takerUpdate will still
+      // show the quantity before the refund.
+      txsBuffer += lastTx.copy(takerUpdate = lastTx.takerUpdate.copy(current = updatedTaker))
+    }
 
     val txs = txsBuffer.toSeq
     // If there is a over-charge refund, the order inside originOrderInfo will still
@@ -333,7 +332,12 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] with
 
   def getOrderMarketSide(orderId: Long, userId: Long): Option[MarketSide] =
     orderMap.get(orderId) filter (_.userId == userId) map { order =>
-      if (orderPool(tailSide).contains(order)) tailSide else headSide
+      if (orderPool(tailSide).contains(order)) tailSide
+      else if (orderPool(headSide).contains(order)) headSide
+      else {
+        assert(false, "order in orderMap but not in orrderPool")
+        headSide
+      }
     }
 
   def removeOrder(orderId: Long, userId: Long): (MarketSide, Order) = {
