@@ -254,8 +254,11 @@ trait AccountManagerBehavior extends CountFeeSupport {
     case DoRequestGenerateABCode(userId, amount, Some(a), Some(b)) =>
       manager.createABCodeTransaction(userId, a, b, amount)
       manager.updateCashAccount(userId, CashAccount(Currency.Cny, -amount, amount, 0))
+
     case DoRequestACodeQuery(userId, codeA) => manager.freezeABCode(userId, codeA)
+
     case DoRequestBCodeRecharge(userId, codeB) => manager.bCodeRecharge(userId, codeB)
+
     case DoRequestConfirmRC(userId, codeB, amount) => {
       manager.confirmRecharge(userId, codeB)
       manager.updateCashAccount(userId, CashAccount(Currency.Cny, 0, -amount, 0))

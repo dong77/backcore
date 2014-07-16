@@ -371,25 +371,34 @@ trait BitwayManagerBehavior {
 
   def updateState: Receive = {
     case AllocateNewAddress(currency, uid, Some(address)) => manager.addressAllocated(uid, address)
+
     case AdjustAddressAmount(currency, address, adjustAmount) => manager.adjustAddressAmount(address, adjustAmount)
+
     case BitwayMessage(currency, Some(res), None, None, None, None) =>
       if (res.addressType.isDefined && res.addresses.isDefined && res.addresses.get.size > 0)
         manager.faucetAddress(res.addressType.get, Set.empty[CryptoAddress] ++ res.addresses.get)
+
     case BitwayMessage(currency, None, Some(tx), None, None, None) =>
       if (tx.timestamp.isDefined) manager.updateLastAlive(tx.timestamp.get)
       manager.rememberTx(tx)
+
     case BitwayMessage(currency, None, None,
       Some(CryptoCurrencyBlockMessage(startIndex, block, timestamp)), None, None) =>
       if (timestamp.isDefined) manager.updateLastAlive(timestamp.get)
       manager.updateBlock(startIndex, block)
+
     case BitwayMessage(currency, None, None, None, Some(res), None) =>
       if (res.addresses.size > 0)
         manager.syncHotAddresses(Set.empty[CryptoAddress] ++ res.addresses)
+
     case BitwayMessage(currency, None, None, None, None, Some(res)) =>
       manager.syncPrivateKeys(res.addresses.toList)
+
     case CleanBlockChain(currency) =>
       manager.cleanBlockChain()
+
     case DoRequestTransfer(_, _) =>
+
     case e => println("bitway updateState doesn't handle the message: ", e)
   }
 }

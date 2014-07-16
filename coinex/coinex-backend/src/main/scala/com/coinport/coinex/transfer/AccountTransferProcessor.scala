@@ -203,12 +203,17 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
 
   private def deliverToAccountManager(event: Any) = {
     log.info(s">>>>>>>>>>>>>>>>>>>>> deliverToAccountManager => event = ${event.toString}")
-    channelToAccountProcessor ! Deliver(Persistent(event), accountProcessorPath)
+    if (!recoveryRunning) {
+      channelToAccountProcessor ! Deliver(Persistent(event), accountProcessorPath)
+    }
   }
 
   private def deliverToBitwayProcessor(currency: Currency, event: Any) = {
     log.info(s">>>>>>>>>>>>>>>>>>>>> deliverToBitwayProcessor => currency = ${currency.toString}, event = ${event.toString}, path = ${bitwayProcessors(currency).path.toString}")
-    bitwayChannels(currency) ! Deliver(Persistent(event), bitwayProcessors(currency).path)
+
+    if (!recoveryRunning) {
+      bitwayChannels(currency) ! Deliver(Persistent(event), bitwayProcessors(currency).path)
+    }
   }
 }
 

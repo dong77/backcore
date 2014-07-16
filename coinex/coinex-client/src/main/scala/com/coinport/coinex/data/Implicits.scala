@@ -84,7 +84,6 @@ class RichOrder(raw: Order) {
       case Some(limit) if limit <= 0 => 0
       case Some(limit) if limit > 0 && limit < price.value * quantity => limit
       case _ =>
-        // this check ensure that the amount couldn't buyed definately be a dust in future check
         val rounded = Math.round(quantity * price.value)
         if ((price.reciprocal.value * rounded).toLong > quantity) rounded.toLong - 1 else rounded.toLong
     }

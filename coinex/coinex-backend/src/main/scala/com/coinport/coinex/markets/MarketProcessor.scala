@@ -51,16 +51,22 @@ class MarketProcessor(
     case DoCancelOrder(_, orderId, userId) =>
       val (side, order) = manager.removeOrder(orderId, userId)
       val cancelled = OrderCancelled(side, order)
-      channelToAccountProcessor forward Deliver(Persistent(cancelled), accountProcessorPath)
+      if (!recoveryRunning) {
+        channelToAccountProcessor forward Deliver(Persistent(cancelled), accountProcessorPath)
+      }
 
     case OrderFundFrozen(side, order: Order) =>
       if (!manager.isOrderPriceInGoodRange(side, order.price)) {
         sender ! SubmitOrderFailed(side, order, PriceOutOfRange)
         val unfrozen = OrderCancelled(side, order)
-        channelToAccountProcessor forward Deliver(Persistent(unfrozen), accountProcessorPath)
+        if (!recoveryRunning) {
+          channelToAccountProcessor forward Deliver(Persistent(unfrozen), accountProcessorPath)
+        }
       } else {
         val orderSubmitted = manager.addOrderToMarket(side, order)
-        channelToAccountProcessor forward Deliver(Persistent(orderSubmitted), accountProcessorPath)
+        if (!recoveryRunning) {
+          channelToAccountProcessor forward Deliver(Persistent(orderSubmitted), accountProcessorPath)
+        }
       }
   }
 }
