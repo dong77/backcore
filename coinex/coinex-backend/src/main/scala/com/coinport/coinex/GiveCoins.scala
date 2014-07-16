@@ -35,7 +35,7 @@ object GiveCoins {
   private implicit val system = ActorSystem("coinex", config)
   private implicit val cluster = Cluster(system)
 
-  private val markets = Seq(Ltc ~> Btc, Doge ~> Btc, Bc ~> Btc, Drk ~> Btc, Vrc ~> Btc, Zet ~> Btc)
+  private val markets = Seq(Ltc ~> Btc, Doge ~> Btc, Bc ~> Btc, Drk ~> Btc, Vrc ~> Btc, Zet ~> Btc, Btsx ~> Btc)
   val routers = new LocalRouters(markets)
   val backend = system.actorOf(Props(new Coinex(routers)), name = "backend")
 

@@ -18,6 +18,8 @@ object Constants {
   val HOT_UID = -1L
   val COLD_UID = -2L
   val AGGREGATION_UID = -1000L
+  val FIRST_USER_ID = 1000000000
+  val NULL_USER_ID = 0
 
   // WARNING: use an enum somewhere else?
   val STOP_ORDER_ROBOT_TYPE = 1

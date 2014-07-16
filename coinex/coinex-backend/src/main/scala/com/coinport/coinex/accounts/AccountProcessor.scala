@@ -34,7 +34,6 @@ class AccountProcessor(
   override implicit val logger = log
 
   private val MAX_PRICE = 1E8.toDouble // 100000000.00000001 can be preserved by toDouble.
-  private val FIRST_USER_ID = 1000000000
 
   override val processorId = ACCOUNT_PROCESSOR <<
   val channelToMarketProcessors = createChannelTo(MARKET_PROCESSOR <<) // DO NOT CHANGE
@@ -86,11 +85,12 @@ class AccountProcessor(
 
     case DoRequestPayment(payment) =>
       val adjustment = CashAccount(payment.currency, -payment.amount, 0, 0)
-      if (payment.payer < FIRST_USER_ID || payment.payee < FIRST_USER_ID) {
+      if ((payment.payer != NULL_USER_ID && payment.payer < FIRST_USER_ID) ||
+        (payment.payee != NULL_USER_ID && payment.payee < FIRST_USER_ID)) {
         sender ! RequestPaymentResult(payment.currency, ErrorCode.InvalidUser)
       } else if (payment.amount <= 0) {
         sender ! RequestPaymentResult(payment.currency, ErrorCode.InvalidAmount)
-      } else if (!manager.canUpdateCashAccount(payment.payer, adjustment)) {
+      } else if (payment.payer != NULL_USER_ID && !manager.canUpdateCashAccount(payment.payer, adjustment)) {
         sender ! RequestPaymentResult(payment.currency, ErrorCode.InsufficientFund)
       } else {
         val updated = payment.copy(id = manager.getLastPaymentId(), created = Some(System.currentTimeMillis))
@@ -336,8 +336,10 @@ trait AccountManagerBehavior extends CountFeeSupport {
 
     case DoRequestPayment(payment) =>
       manager.setLastPaymentId(payment.id)
-      manager.updateCashAccount(payment.payer, CashAccount(payment.currency, -payment.amount, 0, 0))
-      manager.updateCashAccount(payment.payee, CashAccount(payment.currency, payment.amount, 0, 0))
+      if (payment.payer != NULL_USER_ID)
+        manager.updateCashAccount(payment.payer, CashAccount(payment.currency, -payment.amount, 0, 0))
+      if (payment.payee != NULL_USER_ID)
+        manager.updateCashAccount(payment.payee, CashAccount(payment.currency, payment.amount, 0, 0))
   }
 
   private def succeededTransfer(t: AccountTransfer) {

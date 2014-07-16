@@ -5,6 +5,7 @@
 
 package com.coinport.coinex.accounts
 
+import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.common.ExtendedView
 import akka.event.LoggingReceive
 import com.coinport.coinex.data._
@@ -80,8 +81,10 @@ class AssetView extends ExtendedView {
       }
 
     case Persistent(m: DoRequestPayment, _) =>
-      manager.updateAsset(m.payment.payer, m.payment.created.getOrElse(0), m.payment.currency, -m.payment.amount)
-      manager.updateAsset(m.payment.payee, m.payment.created.getOrElse(0), m.payment.currency, m.payment.amount)
+      if (m.payment.payer != NULL_USER_ID)
+        manager.updateAsset(m.payment.payer, m.payment.created.getOrElse(0), m.payment.currency, -m.payment.amount)
+      if (m.payment.payee != NULL_USER_ID)
+        manager.updateAsset(m.payment.payee, m.payment.created.getOrElse(0), m.payment.currency, m.payment.amount)
 
     case q: QueryAsset =>
       val start = Math.min(q.from, q.to)
