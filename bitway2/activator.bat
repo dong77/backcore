@@ -1,0 +1,1 @@
+../coinex/activator.bat
