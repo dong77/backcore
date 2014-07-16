@@ -317,7 +317,7 @@ var checkTxs_ = function(block, callback) {
                 ifATxBelongToAddr_(txs[i]);
                 ifATxUnspent_(txs[i]);
             }
-            if (height%50 == 0) {
+            if (height%1000 == 0) {
                writeFile_(function(errWrite, results) {
                    if (errWrite) {
                        console.log('errWrite: %j', errWrite);
