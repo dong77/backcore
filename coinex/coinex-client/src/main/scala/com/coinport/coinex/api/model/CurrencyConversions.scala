@@ -20,6 +20,9 @@ object CurrencyConversion {
     Bc -> 8,
     Vrc -> 8,
     Zet -> 8,
+    Btsx -> 8,
+    Nxt -> 8,
+    Qora -> 8,
     Cny -> 5,
     Usd -> 5
   )
@@ -37,7 +40,10 @@ object CurrencyConversion {
     Drk -> 2,
     Bc -> 3,
     Vrc -> 3,
-    Zet -> 3
+    Zet -> 3,
+    Btsx -> 8,
+    Nxt -> 8,
+    Qora -> 8
   )
 
   val priceDecimals = Map[MarketSide, Int](
@@ -48,6 +54,9 @@ object CurrencyConversion {
     Bc ~> Btc -> 8,
     Vrc ~> Btc -> 8,
     Zet ~> Btc -> 8,
+    Btsx ~> Btc -> 8,
+    Nxt ~> Btc -> 8,
+    Qora ~> Btc -> 8,
     Btc ~> Btc -> 1
   )
 

@@ -100,6 +100,10 @@ enum Currency {
     BC   = 1400
     VRC  = 1500
     ZET  = 1600
+    // 2-gen coins
+    BTSX = 2100
+    NXT  = 2200
+    QORA = 2210
 }
 
 enum OrderStatus {
