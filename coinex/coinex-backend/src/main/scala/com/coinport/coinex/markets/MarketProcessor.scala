@@ -34,8 +34,10 @@ class MarketProcessor(
     case m @ DoCancelOrder(_, orderId, userId) =>
       manager.getOrderMarketSide(orderId, userId) match {
         case Some(side) =>
-          persist(m.copy(side = side))(updateState)
-          assert(manager.getOrderMarketSide(orderId, userId).isEmpty)
+          persist(m.copy(side = side)) { event =>
+            updateState(event)
+            assert(manager.getOrderMarketSide(orderId, userId).isEmpty)
+          }
         case None => sender ! CancelOrderFailed(OrderNotExist)
       }
 
