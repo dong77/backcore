@@ -56,7 +56,7 @@ class AccountProcessor(
   def receiveRecover = PartialFunction.empty[Any, Unit]
 
   def receiveCommand = LoggingReceive {
-    case DoRequestTransfer(t, _) => t.`type` match {
+    case DoRequestTransfer(t, _, _) => t.`type` match {
       case Withdrawal =>
         val adjustment = CashAccount(t.currency, -t.amount, 0, t.amount)
         if (!manager.canUpdateCashAccount(t.userId, adjustment)) {
@@ -266,14 +266,14 @@ trait AccountManagerBehavior extends CountFeeSupport {
         CashAccount(Currency.Cny, amount, 0, 0))
     }
 
-    case DoRequestTransfer(t, _) =>
+    case DoRequestTransfer(t, _, _) =>
       t.`type` match {
         case Withdrawal =>
           manager.updateCashAccount(t.userId, CashAccount(t.currency, -t.amount, 0, t.amount))
         case _ =>
       }
 
-    case AdminConfirmTransferSuccess(t, _) =>
+    case AdminConfirmTransferSuccess(t, _, _) =>
       succeededTransfer(t)
 
     case AdminConfirmTransferFailure(t, _) =>

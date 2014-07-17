@@ -629,3 +629,7 @@ struct Notification {
     7: i64 updated
     8: Language lang
 }
+
+struct TransferConfig {
+    1: optional set<Currency> manualCurrency
+}

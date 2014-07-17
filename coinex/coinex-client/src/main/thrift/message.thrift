@@ -57,6 +57,7 @@ typedef data.TFeeConfig                         _TFeeConfig
 typedef data.Language                           _Language
 typedef data.ReferralParams                     _ReferralParams
 typedef data.Payment                            _Payment
+typedef data.TransferConfig                     _TransferConfig
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -135,7 +136,7 @@ typedef data.Payment                            _Payment
 /* C,P  */ struct DoRequestPayment                        {1: _Payment payment}
 /* R    */ struct RequestPaymentResult                    {1: _Currency currency, 2: _ErrorCode error}
 
-/* C,P  */ struct DoRequestTransfer                       {1: _AccountTransfer transfer, 2: optional bool transferDebug}
+/* C,P  */ struct DoRequestTransfer                       {1: _AccountTransfer transfer, 2: optional bool transferDebug, 3: optional _TransferConfig transferConfig}
 /* R-   */ struct RequestTransferFailed                   {1: _ErrorCode error}
 /* R+   */ struct RequestTransferSucceeded                {1: _AccountTransfer transfer}
 
@@ -145,7 +146,7 @@ typedef data.Payment                            _Payment
 
 /* C,P  */ struct DoCancelTransfer                        {1: _AccountTransfer transfer}
 /* C,P  */ struct AdminConfirmTransferFailure             {1: _AccountTransfer transfer, 2:_ErrorCode error}
-/* C,P  */ struct AdminConfirmTransferSuccess             {1: _AccountTransfer transfer, 2: optional bool transferDebug}
+/* C,P  */ struct AdminConfirmTransferSuccess             {1: _AccountTransfer transfer, 2: optional bool transferDebug, 3: optional _TransferConfig transferConfig}
 
 /* C,P  */ struct DoRequestGenerateABCode                 {1: i64 userId, 2: i64 amount, 3: optional string a, 4: optional string b}
 /* R-   */ struct RequestGenerateABCodeFailed             {1: _ErrorCode error}

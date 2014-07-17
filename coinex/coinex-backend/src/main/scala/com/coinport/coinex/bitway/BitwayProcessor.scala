@@ -231,7 +231,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       } else {
         log.error("error occur when sync private keys: " + res)
       }
-    case m @ DoRequestTransfer(t, _) =>
+    case m @ DoRequestTransfer(t, _, _) =>
       persist(m) {
         event =>
           updateState(event)
@@ -397,7 +397,7 @@ trait BitwayManagerBehavior {
     case CleanBlockChain(currency) =>
       manager.cleanBlockChain()
 
-    case DoRequestTransfer(_, _) =>
+    case DoRequestTransfer(_, _, _) =>
 
     case e => println("bitway updateState doesn't handle the message: ", e)
   }

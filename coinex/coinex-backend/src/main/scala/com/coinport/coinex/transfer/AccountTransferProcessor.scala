@@ -28,6 +28,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   implicit val manager = new AccountTransferManager()
   val accountTransferConfig = loadConfig(context.system.settings.config.getString("akka.exchange.transfer-path"))
   val transferDebugConfig: Boolean = accountTransferConfig.transferDebug
+  val transferConfig = TransferConfig(manualCurrency = Some(accountTransferConfig.manualCurrency))
   private val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
   private val bitwayChannels = bitwayProcessors.map(kv => kv._1 -> createChannelTo(BITWAY_PROCESSOR << kv._1))
 
@@ -52,28 +53,30 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   def receiveRecover = PartialFunction.empty[Any, Unit]
 
   def receiveCommand = LoggingReceive {
-    case p @ ConfirmablePersistent(DoRequestTransfer(w, _), _, _) =>
-      persist(DoRequestTransfer(w.copy(id = manager.getTransferId, updated = w.created), transferDebug = Some(transferDebugConfig))) {
-        event =>
-          confirm(p)
-          updateState(event)
-          if (isCryptoCurrency(w.currency) && !transferDebugConfig) {
-            w.`type` match {
-              case TransferType.Deposit =>
-                sender ! RequestTransferFailed(UnsupportTransferType)
-              case TransferType.UserToHot =>
-                sender ! RequestTransferFailed(UnsupportTransferType)
-              case TransferType.Withdrawal => // accept wait for admin accept
-                sender ! RequestTransferSucceeded(event.transfer) // wait for admin confirm
-              case TransferType.ColdToHot => // accept, wait for admin confirm
-              case TransferType.HotToCold => // accept, save request to map
-              case TransferType.Unknown => // accept wait for admin accept
-                sender ! RequestTransferFailed(UnsupportTransferType)
-            }
-            sendBitwayMsg(w.currency)
-          } else { // No need to send message, as accountProcessor will ignore it, just for integration test
-            sender ! RequestTransferSucceeded(event.transfer) // wait for admin confirm
-          }
+    case p @ ConfirmablePersistent(DoRequestTransfer(w, _, _), _, _) =>
+      confirm(p)
+      val msg = DoRequestTransfer(w.copy(id = manager.getTransferId, updated = w.created), transferDebug = Some(transferDebugConfig), Some(transferConfig))
+      if (isTransferByBitway(w.currency, msg.transferConfig) && !transferDebugConfig) {
+        w.`type` match {
+          case TransferType.Deposit =>
+            sender ! RequestTransferFailed(UnsupportTransferType)
+          case TransferType.UserToHot =>
+            sender ! RequestTransferFailed(UnsupportTransferType)
+          case TransferType.Withdrawal => // accept wait for admin accept
+            handleTransfer(msg)
+            sender ! RequestTransferSucceeded(msg.transfer) // wait for admin confirm
+          case TransferType.ColdToHot => // accept, wait for admin confirm
+            handleTransfer(msg)
+          case TransferType.HotToCold => // accept, save request to map
+            handleTransfer(msg)
+            sendBitwayMsg(msg.transfer.currency)
+          case TransferType.Unknown => // accept wait for admin accept
+            handleTransfer(msg)
+            sender ! RequestTransferFailed(UnsupportTransferType)
+        }
+      } else { // No need to send message, as accountProcessor will ignore it, just for integration test
+        handleTransfer(msg)
+        sender ! RequestTransferSucceeded(msg.transfer) // wait for admin confirm
       }
 
     case AdminConfirmTransferFailure(t, error) =>
@@ -112,15 +115,15 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
         case None => sender ! AdminCommandResult(TransferNotExist)
       }
 
-    case AdminConfirmTransferSuccess(t, _) =>
+    case AdminConfirmTransferSuccess(t, _, _) =>
       transferHandler.get(t.id) match {
         case Some(transfer) if transfer.status == Pending || transfer.status == HotInsufficient =>
-          if (isCryptoCurrency(transfer.currency) && !transferDebugConfig) {
+          if (isTransferByBitway(transfer.currency, Some(transferConfig)) && !transferDebugConfig) {
             transfer.`type` match {
               case TransferType.Deposit => sender ! RequestTransferFailed(UnsupportTransferType)
               case TransferType.Withdrawal if transfer.address.isDefined =>
                 val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Accepted)
-                persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig))) {
+                persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {
                   event =>
                     updateState(event)
                     sendBitwayMsg(updated.currency)
@@ -128,7 +131,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                 }
               case TransferType.ColdToHot =>
                 val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Accepted)
-                persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig))) {
+                persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {
                   event =>
                     updateState(event)
                     sender ! AdminCommandResult(Ok)
@@ -138,7 +141,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
             }
           } else {
             val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Succeeded)
-            persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig))) {
+            persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {
               event =>
                 deliverToAccountManager(event)
                 updateState(event)
@@ -185,6 +188,13 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
             sendAccountMsg(event.currency)
         }
       }
+  }
+
+  private def handleTransfer(msg: DoRequestTransfer) {
+    persist(msg) {
+      event =>
+        updateState(event)
+    }
   }
 
   private def sendBitwayMsg(currency: Currency) {

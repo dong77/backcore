@@ -23,8 +23,8 @@ trait AccountTransferBehavior {
     this.succeededRetainNum ++= succeededRetainNum
   }
 
-  def isCryptoCurrency(currency: Currency): Boolean = {
-    currency.value >= Currency.Btc.value
+  def isTransferByBitway(currency: Currency, transferConfig: Option[TransferConfig]): Boolean = {
+    currency.value >= Currency.Btc.value && (transferConfig.isEmpty || !(transferConfig.get.manualCurrency.getOrElse(Set.empty[Currency]).contains(currency)))
   }
 
   def intTransferHandlerObjectMap() {
@@ -40,8 +40,8 @@ trait AccountTransferBehavior {
 
   def updateState: Receive = {
 
-    case DoRequestTransfer(t, transferDebug) =>
-      if (isCryptoCurrency(t.currency) && !(transferDebug.isDefined && transferDebug.get)) {
+    case DoRequestTransfer(t, transferDebug, transferConfig) =>
+      if (isTransferByBitway(t.currency, transferConfig) && !(transferDebug.isDefined && transferDebug.get)) {
         t.`type` match {
           case TransferType.Deposit => //Do nothing
           case TransferType.UserToHot =>
@@ -66,8 +66,8 @@ trait AccountTransferBehavior {
 
     case DoCancelTransfer(t) => transferHandler.put(t)
 
-    case AdminConfirmTransferSuccess(t, transferDebug) => {
-      if (isCryptoCurrency(t.currency) && !(transferDebug.isDefined && transferDebug.get)) {
+    case AdminConfirmTransferSuccess(t, transferDebug, transferConfig) => {
+      if (isTransferByBitway(t.currency, transferConfig) && !(transferDebug.isDefined && transferDebug.get)) {
         t.`type` match {
           case TransferType.Withdrawal =>
             val transferAmount = t.fee match {
