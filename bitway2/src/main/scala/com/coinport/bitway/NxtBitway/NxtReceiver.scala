@@ -10,7 +10,7 @@ import redis.clients.jedis.Jedis
 import com.coinport.coinex.serializers.ThriftBinarySerializer
 import com.coinport.coinex.data.{Currency, BitwayMessage}
 
-class NxtProcessorReceiver(config: BitwayConfig, sender: Actor) extends Actor with ActorLogging {
+class NxtReceiver(config: BitwayConfig) extends Actor with ActorLogging {
   val client = new Jedis(config.ip, config.port)
   val serializer = new ThriftBinarySerializer()
   val responseChannel = config.responseChannelPrefix + Currency.Nxt.value.toString
@@ -19,21 +19,23 @@ class NxtProcessorReceiver(config: BitwayConfig, sender: Actor) extends Actor wi
 
   override def preStart = {
     super.preStart
-    listenAtRedis(10)
+    sendMessageToSelf(10)
   }
 
   def receive = LoggingReceive {
     case ListenAtRedis =>
-      client.lpop(responseChannel) match {
-        case Some(s: Array[Byte]) =>
-          sender.sender() ! serializer.fromBinary(s, classOf[BitwayMessage.Immutable])
-          listenAtRedis()
-        case None =>
-          listenAtRedis(5)
-      }
+      println("bbbbbbbbbbbb")
+      sendMessageToSelf(1)
+//      client.lpop(responseChannel) match {
+//        case Some(s) =>
+//          sender.sender() ! serializer.fromBinary(s, classOf[BitwayMessage.Immutable])
+//          waitWhile()
+//        case None =>
+//          waitWhile(5)
+//      }
   }
 
-  private def listenAtRedis(timeout: Long = 0) {
+  private def sendMessageToSelf(timeout: Long = 0) {
     context.system.scheduler.scheduleOnce(timeout.seconds, self, ListenAtRedis)(context.system.dispatcher)
   }
 }
