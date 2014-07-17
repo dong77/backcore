@@ -11,6 +11,8 @@ object NxtBitway {
     val mongoClient = new NxtMongoDAO(mongocollection)
     val httpClient = new NxtHttpClient(targetUrl)
 
+    getAddress(10);
+
     def getAddress(addressNum: Int) = {
       val secretSeq = generateSecret(addressNum)
       val nxts = httpClient.getMultiAddresses(secretSeq)
