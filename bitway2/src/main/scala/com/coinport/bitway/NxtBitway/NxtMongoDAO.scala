@@ -5,6 +5,7 @@
 package com.coinport.bitway.NxtBitway
 
 import com.mongodb.casbah.Imports._
+import com.coinport.bitway.NxtBitway.model.NxtAddressModel
 
 class NxtMongoDAO(collection: MongoCollection) {
   val ACCOUNT_ID = "_id"

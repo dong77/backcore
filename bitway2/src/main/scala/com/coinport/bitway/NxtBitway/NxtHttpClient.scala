@@ -7,6 +7,7 @@ package com.coinport.bitway.NxtBitway
 import dispatch._
 import scala.util.parsing.json.JSON
 import scala.concurrent.ExecutionContext.Implicits.global
+import com.coinport.bitway.NxtBitway.model.NxtAddressModel
 
 class NxtHttpClient(targetUrl: String) {
   val REQUEST_TYPE = "requestType"
