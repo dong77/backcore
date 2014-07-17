@@ -14,11 +14,7 @@ import com.coinport.coinex.api.model.UserOrder
 import com.coinport.coinex.api.service.AccountService
 import com.coinport.coinex.api.service.MarketService
 import com.coinport.coinex.api.service.UserService
-import com.coinport.coinex.data.Currency.Bc
-import com.coinport.coinex.data.Currency.Btc
-import com.coinport.coinex.data.Currency.Doge
-import com.coinport.coinex.data.Currency.Drk
-import com.coinport.coinex.data.Currency.Ltc
+import com.coinport.coinex.data.Currency._
 import com.coinport.coinex.data.Implicits.currency2Rich
 import com.coinport.coinex.data.MarketSide
 
@@ -30,7 +26,7 @@ import dispatch.url
 
 class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpdateInterval: Long, adjustUserId: Long = 1000000000L) {
 
-  case class User(email: String, exchangeFrequency: Int = 5, takerPercentage: Int = 90, riskPercentage: Int = 10, buyPercentage: Int = 50)
+  case class User(email: String, exchangeFrequency: Int = 900, takerPercentage: Int = 90, riskPercentage: Int = 10, buyPercentage: Int = 50)
   case class DepthElem(price: Double, quantity: Double)
 
   var depthBuy: Map[MarketSide, List[DepthElem]] = Map.empty[MarketSide, List[DepthElem]]
@@ -186,13 +182,22 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
     }
   }
 
+  //  def initDefaultUser() {
+  //    userMap ++= Map(
+  //      1000000000L -> User("dong"),
+  //      1000000001L -> User("dong"),
+  //      1000000002L -> User("xiaolu"),
+  //      // 1000000001L -> User("dong3"))
+  //
+  //      1000000008L -> User("xiaolu"))
+  //  }
+
   def initDefaultUser() {
     userMap ++= Map(
-      1000000000L -> User("dong"),
-      1000000001L -> User("dong"),
-      1000000002L -> User("xiaolu"),
-      // 1000000001L -> User("dong3"))
 
+      1000000453L -> User("dong"),
+      1000000340L -> User("xiaolu"),
+      1000000004L -> User("chunming"),
       1000000008L -> User("xiaolu"))
   }
 
@@ -202,12 +207,12 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
       val a = f(0) match {
         case i: String => roundByMarketSide(i.toDouble, side)
         case i: Double => roundByMarketSide(i, side)
-        case _ => 0.0
+        case _         => 0.0
       }
       val b = f(1) match {
         case i: String => roundByMarketSide(i.toDouble, side)
         case i: Double => roundByMarketSide(i, side)
-        case _ => 0.0
+        case _         => 0.0
       }
       depthList = DepthElem(a, b) :: depthList
     }
@@ -216,19 +221,23 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
 
   def roundByMarketSide(src: Double, side: MarketSide) = {
     side match {
-      case MarketSide(Btc, Ltc) => roundDouble(src, 4)
+      case MarketSide(Btc, Ltc)  => roundDouble(src, 4)
       case MarketSide(Btc, Doge) => roundDouble(src, 8)
-      case MarketSide(Btc, Bc) => roundDouble(src, 8)
-      case MarketSide(Btc, Drk) => roundDouble(src, 6)
+      case MarketSide(Btc, Bc)   => roundDouble(src, 8)
+      case MarketSide(Btc, Drk)  => roundDouble(src, 6)
+      case MarketSide(Btc, Vrc)  => roundDouble(src, 8)
+      case MarketSide(Btc, Zet)  => roundDouble(src, 8)
     }
   }
 
   def quantityRoundByMarketSide(src: Double, side: MarketSide) = {
     side match {
-      case MarketSide(Btc, Ltc) => roundDouble(src, 4)
+      case MarketSide(Btc, Ltc)  => roundDouble(src, 4)
       case MarketSide(Btc, Doge) => roundDouble(src, 4)
-      case MarketSide(Btc, Bc) => roundDouble(src, 3)
-      case MarketSide(Btc, Drk) => roundDouble(src, 2)
+      case MarketSide(Btc, Bc)   => roundDouble(src, 3)
+      case MarketSide(Btc, Drk)  => roundDouble(src, 2)
+      case MarketSide(Btc, Vrc)  => roundDouble(src, 3)
+      case MarketSide(Btc, Zet)  => roundDouble(src, 3)
     }
   }
 
@@ -267,7 +276,7 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
         getAccount(uid, side._1.name.toUpperCase) map {
           q =>
             {
-              if (quantity * price > q * 0.1) quantity = quantityRoundByMarketSide(q * 0.1, side)
+              if (quantity * price > q * 0.1) quantity = quantityRoundByMarketSide(q * 0.1 / price, side)
               Some(UserOrder(uid.toString, operationsType, side._2.name, side._1.name, Some(price), Some(quantity), None))
             }
         }
@@ -306,7 +315,7 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
         getAccount(uid, side._1.name.toUpperCase) map {
           q =>
             {
-              if (quantity * price > q * 0.1) quantity = quantityRoundByMarketSide(q * 0.1, side)
+              if (quantity * price > q * 0.1) quantity = quantityRoundByMarketSide(q * 0.1 / price, side)
               Some(UserOrder(uid.toString, operationsType, side._2.name, side._1.name, Some(price), Some(quantity), None))
             }
         }
@@ -344,10 +353,12 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
 
   def randomQuantityBySide(side: MarketSide): Double = {
     side match {
-      case MarketSide(Btc, Ltc) => roundDouble(Random.nextDouble() / 5, 4)
+      case MarketSide(Btc, Ltc)  => roundDouble(Random.nextDouble() / 5, 4)
       case MarketSide(Btc, Doge) => roundDouble(Random.nextDouble() * 10000, 4)
-      case MarketSide(Btc, Bc) => roundDouble(Random.nextDouble() * 10, 3)
-      case MarketSide(Btc, Drk) => roundDouble(Random.nextDouble() / 5, 2)
+      case MarketSide(Btc, Bc)   => roundDouble(Random.nextDouble() * 10, 3)
+      case MarketSide(Btc, Drk)  => roundDouble(Random.nextDouble() / 5, 2)
+      case MarketSide(Btc, Vrc)  => roundDouble(Random.nextDouble() * 5, 3)
+      case MarketSide(Btc, Zet)  => roundDouble(Random.nextDouble() * 5, 3)
     }
   }
 
@@ -381,33 +392,49 @@ object AutoExchangeRobotExecutor {
       Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc",
       Btc ~> Doge -> "http://data.bter.com/api/1/depth/doge_btc",
       Btc ~> Bc -> "http://data.bter.com/api/1/depth/bc_btc",
-      Btc ~> Drk -> "http://data.bter.com/api/1/depth/drk_btc")
+      Btc ~> Drk -> "http://data.bter.com/api/1/depth/drk_btc",
+      Btc ~> Vrc -> "http://data.bter.com/api/1/depth/vrc_btc",
+      Btc ~> Zet -> "http://data.bter.com/api/1/depth/zet_btc")
     val executor = new AutoExchangeRobotExecutor(marketUrlMap, 10000)
     executor.startExecutor
   }
 
   def start() {
-    val marketUrlMap: Map[MarketSide, String] = Map(Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc", Btc ~> Doge -> "http://data.bter.com/api/1/depth/doge_btc")
+    val marketUrlMap: Map[MarketSide, String] = Map(
+      Btc ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_btc",
+      Btc ~> Doge -> "http://data.bter.com/api/1/depth/doge_btc",
+      Btc ~> Bc -> "http://data.bter.com/api/1/depth/bc_btc",
+      Btc ~> Drk -> "http://data.bter.com/api/1/depth/drk_btc",
+      Btc ~> Vrc -> "http://data.bter.com/api/1/depth/vrc_btc",
+      Btc ~> Zet -> "http://data.bter.com/api/1/depth/zet_btc")
     val executor = new AutoExchangeRobotExecutor(marketUrlMap, 10000)
     executor.startExecutor
   }
 
   def deposit() {
-    val user1 = User(1000001001L, "xiaolu@coinport.com", None, "123456")
-    val user2 = User(1000002001L, "jaice_229@163.com", None, "123456")
-    val user3 = User(1000003001L, "mmmmmagina@163.com", None, "123456")
-    UserService.register(user1)
-    UserService.register(user2)
-    UserService.register(user3)
-    Thread.sleep(1000)
-    AccountService.deposit(1000000000L, Btc, 0.3300)
-    AccountService.deposit(1000000000L, Ltc, 19.0000)
-    AccountService.deposit(1000000000L, Doge, 99.0000)
-    AccountService.deposit(1000000001L, Btc, 0.0017)
-    AccountService.deposit(1000000001L, Ltc, 0.3752)
-    AccountService.deposit(1000000001L, Doge, 4123.9800)
-    AccountService.deposit(1000000002L, Bc, 50)
-    AccountService.deposit(1000000002L, Drk, 50)
+    //    val user1 = User(1000001001L, "xiaolu@coinport.com", None, "123456")
+    //    val user2 = User(1000002001L, "jaice_229@163.com", None, "123456")
+    //    val user3 = User(1000003001L, "mmmmmagina@163.com", None, "123456")
+    //    UserService.register(user1)
+    //    UserService.register(user2)
+    //    UserService.register(user3)
+    //    Thread.sleep(1000)
+    AccountService.deposit(1000000000L, Btc, 1000.0)
+    AccountService.deposit(1000000000L, Ltc, 1900)
+    AccountService.deposit(1000000000L, Doge, 100000000.0)
+    AccountService.deposit(1000000000L, Zet, 100000000.0)
+    AccountService.deposit(1000000000L, Vrc, 100000000.0)
+    AccountService.deposit(1000000001L, Btc, 1000.0)
+    AccountService.deposit(1000000001L, Ltc, 3752)
+    AccountService.deposit(1000000001L, Doge, 100000000.0)
+    AccountService.deposit(1000000001L, Zet, 100000000.0)
+    AccountService.deposit(1000000001L, Vrc, 100000000.0)
+    AccountService.deposit(1000000002L, Btc, 1000.0)
+    AccountService.deposit(1000000002L, Bc, 5000)
+    AccountService.deposit(1000000002L, Drk, 5000)
+    AccountService.deposit(1000000002L, Doge, 100000000.0)
+    AccountService.deposit(1000000002L, Zet, 100000000.0)
+    AccountService.deposit(1000000002L, Vrc, 100000000.0)
   }
 
 }
