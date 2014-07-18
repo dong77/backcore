@@ -1,4 +1,4 @@
-package com.coinport.bitway.NxtBitway
+package com.coinport.bitway.NxtBitway.actor
 
 /**
  * Created by chenxi on 7/17/14.
@@ -12,8 +12,9 @@ import com.coinport.coinex.serializers.ThriftBinarySerializer
 import com.coinport.coinex.data.{BitwayMessage, BitwayRequest, Currency}
 import com.coinport.coinex.data.BitwayRequestType._
 import com.coinport.bitway.NxtBitway.processor.NxtProcessor
+import com.coinport.bitway.NxtBitway.{ListenAtRedis, BitwayConfig}
 
-class NxtReceiver(processor: NxtProcessor, config: BitwayConfig) extends Actor with ActorLogging {
+class NxtActor(processor: NxtProcessor, config: BitwayConfig) extends Actor with ActorLogging {
   val client = new RedisClient(config.ip, config.port)
   val serializer = new ThriftBinarySerializer()
 

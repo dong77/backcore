@@ -4,6 +4,7 @@ import scala.util.Random
 import com.coinport.bitway.NxtBitway.mongo.NxtMongoDAO
 import com.coinport.bitway.NxtBitway.http.NxtHttpClient
 import com.coinport.coinex.data._
+import com.coinport.bitway.NxtBitway.model.NxtAddressModel
 
 /**
  * Created by chenxi on 7/18/14.
@@ -15,7 +16,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient) {
     val nxts = nxtHttp.getMultiAddresses(secretSeq, CryptoCurrencyAddressType.Unused)
     nxtMongo.insertAddresses(nxts)
 
-    val gar = GenerateAddressesResult(ErrorCode.Ok, Some(nxts.map(nxt => CryptoAddress(nxt.accountId, Option(nxt.secret))).toSet))
+    val gar = GenerateAddressesResult(ErrorCode.Ok, Some(nxts.map(nxt2CrpytoAddress).toSet))
     BitwayMessage(
       currency = Currency.Nxt,
       generateAddressResponse = Some(gar)
@@ -23,7 +24,13 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient) {
   }
 
   def syncHotAddresses(sync: SyncHotAddresses) = {
-    nxtMongo.queryByTypes(CryptoCurrencyAddressType.Hot)
+    val nxts = nxtMongo.queryByTypes(CryptoCurrencyAddressType.Hot)
+
+    val shar = SyncHotAddressesResult(ErrorCode.Ok, nxts.map(nxt2CrpytoAddress).toSet)
+    BitwayMessage(
+      currency = Currency.Nxt,
+      syncHotAddressesResult = Some(shar)
+    )
   }
 
   private def generateSecret(addressNum: Int): Seq[String] = {
@@ -35,4 +42,6 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient) {
         System.currentTimeMillis() + "%%%" + rand.nextString(10)
     }.toSeq
   }
+
+  private def nxt2CrpytoAddress(nxt: NxtAddressModel) = CryptoAddress(nxt.accountId, Some(nxt.secret), Some(nxt.accountRS))
 }

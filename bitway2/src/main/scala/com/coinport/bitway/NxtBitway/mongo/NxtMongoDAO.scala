@@ -21,7 +21,7 @@ class NxtMongoDAO(collection: MongoCollection) {
 
   def countAddress() = collection.count()
 
-  def queryByTypes(aType: CryptoCurrencyAddressType) = collection.find(MongoDBObject(TYPE -> aType))
+  def queryByTypes(aType: CryptoCurrencyAddressType) = collection.find(MongoDBObject(TYPE -> aType)).toSeq.map(toClass)
 
 
   private def toBson(nxt :NxtAddressModel): DBObject = {
@@ -35,7 +35,7 @@ class NxtMongoDAO(collection: MongoCollection) {
     )
   }
 
-  private def toClass(obj: MongoDBObject): DBObject = {
+  private def toClass(obj: DBObject): NxtAddressModel = {
     NxtAddressModel(
       accountId = obj.getAs[String](ACCOUNT_ID).get,
       accountRS = obj.getAs[String](ACCOUNT_RS).get,
