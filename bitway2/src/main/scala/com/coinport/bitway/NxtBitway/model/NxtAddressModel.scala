@@ -1,3 +1,12 @@
 package com.coinport.bitway.NxtBitway.model
 
-case class NxtAddressModel(accountId: String, accountRS: String, secret: String, publicKey: String, created: Long, updated: Long)
+import com.coinport.coinex.data.CryptoCurrencyAddressType
+
+case class NxtAddressModel(accountId: String,
+                           accountRS: String,
+                           secret: String,
+                           publicKey: String,
+                           addressType: CryptoCurrencyAddressType,
+                           created: Long,
+                           updated: Long)
+

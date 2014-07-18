@@ -33,11 +33,10 @@ class NxtReceiver(processor: NxtProcessor, config: BitwayConfig) extends Actor w
         case Some(s) =>
           val request = serializer.fromBinary(s, classOf[BitwayRequest.Immutable]).asInstanceOf[BitwayRequest]
           val message: BitwayMessage = request.`type` match {
-            case GenerateAddress =>
-              processor.getAddress(request.generateAddresses.get.num)
+            case GenerateAddress => processor.generateAddresses(request.generateAddresses.get)
             case MultiTransfer =>BitwayMessage(Currency.Nxt)
             case GetMissedBlocks =>BitwayMessage(Currency.Nxt)
-            case SyncHotAddresses =>BitwayMessage(Currency.Nxt)
+            case SyncHotAddresses => processor.syncHotAddresses(request.syncHotAddresses.get)
             case SyncPrivateKeys =>BitwayMessage(Currency.Nxt)
             case x => BitwayMessage(Currency.Nxt)
           }

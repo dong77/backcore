@@ -8,6 +8,7 @@ import dispatch._
 import scala.util.parsing.json.JSON
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.coinport.bitway.NxtBitway.model.NxtAddressModel
+import com.coinport.coinex.data.CryptoCurrencyAddressType
 
 class NxtHttpClient(targetUrl: String) {
   val REQUEST_TYPE = "requestType"
@@ -16,9 +17,9 @@ class NxtHttpClient(targetUrl: String) {
   val ACCOUNT_ID = "accountId"
   val ACCOUNT_RS = "accountRS"
 
-  def getMultiAddresses(secretList: Seq[String]): Seq[NxtAddressModel] = secretList.map(getSingleAddress)
+  def getMultiAddresses(secretList: Seq[String], addType: CryptoCurrencyAddressType): Seq[NxtAddressModel] = secretList.map(s => getSingleAddress(s, addType))
 
-  private def getSingleAddress(secret: String): NxtAddressModel = {
+  private def getSingleAddress(secret: String, addType: CryptoCurrencyAddressType): NxtAddressModel = {
     val queryMap = Map(SECRET_PHRASE -> secret)
     val json = JSON.parseFull(getHttpResult(GET_ACCOUNT_ID, queryMap)).get.asInstanceOf[Map[String, String]]
 
@@ -28,6 +29,7 @@ class NxtHttpClient(targetUrl: String) {
       accountRS = json.getOrElse(ACCOUNT_RS, ""),
       secret = secret,
       publicKey = "",
+      addressType = addType,
       created = System.currentTimeMillis(),
       updated = System.currentTimeMillis())
   }

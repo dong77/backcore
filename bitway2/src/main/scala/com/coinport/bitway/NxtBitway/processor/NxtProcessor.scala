@@ -10,9 +10,9 @@ import com.coinport.coinex.data._
  */
 class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient) {
 
-  def getAddress(addressNum: Int) = {
-    val secretSeq = generateSecret(addressNum)
-    val nxts = nxtHttp.getMultiAddresses(secretSeq)
+  def generateAddresses(gen: GenerateAddresses) = {
+    val secretSeq = generateSecret(gen.num)
+    val nxts = nxtHttp.getMultiAddresses(secretSeq, CryptoCurrencyAddressType.Unused)
     nxtMongo.insertAddresses(nxts)
 
     val gar = GenerateAddressesResult(ErrorCode.Ok, Some(nxts.map(nxt => CryptoAddress(nxt.accountId, Option(nxt.secret))).toSet))
@@ -20,6 +20,10 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient) {
       currency = Currency.Nxt,
       generateAddressResponse = Some(gar)
     )
+  }
+
+  def syncHotAddresses(sync: SyncHotAddresses) = {
+    nxtMongo.queryByTypes(CryptoCurrencyAddressType.Hot)
   }
 
   private def generateSecret(addressNum: Int): Seq[String] = {
