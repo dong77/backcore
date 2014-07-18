@@ -30,6 +30,9 @@ class NxtActor(processor: NxtProcessor, config: BitwayConfig) extends Actor with
 
   def receive = LoggingReceive {
     case ListenAtRedis =>
+      processor.getNewBlock.map(m => client.rpush(responseChannel, serializer.toBinary(m)))
+      processor.getUnConfirmedTransaction.map(m => client.rpush(responseChannel, serializer.toBinary(m)))
+
       client.lpop(requestChannel) match {
         case Some(s) =>
           val request = serializer.fromBinary(s, classOf[BitwayRequest.Immutable]).asInstanceOf[BitwayRequest]
@@ -44,7 +47,7 @@ class NxtActor(processor: NxtProcessor, config: BitwayConfig) extends Actor with
           client.rpush(responseChannel, serializer.toBinary(message))
           sendMessageToSelf(0)
         case None =>
-          sendMessageToSelf(5)
+          sendMessageToSelf(1)
       }
   }
 

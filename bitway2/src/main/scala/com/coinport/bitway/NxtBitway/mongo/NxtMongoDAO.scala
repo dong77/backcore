@@ -5,7 +5,7 @@
 package com.coinport.bitway.NxtBitway.mongo
 
 import com.mongodb.casbah.Imports._
-import com.coinport.bitway.NxtBitway.model.NxtAddressModel
+import com.coinport.bitway.NxtBitway.model._
 import com.coinport.coinex.data.CryptoCurrencyAddressType
 
 class NxtMongoDAO(collection: MongoCollection) {
@@ -17,14 +17,14 @@ class NxtMongoDAO(collection: MongoCollection) {
   val UPDATED = "@u"
   val TYPE = "t"
 
-  def insertAddresses(nxts: Seq[NxtAddressModel]) = collection.insert(nxts.map(toBson): _*)
+  def insertAddresses(nxts: Seq[NxtAddress]) = collection.insert(nxts.map(toBson): _*)
 
   def countAddress() = collection.count()
 
   def queryByTypes(aType: CryptoCurrencyAddressType) = collection.find(MongoDBObject(TYPE -> aType)).toSeq.map(toClass)
 
 
-  private def toBson(nxt :NxtAddressModel): DBObject = {
+  private def toBson(nxt :NxtAddress) = {
     MongoDBObject(
       ACCOUNT_ID -> nxt.accountId,
       ACCOUNT_RS -> nxt.accountRS,
@@ -35,8 +35,8 @@ class NxtMongoDAO(collection: MongoCollection) {
     )
   }
 
-  private def toClass(obj: DBObject): NxtAddressModel = {
-    NxtAddressModel(
+  private def toClass(obj: DBObject) = {
+    NxtAddress(
       accountId = obj.getAs[String](ACCOUNT_ID).get,
       accountRS = obj.getAs[String](ACCOUNT_RS).get,
       secret = obj.getAs[String](SECRET).get,

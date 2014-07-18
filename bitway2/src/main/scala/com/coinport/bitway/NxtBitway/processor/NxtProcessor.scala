@@ -4,7 +4,7 @@ import scala.util.Random
 import com.coinport.bitway.NxtBitway.mongo.NxtMongoDAO
 import com.coinport.bitway.NxtBitway.http.NxtHttpClient
 import com.coinport.coinex.data._
-import com.coinport.bitway.NxtBitway.model.NxtAddressModel
+import com.coinport.bitway.NxtBitway.model._
 
 /**
  * Created by chenxi on 7/18/14.
@@ -33,6 +33,14 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient) {
     )
   }
 
+  def getNewBlock: Option[BitwayMessage] = {
+    None
+  }
+
+  def getUnConfirmedTransaction: Option[BitwayMessage] = {
+    None
+  }
+
   private def generateSecret(addressNum: Int): Seq[String] = {
     val rand = new Random()
     val count = nxtMongo.countAddress()
@@ -43,5 +51,5 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient) {
     }.toSeq
   }
 
-  private def nxt2CrpytoAddress(nxt: NxtAddressModel) = CryptoAddress(nxt.accountId, Some(nxt.secret), Some(nxt.accountRS))
+  private def nxt2CrpytoAddress(nxt: NxtAddress) = CryptoAddress(nxt.accountId, Some(nxt.secret), Some(nxt.accountRS))
 }
