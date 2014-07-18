@@ -540,6 +540,7 @@ struct AddressStatusResult {
 struct CryptoAddress {
     1: string address
     2: optional string privateKey
+    3: optional string nxtRsAddress
 }
 
 struct TAddressStatus {
