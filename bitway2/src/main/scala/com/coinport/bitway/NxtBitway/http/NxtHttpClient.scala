@@ -2,7 +2,7 @@
  * Created by chenxi on 7/16/14.
  */
 
-package com.coinport.bitway.NxtBitway
+package com.coinport.bitway.NxtBitway.http
 
 import dispatch._
 import scala.util.parsing.json.JSON

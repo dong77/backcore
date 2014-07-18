@@ -12,11 +12,11 @@ resolvers ++= Seq(
 
 libraryDependencies ++= {
   Seq(
-	"com.typesafe.akka"		%% "akka-actor"		% "2.3.3",
-	"redis.clients"			% "jedis"		% "2.4.2",
+	"com.typesafe.akka"   %% "akka-actor"       % "2.3.3",
+  "net.debasishg"       % "redisclient_2.10"  % "2.12",
 	"net.databinder.dispatch" 	%% "dispatch-core" 	% "0.11.1",
-        "org.mongodb" 			%% "casbah" 		% "2.6.5",
-	"com.coinport"         		%% "coinex-client"	% "1.1.32-SNAPSHOT",
-	"org.scalatest" 		%% "scalatest" 		% "2.0" 	% "test"
+  "org.mongodb" 			  %% "casbah" 		      % "2.6.5",
+	"com.coinport"        %% "coinex-client"	  % "1.1.32-SNAPSHOT",
+	"org.scalatest" 		  %% "scalatest" 		    % "2.0" 	% "test"
   )
 }

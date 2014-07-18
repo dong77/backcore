@@ -2,7 +2,7 @@
  * Created by chenxi on 7/16/14.
  */
 
-package com.coinport.bitway.NxtBitway
+package com.coinport.bitway.NxtBitway.mongo
 
 import com.mongodb.casbah.Imports._
 import com.coinport.bitway.NxtBitway.model.NxtAddressModel
