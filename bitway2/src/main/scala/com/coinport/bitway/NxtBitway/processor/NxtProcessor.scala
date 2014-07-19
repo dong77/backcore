@@ -115,7 +115,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     CryptoCurrencyTransaction(
               sigId = Some(tx.fullHash),
               txid = Some(tx.transactionId),
-              ids = redis.get(tx.transactionId),
+              ids = Some(Seq(redis.get(tx.transactionId).getOrElse("0").toLong)),
               inputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.recipientId, nxtRsAddress = Some(tx.recipientRS)))),
               outputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.senderId, nxtRsAddress = Some(tx.senderRS)))),
               status = TransferStatus.Accepted

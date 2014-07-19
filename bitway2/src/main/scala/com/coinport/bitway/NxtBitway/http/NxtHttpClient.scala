@@ -30,8 +30,12 @@ class NxtHttpClient(targetUrl: String) {
     val queryMap = Map.empty[String, String]
     val json = JSON.parseFull(getHttpResult("getBlock", queryMap)).get.asInstanceOf[Map[String, String]]
 
+    val jsonTXs = json.getOrElse("lastBlock", "[]").asInstanceOf[Seq[String]]
+    val txs = jsonTXs.map(getTransaction)
+
     NxtBlock(
-      transactionIds = getIds(json.getOrElse("lastBlock", "[]")),
+      blockId = blockId,
+      txs = txs,
       nextBlock = json.getOrElse("lastBlock", "0"),
       previousBlock = json.getOrElse("previousBlock", "0"),
       timestamp = json.getOrElse("time", "0").toInt,
