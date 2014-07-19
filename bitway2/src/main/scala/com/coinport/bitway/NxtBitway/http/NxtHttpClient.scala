@@ -13,7 +13,23 @@ import dispatch.Req
 
 class NxtHttpClient(targetUrl: String) {
   def getMultiAddresses(secretList: Seq[String], addType: CryptoCurrencyAddressType) =
-    secretList.map(s => getSingleAddress(s, addType))
+    secretList.map(s => getAddress(s, addType))
+
+  def getAddress(secret: String, addType: CryptoCurrencyAddressType): NxtAddress = {
+    val queryMap = Map("secretPhrase" -> secret)
+    val json = JSON.parseFull(getHttpResult("getAccountId", queryMap)).get.asInstanceOf[Map[String, String]]
+
+    //todo(xichen): decode the secret
+    NxtAddress(
+      accountId = json.getOrElse("accountId", ""),
+      accountRS = json.getOrElse("accountRS", ""),
+      secret = secret,
+      publicKey = "",
+      addressType = addType,
+      created = System.currentTimeMillis(),
+      updated = System.currentTimeMillis())
+  }
+
 
   def getBlockChainStatus() = {
     val queryMap = Map.empty[String, String]
@@ -69,21 +85,6 @@ class NxtHttpClient(targetUrl: String) {
 
     val trans = json.getOrElse("unconfirmedTransactionIds", "[]").asInstanceOf[Seq[String]]
     trans.map(tran => getTransaction(tran))
-  }
-
-  private def getSingleAddress(secret: String, addType: CryptoCurrencyAddressType): NxtAddress = {
-    val queryMap = Map("secretPhrase" -> secret)
-    val json = JSON.parseFull(getHttpResult("getAccountId", queryMap)).get.asInstanceOf[Map[String, String]]
-
-    //todo(xichen): decode the secret
-    NxtAddress(
-      accountId = json.getOrElse("accountId", ""),
-      accountRS = json.getOrElse("accountRS", ""),
-      secret = secret,
-      publicKey = "",
-      addressType = addType,
-      created = System.currentTimeMillis(),
-      updated = System.currentTimeMillis())
   }
 
   private def getHttpResult(commend: String, map: Map[String, String]): String = {

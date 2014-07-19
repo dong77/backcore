@@ -11,9 +11,13 @@ import com.redis.RedisClient
 /**
  * Created by chenxi on 7/18/14.
  */
+
 class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisClient) {
   val txsSet = Set.empty[String]
   var lastIndex = Currency.Nxt.toString + "last_index"
+  val HotAccount = getOrGenerateHotAccount
+
+  def getRedisClient = redis
 
   def generateAddresses(gen: GenerateAddresses) = {
     val secretSeq = generateSecret(gen.num)
@@ -85,8 +89,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
       txs2 = txs2.filter(tx => senderIds.contains(tx.senderId) && recipientIds.contains(tx.recipientId))
 
       // model to thrift
-      txs2.map {
-        tx =>
+      txs2.map { tx =>
           BitwayMessage(
             currency = Nxt,
             tx = Some(nxtTransaction2Thrift(tx))
@@ -95,8 +98,12 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     }
   }
 
-  def sendMoney() = {
+  def sendMoney(transfer: TransferCryptoCurrency) = {
+    BitwayMessage(Nxt)
+  }
 
+  def multiSendMoney(transfers: MultiTransferCryptoCurrency) = {
+    BitwayMessage(Nxt)
   }
 
   private def generateSecret(addressNum: Int): Seq[String] = {
@@ -108,6 +115,17 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
         System.currentTimeMillis() + "%%%" + rand.nextString(10)
     }.toSeq
   }
+
+  private def getOrGenerateHotAccount: NxtAddress = {
+    val hotAddr = nxtMongo.queryOneByTypes(CryptoCurrencyAddressType.Hot)
+    if (!hotAddr.isDefined) {
+      val secret = generateSecret(1)(0)
+      val addr = nxtHttp.getAddress(secret, CryptoCurrencyAddressType.Hot)
+      nxtMongo.insertAddresses(Seq(addr))
+      addr
+    } else hotAddr.get
+  }
+
 
   private def nxtAddress2Thrift(nxt: NxtAddress) = CryptoAddress(nxt.accountId, Some(nxt.secret), Some(nxt.accountRS))
   
@@ -121,5 +139,4 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
               status = TransferStatus.Accepted
             )
   }
-  
 }

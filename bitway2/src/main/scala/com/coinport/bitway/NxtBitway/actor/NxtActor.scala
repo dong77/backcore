@@ -15,7 +15,7 @@ import com.coinport.bitway.NxtBitway.processor.NxtProcessor
 import com.coinport.bitway.NxtBitway.{ListenAtRedis, BitwayConfig}
 
 class NxtActor(processor: NxtProcessor, config: BitwayConfig) extends Actor with ActorLogging {
-  val client = new RedisClient(config.ip, config.port)
+  val client = processor.getRedisClient
   val serializer = new ThriftBinarySerializer()
 
   val responseChannel = config.responseChannelPrefix + Currency.Nxt.value.toString
@@ -38,8 +38,8 @@ class NxtActor(processor: NxtProcessor, config: BitwayConfig) extends Actor with
           val request = serializer.fromBinary(s, classOf[BitwayRequest.Immutable]).asInstanceOf[BitwayRequest]
           val message: Option[BitwayMessage] = request.`type` match {
             case GenerateAddress => Some(processor.generateAddresses(request.generateAddresses.get))
-            case Transfer => None
-            case MultiTransfer => None
+            case Transfer => Some(processor.sendMoney(request.transferCryptoCurrency.get))
+            case MultiTransfer => Some(processor.multiSendMoney(request.multiTransferCryptoCurrency.get))
             case GetMissedBlocks => None
             case SyncHotAddresses => Some(processor.syncHotAddresses(request.syncHotAddresses.get))
             case SyncPrivateKeys => None
