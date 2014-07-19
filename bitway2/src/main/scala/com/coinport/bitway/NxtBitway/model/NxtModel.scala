@@ -16,15 +16,9 @@ case class NxtBlockStatus(
                            lastBlockId: String,
                            timestamp: Long)
 
-case class NxtBlock(
-                     transactionIds: Seq[String],
-                     nextBlock: String,
-                     previousBlock: String,
-                     timestamp: Long,
-                     height: Long)
-
 case class NxtTransaction(
                            transactionId: String,
+                           fullHash: String,
                            senderId: String,
                            senderRS: String,
                            recipientId: String,
@@ -36,3 +30,12 @@ case class NxtTransaction(
                            deadline: Int,
                            subtype: Int,
                            confirms: Int)
+
+case class NxtBlock(
+                     blockId: String,
+                     txs: Seq[NxtTransaction],
+                     nextBlock: String,
+                     previousBlock: String,
+                     timestamp: Long,
+                     height: Long)
+

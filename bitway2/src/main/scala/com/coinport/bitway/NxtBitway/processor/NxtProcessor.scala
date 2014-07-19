@@ -4,41 +4,99 @@ import scala.util.Random
 import com.coinport.bitway.NxtBitway.mongo.NxtMongoDAO
 import com.coinport.bitway.NxtBitway.http.NxtHttpClient
 import com.coinport.coinex.data._
+import com.coinport.coinex.data.Currency.Nxt
 import com.coinport.bitway.NxtBitway.model._
+import com.redis.RedisClient
 
 /**
  * Created by chenxi on 7/18/14.
  */
-class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient) {
+class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisClient) {
+  val txsSet = Set.empty[String]
+  var lastIndex = Currency.Nxt.toString + "last_index"
 
   def generateAddresses(gen: GenerateAddresses) = {
     val secretSeq = generateSecret(gen.num)
     val nxts = nxtHttp.getMultiAddresses(secretSeq, CryptoCurrencyAddressType.Unused)
     nxtMongo.insertAddresses(nxts)
 
-    val gar = GenerateAddressesResult(ErrorCode.Ok, Some(nxts.map(nxt2CrpytoAddress).toSet))
     BitwayMessage(
-      currency = Currency.Nxt,
-      generateAddressResponse = Some(gar)
+      currency = Nxt,
+      generateAddressResponse = Some(GenerateAddressesResult(ErrorCode.Ok, Some(nxts.map(nxtAddress2Thrift).toSet)))
     )
   }
 
   def syncHotAddresses(sync: SyncHotAddresses) = {
     val nxts = nxtMongo.queryByTypes(CryptoCurrencyAddressType.Hot)
-
-    val shar = SyncHotAddressesResult(ErrorCode.Ok, nxts.map(nxt2CrpytoAddress).toSet)
     BitwayMessage(
-      currency = Currency.Nxt,
-      syncHotAddressesResult = Some(shar)
+      currency = Nxt,
+      syncHotAddressesResult = Some(SyncHotAddressesResult(ErrorCode.Ok, nxts.map(nxtAddress2Thrift).toSet))
     )
   }
 
-  def getNewBlock: Option[BitwayMessage] = {
-    None
+  def getNewBlock: Seq[BitwayMessage] = {
+    val blockstatus = nxtHttp.getBlockChainStatus()
+
+    val blockHeight = redis.get[String](lastIndex).getOrElse("0").toLong
+    val heightDiff = blockstatus.lastBlockHeight - blockHeight
+
+    if (heightDiff == 0) Nil
+    else if (heightDiff < 0) Nil // throws exception
+    else {
+      var blockList = Seq.empty[NxtBlock]
+      var nxtBlock = nxtHttp.getBlock(blockstatus.lastBlockId)
+
+      while (nxtBlock.height > blockHeight) {
+        blockList = blockList :+ nxtBlock
+        nxtBlock = nxtHttp.getBlock(nxtBlock.previousBlock)
+      }
+
+      redis.set(lastIndex, (blockHeight + blockList.size).toString)
+
+      blockList.reverse.map {
+        b =>
+          BitwayMessage(
+            currency = Nxt,
+            blockMsg = Some(CryptoCurrencyBlockMessage(
+              reorgIndex = None,
+              block = CryptoCurrencyBlock(
+                index = BlockIndex(id = Some(b.blockId), height = Some(b.height)),
+                prevIndex = BlockIndex(id = Some(b.previousBlock), height = Some(b.height - 1)),
+                txs = b.txs.map(nxtTransaction2Thrift)
+              ),
+              timestamp = None)
+            ))
+      }
+    }
   }
 
-  def getUnConfirmedTransaction: Option[BitwayMessage] = {
-    None
+  def getUnconfirmedTransactions: Seq[BitwayMessage] = {
+    val txs = nxtHttp.getUnconfirmedTransactions()
+    if (txs.isEmpty) {
+      txsSet.empty
+      Nil
+    } else {
+      // if the transaction is already in the set
+      var txs2 = txs.filter(tx => !txsSet.contains(tx.fullHash))
+
+      // if the transaction is about bitway user
+      val senderIds = nxtMongo.queryByAccountId(txs2.map(_.senderId)).toSet
+      val recipientIds = nxtMongo.queryByAccountId(txs2.map(_.recipientId)).toSet
+      txs2 = txs2.filter(tx => senderIds.contains(tx.senderId) && recipientIds.contains(tx.recipientId))
+
+      // model to thrift
+      txs2.map {
+        tx =>
+          BitwayMessage(
+            currency = Nxt,
+            tx = Some(nxtTransaction2Thrift(tx))
+          )
+      }
+    }
+  }
+
+  def sendMoney() = {
+
   }
 
   private def generateSecret(addressNum: Int): Seq[String] = {
@@ -51,5 +109,17 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient) {
     }.toSeq
   }
 
-  private def nxt2CrpytoAddress(nxt: NxtAddress) = CryptoAddress(nxt.accountId, Some(nxt.secret), Some(nxt.accountRS))
+  private def nxtAddress2Thrift(nxt: NxtAddress) = CryptoAddress(nxt.accountId, Some(nxt.secret), Some(nxt.accountRS))
+  
+  private def nxtTransaction2Thrift(tx: NxtTransaction): CryptoCurrencyTransaction = {
+    CryptoCurrencyTransaction(
+              sigId = Some(tx.fullHash),
+              txid = Some(tx.transactionId),
+              ids = redis.get(tx.transactionId),
+              inputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.recipientId, nxtRsAddress = Some(tx.recipientRS)))),
+              outputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.senderId, nxtRsAddress = Some(tx.senderRS)))),
+              status = TransferStatus.Accepted
+            )
+  }
+  
 }

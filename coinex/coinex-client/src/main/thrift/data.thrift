@@ -564,6 +564,7 @@ struct CryptoCurrencyTransactionPort {
     2: optional double amount
     3: optional i64 internalAmount
     4: optional i64 userId
+    5: optional string nxtRsAddress
 }
 
 struct CryptoCurrencyTransferInfo {

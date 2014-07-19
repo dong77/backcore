@@ -30,21 +30,22 @@ class NxtActor(processor: NxtProcessor, config: BitwayConfig) extends Actor with
 
   def receive = LoggingReceive {
     case ListenAtRedis =>
-      processor.getNewBlock.map(m => client.rpush(responseChannel, serializer.toBinary(m)))
-      processor.getUnConfirmedTransaction.map(m => client.rpush(responseChannel, serializer.toBinary(m)))
+      processor.getNewBlock.foreach(m => client.rpush(responseChannel, serializer.toBinary(m)))
+      processor.getUnconfirmedTransactions.foreach(m => client.rpush(responseChannel, serializer.toBinary(m)))
 
       client.lpop(requestChannel) match {
         case Some(s) =>
           val request = serializer.fromBinary(s, classOf[BitwayRequest.Immutable]).asInstanceOf[BitwayRequest]
-          val message: BitwayMessage = request.`type` match {
-            case GenerateAddress => processor.generateAddresses(request.generateAddresses.get)
-            case MultiTransfer =>BitwayMessage(Currency.Nxt)
-            case GetMissedBlocks =>BitwayMessage(Currency.Nxt)
-            case SyncHotAddresses => processor.syncHotAddresses(request.syncHotAddresses.get)
-            case SyncPrivateKeys =>BitwayMessage(Currency.Nxt)
-            case x => BitwayMessage(Currency.Nxt)
+          val message: Option[BitwayMessage] = request.`type` match {
+            case GenerateAddress => Some(processor.generateAddresses(request.generateAddresses.get))
+            case Transfer => None
+            case MultiTransfer => None
+            case GetMissedBlocks => None
+            case SyncHotAddresses => Some(processor.syncHotAddresses(request.syncHotAddresses.get))
+            case SyncPrivateKeys => None
+            case x => None
           }
-          client.rpush(responseChannel, serializer.toBinary(message))
+          message.map(m => client.rpush(responseChannel, serializer.toBinary(m)))
           sendMessageToSelf(0)
         case None =>
           sendMessageToSelf(1)

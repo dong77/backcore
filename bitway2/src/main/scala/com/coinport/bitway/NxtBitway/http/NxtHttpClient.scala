@@ -39,9 +39,8 @@ class NxtHttpClient(targetUrl: String) {
     )
   }
 
-  def getTransaction(transactionId: String) = {
-    val queryMap = Map.empty[String, String]
-    val json = JSON.parseFull(getHttpResult("getTransaction", queryMap)).get.asInstanceOf[Map[String, String]]
+  def getTransaction(transaction: String) = {
+    val json = JSON.parseFull(transaction).get.asInstanceOf[Map[String, String]]
 
     NxtTransaction(
       transactionId = json.getOrElse("transaction", "0"),
@@ -55,15 +54,17 @@ class NxtHttpClient(targetUrl: String) {
       deadline = json.getOrElse("deadline", "0").toInt,
       subtype = json.getOrElse("subtype", "0").toInt,
       confirms  = json.getOrElse("confirmations", "0").toInt,
-      amount = json.getOrElse("amountNQT", "0")
+      amount = json.getOrElse("amountNQT", "0"),
+      fullHash =  json.getOrElse("fullHash", "")
     )
   }
 
-  def getUnconfirmedTrancationIds() = {
+  def getUnconfirmedTransactions() = {
     val queryMap = Map.empty[String, String]
     val json = JSON.parseFull(getHttpResult("getUnconfirmedTransactionIds", queryMap)).get.asInstanceOf[Map[String, String]]
 
-    getIds(json.getOrElse("unconfirmedTransactionIds", "[]"))
+    val trans = json.getOrElse("unconfirmedTransactionIds", "[]").asInstanceOf[Seq[String]]
+    trans.map(tran => getTransaction(tran))
   }
 
   private def getSingleAddress(secret: String, addType: CryptoCurrencyAddressType): NxtAddress = {
