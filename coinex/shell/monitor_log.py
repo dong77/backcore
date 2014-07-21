@@ -28,9 +28,10 @@ date_reg_exp = re.compile('\d{4}[-/]\d{2}[-/]\d{2}')
 line_num_cache_file = "line_num_cache"
 CACHE_TEXT_SIZE = 32
 
-mail_from = "coinport2014@126.com"
-mail_from_pwd = "CpLogMonitor"
-mail_to = "kongliang@coinport.com"
+mail_from = "cp_admin_alarm@163.com"
+mail_from_pwd = "coinport1234567"
+mail_to = ['jaice_229@163.com','xiaolu@coinport.com']
+#mail_to = "xiaolu@coinport.com"
 SERVER_NAME = "exchange frontend "
 
 def write_line_num(num, last_line):
@@ -80,9 +81,9 @@ def send_mail(content):
     msg = MIMEMultipart('alternative')
     msg['Subject'] = SERVER_NAME + ""
     msg['From'] = mail_from
-    msg['To'] = mail_to
+    msg['To'] = ", ".join(mail_to)
     msg.attach(MIMEText(content, 'plain'))
-    s = smtplib.SMTP('smtp.126.com')
+    s = smtplib.SMTP('smtp.163.com')
     s.login(mail_from, mail_from_pwd)
     try:
         s.sendmail(mail_from, mail_to, msg.as_string())
@@ -131,7 +132,9 @@ def main():
                 mail_content = mail_content + msg + "\n"
                 
         print mail_content
-#        send_mail(mail_content)
+        #command = 'mail -s "backend_restart" ' + mail_to + ' ' + mail_content
+        #os.system(command)
+        send_mail(mail_content)
     exit(error_code)
 
 if __name__ == '__main__':
