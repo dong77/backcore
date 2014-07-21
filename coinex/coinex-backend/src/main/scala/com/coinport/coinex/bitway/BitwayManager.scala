@@ -35,6 +35,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
   val sigIdsSinceLastBlock = Set.empty[String]
   var lastAlive: Long = -1
   private[bitway] val privateKeysBackup = Map.empty[String, String]
+  private[bitway] val address2AccountNameMap = Map.empty[String, String]
 
   final val SPECIAL_ACCOUNT_ID: Map[CryptoCurrencyAddressType, Long] = Map(
     CryptoCurrencyAddressType.Hot -> HOT_UID,
@@ -56,7 +57,8 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     lastAlive,
     addressUidMap.clone,
     sigIdsSinceLastBlock.clone,
-    privateKeysBackup = if (privateKeysBackup.size > 0) Some(privateKeysBackup.clone) else None
+    privateKeysBackup = if (privateKeysBackup.size > 0) Some(privateKeysBackup.clone) else None,
+    address2AccountNameMap = if (address2AccountNameMap.nonEmpty) Some(address2AccountNameMap.clone) else None
   )
 
   def loadSnapshot(s: TBitwayState) {
@@ -75,6 +77,10 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     if (s.privateKeysBackup.isDefined) {
       privateKeysBackup.clear
       privateKeysBackup ++= s.privateKeysBackup.get
+    }
+    if (s.address2AccountNameMap.isDefined) {
+      address2AccountNameMap.clear
+      address2AccountNameMap ++= s.address2AccountNameMap.get
     }
 
     if (config.coldAddresses.nonEmpty)
@@ -110,6 +116,9 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     val privateKeys = addrs.filter(_.privateKey.isDefined)
     if (privateKeys.size > 0)
       privateKeysBackup ++= Map(privateKeys.map(i => (i.address -> i.privateKey.get)).toSeq: _*)
+    val accountNames = addrs.filter(_.accountName.isDefined)
+    if (accountNames.nonEmpty)
+      address2AccountNameMap ++= Map(accountNames.map(i => (i.address -> i.accountName.get)).toSeq: _*)
   }
 
   def updateLastAlive(ts: Long) {
@@ -244,10 +253,10 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
       if (txType.isDefined) {
         val regularizeInputs = inputs.map(_.map(i => i.copy(
           internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)),
-          userId = addressUidMap.get(i.address))))
+          userId = addressUidMap.get(i.address), accountName = address2AccountNameMap.get(i.address))))
         val regularizeOutputs = outputs.map(_.map(i => i.copy(
           internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)),
-          userId = addressUidMap.get(i.address))))
+          userId = addressUidMap.get(i.address), accountName = address2AccountNameMap.get(i.address))))
         val sumInput = regularizeInputs.get.map(i => i.internalAmount.getOrElse(0L)).sum
         val sumOutput = regularizeOutputs.get.map(i => i.internalAmount.getOrElse(0L)).sum
         val minerFee = if (sumInput > sumOutput) {

@@ -117,4 +117,5 @@ struct TBitwayState {
     7: map<string, i64> addressUidMap
     8: set<string> sigIdsSinceLastBlock
     9: optional map<string, string> privateKeysBackup
+    10: optional map<string, string> address2AccountNameMap
 }
