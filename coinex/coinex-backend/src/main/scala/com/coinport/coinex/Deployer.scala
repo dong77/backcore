@@ -32,6 +32,7 @@ import com.coinport.coinex.users._
 import com.coinport.coinex.transfer._
 import com.coinport.coinex.util._
 import com.coinport.coinex.bitway._
+import com.coinport.coinex.history._
 import Implicits._
 import scala.collection.mutable.ListBuffer
 import com.coinport.coinex.common._
@@ -89,6 +90,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploy(Props(new OrderReader(dbForViews)), order_mongo_reader <<)
     deploy(Props(new AccountTransferReader(dbForViews)), account_transfer_mongo_reader <<)
     deploy(Props(new NotificationReaderWriter(dbForViews)), notification_mongo <<)
+    deploy(Props(new HistoryReader(dbForViews)), history_reader <<)
 
     // Then deploy routers
     val routers = new LocalRouters(markets)
@@ -116,6 +118,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     deploySingleton(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer <<)
     deploySingleton(Props(new OrderWriter(dbForViews)), order_mongo_writer <<)
     deploySingleton(Props(new ExportOpenDataProcessor(asyncHBaseClient) with StackableEventsourced[ExportOpenDataMap, ExportOpenDataManager]), opendata_exporter <<)
+
+    deploySingleton(Props(new HistoryWriter(dbForViews)), history_writer <<)
 
     val configs = loadConfig[BitwayConfigs](config.getString("akka.exchange.bitway-path")).configs
     markets.toCryptoCurrencySet foreach { c =>

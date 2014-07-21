@@ -69,6 +69,9 @@ class LocalRouters(markets: Seq[MarketSide])(implicit cluster: Cluster) {
 
   val monitorService = routerForSingleton(monitor_service <<)
 
+  val historyWriter = routerForSingleton(history_writer <<)
+  val historyReader = routerFor(history_reader <<)
+
   private def routerForSingleton(name: String) = system.actorOf(
     ClusterSingletonProxy.defaultProps("/user/" + name + "/singleton", name),
     name + "_router")

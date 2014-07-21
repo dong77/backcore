@@ -58,6 +58,8 @@ typedef data.Language                           _Language
 typedef data.ReferralParams                     _ReferralParams
 typedef data.Payment                            _Payment
 typedef data.TransferConfig                     _TransferConfig
+typedef data.UserAction                         _UserAction
+typedef data.UserActionType                     _UserActionType
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -111,7 +113,7 @@ typedef data.TransferConfig                     _TransferConfig
 /* Q    */ struct DoSuspendUser                           {1: i64 userId}
 /* R    */ struct SuspendUserResult                       {1: optional _UserProfile userProfile}
 
-/* Q    */ struct DoResumeUser                            {1: i64 userId}
+/* C    */ struct DoResumeUser                            {1: i64 userId}
 /* R    */ struct ResumeUserResult                        {1: optional _UserProfile userProfile}
 
 /* C,P  */ struct DoResetPassword                         {1: string newPassword, 2: string passwordResetToken}
@@ -314,3 +316,9 @@ typedef data.TransferConfig                     _TransferConfig
 ////////// monitor
 /* Q    */ struct QueryActiveActors                       {}
 /* R    */ struct QueryActiveActorsResult                 {1: map<string, list<string>> actorPaths}
+
+////////// user action log and query
+/* Q    */ struct QueryUserAction                         {1: i64 userId, 2: _UserActionType actionType}
+/* R    */ struct QueryUserActionResult                   {1: list<_UserAction> userActions, 2: i32 count}
+
+/* C    */ struct PersistUserAction                       {1: _UserAction userAction}

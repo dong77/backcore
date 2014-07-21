@@ -232,6 +232,13 @@ enum Language {
     ENGLISH = 1
 }
 
+enum UserActionType {
+    REGISTER = 0
+    LOGIN = 1
+    CHANGE_PASSWORD = 2
+    RESET_PASSWORD = 3
+}
+
 ///////////////////////////////////////////////////////////////////////
 ////////////////////////// PERSISTENT DATA ////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -262,6 +269,15 @@ struct UserProfile {
     17: optional i64 referralToken
     18: optional i64 referralUserId  // this should be hidden for this user
     19: optional string securityPreference // 01:email 10:sms 11: email && sms
+}
+
+struct UserAction {
+    1: i64 id
+    2: i64 userId
+    3: i64 timestamp
+    4: UserActionType actionType
+    5: optional string ipAddress
+    6: optional string location
 }
 
 struct ReferralParams {

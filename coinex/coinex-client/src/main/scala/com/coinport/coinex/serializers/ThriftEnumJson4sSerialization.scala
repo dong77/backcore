@@ -135,6 +135,11 @@ object ThriftEnumJson4sSerialization {
       case x: UserStatus => JString(x.name)
     }))
 
+  class UserActionTypeSerializer extends CustomSerializer[UserActionType](format => (
+    { case JString(s) => UserActionType.valueOf(s).get }, {
+      case x: UserActionType => JString(x.name)
+    }))
+
   implicit val formats = Serialization.formats(NoTypeHints) +
     new BitwayRequestTypeSerializer +
     new BitwayResponseTypeSerializer +
@@ -152,5 +157,6 @@ object ThriftEnumJson4sSerialization {
     new RefundReasonSerializer +
     new TransferStatusSerializer +
     new TransferTypeSerializer +
-    new UserStatusSerializer
+    new UserStatusSerializer +
+    new UserActionTypeSerializer
 }

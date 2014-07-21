@@ -32,6 +32,9 @@ object ConstantRole extends Enumeration {
   val notification_mongo = Value
 
   val monitor_service = Value
+
+  val history_writer = Value
+  val history_reader = Value
 }
 
 object MarketRole extends Enumeration {

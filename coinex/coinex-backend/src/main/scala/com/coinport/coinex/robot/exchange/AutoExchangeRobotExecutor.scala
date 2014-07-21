@@ -207,12 +207,12 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
       val a = f(0) match {
         case i: String => roundByMarketSide(i.toDouble, side)
         case i: Double => roundByMarketSide(i, side)
-        case _         => 0.0
+        case _ => 0.0
       }
       val b = f(1) match {
         case i: String => roundByMarketSide(i.toDouble, side)
         case i: Double => roundByMarketSide(i, side)
-        case _         => 0.0
+        case _ => 0.0
       }
       depthList = DepthElem(a, b) :: depthList
     }
@@ -221,23 +221,23 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
 
   def roundByMarketSide(src: Double, side: MarketSide) = {
     side match {
-      case MarketSide(Btc, Ltc)  => roundDouble(src, 4)
+      case MarketSide(Btc, Ltc) => roundDouble(src, 4)
       case MarketSide(Btc, Doge) => roundDouble(src, 8)
-      case MarketSide(Btc, Bc)   => roundDouble(src, 8)
-      case MarketSide(Btc, Drk)  => roundDouble(src, 6)
-      case MarketSide(Btc, Vrc)  => roundDouble(src, 8)
-      case MarketSide(Btc, Zet)  => roundDouble(src, 8)
+      case MarketSide(Btc, Bc) => roundDouble(src, 8)
+      case MarketSide(Btc, Drk) => roundDouble(src, 6)
+      case MarketSide(Btc, Vrc) => roundDouble(src, 8)
+      case MarketSide(Btc, Zet) => roundDouble(src, 8)
     }
   }
 
   def quantityRoundByMarketSide(src: Double, side: MarketSide) = {
     side match {
-      case MarketSide(Btc, Ltc)  => roundDouble(src, 4)
+      case MarketSide(Btc, Ltc) => roundDouble(src, 4)
       case MarketSide(Btc, Doge) => roundDouble(src, 4)
-      case MarketSide(Btc, Bc)   => roundDouble(src, 3)
-      case MarketSide(Btc, Drk)  => roundDouble(src, 2)
-      case MarketSide(Btc, Vrc)  => roundDouble(src, 3)
-      case MarketSide(Btc, Zet)  => roundDouble(src, 3)
+      case MarketSide(Btc, Bc) => roundDouble(src, 3)
+      case MarketSide(Btc, Drk) => roundDouble(src, 2)
+      case MarketSide(Btc, Vrc) => roundDouble(src, 3)
+      case MarketSide(Btc, Zet) => roundDouble(src, 3)
     }
   }
 
@@ -353,12 +353,12 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
 
   def randomQuantityBySide(side: MarketSide): Double = {
     side match {
-      case MarketSide(Btc, Ltc)  => roundDouble(Random.nextDouble() / 5, 4)
+      case MarketSide(Btc, Ltc) => roundDouble(Random.nextDouble() / 5, 4)
       case MarketSide(Btc, Doge) => roundDouble(Random.nextDouble() * 10000, 4)
-      case MarketSide(Btc, Bc)   => roundDouble(Random.nextDouble() * 10, 3)
-      case MarketSide(Btc, Drk)  => roundDouble(Random.nextDouble() / 5, 2)
-      case MarketSide(Btc, Vrc)  => roundDouble(Random.nextDouble() * 5, 3)
-      case MarketSide(Btc, Zet)  => roundDouble(Random.nextDouble() * 5, 3)
+      case MarketSide(Btc, Bc) => roundDouble(Random.nextDouble() * 10, 3)
+      case MarketSide(Btc, Drk) => roundDouble(Random.nextDouble() / 5, 2)
+      case MarketSide(Btc, Vrc) => roundDouble(Random.nextDouble() * 5, 3)
+      case MarketSide(Btc, Zet) => roundDouble(Random.nextDouble() * 5, 3)
     }
   }
 
