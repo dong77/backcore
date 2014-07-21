@@ -15,7 +15,9 @@ import com.redis.RedisClient
 class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisClient) {
   val txsSet = Set.empty[String]
   var lastIndex = Currency.Nxt.toString + "last_index"
-  val HotAccount = getOrGenerateHotAccount
+  val hotAccount = getOrGenerateHotAccount
+  val prefix_transaction = "Nxt_tran_"
+  val transfer_fee = 1.0
 
   def getRedisClient = redis
 
@@ -24,10 +26,10 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     val nxts = nxtHttp.getMultiAddresses(secretSeq, CryptoCurrencyAddressType.Unused)
     nxtMongo.insertAddresses(nxts)
 
-    BitwayMessage(
+    Some(BitwayMessage(
       currency = Nxt,
       generateAddressResponse = Some(GenerateAddressesResult(ErrorCode.Ok, Some(nxts.map(nxtAddress2Thrift).toSet)))
-    )
+    ))
   }
 
   def syncHotAddresses(sync: SyncHotAddresses) = {
@@ -84,8 +86,8 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
       var txs2 = txs.filter(tx => !txsSet.contains(tx.fullHash))
 
       // if the transaction is about bitway user
-      val senderIds = nxtMongo.queryByAccountId(txs2.map(_.senderId)).toSet
-      val recipientIds = nxtMongo.queryByAccountId(txs2.map(_.recipientId)).toSet
+      val senderIds = nxtMongo.queryByAccountIds(txs2.map(_.senderId)).toSet
+      val recipientIds = nxtMongo.queryByAccountIds(txs2.map(_.recipientId)).toSet
       txs2 = txs2.filter(tx => senderIds.contains(tx.senderId) && recipientIds.contains(tx.recipientId))
 
       // model to thrift
@@ -99,11 +101,31 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
   }
 
   def sendMoney(transfer: TransferCryptoCurrency) = {
-    BitwayMessage(Nxt)
+    val infos  = transfer.transferInfos
+    transfer.`type` match {
+      case TransferType.HotToCold | TransferType.Withdrawal =>
+        infos.foreach{ info =>
+          val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, info.amount.get, transfer_fee)
+          if(!txid.isEmpty) redis.set(getTransactionKey(txid), info.id)
+        }
+
+      case TransferType.UserToHot =>
+        infos.foreach{ info =>
+          val userSecret = nxtMongo.queryOneUser(info.from.get).get.secret
+          val txid = nxtHttp.sendMoney(userSecret, hotAccount.accountId, info.amount.get, transfer_fee)
+          if(!txid.isEmpty) redis.set(getTransactionKey(txid), info.id)
+        }
+
+      case x =>
+    }
+    None
   }
 
-  def multiSendMoney(transfers: MultiTransferCryptoCurrency) = {
-    BitwayMessage(Nxt)
+  def multiSendMoney(multiTransfer: MultiTransferCryptoCurrency) = {
+    multiTransfer.transferInfos.map(transfers =>
+      sendMoney(TransferCryptoCurrency(multiTransfer.currency, transfers._2, transfers._1))
+    )
+    None
   }
 
   private def generateSecret(addressNum: Int): Seq[String] = {
@@ -126,17 +148,18 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     } else hotAddr.get
   }
 
-
   private def nxtAddress2Thrift(nxt: NxtAddress) = CryptoAddress(nxt.accountId, Some(nxt.secret), Some(nxt.accountRS))
   
   private def nxtTransaction2Thrift(tx: NxtTransaction): CryptoCurrencyTransaction = {
     CryptoCurrencyTransaction(
               sigId = Some(tx.fullHash),
               txid = Some(tx.transactionId),
-              ids = Some(Seq(redis.get(tx.transactionId).getOrElse("0").toLong)),
+              ids = Some(Seq(redis.get(getTransactionKey(tx.transactionId)).getOrElse("0").toLong)),
               inputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.recipientId, nxtRsAddress = Some(tx.recipientRS)))),
               outputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.senderId, nxtRsAddress = Some(tx.senderRS)))),
               status = TransferStatus.Accepted
             )
   }
+
+  private def getTransactionKey(id: String) = prefix_transaction+id
 }

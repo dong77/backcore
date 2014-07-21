@@ -87,6 +87,19 @@ class NxtHttpClient(targetUrl: String) {
     trans.map(tran => getTransaction(tran))
   }
 
+  def sendMoney(secret: String, recipient: String, amount: Double, fee: Double, deadline: Int = 900): String = {
+    val queryMap = Map(
+      "secretPhrase" -> secret,
+      "recipient" -> recipient,
+      "amount" -> amount.toString,
+      "fee" -> fee.toString,
+      "deadline" -> deadline.toString
+    )
+
+    val json = JSON.parseFull(getHttpResult("sendMoney", queryMap)).get.asInstanceOf[Map[String, String]]
+    json.get("transaction").getOrElse("")
+  }
+
   private def getHttpResult(commend: String, map: Map[String, String]): String = {
     val rq: Req = url(targetUrl).subject.POST <<? (Map("requestType" -> commend) ++ map)
     val result = Http(rq)
