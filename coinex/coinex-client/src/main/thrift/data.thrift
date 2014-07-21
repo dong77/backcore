@@ -541,6 +541,7 @@ struct CryptoAddress {
     1: string address
     2: optional string privateKey
     3: optional string nxtRsAddress
+    4: optional string accountName
 }
 
 struct TAddressStatus {
@@ -565,6 +566,7 @@ struct CryptoCurrencyTransactionPort {
     3: optional i64 internalAmount
     4: optional i64 userId
     5: optional string nxtRsAddress
+    6: optional string accountName
 }
 
 struct CryptoCurrencyTransferInfo {

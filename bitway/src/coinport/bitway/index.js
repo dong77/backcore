@@ -153,9 +153,31 @@ var zet = {
         port: '6379',
     }
 };
+
+
+var btsx = {
+    currency: Currency.BTSX,
+    cryptoConfig: {
+        cryptoRpcConfig: {
+            protocol: 'http',
+            user: 'user',
+            pass: 'pass',
+            host: 'bitway',
+            port: '9989',
+        },
+        minConfirm: 20,
+        checkInterval : 5000,
+        walletPassPhrase: ""
+    },
+    redisProxyConfig: {
+        currency: Currency.BTSX,
+        ip: 'bitway',
+        port: '6379',
+    }
+};
 var configs = [ btc, ltc, dog, drk, bc, vrc, zet ];
 // var configs = [ btc ];
-// var configs = [ dog ];
+// var configs = [ btsx ];
 
 
 fs.readFile('./pw', function(error, data){

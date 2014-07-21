@@ -73,7 +73,14 @@ log4js.configure({
             pattern: "-yyyy-MM-dd",
             alwaysIncludePattern: true,
             category: "1600"
-        }
+        },
+        {
+            type: "dateFile",
+            filename: 'logs/BTSX.log',
+            pattern: "-yyyy-MM-dd",
+            alwaysIncludePattern: true,
+            category: "2100"
+        },
     ],
     replaceConsole: true, //替换console.log
     levels:{
@@ -84,6 +91,7 @@ log4js.configure({
         1400: 'INFO',
         1500: 'INFO',
         1600: 'INFO',
+        2100: 'DEBUG',
     }
 });
 
