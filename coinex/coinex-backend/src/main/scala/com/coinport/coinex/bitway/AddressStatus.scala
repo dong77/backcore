@@ -55,8 +55,9 @@ case class AddressStatus(txid: Option[String] = None, height: Option[Long] = Non
     TAddressStatus(txid, height, books.map { kv => (kv._1 -> kv._2) })
   }
 
-  def getAddressStatusResult(currentHeight: Option[Long]) = {
-    AddressStatusResult(txid, height, getAmount(currentHeight, 1))
+  def getAddressStatusResult(currentHeight: Option[Long], confirmationNum: Option[Int] = None) = {
+
+    AddressStatusResult(txid, height, getAmount(currentHeight, confirmationNum.getOrElse(1)))
   }
 
   def getAmount(currentHeight: Option[Long], confirmationNum: Int): Long = {

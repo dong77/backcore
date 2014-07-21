@@ -38,11 +38,11 @@ class MetricsObserver(side: MarketSide, transactionQueue: WindowVector[MarketEve
     var volumeMaintainer: Long = 0L) extends Logging {
 
   def pushEvent(event: MarketEvent, tick: Long) = {
-//    val sb = new StringBuilder()
-//    sb.append("\n" + "~" * 100 + s"${side}\n")
-//    sb.append(s"push event ${event} at ${tick}\n")
-//    sb.append(s"before event push,\n    transactionQueue: ${transactionQueue};\n    minMaintainer: ${minMaintainer};\n    volumeMaintainer: ${volumeMaintainer}\n")
-//    sb.append("----------- popped event ------------\n")
+    //    val sb = new StringBuilder()
+    //    sb.append("\n" + "~" * 100 + s"${side}\n")
+    //    sb.append(s"push event ${event} at ${tick}\n")
+    //    sb.append(s"before event push,\n    transactionQueue: ${transactionQueue};\n    minMaintainer: ${minMaintainer};\n    volumeMaintainer: ${volumeMaintainer}\n")
+    //    sb.append("----------- popped event ------------\n")
     transactionQueue.addAtTick(event, tick) foreach { e =>
       e match {
         case null => None
@@ -51,11 +51,11 @@ class MetricsObserver(side: MarketSide, transactionQueue: WindowVector[MarketEve
           maxMaintainer.dequeue(p)
           preMaintainer.dequeue(p)
           volumeMaintainer -= v
-//          sb.append(s"${e}\n")
+        //          sb.append(s"${e}\n")
         case _ => None
       }
     }
-//    sb.append("-------------------------------------\n")
+    //    sb.append("-------------------------------------\n")
     event match {
       case null => None
       case MarketEvent(Some(p), Some(v), _) =>
@@ -67,8 +67,8 @@ class MetricsObserver(side: MarketSide, transactionQueue: WindowVector[MarketEve
         volumeMaintainer += v
       case _ => None
     }
-//    sb.append(s"after event push,\n    transactionQueue: ${transactionQueue};\n    minMaintainer: ${minMaintainer};\n    volumeMaintainer: ${volumeMaintainer}\n")
-//    log.info(sb.toString)
+    //    sb.append(s"after event push,\n    transactionQueue: ${transactionQueue};\n    minMaintainer: ${minMaintainer};\n    volumeMaintainer: ${volumeMaintainer}\n")
+    //    log.info(sb.toString)
     this
   }
 

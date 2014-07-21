@@ -21,8 +21,7 @@ object BlockContinuityEnum extends Enumeration {
   val SUCCESSOR, GAP, REORG, OTHER_BRANCH, DUP, BAD = Value
 }
 
-class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, coldAddresses: List[String],
-  hotColdTransfer: Option[HotColdTransferStrategy] = None, hotColdTransferNumThreshold: Long = 20L)
+class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     extends Manager[TBitwayState] with Logging {
 
   import CryptoCurrencyAddressType._
@@ -45,8 +44,8 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
   val FAUCET_THRESHOLD: Double = 0.5
   val INIT_ADDRESS_NUM: Int = 100
 
-  if (coldAddresses.nonEmpty)
-    syncColdAddresses(coldAddresses)
+  if (config.coldAddresses.nonEmpty)
+    syncColdAddresses(config.coldAddresses)
 
   def getSnapshot = TBitwayState(
     supportedCurrency,
@@ -78,8 +77,8 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
       privateKeysBackup ++= s.privateKeysBackup.get
     }
 
-    if (coldAddresses.nonEmpty)
-      syncColdAddresses(coldAddresses)
+    if (config.coldAddresses.nonEmpty)
+      syncColdAddresses(config.coldAddresses)
   }
 
   def isDryUp = addresses(Unused).size == 0 || addresses(User).size > addresses(Unused).size * FAUCET_THRESHOLD
@@ -293,10 +292,10 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
     }
   }
 
-  def getAddressStatus(t: CryptoCurrencyAddressType): Map[String, AddressStatusResult] = {
+  def getAddressStatus(t: CryptoCurrencyAddressType, confirmationNum: Option[Int] = None): Map[String, AddressStatusResult] = {
     Map(addresses(t).filter(d =>
       addressStatus.contains(d) && addressStatus(d) != AddressStatus()).toSeq.map(address =>
-      (address -> addressStatus(address).getAddressStatusResult(getCurrentHeight))
+      (address -> addressStatus(address).getAddressStatusResult(getCurrentHeight, confirmationNum))
     ): _*)
   }
 
@@ -371,12 +370,12 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
   // for return value amount, +amount means transfer from hot to cold;
   //                          -amount means transfer from cold to hot.
   def needHotColdTransfer(): Option[Long] = {
-    val hotAmount = getReserveAmount(CryptoCurrencyAddressType.Hot)
-    if (hotAmount <= hotColdTransferNumThreshold) {
+    val hotAmount = getAvailableReserveAmount(CryptoCurrencyAddressType.Hot, Some(config.confirmNum))
+    if (hotAmount <= config.hotColdTransferNumThreshold) {
       return None
     }
-    val coldAmount = getReserveAmount(CryptoCurrencyAddressType.Cold)
-    val HotColdTransferStrategy(highThreshold, lowThreshold) = hotColdTransfer.getOrElse(HotColdTransferStrategy(1, 0))
+    val coldAmount = getAvailableReserveAmount(CryptoCurrencyAddressType.Cold, Some(config.confirmNum))
+    val HotColdTransferStrategy(highThreshold, lowThreshold) = config.hotColdTransfer.getOrElse(HotColdTransferStrategy(1, 0))
     val mid = (highThreshold + lowThreshold) / 2
     val allAmount = hotAmount + coldAmount
     if (allAmount == 0) {
@@ -431,9 +430,13 @@ class BitwayManager(supportedCurrency: Currency, maintainedChainLength: Int, col
     if (reorgPos > 0)
       blockIndexes.remove(reorgPos, blockIndexes.length - reorgPos)
     blockIndexes ++= chain
-    if (blockIndexes.length > maintainedChainLength)
-      blockIndexes.remove(0, blockIndexes.length - maintainedChainLength)
+    if (blockIndexes.length > config.maintainedChainLength)
+      blockIndexes.remove(0, blockIndexes.length - config.maintainedChainLength)
   }
 
-  def getReserveAmount(t: CryptoCurrencyAddressType) = getAddressStatus(t).values.map(_.confirmedAmount).sum
+  def getReserveAmount(t: CryptoCurrencyAddressType, confirmationNum: Option[Int] = None) = getAddressStatus(t, confirmationNum).values.map(_.confirmedAmount).sum
+
+  def getAvailableReserveAmount(t: CryptoCurrencyAddressType, confirmationNum: Option[Int] = None) = {
+    Math.min(getReserveAmount(t, confirmationNum), getReserveAmount(t))
+  }
 }

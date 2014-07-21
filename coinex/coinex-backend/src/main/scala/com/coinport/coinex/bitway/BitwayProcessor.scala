@@ -5,10 +5,8 @@
 
 package com.coinport.coinex.bitway
 
-import akka.actor.Actor
+import akka.actor.{ Cancellable, Actor, ActorLogging, ActorRef }
 import akka.actor.Actor.Receive
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
 import akka.event.LoggingReceive
 import akka.persistence.Deliver
 import akka.persistence.Persistent
@@ -23,9 +21,12 @@ import scala.concurrent.duration._
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
+import com.coinport.coinex.data.FetchAddresses
+import com.coinport.coinex.data.TransferBetweenHotCold
+import com.coinport.coinex.data.TransferType._
 import com.coinport.coinex.serializers._
 import Implicits._
-import com.coinport.coinex.data.TransferType._
+import scala.Some
 
 class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, config: BitwayConfig)
     extends ExtendedProcessor with EventsourcedProcessor with BitwayManagerBehavior with ActorLogging {
@@ -36,7 +37,8 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
   val RESEND_GET_MISSED_BLOCK_TIMEOUT = 30 * 1000L
   val HOT_RESERVE_INTERNAL_AMOUNT = 10000 * 1000L
 
-  private var hotColdTransferLastTransferTime: Option[Long] = None
+  private var hot2ColdCancellable: Cancellable = null
+  private var cold2HotCancellable: Cancellable = null
   val serializer = new ThriftBinarySerializer()
   val client: Option[RedisClient] = try {
     Some(new RedisClient(config.ip, config.port))
@@ -48,12 +50,13 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
   override val processorId = BITWAY_PROCESSOR << supportedCurrency
   val channelToTransferProcessor = createChannelTo(ACCOUNT_TRANSFER_PROCESSOR <<) // DO NOT CHANGE
 
-  val manager = new BitwayManager(supportedCurrency, config.maintainedChainLength, config.coldAddresses, config.hotColdTransfer, config.hotColdTransferNumThreshold)
+  val manager = new BitwayManager(supportedCurrency, config)
 
   override def preStart() = {
     super.preStart
     scheduleTryPour()
     scheduleSyncHotAddresses()
+    initScheduleTransfer()
   }
 
   override def identifyChannel: PartialFunction[Any, String] = {
@@ -88,6 +91,9 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
           BitwayRequestType.SyncHotAddresses, currency, syncHotAddresses = Some(
             SyncHotAddresses(supportedCurrency)))))
       }
+    case TransferBetweenHotCold(txType) =>
+      checkTransferHotCold(txType)
+
     case m @ CleanBlockChain(currency) =>
       persist(m) {
         event =>
@@ -158,6 +164,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
             channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(
               currency, List(tx))), transferProcessor.path)
         }
+        reScheduleTransferForFailedTx(tx)
       } else {
         manager.completeCryptoCurrencyTransaction(tx) match {
           case None => log.debug("unrelated tx received")
@@ -197,7 +204,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
                 val msg = MultiCryptoCurrencyTransactionMessage(currency,
                   relatedTxs, reorgIndex)
                 channelToTransferProcessor forward Deliver(Persistent(msg), transferProcessor.path)
-                checkTransferHotCold(msg)
+                reScheduleTransferForBlock(msg)
               }
           }
         case GAP =>
@@ -299,13 +306,13 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     var hotAmountRes: Option[Long] = hotAmount
 
     def subHotAmount(info: CryptoCurrencyTransferInfo) {
-      val hm = hotAmountRes.getOrElse(manager.getReserveAmount(CryptoCurrencyAddressType.Hot))
-      (info.internalAmount.get + HOT_RESERVE_INTERNAL_AMOUNT) > hm match {
+      val ha = hotAmountRes.getOrElse(manager.getAvailableReserveAmount(CryptoCurrencyAddressType.Hot, Some(config.confirmNum)))
+      (info.internalAmount.get + HOT_RESERVE_INTERNAL_AMOUNT) > ha match {
         case true =>
           failedInfos.append(info.copy(error = Some(ErrorCode.InsufficientHot)))
         case _ =>
           passedInfos.append(info)
-          hotAmountRes = Some(hm - info.internalAmount.get)
+          hotAmountRes = Some(ha - info.internalAmount.get)
       }
     }
 
@@ -332,6 +339,25 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     (passedInfos.toList, failedInfos.toList, hotAmountRes)
   }
 
+  private def reScheduleTransferForFailedTx(tx: CryptoCurrencyTransaction) {
+    if (!config.enableHotColdTransfer) return
+    tx.txType match {
+      case Some(HotToCold) =>
+        scheduleTransfer(HotToCold, config.hot2ColdTransferInterval)
+    }
+  }
+
+  private def reScheduleTransferForBlock(msg: MultiCryptoCurrencyTransactionMessage) {
+    if (!config.enableHotColdTransfer) return
+    msg.txs.foreach {
+      tx =>
+        tx.txType match {
+          case Some(HotToCold) => scheduleTransfer(tx.txType.get, config.hot2ColdTransferInterval)
+          case Some(ColdToHot) => scheduleTransfer(tx.txType.get, config.cold2HotTransferInterval)
+        }
+    }
+  }
+
   private def scheduleTryPour() = {
     context.system.scheduler.scheduleOnce(delayinSeconds seconds, self, TryFetchAddresses)(context.system.dispatcher)
   }
@@ -340,30 +366,45 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     context.system.scheduler.scheduleOnce(delayinSeconds seconds, self, TrySyncHotAddresses)(context.system.dispatcher)
   }
 
-  private def getRequestChannel = config.requestChannelPrefix + supportedCurrency.value.toString
-
-  private def checkTransferHotCold(msg: MultiCryptoCurrencyTransactionMessage) {
-    var needCheckHotColdTransfer = false
-    if (msg.txs.filter(tx => tx.txType == Some(TransferType.Withdrawal) || tx.txType == Some(TransferType.UserToHot)).nonEmpty) {
-      needCheckHotColdTransfer = true
-    }
-    if (config.enableHotColdTransfer && needCheckHotColdTransfer &&
-      System.currentTimeMillis - hotColdTransferLastTransferTime.getOrElse(0L) > config.hotColdTransferInterval) {
-      hotColdTransferLastTransferTime = Some(System.currentTimeMillis)
-      transferHotColdIfNeed()
+  private def initScheduleTransfer() = {
+    if (config.enableHotColdTransfer) {
+      scheduleTransfer(HotToCold, config.hot2ColdTransferInterval)
+      scheduleTransfer(ColdToHot, config.cold2HotTransferInterval)
     }
   }
 
-  private def transferHotColdIfNeed() {
+  private def getRequestChannel = config.requestChannelPrefix + supportedCurrency.value.toString
+
+  private def checkTransferHotCold(txType: Option[TransferType]) {
+    if (config.enableHotColdTransfer) {
+      transferHotColdIfNeed(txType)
+    }
+  }
+
+  private def transferHotColdIfNeed(txType: Option[TransferType]) {
     manager.needHotColdTransfer match {
       case None =>
       case Some(amount) if amount == 0 =>
-      case Some(amount) if amount > 0 =>
+      case Some(amount) if amount > 0 && txType != Some(ColdToHot) =>
         self ! DoRequestTransfer(AccountTransfer(0, 0, HotToCold, supportedCurrency, amount, created = Some(System.currentTimeMillis)))
-      case Some(amount) if amount < 0 =>
+        scheduleTransfer(HotToCold, config.hot2ColdTransferIntervalLarge)
+      case Some(amount) if amount < 0 && txType != Some(HotToCold) =>
         self ! DoRequestTransfer(AccountTransfer(0, 0, ColdToHot, supportedCurrency, -amount, created = Some(System.currentTimeMillis)))
+        scheduleTransfer(ColdToHot, config.cold2HotTransferInterval)
     }
   }
+
+  private def scheduleTransfer(txType: TransferType, interval: FiniteDuration) {
+    txType match {
+      case HotToCold =>
+        if (hot2ColdCancellable != null && !hot2ColdCancellable.isCancelled) hot2ColdCancellable.cancel()
+        hot2ColdCancellable = context.system.scheduler.scheduleOnce(interval, self, TransferBetweenHotCold(Some(HotToCold)))(context.system.dispatcher)
+      case ColdToHot =>
+        if (cold2HotCancellable != null && !cold2HotCancellable.isCancelled) cold2HotCancellable.cancel()
+        cold2HotCancellable = context.system.scheduler.scheduleOnce(interval, self, TransferBetweenHotCold(Some(ColdToHot)))(context.system.dispatcher)
+    }
+  }
+
 }
 
 trait BitwayManagerBehavior {
