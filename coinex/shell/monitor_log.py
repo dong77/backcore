@@ -131,6 +131,8 @@ def main():
             for msg in except_message_dict[key]:
                 mail_content = mail_content + msg + "\n"
                 
+        if len(mail_content) > 5000:
+            mail_content = mail_content[:5000] + "..."
         print mail_content
         #command = 'mail -s "backend_restart" ' + mail_to + ' ' + mail_content
         #os.system(command)
