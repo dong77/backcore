@@ -41,8 +41,8 @@ class NxtActor(processor: NxtProcessor, config: BitwayConfig) extends Actor with
             case Transfer => processor.sendMoney(request.transferCryptoCurrency.get)
             case MultiTransfer => processor.multiSendMoney(request.multiTransferCryptoCurrency.get)
             case GetMissedBlocks => None
-            case SyncHotAddresses => Some(processor.syncHotAddresses(request.syncHotAddresses.get))
-            case SyncPrivateKeys => None
+            case SyncHotAddresses => processor.syncHotAddresses(request.syncHotAddresses.get)
+            case SyncPrivateKeys => processor.syncPrivateKeys(request.syncPrivateKeys.get)
             case x => None
           }
           message.map(m => client.rpush(responseChannel, serializer.toBinary(m)))

@@ -26,7 +26,7 @@ class NxtMongoDAO(collection: MongoCollection) {
   def queryOneByTypes(aType: CryptoCurrencyAddressType) = collection.findOne(MongoDBObject(TYPE -> aType)).map(toClass)
 
   def queryByAccountIds(accountIds: Seq[String]) =
-    collection.find(ACCOUNT_ID $in accountIds, MongoDBObject(ACCOUNT_ID -> true)).map(obj => obj.getAs[String](ACCOUNT_ID).get)
+    collection.find(ACCOUNT_ID $in accountIds, MongoDBObject(ACCOUNT_ID -> true)).map(toClass)
 
   def queryOneUser(id: String) = collection.findOne($or(ACCOUNT_ID -> id, ACCOUNT_RS -> id)).map(toClass)
 

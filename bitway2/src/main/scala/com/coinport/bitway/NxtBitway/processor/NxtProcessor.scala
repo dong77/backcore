@@ -34,11 +34,20 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
 
   def syncHotAddresses(sync: SyncHotAddresses) = {
     val nxts = nxtMongo.queryByTypes(CryptoCurrencyAddressType.Hot)
-    BitwayMessage(
+    Some(BitwayMessage(
       currency = Nxt,
       syncHotAddressesResult = Some(SyncHotAddressesResult(ErrorCode.Ok, nxts.map(nxtAddress2Thrift).toSet))
-    )
+    ))
   }
+
+  def syncPrivateKeys(sync: SyncPrivateKeys) = {
+    val nxts = nxtMongo.queryByAccountIds(sync.pubKeys.get.toSeq)
+    Some(BitwayMessage(
+      currency = Nxt,
+      syncPrivateKeysResult = Some(SyncPrivateKeysResult(ErrorCode.Ok, nxts.map(nxtAddress2Thrift).toSet))
+    ))
+  }
+
 
   def getNewBlock: Seq[BitwayMessage] = {
     val blockstatus = nxtHttp.getBlockChainStatus()
@@ -86,8 +95,8 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
       var txs2 = txs.filter(tx => !txsSet.contains(tx.fullHash))
 
       // if the transaction is about bitway user
-      val senderIds = nxtMongo.queryByAccountIds(txs2.map(_.senderId)).toSet
-      val recipientIds = nxtMongo.queryByAccountIds(txs2.map(_.recipientId)).toSet
+      val senderIds = nxtMongo.queryByAccountIds(txs2.map(_.senderId)).map(_.accountId).toSet
+      val recipientIds = nxtMongo.queryByAccountIds(txs2.map(_.recipientId)).map(_.accountId).toSet
       txs2 = txs2.filter(tx => senderIds.contains(tx.senderId) && recipientIds.contains(tx.recipientId))
 
       // model to thrift
