@@ -125,6 +125,7 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
 
       // UserAction save and query
       case m: PersistUserAction => routers.historyWriter forward m
+      case m: QueryUserAction => routers.historyReader forward m
 
       //-------------------------------------------------------------------------
       case m =>

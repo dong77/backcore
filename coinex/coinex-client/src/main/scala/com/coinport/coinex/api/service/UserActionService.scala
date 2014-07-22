@@ -19,10 +19,13 @@ object UserActionService extends AkkaService {
     val command = QueryUserAction(userId, UserActionType.Login)
     backend ? command map {
       case result: QueryUserActionResult =>
-        ApiResult(true, 0, "", Some(result.userActions))
+        ApiResult(true, 0, "", Some(result.userActions.map(thrift2pojo)))
       case e =>
         ApiResult(false, -1, e.toString)
     }
   }
+
+  private def thrift2pojo(t: UserAction) =
+    new UserActionPojo(t.id, t.userId, t.timestamp, t.actionType, t.ipAddress, t.location)
 
 }
