@@ -167,14 +167,14 @@ CryptoProxy.prototype.httpRequest_ = function(request, callback) {
 
 CryptoProxy.prototype.generateNewAccountName_ = function(unused, callback) {
     var self = this;
-    var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_list_accounts", params: []};
+    var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_list_my_accounts", params: []};
     var request = JSON.stringify(requestBody);
 
     self.httpRequest_(request, function(error, result) {
         console.log("request: ", request);
         if(!error) {
             console.log("result: ", result);
-            var number = result.result.length + 1;
+            var number = result.result.length + 1 + unused;
             console.log("result.result.length: ", result.result.length);
             var accountName = CryptoProxy.ACCOUNT + number;
             console.log("result: ", accountName);
@@ -195,10 +195,10 @@ CryptoProxy.prototype.getPrivateKeyByAccount_ = function(accountName, callback) 
     console.log("request: ", request);
     self.httpRequest_(request, function(error, result) {
         if (!error) {
-            console.log("result: ", result);
-            callback(null, result.result);
+            console.log("getPrivateKeyByAccount_ result: ", result);
+            callback(null, result);
         } else {
-            console.log("error: ", error);
+            console.log("getPrivateKeyByAccount_ error: ", error);
             callback(error, null);
         }
     });
@@ -232,31 +232,30 @@ CryptoProxy.prototype.generateNewAccount_ = function(accountName, callback) {
     });
 };
 
-CryptoProxy.prototype.generateCustomerAccount_ = function(accountInfo, callback) {
-    var self = this;
-    var params = [];
-    params.push(accountInfo.accountName);
-    params.push(CryptoProxy.HOT_ACCOUNT);
-    var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_account_register", params: params};
-    var request = JSON.stringify(requestBody);
-    console.log("request: ", request);
-    self.httpRequest_(request, function(error, result) {
-        if (!error) {
-            console.log("result: ", result);
-            var cryptoAddress = new CryptoAddress({accountName: accountInfo.accountName,
-                address: accountInfo.address, privateKey: accountInfo.privateKey});
-            console.log("cryptoAddress: ", cryptoAddress);
-            callback(null, cryptoAddress);
-        } else {
-            callback(error, null);
-        }
-    });
-};
+//CryptoProxy.prototype.generateCustomerAccount_ = function(accountInfo, callback) {
+//    var self = this;
+//    var params = [];
+//    params.push(accountInfo.accountName);
+//    var requestBody = {jsonrpc: '2.0', id: 2, method: "", params: params};
+//    var request = JSON.stringify(requestBody);
+//    console.log("request: ", request);
+//    self.httpRequest_(request, function(error, result) {
+//        if (!error) {
+//            console.log("result: ", result);
+//            var cryptoAddress = new CryptoAddress({accountName: accountInfo.accountName,
+//                address: accountInfo.address, privateKey: accountInfo.privateKey});
+//            console.log("cryptoAddress: ", cryptoAddress);
+//            callback(null, cryptoAddress);
+//        } else {
+//            callback(error, null);
+//        }
+//    });
+//};
 
 CryptoProxy.prototype.generateCustomerAccount_ = function(unusedIndex, callback) { 
     var self = this;
     Async.compose(self.generateNewAccount_.bind(self),
-        self.generateNewAccountName_.bind(self))("", function(error, cryptoAddress) {
+        self.generateNewAccountName_.bind(self))(unusedIndex, function(error, cryptoAddress) {
             if (!error) {
                 callback(null, cryptoAddress);
             } else {
