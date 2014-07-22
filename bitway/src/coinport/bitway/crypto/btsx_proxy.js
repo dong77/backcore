@@ -218,7 +218,7 @@ CryptoProxy.prototype.generateNewAccount_ = function(accountName, callback) {
             self.getPrivateKeyByAccount_(accountName, function(errPriv, retPriv) {
                 if (!errPriv) {
                     console.log(retPriv);
-                    var accountInfo = new Object({accountName: accountName, address: result.result,
+                    var accountInfo = new CryptoAddress({accountName: accountName, address: result.result,
                         privateKey: retPriv.result});
                     console.log("accountInfo: ", accountInfo);
                     callback(null, accountInfo);
@@ -299,7 +299,7 @@ CryptoProxy.prototype.getHotAccount_ =  function(callback) {
             if (result.result.length == 0) {
                 self.generateNewAccount_ (CryptoProxy.HOT_ACCOUNT, function(errGNA, retGNA) {
                     if (!error) {
-                        var accountInfo = new Object({accountName:CryptoProxy.HOT_ACCOUNT,
+                        var accountInfo = new CryptoAddress({accountName:CryptoProxy.HOT_ACCOUNT,
                             address: result.result,
                             privateKey: retGNA.privateKey});
                         console.log("accountInfo: ", accountInfo);
@@ -312,7 +312,7 @@ CryptoProxy.prototype.getHotAccount_ =  function(callback) {
                 self.getPrivateKeyByAccount_(CryptoProxy.HOT_ACCOUNT, function(errPriv, retPriv) {
                     if (!errPriv) {
                         console.log(retPriv);
-                        var accountInfo = new Object({accountName: CryptoProxy.HOT_ACCOUNT,
+                        var accountInfo = new CryptoAddress({accountName: CryptoProxy.HOT_ACCOUNT,
                             address: result.result,
                             privateKey: retPriv.result});
                         console.log("accountInfo: ", accountInfo);
@@ -429,7 +429,7 @@ CryptoProxy.prototype.walletTransfer_ = function(type, amount, from, to, id) {
     self.httpRequest_(request, function(error, result) {
         if (!error) {
             console.log("result: ", result);
-            var cctx = new Object();
+            var cctx = new CryptoCurrencyTransaction();
             cctx.ids = id;
             cctx.txType = type;
             cctx.status = TransferStatus.CONFIRMING;
