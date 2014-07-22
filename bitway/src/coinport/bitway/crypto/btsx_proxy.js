@@ -236,7 +236,7 @@ CryptoProxy.prototype.generateNewAccount_ = function(accountName, callback) {
 CryptoProxy.prototype.generateCustomerAccount_ = function(unusedIndex, callback) { 
     var self = this;
     console.log("Enter into generateCustomerAccount_ unusedIndex: ", unusedIndex);
-    var accountName = CryptoProxy.ACCOUNT + ((new Date()).getTime() + unusedIndex);
+    var accountName = CryptoProxy.ACCOUNT + ((new Date()).getTime());
     self.generateNewAccount_.bind(self)(accountName, function(error, cryptoAddress) {
         if (!error) {
             callback(null, cryptoAddress);
