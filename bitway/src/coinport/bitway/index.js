@@ -175,9 +175,9 @@ var btsx = {
         port: '6379',
     }
 };
-var configs = [ btc, ltc, dog, drk, bc, vrc, zet ];
+// var configs = [ btc, ltc, dog, drk, bc, vrc, zet ];
 // var configs = [ btc ];
-// var configs = [ btsx ];
+var configs = [ btsx ];
 
 
 fs.readFile('./pw', function(error, data){
