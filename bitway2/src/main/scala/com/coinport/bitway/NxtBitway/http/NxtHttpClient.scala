@@ -33,12 +33,12 @@ class NxtHttpClient(targetUrl: String) {
 
   def getBlockChainStatus() = {
     val queryMap = Map.empty[String, String]
-    val json = JSON.parseFull(getHttpResult("getBlockchainStatus", queryMap)).get.asInstanceOf[Map[String, String]]
+    val json = JSON.parseFull(getHttpResult("getBlockchainStatus", queryMap)).get.asInstanceOf[Map[String, Any]]
 
     NxtBlockStatus(
-      timestamp = json.getOrElse("time", "0").toInt,
-      lastBlockHeight = json.getOrElse("lastBlockchainFeederHeight", "0").toLong,
-      lastBlockId =  json.getOrElse("lastBlock", "0")
+      timestamp = json.get("time").get.asInstanceOf[Double],
+      lastBlockHeight = json.get("lastBlockchainFeederHeight").get.asInstanceOf[Double].toLong,
+      lastBlockId =  json.get("lastBlock").get.asInstanceOf[String]
     )
   }
 

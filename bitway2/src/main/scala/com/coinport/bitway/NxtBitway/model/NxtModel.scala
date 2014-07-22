@@ -14,7 +14,7 @@ case class NxtAddress(
 case class NxtBlockStatus(
                            lastBlockHeight: Long,
                            lastBlockId: String,
-                           timestamp: Long)
+                           timestamp: Double)
 
 case class NxtTransaction(
                            transactionId: String,
