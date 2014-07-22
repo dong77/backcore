@@ -35,6 +35,7 @@ object MapSerializer extends Serializer[Map[Any, Any]] {
           case ks: RefundReason => ks.name.toUpperCase
           case ks: TransferStatus => ks.name.toUpperCase
           case ks: TransferType => ks.name.toUpperCase
+          case ks: UserActionType => ks.name.toUpperCase
           case ks: UserStatus => ks.name.toUpperCase
           case ks: Any => ks.toString
         },
@@ -130,14 +131,14 @@ object ThriftEnumJson4sSerialization {
       case x: TransferType => JString(x.name)
     }))
 
-  class UserStatusSerializer extends CustomSerializer[UserStatus](format => (
-    { case JString(s) => UserStatus.valueOf(s).get }, {
-      case x: UserStatus => JString(x.name)
-    }))
-
   class UserActionTypeSerializer extends CustomSerializer[UserActionType](format => (
     { case JString(s) => UserActionType.valueOf(s).get }, {
       case x: UserActionType => JString(x.name)
+    }))
+
+  class UserStatusSerializer extends CustomSerializer[UserStatus](format => (
+    { case JString(s) => UserStatus.valueOf(s).get }, {
+      case x: UserStatus => JString(x.name)
     }))
 
   implicit val formats = Serialization.formats(NoTypeHints) +
@@ -157,6 +158,6 @@ object ThriftEnumJson4sSerialization {
     new RefundReasonSerializer +
     new TransferStatusSerializer +
     new TransferTypeSerializer +
-    new UserStatusSerializer +
-    new UserActionTypeSerializer
+    new UserActionTypeSerializer +
+    new UserStatusSerializer
 }

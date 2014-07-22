@@ -64,7 +64,9 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cTWindowQueue = BinaryScalaCodec(TWindowQueue)
   lazy val _cTWindowVector = BinaryScalaCodec(TWindowVector)
   lazy val _cTransaction = BinaryScalaCodec(Transaction)
+  lazy val _cTransferConfig = BinaryScalaCodec(TransferConfig)
   lazy val _cUserAccount = BinaryScalaCodec(UserAccount)
+  lazy val _cUserAction = BinaryScalaCodec(UserAction)
   lazy val _cUserLogsState = BinaryScalaCodec(UserLogsState)
   lazy val _cUserProfile = BinaryScalaCodec(UserProfile)
   lazy val _cAddRobotDNAFailed = BinaryScalaCodec(AddRobotDNAFailed)
@@ -132,6 +134,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cOrderSubmissionSimulated = BinaryScalaCodec(OrderSubmissionSimulated)
   lazy val _cOrderSubmitted = BinaryScalaCodec(OrderSubmitted)
   lazy val _cPasswordResetTokenValidationResult = BinaryScalaCodec(PasswordResetTokenValidationResult)
+  lazy val _cPersistUserAction = BinaryScalaCodec(PersistUserAction)
   lazy val _cQueryAccount = BinaryScalaCodec(QueryAccount)
   lazy val _cQueryAccountResult = BinaryScalaCodec(QueryAccountResult)
   lazy val _cQueryAccountStatistics = BinaryScalaCodec(QueryAccountStatistics)
@@ -170,6 +173,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cQueryTransactionResult = BinaryScalaCodec(QueryTransactionResult)
   lazy val _cQueryTransfer = BinaryScalaCodec(QueryTransfer)
   lazy val _cQueryTransferResult = BinaryScalaCodec(QueryTransferResult)
+  lazy val _cQueryUserAction = BinaryScalaCodec(QueryUserAction)
+  lazy val _cQueryUserActionResult = BinaryScalaCodec(QueryUserActionResult)
   lazy val _cRegisterUserFailed = BinaryScalaCodec(RegisterUserFailed)
   lazy val _cRegisterUserSucceeded = BinaryScalaCodec(RegisterUserSucceeded)
   lazy val _cRemoveRobotDNAFailed = BinaryScalaCodec(RemoveRobotDNAFailed)
@@ -274,7 +279,9 @@ class ThriftBinarySerializer extends Serializer {
     case m: TWindowQueue => _cTWindowQueue(m)
     case m: TWindowVector => _cTWindowVector(m)
     case m: Transaction => _cTransaction(m)
+    case m: TransferConfig => _cTransferConfig(m)
     case m: UserAccount => _cUserAccount(m)
+    case m: UserAction => _cUserAction(m)
     case m: UserLogsState => _cUserLogsState(m)
     case m: UserProfile => _cUserProfile(m)
     case m: AddRobotDNAFailed => _cAddRobotDNAFailed(m)
@@ -342,6 +349,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: OrderSubmissionSimulated => _cOrderSubmissionSimulated(m)
     case m: OrderSubmitted => _cOrderSubmitted(m)
     case m: PasswordResetTokenValidationResult => _cPasswordResetTokenValidationResult(m)
+    case m: PersistUserAction => _cPersistUserAction(m)
     case m: QueryAccount => _cQueryAccount(m)
     case m: QueryAccountResult => _cQueryAccountResult(m)
     case m: QueryAccountStatistics => _cQueryAccountStatistics(m)
@@ -380,6 +388,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: QueryTransactionResult => _cQueryTransactionResult(m)
     case m: QueryTransfer => _cQueryTransfer(m)
     case m: QueryTransferResult => _cQueryTransferResult(m)
+    case m: QueryUserAction => _cQueryUserAction(m)
+    case m: QueryUserActionResult => _cQueryUserActionResult(m)
     case m: RegisterUserFailed => _cRegisterUserFailed(m)
     case m: RegisterUserSucceeded => _cRegisterUserSucceeded(m)
     case m: RemoveRobotDNAFailed => _cRemoveRobotDNAFailed(m)
@@ -488,7 +498,9 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[TWindowQueue.Immutable] => _cTWindowQueue.invert(bytes).get
     case Some(c) if c == classOf[TWindowVector.Immutable] => _cTWindowVector.invert(bytes).get
     case Some(c) if c == classOf[Transaction.Immutable] => _cTransaction.invert(bytes).get
+    case Some(c) if c == classOf[TransferConfig.Immutable] => _cTransferConfig.invert(bytes).get
     case Some(c) if c == classOf[UserAccount.Immutable] => _cUserAccount.invert(bytes).get
+    case Some(c) if c == classOf[UserAction.Immutable] => _cUserAction.invert(bytes).get
     case Some(c) if c == classOf[UserLogsState.Immutable] => _cUserLogsState.invert(bytes).get
     case Some(c) if c == classOf[UserProfile.Immutable] => _cUserProfile.invert(bytes).get
     case Some(c) if c == classOf[AddRobotDNAFailed.Immutable] => _cAddRobotDNAFailed.invert(bytes).get
@@ -556,6 +568,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[OrderSubmissionSimulated.Immutable] => _cOrderSubmissionSimulated.invert(bytes).get
     case Some(c) if c == classOf[OrderSubmitted.Immutable] => _cOrderSubmitted.invert(bytes).get
     case Some(c) if c == classOf[PasswordResetTokenValidationResult.Immutable] => _cPasswordResetTokenValidationResult.invert(bytes).get
+    case Some(c) if c == classOf[PersistUserAction.Immutable] => _cPersistUserAction.invert(bytes).get
     case Some(c) if c == classOf[QueryAccount.Immutable] => _cQueryAccount.invert(bytes).get
     case Some(c) if c == classOf[QueryAccountResult.Immutable] => _cQueryAccountResult.invert(bytes).get
     case Some(c) if c == classOf[QueryAccountStatistics.Immutable] => _cQueryAccountStatistics.invert(bytes).get
@@ -594,6 +607,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[QueryTransactionResult.Immutable] => _cQueryTransactionResult.invert(bytes).get
     case Some(c) if c == classOf[QueryTransfer.Immutable] => _cQueryTransfer.invert(bytes).get
     case Some(c) if c == classOf[QueryTransferResult.Immutable] => _cQueryTransferResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryUserAction.Immutable] => _cQueryUserAction.invert(bytes).get
+    case Some(c) if c == classOf[QueryUserActionResult.Immutable] => _cQueryUserActionResult.invert(bytes).get
     case Some(c) if c == classOf[RegisterUserFailed.Immutable] => _cRegisterUserFailed.invert(bytes).get
     case Some(c) if c == classOf[RegisterUserSucceeded.Immutable] => _cRegisterUserSucceeded.invert(bytes).get
     case Some(c) if c == classOf[RemoveRobotDNAFailed.Immutable] => _cRemoveRobotDNAFailed.invert(bytes).get
