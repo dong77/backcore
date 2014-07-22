@@ -69,7 +69,11 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
             handleTransfer(msg)
           case TransferType.HotToCold => // accept, save request to map
             handleTransfer(msg)
-            sendBitwayMsg(msg.transfer.currency)
+            persist(msg) {
+              event =>
+                updateState(event)
+                sendBitwayMsg(msg.transfer.currency)
+            }
           case TransferType.Unknown => // accept wait for admin accept
             handleTransfer(msg)
             sender ! RequestTransferFailed(UnsupportTransferType)

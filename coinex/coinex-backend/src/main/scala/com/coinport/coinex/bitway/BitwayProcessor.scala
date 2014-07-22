@@ -393,6 +393,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       case Some(amount) if amount < 0 && txType != Some(HotToCold) =>
         self ! DoRequestTransfer(AccountTransfer(0, 0, ColdToHot, supportedCurrency, -amount, created = Some(System.currentTimeMillis)))
         scheduleTransfer(ColdToHot, config.cold2HotTransferInterval)
+      case _ =>
     }
   }
 
