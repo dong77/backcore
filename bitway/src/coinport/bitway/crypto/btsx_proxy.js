@@ -220,7 +220,7 @@ CryptoProxy.prototype.generateNewAccount_ = function(accountName, callback) {
                     var accountInfo = new Object({accountName: accountName, address: result.result,
                         privateKey: retPriv.result});
                     console.log("accountInfo: ", accountInfo);
-                    callback(null, cryptoAddress);
+                    callback(null, accountInfo);
                 } else {
                     console.log("errPriv: ", errPriv);
                     callback(errPriv, null);
@@ -255,8 +255,7 @@ CryptoProxy.prototype.generateCustomerAccount_ = function(accountInfo, callback)
 
 CryptoProxy.prototype.generateCustomerAccount_ = function(unusedIndex, callback) { 
     var self = this;
-    Async.compose(self.registeAccount_bind(self),
-        self.generateNewAccount_.bind(self),
+    Async.compose(self.generateNewAccount_.bind(self),
         self.generateNewAccountName_.bind(self))("", function(error, cryptoAddress) {
             if (!error) {
                 callback(null, cryptoAddress);
@@ -520,7 +519,7 @@ CryptoProxy.prototype.addWithdrawalAccount_ = function(transferInfo, callback) {
     if (transferInfo.id) {
         var self = this;
         var params = [];
-        params.push(transferInfo.id);
+        params.push("out" + transferInfo.id);
         arams.push(transferInfo.to);
         var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_add_contact_account", params: params};
         var request = JSON.stringify(requestBody);
@@ -857,19 +856,19 @@ CryptoProxy.prototype.constructCCTXByTxHistory_ = function(txHistory, callback) 
 
     Async.parallel ([
         function(cb) {self.getSigIdByTxId_.bind(self)(txHistory.trx_id, cb)},
-        function(cb) {self.getAccountByAccountName_.bind(self)(ledger_entries.from_account, cb)},
+        function(cb) {self.getFromAccountInfo_.bind(self)(ledger_entries.from_account, cb)},
         function(cb) {self.getAccountByAccountName_.bind(self)(ledger_entries.to_account, cb)}
         ], function(err, results){
         if (!err) {
             var inputs = [];
             var input = new CryptoCurrencyTransactionPort({accountName: results[1].accountName,
                 address: results[1].key,
-                amount: ledger_entries.amount.amount + txHistory.fee.amount});
+                amount: (ledger_entries.amount.amount + txHistory.fee.amount)/100000});
             inputs.push(input);
             var outputs = [];
             var output = new CryptoCurrencyTransactionPort({accountName: results[2].accountName,
                 address: results[2].key,
-                amount: ledger_entries.amount.amount});
+                amount: ledger_entries.amount.amount/100000});
             outputs.push(output);
             var cctx = new CryptoCurrencyTransaction({sigId: results[0], txid: txHistory.trx_id,
                 ids: null, inputs: inputs, outputs: outputs});
@@ -885,6 +884,22 @@ CryptoProxy.prototype.constructCCTXByTxHistory_ = function(txHistory, callback) 
             callback(error, null);
         }
     });
+};
+
+CryptoProxy.prototype.getFromAccountInfo_ = function(fromAccountName, callback) {
+    var self = this;
+    if (fromAccountName == CryptoProxy.HOT_ACCOUNT) {
+        self.getAccountByAccountName_(fromAccountName, function (error, account) {
+            if (!error) {
+                callback(null, account);
+            } else {
+                callback(error, null);
+            }
+        });
+    } else {
+        var account = new Object({accountName: fromAccountName, key: null});
+        callback(null, account);
+    }
 };
 
 CryptoProxy.prototype.getSigIdByTxId_ = function(txid, callback) {
@@ -911,7 +926,7 @@ CryptoProxy.prototype.getAccountByAccountName_ = function(accountName, callback)
     console.log("Enter into getAccountByAccountName_ accountName:", accountName);
     var params = [];
     params.push(accountName);
-    var requestBody = {jsonrpc: '2.0', id: 2, method: "blockchain_get_account", params: params};
+    var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_get_account", params: params};
     var request = JSON.stringify(requestBody);
     console.log("getAccountByAccountName_ request: ", request);
     self.httpRequest_(request, function(error, result) {
