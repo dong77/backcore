@@ -344,6 +344,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     tx.txType match {
       case Some(HotToCold) =>
         scheduleTransfer(HotToCold, config.hot2ColdTransferInterval)
+      case _ =>
     }
   }
 
@@ -354,6 +355,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         tx.txType match {
           case Some(HotToCold) => scheduleTransfer(tx.txType.get, config.hot2ColdTransferInterval)
           case Some(ColdToHot) => scheduleTransfer(tx.txType.get, config.cold2HotTransferInterval)
+          case _ =>
         }
     }
   }
@@ -402,6 +404,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       case ColdToHot =>
         if (cold2HotCancellable != null && !cold2HotCancellable.isCancelled) cold2HotCancellable.cancel()
         cold2HotCancellable = context.system.scheduler.scheduleOnce(interval, self, TransferBetweenHotCold(Some(ColdToHot)))(context.system.dispatcher)
+      case _ =>
     }
   }
 
