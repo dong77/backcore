@@ -23,6 +23,22 @@
         </encoder>
     </appender>
 
+    <appender name="ERROR-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="com.coinport.coinex.LogFilter" />
+        <File>log/coinex-error.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>log/coinex-error_%i.log.bak</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>100</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>10MB</maxFileSize>
+        </triggeringPolicy>
+        <encoder charset="UTF-8">
+            <pattern>%date{yyyy-MM-dd} %X{akkaTimestamp} %-5level[%-45thread] %-60X{akkaSource}[%-45logger{1}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <!-- <appender name="FILE-BACKUP" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <File>log/coinex.log</File>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -39,6 +55,7 @@
     <root level="INFO">
         <!-- <appender-ref ref="CONSOLE"/> -->
         <appender-ref ref="FILE"/>
+        <appender-ref ref="ERROR-FILE"/>
         <!-- <appender-ref ref="FILE-BACKUP"/> -->
     </root>
 </configuration>
