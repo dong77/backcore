@@ -56,5 +56,12 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     enableHotColdTransfer = false
+  ),
+  Btsx -> BitwayConfig(
+    ip = "bitway",
+    port = 6379,
+    maintainedChainLength = 120,
+    enableHotColdTransfer = false,
+    confirmNum = 10
   )
 ))
