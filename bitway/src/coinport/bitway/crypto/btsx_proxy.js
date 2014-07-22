@@ -206,6 +206,7 @@ CryptoProxy.prototype.getPrivateKeyByAccount_ = function(accountName, callback) 
 
 CryptoProxy.prototype.generateNewAccount_ = function(accountName, callback) {
     var self = this;
+    console.log("Enter into generateNewAccount_ accountName: ", accountName);
     var params = [];
     params.push(accountName);
     var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_account_create", params: params};
@@ -232,36 +233,17 @@ CryptoProxy.prototype.generateNewAccount_ = function(accountName, callback) {
     });
 };
 
-//CryptoProxy.prototype.generateCustomerAccount_ = function(accountInfo, callback) {
-//    var self = this;
-//    var params = [];
-//    params.push(accountInfo.accountName);
-//    var requestBody = {jsonrpc: '2.0', id: 2, method: "", params: params};
-//    var request = JSON.stringify(requestBody);
-//    console.log("request: ", request);
-//    self.httpRequest_(request, function(error, result) {
-//        if (!error) {
-//            console.log("result: ", result);
-//            var cryptoAddress = new CryptoAddress({accountName: accountInfo.accountName,
-//                address: accountInfo.address, privateKey: accountInfo.privateKey});
-//            console.log("cryptoAddress: ", cryptoAddress);
-//            callback(null, cryptoAddress);
-//        } else {
-//            callback(error, null);
-//        }
-//    });
-//};
-
 CryptoProxy.prototype.generateCustomerAccount_ = function(unusedIndex, callback) { 
     var self = this;
-    Async.compose(self.generateNewAccount_.bind(self),
-        self.generateNewAccountName_.bind(self))(unusedIndex, function(error, cryptoAddress) {
-            if (!error) {
-                callback(null, cryptoAddress);
-            } else {
-                callback(error, null);
-            }
-        });
+    console.log("Enter into generateCustomerAccount_ unusedIndex: ", unusedIndex);
+    var accountName = CryptoProxy.ACCOUNT + ((new Date()).getTime() + unusedIndex);
+    self.generateNewAccount_.bind(self)(accountName, function(error, cryptoAddress) {
+        if (!error) {
+            callback(null, cryptoAddress);
+        } else {
+            callback(error, null);
+        }
+    });
 };
 
 CryptoProxy.prototype.generateUserAddress = function(request, callback) {
