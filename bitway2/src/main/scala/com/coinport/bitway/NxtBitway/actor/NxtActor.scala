@@ -40,7 +40,7 @@ class NxtActor(processor: NxtProcessor, config: BitwayConfig) extends Actor with
             case GenerateAddress => processor.generateAddresses(request.generateAddresses.get)
             case Transfer => processor.sendMoney(request.transferCryptoCurrency.get)
             case MultiTransfer => processor.multiSendMoney(request.multiTransferCryptoCurrency.get)
-            case GetMissedBlocks => None
+            case GetMissedBlocks => processor.getMissedBlocks(request.getMissedCryptoCurrencyBlocksRequest.get)
             case SyncHotAddresses => processor.syncHotAddresses(request.syncHotAddresses.get)
             case SyncPrivateKeys => processor.syncPrivateKeys(request.syncPrivateKeys.get)
             case x => None

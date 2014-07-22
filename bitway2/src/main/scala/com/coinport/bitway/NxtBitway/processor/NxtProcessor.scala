@@ -48,25 +48,53 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     ))
   }
 
+  def getMissedBlocks(gmccb: GetMissedCryptoCurrencyBlocks) = {
+    val blockList = gmccb.startIndexs
+    val (lastBlockId, lastBlockHeight)= getRedisLastIndex(redis.get[String](lastIndex).getOrElse(""))
+    var block = blockList.last
+
+    //get two same height block which from blockList & nxtHttp
+    var (listIndex: Int, nxtBlock: NxtBlock) =
+      if (lastBlockHeight > block.height.get) {
+        var nBlock = nxtHttp.getBlock(lastBlockId)
+        while (nBlock.height > block.height.get) nBlock = nxtHttp.getBlock(nBlock.previousBlock)
+        (blockList.size - 1, nBlock)
+      } else if (lastBlockHeight < block.height.get)
+        (blockList.size - 1 - (block.height.get - lastBlockHeight), nxtHttp.getBlock(lastBlockId))
+
+    //find the reorg Index
+    var loop = true
+    while (loop) {
+      block = blockList(listIndex)
+      if (block.id.get == nxtBlock.blockId) loop = false
+      else {
+        nxtBlock = nxtHttp.getBlock(nxtBlock.previousBlock)
+        listIndex = listIndex - 1
+      }
+    }
+
+    //get bitway message by reorg index
+    Some(getBitwayMessageWithReorgIndex(loop, nxtBlock, block))
+  }
 
   def getNewBlock: Seq[BitwayMessage] = {
-    val blockstatus = nxtHttp.getBlockChainStatus()
+    val blockStatus = nxtHttp.getBlockChainStatus()
 
     val blockHeight = redis.get[String](lastIndex).getOrElse("0").toLong
-    val heightDiff = blockstatus.lastBlockHeight - blockHeight
+    val heightDiff = blockStatus.lastBlockHeight - blockHeight
 
     if (heightDiff == 0) Nil
     else if (heightDiff < 0) Nil // throws exception
     else {
       var blockList = Seq.empty[NxtBlock]
-      var nxtBlock = nxtHttp.getBlock(blockstatus.lastBlockId)
+      var nxtBlock = nxtHttp.getBlock(blockStatus.lastBlockId)
 
       while (nxtBlock.height > blockHeight) {
         blockList = blockList :+ nxtBlock
         nxtBlock = nxtHttp.getBlock(nxtBlock.previousBlock)
       }
 
-      redis.set(lastIndex, (blockHeight + blockList.size).toString)
+      redis.set(lastIndex, makeRedisLastIndex(blockList.head.blockId, blockList.head.height))
 
       blockList.reverse.map {
         b =>
@@ -171,4 +199,35 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
   }
 
   private def getTransactionKey(id: String) = prefix_transaction+id
+
+  private def getBitwayMessageWithReorgIndex(loop: Boolean, blockNxt: NxtBlock, block: BlockIndex) = {
+    if (loop == false) BitwayMessage(
+      currency = Nxt,
+      blockMsg = Some(CryptoCurrencyBlockMessage(
+        reorgIndex = Some(BlockIndex(None, None)),
+        block = CryptoCurrencyBlock(
+          index = BlockIndex(None, None),
+          prevIndex = BlockIndex(None, None),
+          txs = Nil))))
+    else {
+      val nxtBlock = nxtHttp.getBlock(blockNxt.nextBlock)
+      redis.set(lastIndex, nxtBlock.height.toString)
+      BitwayMessage(
+        currency = Nxt,
+        blockMsg = Some(CryptoCurrencyBlockMessage(
+          reorgIndex = Some(BlockIndex(block.id, block.height)),
+          block = CryptoCurrencyBlock(
+            index = BlockIndex(Some(nxtBlock.blockId), Some(nxtBlock.height)),
+            prevIndex = BlockIndex(block.id, block.height),
+            txs = nxtBlock.txs.map(nxtTransaction2Thrift)
+          ))))}
+  }
+
+  private def makeRedisLastIndex(block: String, height: Long) = block + "//" + height
+
+  private def getRedisLastIndex(value: String) = {
+    val list = value.split("//")
+    (list(0), list(0).toInt)
+  }
+
 }
