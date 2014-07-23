@@ -30,8 +30,13 @@ class NxtActor(processor: NxtProcessor, config: BitwayConfig) extends Actor with
 
   def receive = LoggingReceive {
     case ListenAtRedis =>
-      processor.getNewBlock.foreach(m => client.rpush(responseChannel, serializer.toBinary(m)))
-      processor.getUnconfirmedTransactions.foreach(m => client.rpush(responseChannel, serializer.toBinary(m)))
+      processor.getNewBlock.foreach{m =>
+        log.debug("find new block, height: %d".format(m.blockMsg.get.block.index.height.get))
+        client.rpush(responseChannel, serializer.toBinary(m))}
+
+      processor.getUnconfirmedTransactions.foreach{m =>
+        log.debug("find unconfirmed transactions: %s".format(m.tx.get.txid))
+        client.rpush(responseChannel, serializer.toBinary(m))}
 
       client.lpop(requestChannel) match {
         case Some(s) =>
@@ -45,7 +50,7 @@ class NxtActor(processor: NxtProcessor, config: BitwayConfig) extends Actor with
             case SyncPrivateKeys => processor.syncPrivateKeys(request.syncPrivateKeys.get)
             case x => None
           }
-          message.map(m => client.rpush(responseChannel, serializer.toBinary(m)))
+          message.foreach(m => client.rpush(responseChannel, serializer.toBinary(m)))
           sendMessageToSelf(0)
         case None =>
           sendMessageToSelf(1)

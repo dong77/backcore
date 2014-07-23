@@ -45,8 +45,6 @@ class NxtHttpClient(targetUrl: String) {
   def getBlock(blockId: String) = {
     val queryMap = Map("block" -> blockId)
     val json = JSON.parseFull(getHttpResult("getBlock", queryMap)).get.asInstanceOf[Map[String, Any]]
-    json.foreach(println)
-
 
     val txIds = json.get("transactions").map(x => x.asInstanceOf[Seq[String]]).getOrElse(Nil)
     val txs = txIds.map { tid =>
