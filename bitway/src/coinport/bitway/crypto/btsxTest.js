@@ -85,7 +85,9 @@ console.log((new Date()).getTime());
 //cryptoProxy.findUserAccountByKey_("BTSX5hzCPsQpBxd81SznNKMsVKzbd1i8YmyC6mVDFShJDLYC4bh5pA", function(error, result) {
 //cryptoProxy.getSigIdByTxId_("4e715691b90ff7a357d30c52f809acb6daae2562", function(error, result) {
 //cryptoProxy.walletTransfer_(10, "yangli", "customers2", 100000000, function(error, result) {
-cryptoProxy.getWalletTransactionByIndex_(26646, function(error, result) {
+//cryptoProxy.getWalletTransactionByIndex_(26646, function(error, result) {
+//cryptoProxy.batchRegister_(2000, function(error, result) {
+cryptoProxy.synchronousHotAddr(request, function(error, result) {
     console.log("%j", error);
     console.log("%j", result);
     console.log((new Date()).getTime()-time1);

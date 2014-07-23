@@ -129,21 +129,19 @@ CryptoProxy.prototype.httpRequest_ = function(request, callback) {
             }
 
             if(err) {
-                self.log.info('error: ', err);
+                self.log.error('httpRequest error: ', err);
                 return;
             }
 
             try {
                 self.log.info(buf);
                 var pos = buf.indexOf('{');
-                var x = buf.substring(pos, buf.length);
-                self.log.info("x: ", x.length);
-                var parsedBuf = JSON.parse(x.data || x);
-                self.log.info("Json Result: ", parsedBuf);
+                var body = buf.substring(pos, buf.length);
+                var parsedBuf = JSON.parse(body.data || body);
                 callback(null, parsedBuf);
             } catch(e) {
-                self.log.info("e.stack", e.stack);
-                self.log.info('HTTP Status code:' + res.statusCode);
+                self.log.error("e.stack", e.stack);
+                self.log.error('HTTP Status code:' + res.statusCode);
                 return;
             }
         });
@@ -151,10 +149,10 @@ CryptoProxy.prototype.httpRequest_ = function(request, callback) {
 
     req.on('error', function(e) {
         var err = new Error('Could not connect to bitcoin via RPC: '+e.message);
-        self.log.info(err);
+        self.log.error(err);
     });
 
-    self.log.info("request: ", request); 
+    self.log.info("httpRequest request: ", request); 
     req.setHeader('Accept', 'application/json, text/plain, */*');
     req.setHeader('Connection', 'keep-alive');
     req.setHeader('Content-Length', request.length);
@@ -165,27 +163,6 @@ CryptoProxy.prototype.httpRequest_ = function(request, callback) {
     req.end();
 }
 
-CryptoProxy.prototype.generateNewAccountName_ = function(unused, callback) {
-    var self = this;
-    var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_list_my_accounts", params: []};
-    var request = JSON.stringify(requestBody);
-
-    self.httpRequest_(request, function(error, result) {
-        self.log.info("request: ", request);
-        if(!error) {
-            self.log.info("result: ", result);
-            var number = result.result.length + 1 + unused;
-            self.log.info("result.result.length: ", result.result.length);
-            var accountName = CryptoProxy.ACCOUNT + number;
-            self.log.info("result: ", accountName);
-            callback(null, accountName);
-        } else {
-            self.log.info("error: ", error);
-            callback(error, null);
-        }
-    });
-};
-
 CryptoProxy.prototype.getPrivateKeyByAccount_ = function(accountName, callback) {
     var self = this;
     var params = [];
@@ -195,53 +172,10 @@ CryptoProxy.prototype.getPrivateKeyByAccount_ = function(accountName, callback) 
     self.log.info("request: ", request);
     self.httpRequest_(request, function(error, result) {
         if (!error) {
-            self.log.info("getPrivateKeyByAccount_ result: ", result);
-            callback(null, result);
+            var privateKey = result.result;
+            callback(null, privateKey);
         } else {
             self.log.info("getPrivateKeyByAccount_ error: ", error);
-            callback(error, null);
-        }
-    });
-};
-
-CryptoProxy.prototype.generateNewAccount_ = function(accountName, callback) {
-    var self = this;
-    self.log.info("Enter into generateNewAccount_ accountName: ", accountName);
-    var params = [];
-    params.push(accountName);
-    var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_account_create", params: params};
-    var request = JSON.stringify(requestBody);
-    self.log.info("request: ", request);
-    self.httpRequest_(request, function(error, result) {
-        if (!error) {
-            self.log.info("result: ", result);
-            self.getPrivateKeyByAccount_(accountName, function(errPriv, retPriv) {
-                if (!errPriv) {
-                    self.log.info(retPriv);
-                    var accountInfo = new CryptoAddress({accountName: accountName, address: result.result,
-                        privateKey: retPriv.result});
-                    self.log.info("accountInfo: ", accountInfo);
-                    callback(null, accountInfo);
-                } else {
-                    self.log.info("errPriv: ", errPriv);
-                    callback(errPriv, null);
-                }
-            });
-        } else {
-            callback(error, null);
-        }
-    });
-};
-
-CryptoProxy.prototype.generateCustomerAccount_ = function(unusedIndex, callback) { 
-    var self = this;
-    self.log.info("Enter into generateCustomerAccount_ unusedIndex: ", unusedIndex);
-    var accountName = CryptoProxy.ACCOUNT + unusedIndex
-        + ((new Date()).getTime())  + ((new Date()).getMilliseconds());
-    self.generateNewAccount_.bind(self)(accountName, function(error, cryptoAddress) {
-        if (!error) {
-            callback(null, cryptoAddress);
-        } else {
             callback(error, null);
         }
     });
@@ -251,21 +185,7 @@ CryptoProxy.prototype.generateUserAddress = function(request, callback) {
     var self = this;
     self.log.info('** Generate User Address Request Received **');
     self.log.info("generateUserAddress req: " + JSON.stringify(request));
-    if (request.num < CryptoProxy.MIN_GENERATE_ADDR_NUM || request.num > CryptoProxy.MAX_GENERATE_ADDR_NUM) {
-        callback(self.makeNormalResponse_(BitwayResponseType.GENERATE_ADDRESS, self.currency,
-            new GenerateAddressesResult({error: ErrorCode.INVALID_REQUEST_ADDRESS_NUM})));
-    } else {
-        Async.times(request.num, self.generateCustomerAccount_.bind(self), function(error, results) {
-            var gar = new GenerateAddressesResult({error: ErrorCode.OK, addressType: CryptoCurrencyAddressType.UNUSED})
-            if (error || results.length != request.num) {
-                gar.error = ErrorCode.RPC_ERROR;
-            } else {
-                gar.addresses = results;
-            }
-            self.log.info("gar: ", gar);
-            callback(self.makeNormalResponse_(BitwayResponseType.GENERATE_ADDRESS, self.currency, gar));
-        });
-    }
+    self.log.info("generateUserAddress do nothint");
 };
 
 CryptoProxy.prototype.synchronousHotAddr =  function(request, callback) {
@@ -296,37 +216,18 @@ CryptoProxy.prototype.getHotAccount_ =  function(callback) {
     self.httpRequest_(request, function(error, result) {
         if (!error) {
             self.log.info("result: ", result);
-            if (result.result.length == 0) {
-                self.generateNewAccount_ (CryptoProxy.HOT_ACCOUNT, function(errGNA, retGNA) {
-                    if (!error) {
-                        var accountInfo = new CryptoAddress({accountName:CryptoProxy.HOT_ACCOUNT,
-                            address: result.result,
-                            privateKey: retGNA.privateKey});
-                        self.log.info("accountInfo: ", accountInfo);
-                        callback(null, cryptoAddress);
-                    } else {
-                        callback(errGNA, null);
-                    }
-                });
-            } else {
-                self.getPrivateKeyByAccount_(CryptoProxy.HOT_ACCOUNT, function(errPriv, retPriv) {
-                    if (!errPriv) {
-                        self.log.info(retPriv);
-                        var accountInfo = new CryptoAddress({accountName: CryptoProxy.HOT_ACCOUNT,
-                            address: result.result,
-                            privateKey: retPriv.result});
-                        self.log.info("accountInfo: ", accountInfo);
-                        callback(null, cryptoAddress);
-                    } else {
-                        self.log.info("errPriv: ", errPriv);
-                        callback(errPriv, null);
-                    }
-                });
-                    var cryptoAddress = new CryptoAddress({address: accountInfo.address, privateKey: accountInfo.privateKey});
+            var accountInfo = new CryptoAddress({accountName: CryptoProxy.HOT_ACCOUNT,
+                address: result.result.owner_key,
+                privateKey: null});
+            self.getPrivateKeyByAccount_(CryptoProxy.HOT_ACCOUNT, function(errPriv, retPriv) {
+                if (!errPriv) {
+                    accountInfo.privateKey = retPriv;
+                    callback(null, accountInfo);
+                } else {
+                    self.log.info("errPriv: ", errPriv);
+                    callback(errPriv, null);
                 }
-                var cryptoAddress = new CryptoAddress({address: accountInfo.address, privateKey: accountInfo.privateKey});
-                self.log.info("cryptoAddress: ", cryptoAddress);
-                callback(null, cryptoAddress);
+            });
         } else {
             callback(error, null);
         }
@@ -337,19 +238,7 @@ CryptoProxy.prototype.syncPrivateKeys =  function(request, callback) {
     var self = this;
     self.log.info('** Synchronous Addr Request Received **');
     self.log.info("syncPKs req: " + JSON.stringify(request));
-    //var spkr = new SyncPrivateKeysResult({error: ErrorCode.OK, addresses: []});
-    //if (request.pubKeys && request.pubKeys.length > 0) {
-    //    Async.map(request.pubKeys, self.getPrivateKey_.bind(self), function(error, cryptoAddrs) {
-    //        if (error) {
-    //            spkr.error = ErrorCode.RPC_ERROR;
-    //        } else {
-    //            spkr.addresses = cryptoAddrs;
-    //        }
-    //        callback(self.makeNormalResponse_(BitwayResponseType.SYNC_PRIVATE_KEYS, self.currency, spkr));
-    //    });
-    //} else {
-    //    self.log.error("Invalid Request!");
-    //}
+    self.log.info("syncPrivateKeys do nothing");
 };
 
 CryptoProxy.prototype.encryptPrivKey_ = function(priv, key) {
@@ -366,53 +255,13 @@ CryptoProxy.prototype.decrypt_ = function(message, key) {
     dec += decipher.final('utf8');
 };
 
-CryptoProxy.prototype.dumpPrivateKey_ = function(address, callback) {
-    var self = this;
-    var privateKey = null;
-    self.rpc.dumpPrivKey(address, function(errPriv, replyPriv){
-        if (errPriv) {
-            callback(errPriv);
-        } else {
-           if (self.walletPassPhrase) { 
-               privateKey = self.encryptPrivKey_(replyPriv.result, self.walletPassPhrase);
-           } else {
-               privateKey = replyPriv.result;
-           }
-           var cryptoAddress = new CryptoAddress({address: address, privateKey: privateKey});
-           callback(null, cryptoAddress);
-        }
-    });
-};
-
-CryptoProxy.prototype.getPrivateKey_ = function(address, callback) {
-    var self = this;
-    if (self.walletPassPhrase) {
-        Async.series([
-            function(cb) {
-                self.walletPassPhrase_.bind(self)(cb)},
-            function(cb) {
-                self.dumpPrivateKey_.bind(self)(address, cb)}
-        ], function(err, values) {
-            if (err) {
-                self.log.error(err);
-                callback(err, null);
-            } else {
-                callback(null, values[1]);
-            }
-        });
-    } else {
-        self.log.warn("no password!");
-        self.dumpPrivateKey_.bind(self)(address, callback);
-    }
-};
-
 CryptoProxy.prototype.transfer = function(request, callback) {
     var self = this;
     self.log.info('** TransferRequest Received **');
     self.log.info("transfer req: " + JSON.stringify(request));
     var ids = [];
     for (var i = 0; i < request.transferInfos.length; i++) {
-        self.makeTransfer(request.type, request.transferInfos[i]);
+        self.makeTransfer_(request.type, request.transferInfos[i]);
     }
 };
 
@@ -429,7 +278,7 @@ CryptoProxy.prototype.walletTransfer_ = function(type, amount, from, to, id) {
     self.httpRequest_(request, function(error, result) {
         if (!error) {
             self.log.info("result: ", result);
-            var cctx = new CryptoCurrencyTransaction();
+            var cctx = new CryptoCurrencyTransaction({status: TransferStatus.CONFIRMING});
             cctx.ids = id;
             cctx.txType = type;
             cctx.status = TransferStatus.CONFIRMING;
@@ -459,7 +308,7 @@ CryptoProxy.prototype.getSigId_ = function(signatures) {
     return sha256.digest('hex');
 };
 
-CryptoProxy.prototype.makeTransfer = function(type, transferInfo) {
+CryptoProxy.prototype.makeTransfer_ = function(type, transferInfo) {
     switch (type) {
         case TransferType.WITHDRAWAL:
         case TransferType.HOT_TO_COLD:
@@ -479,7 +328,7 @@ CryptoProxy.prototype.makeTransfer = function(type, transferInfo) {
             break;
         case TransferType.USER_TO_HOT:
             Async.parallel ([
-                function(cb) {self.getAccountByAccountName_.bind(self)(transferInfo.from.accountName, cb)},
+                function(cb) {self.getAccountByAccountName_.bind(self)(CryptoProxy.DEPOSIT_ACCOUNT, cb)},
                 function(cb) {self.getAccountByAccountName_.bind(self)(CryptoProxy.HOT_ACCOUNT, cb)}
                 ], function(error, results){
                     if (!error) {
@@ -502,7 +351,7 @@ CryptoProxy.prototype.addWithdrawalAccount_ = function(transferInfo, callback) {
         var self = this;
         var params = [];
         params.push("out" + transferInfo.id);
-        arams.push(transferInfo.to);
+        params.push(transferInfo.to);
         var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_add_contact_account", params: params};
         var request = JSON.stringify(requestBody);
         self.log.info("request: ", request);
@@ -560,13 +409,13 @@ CryptoProxy.prototype.multi_transfer = function(request, callback) {
             transferInfos: request.transferInfos[key], type: Number(key)});
         requestAarry.push(singleRequest);
     }
-    Async.map(requestAarry, self.transfer.bind(self), function(result) {
-        callback(result);    
+    Async.map(requestAarry, self.transfer.bind(self), function(results) {
+        callback(results);    
     });
 }
 
-CryptoProxy.prototype.jsonToAmount_ = function(value) {
-    return Math.round(1e8 * value)/1e8;
+CryptoProxy.prototype.convertAmount_ = function(value) {
+    return value/100000;
 };
 
 CryptoProxy.prototype.walletPassPhrase_ = function(callback) {
@@ -831,29 +680,18 @@ CryptoProxy.prototype.constructCCTXByTxHistory_ = function(txHistory, callback) 
     var self = this;
     var inputs = [];
     self.log.info("txHistory %j: ", txHistory);
-    var ledger_entries = txHistory.ledger_entries[0];
+    var ledger_entries = txHistory.ledger_entries;
     self.log.info("ledger_entries: ", ledger_entries);
-    self.log.info("amount: ", ledger_entries.amount);
-    self.log.info("amount.amount: ", ledger_entries.amount.amount);
 
     Async.parallel ([
         function(cb) {self.getSigIdByTxId_.bind(self)(txHistory.trx_id, cb)},
-        function(cb) {self.getFromAccountInfo_.bind(self)(ledger_entries.from_account, cb)},
-        function(cb) {self.getAccountByAccountName_.bind(self)(ledger_entries.to_account, cb)}
+        function(cb) {self.constructInputs_.bind(self)(ledger_entries, cb)},
+        function(cb) {self.constructOutputs_.bind(self)(ledger_entries, cb)}
         ], function(err, results){
         if (!err) {
-            var inputs = [];
-            var input = new CryptoCurrencyTransactionPort({accountName: results[1].accountName,
-                address: results[1].key,
-                amount: (ledger_entries.amount.amount + txHistory.fee.amount)/100000});
-            inputs.push(input);
-            var outputs = [];
-            var output = new CryptoCurrencyTransactionPort({accountName: results[2].accountName,
-                address: results[2].key,
-                amount: ledger_entries.amount.amount/100000});
-            outputs.push(output);
             var cctx = new CryptoCurrencyTransaction({sigId: results[0], txid: txHistory.trx_id,
-                ids: null, inputs: inputs, outputs: outputs});
+                ids: null, inputs: results[1], outputs: results[2], 
+                minerFee: self.convertAmount_(txHistory.fee)});
             self.redis.get(results[0], function(error, ids) {
                 if (!error) {
                     cctx.ids = ids;
@@ -870,6 +708,52 @@ CryptoProxy.prototype.constructCCTXByTxHistory_ = function(txHistory, callback) 
     });
 };
 
+CryptoProxy.prototype.constructInputs_ = function(ledgerEntries, callback) {
+    var self = this;
+    self.log.info("Enter into constructInputs_");
+    var inputAccountNames = [];
+    for (var i = 0; i < ledgerEntries.length; i++) {
+        inputAccountNames.push(ledgerEntries[i].from_account);
+    }
+    Async.map(inputAccountNames, self.getAccountByAccountName_.bind(self), function(errors, results) {
+        if (!errors) {
+            var inputs = [];
+            for (var i = 0; i < results.length; i++) {
+                var input = new CryptoCurrencyTransactionPort({accountName: results[i].accountName,
+                    address: results[i].address,
+                    amount: self.convertAmount_(ledgerEntries[i].amount.amount)});
+                inputs.push(input);
+            }
+            callback(null, inputs);
+       } else {
+           callback(errors, null);
+       }
+   });
+};
+
+CryptoProxy.prototype.constructOutputs_ = function(ledgerEntries, callback) {
+    var self = this;
+    self.log.info("Enter into constructOutputs_");
+    var outputAccountNames = [];
+    for (var i = 0; i < ledgerEntries.length; i++) {
+        outputAccountNames.push(ledgerEntries[i].to_account);
+    }
+    Async.map(outputAccountNames, self.getAccountByAccountName_.bind(self), function(errors, results) {
+        if (!errors) {
+            var outputs = [];
+            for (var i = 0; i < results.length; i++) {
+                var output = new CryptoCurrencyTransactionPort({accountName: results[i].accountName,
+                    address: results[i].address,
+                    amount: self.convertAmount_(ledgerEntries[i].amount.amount)});
+                outputs.push(output);
+            }
+            callback(null, outputs);
+        } else {
+            callback(errors, null);
+        }
+    });
+};
+
 CryptoProxy.prototype.getFromAccountInfo_ = function(fromAccountName, callback) {
     var self = this;
     if (fromAccountName == CryptoProxy.HOT_ACCOUNT) {
@@ -881,7 +765,7 @@ CryptoProxy.prototype.getFromAccountInfo_ = function(fromAccountName, callback) 
             }
         });
     } else {
-        var account = new Object({accountName: fromAccountName, key: null});
+        var account = new CryptoAddress({accountName: fromAccountName, address: null});
         callback(null, account);
     }
 };
@@ -917,10 +801,10 @@ CryptoProxy.prototype.getAccountByAccountName_ = function(accountName, callback)
         if(!error) {
             self.log.info("getAccountByAccountName_ result: ", result);
             if (result.result && result.result.name == accountName) {
-                var account = new Object({accountName: accountName, key: result.result.owner_key});
+                var account = new CryptoAddress({accountName: accountName, address: result.result.owner_key});
                 callback(null, account);
             } else {
-                var account = new Object({accountName: accountName, key: null});
+                var account = new CryptoAddress({accountName: accountName, address: null});
                 callback(null, account);
             }
         } else {
