@@ -43,39 +43,43 @@ class NxtHttpClient(targetUrl: String) {
   }
 
   def getBlock(blockId: String) = {
-    val queryMap = Map.empty[String, String]
-    val json = JSON.parseFull(getHttpResult("getBlock", queryMap)).get.asInstanceOf[Map[String, String]]
+    val queryMap = Map("block" -> blockId)
+    val json = JSON.parseFull(getHttpResult("getBlock", queryMap)).get.asInstanceOf[Map[String, Any]]
+    json.foreach(println)
 
-    val jsonTXs = json.getOrElse("lastBlock", "[]").asInstanceOf[Seq[String]]
-    val txs = jsonTXs.map(getTransaction)
+
+    val txIds = json.get("transactions").map(x => x.asInstanceOf[Seq[String]]).getOrElse(Nil)
+    val txs = txIds.map { tid =>
+      val tx = JSON.parseFull(getHttpResult("getTransaction", Map("transaction" -> tid))).get.asInstanceOf[Map[String, Any]]
+      parseTransaction(tx)
+    }.filter(_.tType == 0)
 
     NxtBlock(
       blockId = blockId,
       txs = txs,
-      nextBlock = json.getOrElse("lastBlock", "0"),
-      previousBlock = json.getOrElse("previousBlock", "0"),
-      timestamp = json.getOrElse("time", "0").toInt,
-      height = json.getOrElse("height", "0").toLong
+      nextBlock = json.get("nextBlock").map(x => x.asInstanceOf[String]),
+      previousBlock = json.get("previousBlock").get.asInstanceOf[String],
+      timestamp = json.get("timestamp").get.asInstanceOf[Double].toLong,
+      height = json.get("height").get.asInstanceOf[Double].toLong
     )
   }
 
-  def getTransaction(transaction: String) = {
-    val json = JSON.parseFull(transaction).get.asInstanceOf[Map[String, String]]
-
+  def parseTransaction(json: Map[String, Any]) = {
     NxtTransaction(
-      transactionId = json.getOrElse("transaction", "0"),
-      senderId = json.getOrElse("sender", "0"),
-      senderRS = json.getOrElse("senderRS", "0"),
-      recipientId = json.getOrElse("recipient", "0"),
-      recipientRS = json.getOrElse("recipientRS", "0"),
-      timestamp = json.getOrElse("timestamp", "0").toInt,
-      blockId = json.getOrElse("block", "0"),
-      height = json.getOrElse("height", "0").toInt,
-      deadline = json.getOrElse("deadline", "0").toInt,
-      subtype = json.getOrElse("subtype", "0").toInt,
-      confirms  = json.getOrElse("confirmations", "0").toInt,
-      amount = json.getOrElse("amountNQT", "0"),
-      fullHash =  json.getOrElse("fullHash", "")
+      transactionId = json.get("transaction").get.asInstanceOf[String],
+      senderId = json.get("sender").get.asInstanceOf[String],
+      senderRS = json.get("senderRS").get.asInstanceOf[String],
+      recipientId = json.get("recipient").get.asInstanceOf[String],
+      recipientRS = json.get("recipientRS").get.asInstanceOf[String],
+      timestamp = json.get("timestamp").get.asInstanceOf[Double].toLong,
+      blockId = json.get("block").get.asInstanceOf[String],
+      height = json.get("height").get.asInstanceOf[Double].toInt,
+      deadline = json.get("deadline").get.asInstanceOf[Double].toInt,
+      tType = json.get("type").get.asInstanceOf[Double].toInt,
+      confirms  = json.get("confirmations").get.asInstanceOf[Double].toInt,
+      amount = json.get("amountNQT").get.asInstanceOf[String].toDouble,
+      fee = json.get("feeNQT").get.asInstanceOf[String].toDouble,
+      fullHash =  json.get("fullHash").get.asInstanceOf[String]
     )
   }
 
@@ -83,8 +87,8 @@ class NxtHttpClient(targetUrl: String) {
     val queryMap = Map.empty[String, String]
     val json = JSON.parseFull(getHttpResult("getUnconfirmedTransactionIds", queryMap)).get.asInstanceOf[Map[String, String]]
 
-    val trans = json.getOrElse("unconfirmedTransactionIds", "[]").asInstanceOf[Seq[String]]
-    trans.map(tran => getTransaction(tran))
+    val trans = json.getOrElse("unconfirmedTransactionIds", "[]").asInstanceOf[Seq[Map[String, Any]]]
+    trans.map(tran => parseTransaction(tran))
   }
 
   def sendMoney(secret: String, recipient: String, amount: Double, fee: Double, deadline: Int = 900): String = {

@@ -24,17 +24,18 @@ case class NxtTransaction(
                            recipientId: String,
                            recipientRS: String,
                            blockId: String,
-                           amount: String,
+                           amount: Double,
+                           fee: Double,
                            timestamp: Long,
                            height: Int,
                            deadline: Int,
-                           subtype: Int,
+                           tType: Int,
                            confirms: Int)
 
 case class NxtBlock(
                      blockId: String,
                      txs: Seq[NxtTransaction],
-                     nextBlock: String,
+                     nextBlock: Option[String],
                      previousBlock: String,
                      timestamp: Long,
                      height: Long)

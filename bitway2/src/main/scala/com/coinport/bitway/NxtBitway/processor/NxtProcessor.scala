@@ -210,7 +210,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
           prevIndex = BlockIndex(None, None),
           txs = Nil))))
     else {
-      val nxtBlock = nxtHttp.getBlock(blockNxt.nextBlock)
+      val nxtBlock = nxtHttp.getBlock(blockNxt.nextBlock.get)
       redis.set(lastIndex, nxtBlock.height.toString)
       BitwayMessage(
         currency = Nxt,
