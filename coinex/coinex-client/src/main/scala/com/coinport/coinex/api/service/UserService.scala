@@ -240,8 +240,6 @@ object UserService extends AkkaService {
 
     backend ? command map {
       case succeeded: LoginSucceeded =>
-        val userAction = UserAction(0L, succeeded.id, System.currentTimeMillis, UserActionType.Login, None, None)
-        HistoryService.saveUserAction(userAction)
         ApiResult(true, 0, "登录成功", Some(succeeded))
       case failed: LoginFailed =>
         ApiResult(false, failed.error.value, failed.toString)

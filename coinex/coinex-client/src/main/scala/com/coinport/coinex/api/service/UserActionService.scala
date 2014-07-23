@@ -11,9 +11,18 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.Await.result
 import scala.concurrent.Await
+import java.util.Date
+import java.text.SimpleDateFormat
 
 object UserActionService extends AkkaService {
   override def hashCode(): Int = super.hashCode()
+  private val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+
+  def saveUserAction(userAction: UserAction) = {
+    val command = PersistUserAction(userAction)
+    backend ? command
+    ApiResult(true, 0, "")
+  }
 
   def getLoginHistory(userId: Long) = {
     val command = QueryUserAction(userId, UserActionType.Login)
@@ -26,6 +35,6 @@ object UserActionService extends AkkaService {
   }
 
   private def thrift2pojo(t: UserAction) =
-    new UserActionPojo(t.id, t.userId, t.timestamp, t.actionType, t.ipAddress, t.location)
+    new UserActionPojo(t.id, t.userId, t.timestamp, t.actionType, t.ipAddress, t.location, Some(sdf.format(new Date(t.timestamp))))
 
 }

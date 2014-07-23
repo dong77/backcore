@@ -11,4 +11,5 @@ case class UserActionPojo(id: Long,
   timestamp: Long,
   actionType: UserActionType,
   ip: Option[String] = None,
-  location: Option[String] = None)
+  location: Option[String] = None,
+  timeStr: Option[String] = None)
