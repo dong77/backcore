@@ -20,7 +20,7 @@ object AccountService extends AkkaService {
     }
   }
 
-  def requestDeposit(uid: Long, currency: Currency, amount: Double): Future[ApiResult] = {
+  def deposit(uid: Long, currency: Currency, amount: Double): Future[ApiResult] = {
     val internalAmount: Long = amount.internalValue(currency)
 
     val deposit = AccountTransfer(0L, uid.toLong, TransferType.Deposit, currency, internalAmount, TransferStatus.Pending)
