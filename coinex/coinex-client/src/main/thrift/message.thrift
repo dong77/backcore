@@ -149,6 +149,7 @@ typedef data.UserActionType                     _UserActionType
 /* C,P  */ struct DoCancelTransfer                        {1: _AccountTransfer transfer}
 /* C,P  */ struct AdminConfirmTransferFailure             {1: _AccountTransfer transfer, 2:_ErrorCode error}
 /* C,P  */ struct AdminConfirmTransferSuccess             {1: _AccountTransfer transfer, 2: optional bool transferDebug, 3: optional _TransferConfig transferConfig}
+/* C,P  */ struct AdminConfirmTransferProcessed           {1: _AccountTransfer transfer}
 
 /* C,P  */ struct DoRequestGenerateABCode                 {1: i64 userId, 2: i64 amount, 3: optional string a, 4: optional string b}
 /* R-   */ struct RequestGenerateABCodeFailed             {1: _ErrorCode error}

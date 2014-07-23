@@ -106,6 +106,13 @@ class AccountProcessor(
         updateState(event)
       }
 
+    case p @ ConfirmablePersistent(m: AdminConfirmTransferProcessed, _, _) =>
+      persist(m.copy(transfer = appendFeeIfNecessary(m.transfer))) {
+        event =>
+          confirm(p)
+          updateState(event)
+      }
+
     case p @ ConfirmablePersistent(m: CryptoTransferSucceeded, _, _) =>
       persist(m.copy(transfers = m.transfers.map(appendFeeIfNecessary(_)))) {
         event =>
@@ -274,6 +281,9 @@ trait AccountManagerBehavior extends CountFeeSupport {
       }
 
     case AdminConfirmTransferSuccess(t, _, _) =>
+      succeededTransfer(t)
+
+    case AdminConfirmTransferProcessed(t) =>
       succeededTransfer(t)
 
     case AdminConfirmTransferFailure(t, _) =>

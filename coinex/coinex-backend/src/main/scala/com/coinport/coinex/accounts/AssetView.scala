@@ -22,33 +22,18 @@ class AssetView extends ExtendedView {
 
   def receive = LoggingReceive {
     case Persistent(cts: CryptoTransferSucceeded, _) =>
-      cts.transfers foreach {
-        t =>
-          t.`type` match {
-            case Deposit => manager.updateAsset(t.userId, t.updated.get, t.currency, t.amount)
-            case Withdrawal => manager.updateAsset(t.userId, t.updated.get, t.currency, -t.amount)
-            case _ =>
-          }
-      }
+      cts.transfers foreach (succeededTransfer(_))
+
     case Persistent(acts: AdminConfirmTransferSuccess, _) =>
-      val t = acts.transfer
-      t.`type` match {
-        case Deposit => manager.updateAsset(t.userId, t.updated.get, t.currency, t.amount)
-        case Withdrawal => manager.updateAsset(t.userId, t.updated.get, t.currency, -t.amount)
-        case _ =>
-      }
+      succeededTransfer(acts.transfer)
+
+    case Persistent(processed: AdminConfirmTransferProcessed, _) =>
+      succeededTransfer(processed.transfer)
 
     case Persistent(result: CryptoTransferResult, _) =>
       result.multiTransfers.values foreach {
         tmf =>
-          tmf.transfers.filter(_.status == TransferStatus.Succeeded).foreach {
-            t =>
-              t.`type` match {
-                case Deposit => manager.updateAsset(t.userId, t.updated.get, t.currency, t.amount)
-                case Withdrawal => manager.updateAsset(t.userId, t.updated.get, t.currency, -t.amount)
-                case _ =>
-              }
-          }
+          tmf.transfers.filter(_.status == TransferStatus.Succeeded).foreach(succeededTransfer(_))
       }
 
     case e @ Persistent(OrderSubmitted(originOrderInfo, txs), _) =>
@@ -96,5 +81,20 @@ class AssetView extends ExtendedView {
       val currentPrice = CurrentPrice(manager.getCurrentPrice)
 
       sender ! QueryAssetResult(currentAsset, historyAsset, currentPrice, historyPrice)
+  }
+
+  private def succeededTransfer(t: AccountTransfer) {
+    t.`type` match {
+      case Deposit =>
+        // Deposit fee not included the t.amount
+        val feeAmount = t.fee match {
+          case Some(f) if f.amount > 0 => f.amount
+          case _ => 0L
+        }
+        manager.updateAsset(t.userId, t.updated.get, t.currency, t.amount - feeAmount)
+      // Withdrawal fee is included in t.amount, so no need to substract again
+      case Withdrawal => manager.updateAsset(t.userId, t.updated.get, t.currency, -t.amount)
+      case _ =>
+    }
   }
 }

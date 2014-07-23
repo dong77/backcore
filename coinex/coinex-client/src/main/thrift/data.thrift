@@ -179,6 +179,7 @@ enum TransferStatus {
     CANCELLED            = 8
     REJECTED             = 9
     HOT_INSUFFICIENT     = 10
+    PROCESSING           = 11
 }
 
 enum ExportedEventType {

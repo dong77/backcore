@@ -82,6 +82,8 @@ trait AccountTransferBehavior {
       transferHandler.put(t)
     }
 
+    case AdminConfirmTransferProcessed(t) => transferHandler.put(t)
+
     case m @ MultiCryptoCurrencyTransactionMessage(currency, txs, newIndex: Option[BlockIndex], confirmNum, timestamp) =>
       logger.info(s">>>>>>>>>>>>>>>>>>>>> updateState  => ${m.toString}")
       if (manager.getLastBlockHeight(currency) > 0) newIndex foreach {

@@ -84,7 +84,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
 
     case AdminConfirmTransferFailure(t, error) =>
       transferHandler.get(t.id) match {
-        case Some(transfer) if transfer.status == Pending =>
+        case Some(transfer) if transfer.status == Pending || transfer.status == Processing =>
           val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Rejected, reason = Some(error))
           persist(AdminConfirmTransferFailure(updated, error)) {
             event =>
@@ -143,13 +143,35 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                 sender ! RequestTransferFailed(UnsupportTransferType)
             }
           } else {
-            val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Succeeded)
-            persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {
-              event =>
-                deliverToAccountManager(event)
-                updateState(event)
-                sender ! AdminCommandResult(Ok)
+            transfer.`type` match {
+              case TransferType.Withdrawal if !transferDebugConfig =>
+                val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Processing)
+                persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {
+                  event =>
+                    updateState(event)
+                }
+              case _ =>
+                val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Succeeded)
+                persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {
+                  event =>
+                    deliverToAccountManager(event)
+                    updateState(event)
+                }
             }
+            sender ! AdminCommandResult(Ok)
+          }
+        case Some(_) => sender ! AdminCommandResult(AlreadyConfirmed)
+        case None => sender ! AdminCommandResult(TransferNotExist)
+      }
+
+    case AdminConfirmTransferProcessed(t) =>
+      transferHandler.get(t.id) match {
+        case Some(transfer) if transfer.status == Processing =>
+          persist(AdminConfirmTransferProcessed(transfer.copy(updated = Some(System.currentTimeMillis), status = Succeeded))) {
+            event =>
+              deliverToAccountManager(event)
+              updateState(event)
+              sender ! AdminCommandResult(Ok)
           }
         case Some(_) => sender ! AdminCommandResult(AlreadyConfirmed)
         case None => sender ! AdminCommandResult(TransferNotExist)
