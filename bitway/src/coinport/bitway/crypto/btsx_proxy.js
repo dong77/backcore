@@ -745,6 +745,9 @@ CryptoProxy.prototype.constructOutputs_ = function(ledgerEntries, callback) {
                 var output = new CryptoCurrencyTransactionPort({accountName: results[i].accountName,
                     address: results[i].address,
                     amount: self.convertAmount_(ledgerEntries[i].amount.amount)});
+                if (output.accountName == CryptoProxy.HOT_ACCOUNT) {
+                    output.memo = ledgerEntries[i].memo;
+                }
                 outputs.push(output);
             }
             callback(null, outputs);
