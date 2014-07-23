@@ -67,6 +67,7 @@ final class Coinex(routers: LocalRouters) extends Actor with Logging {
       case m: AdminConfirmTransferFailure => routers.depositWithdrawProcessor forward m
       case m: AdminConfirmTransferSuccess => routers.depositWithdrawProcessor forward m
       case m: DoCancelTransfer => routers.depositWithdrawProcessor forward m
+      case m: AdminConfirmTransferProcessed => routers.depositWithdrawProcessor forward m
       case m: MultiCryptoCurrencyTransactionMessage => routers.depositWithdrawProcessor forward m
       case m: MultiTransferCryptoCurrencyResult => routers.depositWithdrawProcessor forward m
 
