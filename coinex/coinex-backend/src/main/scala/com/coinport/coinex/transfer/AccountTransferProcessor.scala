@@ -68,7 +68,6 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
           case TransferType.ColdToHot => // accept, wait for admin confirm
             handleTransfer(msg)
           case TransferType.HotToCold => // accept, save request to map
-            handleTransfer(msg)
             persist(msg) {
               event =>
                 updateState(event)
