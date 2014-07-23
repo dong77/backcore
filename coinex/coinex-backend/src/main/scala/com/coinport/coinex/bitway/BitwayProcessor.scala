@@ -176,6 +176,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
                   channelToTransferProcessor forward Deliver(Persistent(MultiCryptoCurrencyTransactionMessage(currency,
                     List(completedTx))), transferProcessor.path)
               }
+              reScheduleTransferForTx(completedTx)
             }
         }
       }
@@ -348,13 +349,23 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     }
   }
 
+  private def reScheduleTransferForTx(tx: CryptoCurrencyTransaction) {
+    if (!config.enableHotColdTransfer) return
+    tx.txType match {
+      case Some(ColdToHot) => // Find transaction for coldToHot, then postpone HotToCold check for half an hour
+        scheduleTransfer(HotToCold, config.hot2ColdTransferInterval * 6)
+      case _ =>
+    }
+  }
+
   private def reScheduleTransferForBlock(msg: MultiCryptoCurrencyTransactionMessage) {
     if (!config.enableHotColdTransfer) return
     msg.txs.foreach {
       tx =>
         tx.txType match {
           case Some(HotToCold) => scheduleTransfer(tx.txType.get, config.hot2ColdTransferInterval)
-          case Some(ColdToHot) => scheduleTransfer(tx.txType.get, config.cold2HotTransferInterval)
+          case Some(ColdToHot) =>
+            scheduleTransfer(tx.txType.get, config.cold2HotTransferInterval)
           case _ =>
         }
     }
