@@ -20,16 +20,12 @@ object AccountService extends AkkaService {
     }
   }
 
-  // TODO: remove this function
-  def deposit(uid: Long, currency: Currency, amount: Double): Future[ApiResult] = {
+  def requestDeposit(uid: Long, currency: Currency, amount: Double): Future[ApiResult] = {
     val internalAmount: Long = amount.internalValue(currency)
 
     val deposit = AccountTransfer(0L, uid.toLong, TransferType.Deposit, currency, internalAmount, TransferStatus.Pending)
     backend ? DoRequestTransfer(deposit) map {
       case result: RequestTransferSucceeded =>
-
-        backend ! AdminConfirmTransferSuccess(result.transfer)
-
         ApiResult(true, 0, "充值申请已提交", Some(result))
       case failed: RequestTransferFailed =>
         ApiResult(false, 1, "充值失败", Some(failed))
