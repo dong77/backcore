@@ -27,7 +27,7 @@ case object TryFetchAddresses
 
 case object TrySyncHotAddresses
 
-case class TransferBetweenHotCold(txType: Option[TransferType] = None)
+case class TransferBetweenHotCold(txType: TransferType)
 
 case class FetchAddresses(currency: Currency)
 

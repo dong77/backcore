@@ -388,21 +388,28 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
 
   private def getRequestChannel = config.requestChannelPrefix + supportedCurrency.value.toString
 
-  private def checkTransferHotCold(txType: Option[TransferType]) {
+  private def checkTransferHotCold(txType: TransferType) {
     if (config.enableHotColdTransfer) {
       transferHotColdIfNeed(txType)
     }
   }
 
-  private def transferHotColdIfNeed(txType: Option[TransferType]) {
+  private def transferHotColdIfNeed(txType: TransferType) {
+    var isTransfer = false
     manager.needHotColdTransfer match {
       case None =>
       case Some(amount) if amount == 0 =>
-      case Some(amount) if amount > 0 && txType != Some(ColdToHot) =>
+      case Some(amount) if amount > 0 && txType != ColdToHot =>
         self ! DoRequestTransfer(AccountTransfer(0, 0, HotToCold, supportedCurrency, amount, created = Some(System.currentTimeMillis)))
-        scheduleTransfer(HotToCold, config.hot2ColdTransferIntervalLarge)
-      case Some(amount) if amount < 0 && txType != Some(HotToCold) =>
+        isTransfer = true
+      case Some(amount) if amount < 0 && txType != HotToCold =>
         self ! DoRequestTransfer(AccountTransfer(0, 0, ColdToHot, supportedCurrency, -amount, created = Some(System.currentTimeMillis)))
+      case _ =>
+    }
+    txType match {
+      case HotToCold =>
+        scheduleTransfer(HotToCold, if (isTransfer) config.hot2ColdTransferIntervalLarge else config.hot2ColdTransferInterval)
+      case ColdToHot =>
         scheduleTransfer(ColdToHot, config.cold2HotTransferInterval)
       case _ =>
     }
@@ -412,10 +419,10 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     txType match {
       case HotToCold =>
         if (hot2ColdCancellable != null && !hot2ColdCancellable.isCancelled) hot2ColdCancellable.cancel()
-        hot2ColdCancellable = context.system.scheduler.scheduleOnce(interval, self, TransferBetweenHotCold(Some(HotToCold)))(context.system.dispatcher)
+        hot2ColdCancellable = context.system.scheduler.scheduleOnce(interval, self, TransferBetweenHotCold(HotToCold))(context.system.dispatcher)
       case ColdToHot =>
         if (cold2HotCancellable != null && !cold2HotCancellable.isCancelled) cold2HotCancellable.cancel()
-        cold2HotCancellable = context.system.scheduler.scheduleOnce(interval, self, TransferBetweenHotCold(Some(ColdToHot)))(context.system.dispatcher)
+        cold2HotCancellable = context.system.scheduler.scheduleOnce(interval, self, TransferBetweenHotCold(ColdToHot))(context.system.dispatcher)
       case _ =>
     }
   }
