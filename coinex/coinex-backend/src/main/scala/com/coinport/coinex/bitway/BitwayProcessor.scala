@@ -399,10 +399,10 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     manager.needHotColdTransfer match {
       case None =>
       case Some(amount) if amount == 0 =>
-      case Some(amount) if amount > 0 && txType != ColdToHot =>
+      case Some(amount) if amount > 0 && txType == HotToCold =>
         self ! DoRequestTransfer(AccountTransfer(0, 0, HotToCold, supportedCurrency, amount, created = Some(System.currentTimeMillis)))
         isTransfer = true
-      case Some(amount) if amount < 0 && txType != HotToCold =>
+      case Some(amount) if amount < 0 && txType == ColdToHot =>
         self ! DoRequestTransfer(AccountTransfer(0, 0, ColdToHot, supportedCurrency, -amount, created = Some(System.currentTimeMillis)))
       case _ =>
     }
@@ -412,6 +412,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       case ColdToHot =>
         scheduleTransfer(ColdToHot, config.cold2HotTransferInterval)
       case _ =>
+        log.error(s"transferHotColdIfNeed get wrong txType: ${txType.toString}")
     }
   }
 
