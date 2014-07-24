@@ -32,6 +32,8 @@ class MandrillMailHandler(mandrillApiKey: String)(implicit val system: ActorSyst
   val passwordResetTemplate = "passwordreset"
   val monitorTemplate = "monitor"
   val codeTemplate = "verificationcode"
+  val depositTemplate = "depositnotification"
+  val withdrawalTemplate = "withdrawalnotification"
 
   case class TemplateContent(name: String, content: String)
   case class To(email: String)
@@ -60,6 +62,7 @@ class MandrillMailHandler(mandrillApiKey: String)(implicit val system: ActorSyst
   def sendPasswordReset(to: String, params: Seq[(String, String)]) = sendMail(to, passwordResetTemplate, params)
   def sendMonitor(to: String, params: Seq[(String, String)]) = sendMail(to, monitorTemplate, params)
   def sendVerificationCodeEmail(to: String, params: Seq[(String, String)]) = sendMail(to, codeTemplate, params)
+  def sendWithdrawalNotification(to: String, params: Seq[(String, String)]) = sendMail(to, withdrawalTemplate, params)
 
   private def sendMail(to: String, template: String, params: Seq[(String, String)]) = {
     val mergeVars = params.map { case (k, v) => MergeVar(k, v) }

@@ -127,6 +127,7 @@ enum EmailType {
     PASSWORD_RESET_TOKEN = 3
     MONITOR = 4
     VERIFICATION_CODE = 5
+    WITHDRAWAL_NOTIFICATION = 6
 }
 
 enum ChartTimeDimension {

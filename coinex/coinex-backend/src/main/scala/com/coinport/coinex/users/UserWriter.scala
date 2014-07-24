@@ -32,7 +32,11 @@ class UserWriter(db: MongoDB, secret: String) extends ExtendedView {
   }
 
   val profiles = new SimpleJsonMongoCollection[UserProfile, UserProfile.Immutable] {
-    val coll = db("user_profiles")
+    val coll = db(UserWriter.collName)
     def extractId(profile: UserProfile) = profile.id
   }
+}
+
+object UserWriter {
+  val collName = "user_profiles"
 }

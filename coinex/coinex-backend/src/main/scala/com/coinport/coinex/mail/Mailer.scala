@@ -30,6 +30,9 @@ class Mailer(handler: MailHandler) extends Actor with ActorLogging {
 
         case EmailType.VerificationCode =>
           handler.sendVerificationCodeEmail(email, params.toSeq)
+
+        case EmailType.WithdrawalNotification =>
+          handler.sendWithdrawalNotification(email, params.toSeq)
       }
   }
 }

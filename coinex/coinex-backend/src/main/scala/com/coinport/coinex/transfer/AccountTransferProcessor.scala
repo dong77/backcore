@@ -8,6 +8,7 @@ import com.coinport.coinex.common.{ ExtendedProcessor, Manager }
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.common.support.ChannelSupport
 import com.coinport.coinex.data._
+import com.coinport.coinex.users.UserReader
 import com.mongodb.casbah.Imports._
 import com.twitter.util.Eval
 import java.io.InputStream
@@ -19,7 +20,7 @@ import Implicits._
 import TransferStatus._
 import TransferType._
 
-class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath, bitwayProcessors: collection.immutable.Map[Currency, ActorRef]) extends ExtendedProcessor
+class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath, bitwayProcessors: collection.immutable.Map[Currency, ActorRef], mailer: ActorRef) extends ExtendedProcessor
     with EventsourcedProcessor with ChannelSupport with AccountTransferBehavior with ActorLogging {
   override val processorId = ACCOUNT_TRANSFER_PROCESSOR <<
 
@@ -31,6 +32,8 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   val transferConfig = TransferConfig(manualCurrency = Some(accountTransferConfig.manualCurrency))
   private val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
   private val bitwayChannels = bitwayProcessors.map(kv => kv._1 -> createChannelTo(BITWAY_PROCESSOR << kv._1))
+
+  private val userReader = new UserReader(db)
 
   setSucceededRetainNum(accountTransferConfig.succeededRetainNum)
   intTransferHandlerObjectMap()
@@ -130,6 +133,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                   event =>
                     updateState(event)
                     sendBitwayMsg(updated.currency)
+                    sendWithdrawalNotification(transfer.userId, transfer.fee.get.amount, transfer.fee.get.currency.toString)
                     sender ! AdminCommandResult(Ok)
                 }
               case TransferType.ColdToHot =>
@@ -149,6 +153,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                 persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {
                   event =>
                     updateState(event)
+                    sendWithdrawalNotification(transfer.userId, transfer.fee.get.amount, transfer.fee.get.currency.toString)
                 }
               case _ =>
                 val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Succeeded)
@@ -213,6 +218,14 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
             sendAccountMsg(event.currency)
         }
       }
+  }
+
+  private def sendWithdrawalNotification(uid: Long, amount: Long, currency: String) = {
+    val email = userReader.getEmailByUid(uid)
+    val amountDouble = amount / 100000000
+    val content = s"We are informing you that today, the amount of " + amountDouble + " " + currency.toString +
+      " has been drawn out of your account. <br/>- The coinport team "
+    mailer ! DoSendEmail(email, EmailType.WithdrawalNotification, Map("CONTENT" -> content))
   }
 
   private def handleTransfer(msg: DoRequestTransfer) {
