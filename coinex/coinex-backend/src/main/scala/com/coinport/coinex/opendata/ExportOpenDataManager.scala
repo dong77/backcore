@@ -28,6 +28,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
     extends Manager[ExportOpenDataMap] with EventWriter {
   private val config = context.system.settings.config
   implicit lazy val fs: FileSystem = openHdfsSystem(openDataConfig.hdfsHost)
+  implicit val client = asyncHBaseClient.getClient()
   private val snapshotHdfsDir: String = config.getString("hadoop-snapshot-store.snapshot-dir")
   private val messagesTable = config.getString("hbase-journal.table")
   private val messagesFamily = config.getString("hbase-journal.family")
@@ -105,7 +106,6 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
   // "fromSeqNum" is inclusive, "toSeqNum" is exclusive
   def dumpMessages(processorId: String, fromSeqNum: Long, toSeqNum: Long) {
     if (toSeqNum <= fromSeqNum) return
-    val client = asyncHBaseClient.getClient()
     var retryTimes: Int = 0
     var isDuplicate = false
     var tryStartSeqNr: Long = if (fromSeqNum <= 0) 1 else fromSeqNum
