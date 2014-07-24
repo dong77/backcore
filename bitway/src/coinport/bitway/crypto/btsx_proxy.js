@@ -26,7 +26,8 @@ var Async                         = require('async'),
     TransferType                  = DataTypes.TransferType,
     BlockIndex                    = DataTypes.BlockIndex,
     CryptoAddress                 = DataTypes.CryptoAddress,
-    SyncHotAddressesResult        = MessageTypes.SyncHotAddressesResult;
+    SyncHotAddressesResult        = MessageTypes.SyncHotAddressesResult,
+    http                          = require('http');
 
 /**
  * Handle the crypto currency network event
@@ -45,23 +46,23 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
     Events.EventEmitter.call(this);
 
     if (opt_config) {
-        opt_config.cryptoRpc != undefined && (this.rpc = opt_config.cryptoRpc);
         opt_config.redis != undefined && (this.redis = opt_config.redis);
-        opt_config.minConfirm != undefined && (this.minConfirm = opt_config.minConfirm);
         opt_config.checkInterval != undefined && (this.checkInterval = opt_config.checkInterval);
         opt_config.minerfee != undefined && (self.minerFee = opt_config.minerFee);
         opt_config.walletPassPhrase != undefined && (this.walletPassPhrase = opt_config.walletPassPhrase);
     }
 
+    this.rpcUser = opt_config.cryptoRpcConfig.user;
+    this.rpcPass = opt_config.cryptoRpcConfig.pass;
+    this.httpOptions = {
+      host: opt_config.cryptoRpcConfig.host,
+      path: '/rpc',
+      method: 'POST',
+      port: opt_config.cryptoRpcConfig.port,
+      agent: this.disableAgent ? false : undefined,                   
+    };
+
     this.currency || (this.currency = currency);
-    this.minConfirm || (this.minConfirm = 1);
-    this.rpc || (this.rpc = new Bitcore.RpcClient({
-        protocol: 'http',
-        user: 'user',
-        pass: 'pass',
-        host: '127.0.0.1',
-        port: '18332',
-    }));
     this.redis || (this.redis = Redis.createClient('6379', '127.0.0.1'));
     this.redis.on('connect'     , this.logFunction('connect'));
     this.redis.on('ready'       , this.logFunction('ready'));
@@ -74,15 +75,9 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
     this.processedSigids = this.currency + '_processed_sigids';
     this.lastIndex = this.currency + '_last_index';
     this.log = Logger.logger(this.currency.toString());
+    this.hotAccountName = opt_config.hotAccountName;
 };
 Util.inherits(CryptoProxy, Events.EventEmitter);
-
-CryptoProxy.ACCOUNT = 'customers';
-CryptoProxy.HOT_ACCOUNT = "hot";
-CryptoProxy.MIN_GENERATE_ADDR_NUM = 1;
-CryptoProxy.MAX_GENERATE_ADDR_NUM = 1000;
-CryptoProxy.MAX_CONFIRM_NUM = 9999999;
-CryptoProxy.HOT_ADDRESS_NUM = 10;
 
 CryptoProxy.EventType = {
     TX_ARRIVED : 'tx_arrived',
@@ -90,27 +85,19 @@ CryptoProxy.EventType = {
     HOT_ADDRESS_GENERATE : 'hot_address_generate'
 };
 
-var http    = require('http');
-var auth = Buffer('test' + ':' + 'test').toString('base64');
-var options = {
-  host: '127.0.0.1',
-  path: '/rpc',
-  method: 'POST',
-  port: 9989,
-  agent: this.disableAgent ? false : undefined,                   
-};
-
 CryptoProxy.prototype.logFunction = function log(type) {
     var self = this;
     return function() {
-        self.log.info(type, 'crypto_proxy');
+        self.log.info(type, 'btsx crypto_proxy');
     };
 };
 
 CryptoProxy.prototype.httpRequest_ = function(request, callback) {
     var self = this;
     var err = null;
-    var req = http.request(options, function(res) {
+    var auth = Buffer(self.rpcUser + ':' + self.rpcPass).toString('base64');
+    console.log("self.rpcUser: ", self.rpcUser);
+    var req = http.request(self.httpOptions, function(res) {
         var buf = '';
 
         res.on('data', function(data) {
@@ -209,17 +196,17 @@ CryptoProxy.prototype.synchronousHotAddr =  function(request, callback) {
 CryptoProxy.prototype.getHotAccount_ =  function(callback) { 
     var self = this;
     var params = [];
-    params.push(CryptoProxy.HOT_ACCOUNT);
+    params.push(self.hotAccountName);
     var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_get_account", params: params};
     var request = JSON.stringify(requestBody);
     self.log.info("request: ", request);
     self.httpRequest_(request, function(error, result) {
         if (!error) {
             self.log.info("result: ", result);
-            var accountInfo = new CryptoAddress({accountName: CryptoProxy.HOT_ACCOUNT,
+            var accountInfo = new CryptoAddress({accountName: self.hotAccountName,
                 address: result.result.owner_key,
                 privateKey: null});
-            self.getPrivateKeyByAccount_(CryptoProxy.HOT_ACCOUNT, function(errPriv, retPriv) {
+            self.getPrivateKeyByAccount_(self.hotAccountName, function(errPriv, retPriv) {
                 if (!errPriv) {
                     accountInfo.privateKey = retPriv;
                     callback(null, accountInfo);
@@ -313,7 +300,7 @@ CryptoProxy.prototype.makeTransfer_ = function(type, transferInfo) {
         case TransferType.WITHDRAWAL:
         case TransferType.HOT_TO_COLD:
             Async.parallel ([
-                function(cb) {self.getAccountByAccountName_.bind(self)(CryptoProxy.HOT_ACCOUNT, cb)},
+                function(cb) {self.getAccountByAccountName_.bind(self)(self.hotAccountName, cb)},
                 function(cb) {self.addWithdrawalAccount_.bind(self)(transferInfo.from.accountName, cb)}
                 ], function(error, results){
                 if (!error) {
@@ -329,7 +316,7 @@ CryptoProxy.prototype.makeTransfer_ = function(type, transferInfo) {
         case TransferType.USER_TO_HOT:
             Async.parallel ([
                 function(cb) {self.getAccountByAccountName_.bind(self)(CryptoProxy.DEPOSIT_ACCOUNT, cb)},
-                function(cb) {self.getAccountByAccountName_.bind(self)(CryptoProxy.HOT_ACCOUNT, cb)}
+                function(cb) {self.getAccountByAccountName_.bind(self)(self.hotAccountName, cb)}
                 ], function(error, results){
                     if (!error) {
                          self.walletTransfer_(transferInfo.amount, results[0], results[1], transferInfo.id);
@@ -745,7 +732,7 @@ CryptoProxy.prototype.constructOutputs_ = function(ledgerEntries, callback) {
                 var output = new CryptoCurrencyTransactionPort({accountName: results[i].accountName,
                     address: results[i].address,
                     amount: self.convertAmount_(ledgerEntries[i].amount.amount)});
-                if (output.accountName == CryptoProxy.HOT_ACCOUNT) {
+                if (output.accountName == self.hotAccountName) {
                     output.memo = ledgerEntries[i].memo;
                 }
                 outputs.push(output);
@@ -759,7 +746,7 @@ CryptoProxy.prototype.constructOutputs_ = function(ledgerEntries, callback) {
 
 CryptoProxy.prototype.getFromAccountInfo_ = function(fromAccountName, callback) {
     var self = this;
-    if (fromAccountName == CryptoProxy.HOT_ACCOUNT) {
+    if (fromAccountName == self.hotAccountName) {
         self.getAccountByAccountName_(fromAccountName, function (error, account) {
             if (!error) {
                 callback(null, account);

@@ -160,11 +160,12 @@ var btsx = {
     cryptoConfig: {
         cryptoRpcConfig: {
             protocol: 'http',
-            user: 'user',
-            pass: 'pass',
+            user: 'test',
+            pass: 'test',
             host: 'bitway',
-            port: '9989',
+            port: 9989,
         },
+        hotAccountName: "hot105",
         minConfirm: 20,
         checkInterval : 5000,
         walletPassPhrase: ""

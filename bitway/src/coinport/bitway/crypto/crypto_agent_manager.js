@@ -7,7 +7,9 @@ var CryptoAgent = require('./crypto_agent').CryptoAgent,
     RedisProxy  = require('../redis/redis_proxy').RedisProxy,
     RpcClient   = require('bitcore').RpcClient,
     Redis       = require('redis'),
-    CryptoProxy = require('./crypto_proxy').CryptoProxy;
+    CryptoProxy = require('./crypto_proxy').CryptoProxy,
+    DataTypes   = require('../../../../gen-nodejs/data_types'),
+    Currency    = DataTypes.Currency,
     BtsxCryptoProxy = require('./btsx_proxy').CryptoProxy;
 
 var CryptoAgentManager = module.exports.CryptoAgentManager = function(configs) {
@@ -18,13 +20,13 @@ var CryptoAgentManager = module.exports.CryptoAgentManager = function(configs) {
         var redisProxy = new RedisProxy(redisConf.currency, redisConf.ip, redisConf.port);
 
         var cryptoConfig = config.cryptoConfig;
-        cryptoConfig.cryptoRpc = new RpcClient(cryptoConfig.cryptoRpcConfig);
         cryptoConfig.redis = Redis.createClient(redisConf.port, redisConf.ip);
-        if (config.currency == 2100 ) {
+        if (config.currency == Currency.BTSX) {
             console.log("BTSX");
             var cryptoProxy = new BtsxCryptoProxy(config.currency, cryptoConfig);
         } else {
             console.log(config.currency.toString());
+            cryptoConfig.cryptoRpc = new RpcClient(cryptoConfig.cryptoRpcConfig);
             var cryptoProxy = new CryptoProxy(config.currency, cryptoConfig);
         }
         this.agents.push(new CryptoAgent(cryptoProxy, redisProxy));
