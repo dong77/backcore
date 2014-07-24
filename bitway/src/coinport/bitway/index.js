@@ -168,7 +168,8 @@ var btsx = {
         hotAccountName: "hot105",
         minConfirm: 20,
         checkInterval : 5000,
-        walletPassPhrase: ""
+        walletName: "coinporttest",
+        walletPassPhrase: "coinport"
     },
     redisProxyConfig: {
         currency: Currency.BTSX,
