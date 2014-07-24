@@ -14,6 +14,7 @@ import com.coinport.coinex.api.model._
 import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.common.Manager
 import com.coinport.coinex.data._
+import com.coinport.coinex.data.TransferType.DepositHot
 import Currency._
 
 object BlockContinuityEnum extends Enumeration {
@@ -177,6 +178,8 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
         Some(TransferType.Deposit)
       else
         Some(TransferType.Unknown)
+    } else if (config.isDepositHot && outputsMatched.contains(HOT)) {
+      Some(TransferType.DepositHot)
     } else if (inputsMatched.nonEmpty || outputsMatched.nonEmpty) {
       Some(TransferType.Unknown)
     } else {
@@ -256,7 +259,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
           userId = addressUidMap.get(i.address), accountName = address2AccountNameMap.get(i.address))))
         val regularizeOutputs = outputs.map(_.map(i => i.copy(
           internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)),
-          userId = addressUidMap.get(i.address), accountName = address2AccountNameMap.get(i.address))))
+          userId = getUserId(i, tx, txType.get), accountName = address2AccountNameMap.get(i.address))))
         val sumInput = regularizeInputs.get.map(i => i.internalAmount.getOrElse(0L)).sum
         val sumOutput = regularizeOutputs.get.map(i => i.internalAmount.getOrElse(0L)).sum
         val minerFee = if (sumInput > sumOutput) {
@@ -399,6 +402,12 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     }
   }
 
+  def getReserveAmount(t: CryptoCurrencyAddressType, confirmationNum: Option[Int] = None) = getAddressStatus(t, confirmationNum).values.map(_.confirmedAmount).sum
+
+  def getAvailableReserveAmount(t: CryptoCurrencyAddressType, confirmationNum: Option[Int] = None) = {
+    Math.min(getReserveAmount(t, confirmationNum), getReserveAmount(t))
+  }
+
   private def getCurrentHeight: Option[Long] = {
     blockIndexes.lastOption match {
       case None => None
@@ -443,9 +452,24 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
       blockIndexes.remove(0, blockIndexes.length - config.maintainedChainLength)
   }
 
-  def getReserveAmount(t: CryptoCurrencyAddressType, confirmationNum: Option[Int] = None) = getAddressStatus(t, confirmationNum).values.map(_.confirmedAmount).sum
-
-  def getAvailableReserveAmount(t: CryptoCurrencyAddressType, confirmationNum: Option[Int] = None) = {
-    Math.min(getReserveAmount(t, confirmationNum), getReserveAmount(t))
+  private def getUserId(port: CryptoCurrencyTransactionPort, tx: CryptoCurrencyTransaction, txType: TransferType): Option[Long] = {
+    if (config.userIdFromMemo && txType == DepositHot) {
+      if (port.accountName.isDefined && port.accountName.get.nonEmpty &&
+        port.accountName.get.equals(address2AccountNameMap.getOrElse(port.address, ""))) {
+        val userId: String = port.memo.getOrElse("0")
+        val reg = "1([0-9]{9})".r
+        if (reg.pattern.matcher(userId).matches) {
+          Some(java.lang.Long.parseLong(userId))
+        } else {
+          log.error(s"DepositHot tx's output set invalid memo: ${port.toString}, with tx: ${tx.toString}")
+          None
+        }
+      } else {
+        log.error(s"DepositHot tx output set incorrect, port: ${port.toString} expect accountName: ${address2AccountNameMap(port.address)}, with tx: ${tx.toString}")
+        None
+      }
+    } else {
+      addressUidMap.get(port.address)
+    }
   }
 }

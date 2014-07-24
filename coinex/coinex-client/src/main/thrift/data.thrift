@@ -159,6 +159,7 @@ enum TransferType {
     HOT_TO_COLD = 3
     COLD_TO_HOT = 4
     UNKNOWN     = 5
+    DEPOSIT_HOT = 6
 }
 
 enum RechargeCodeStatus {

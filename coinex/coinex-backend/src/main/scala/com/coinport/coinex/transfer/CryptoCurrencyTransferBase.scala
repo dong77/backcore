@@ -212,7 +212,7 @@ trait CryptoCurrencyTransferBase {
   protected def updateSigId2MinerFee(tx: CryptoCurrencyTransaction) {
     tx.minerFee match {
       case Some(fee) if tx.sigId.isDefined =>
-        if (tx.txType.isDefined && tx.txType.get != Deposit) { //Deposit should ignore minerFee
+        if (tx.txType.isDefined && tx.txType.get != Deposit && tx.txType.get != DepositHot) { //Deposit should ignore minerFee
           tx.status match {
             case Failed => sigId2MinerFeeMap.remove(tx.sigId.get)
             case _ => sigId2MinerFeeMap.put(tx.sigId.get, fee)
@@ -287,6 +287,8 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
                             Some(new CryptoCurrencyTransferDepositHandler(currency, outputPort, tx.copy(minerFee = None), timestamp))
                           case Some(ColdToHot) if outputPort.userId.get == HOT_UID =>
                             Some(new CryptoCurrencyTransferColdToHotHandler(currency, outputPort, tx, timestamp))
+                          case Some(DepositHot) =>
+                            Some(new CryptoCurrencyTransferDepositHotHandler(currency, outputPort, tx, timestamp))
                           case _ =>
                             logger.error(s"""${"~" * 50} innerHandleTx() ${tx.txType.get.toString} tx is not valid txType : ${tx.toString}""")
                             None

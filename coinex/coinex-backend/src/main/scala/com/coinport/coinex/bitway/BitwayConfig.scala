@@ -24,7 +24,9 @@ final case class BitwayConfig(
   hot2ColdTransferInterval: FiniteDuration = 5 * 60 seconds,
   hot2ColdTransferIntervalLarge: FiniteDuration = 3600 seconds,
   cold2HotTransferInterval: FiniteDuration = 3600 seconds,
-  confirmNum: Int = 1)
+  confirmNum: Int = 1,
+  userIdFromMemo: Boolean = false,
+  isDepositHot: Boolean = false)
 
 final case class BitwayConfigs(
   configs: Map[Currency, BitwayConfig] = Map.empty)

@@ -34,6 +34,7 @@ trait AccountTransferBehavior {
     transferHandlerObjectMap += Withdrawal -> CryptoCurrencyTransferWithdrawalHandler.setEnv(env)
     transferHandlerObjectMap += HotToCold -> CryptoCurrencyTransferHotToColdHandler.setEnv(env)
     transferHandlerObjectMap += ColdToHot -> CryptoCurrencyTransferColdToHotHandler.setEnv(env)
+    transferHandlerObjectMap += DepositHot -> CryptoCurrencyTransferDepositHotHandler.setEnv(env)
     manager.setTransferHandlers(transferHandlerObjectMap)
     CryptoCurrencyTransferUnknownHandler.setEnv(env)
   }
@@ -45,6 +46,7 @@ trait AccountTransferBehavior {
         t.`type` match {
           case TransferType.Deposit => //Do nothing
           case TransferType.UserToHot =>
+          case TransferType.DepositHot =>
           case TransferType.Withdrawal =>
             transferHandler.put(t)
           case TransferType.ColdToHot => //Just log, will confirmed by admin

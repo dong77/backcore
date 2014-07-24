@@ -62,6 +62,8 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     enableHotColdTransfer = false,
-    confirmNum = 10
+    confirmNum = 10,
+    userIdFromMemo = true,
+    isDepositHot = true
   )
 ))

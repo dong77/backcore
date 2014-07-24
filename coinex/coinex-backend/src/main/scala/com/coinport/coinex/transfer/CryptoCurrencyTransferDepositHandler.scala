@@ -43,8 +43,11 @@ class CryptoCurrencyTransferDepositHandler(currency: Currency, outputPort: Crypt
 
   override def checkConfirm(lastBlockHeight: Long): Boolean = {
     //Reorging item will not confirm again to avoid resend UserToHot message
-    if (super.checkConfirm(lastBlockHeight) && item.status.get != Reorging) {
-      CryptoCurrencyTransferUserToHotHandler.createUserToHot(item, getTimestamp())
+    val isReorging = item.status.get == Reorging
+    if (super.checkConfirm(lastBlockHeight)) {
+      if (!isReorging) {
+        CryptoCurrencyTransferUserToHotHandler.createUserToHot(item, getTimestamp())
+      }
       return true
     }
     false
