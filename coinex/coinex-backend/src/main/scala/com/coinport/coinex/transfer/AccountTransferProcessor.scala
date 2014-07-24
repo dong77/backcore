@@ -223,8 +223,8 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   private def sendWithdrawalNotification(uid: Long, amount: Long, currency: String) = {
     val email = userReader.getEmailByUid(uid)
     val amountDouble = amount / 100000000
-    val content = s"We are informing you that today, the amount of " + amountDouble + " " + currency.toString +
-      " has been drawn out of your account. <br/>- The coinport team "
+    val content = "We are informing you that today, the amount of " + amountDouble + currency.toString +
+      " has been drawn out of your account. "
     mailer ! DoSendEmail(email, EmailType.WithdrawalNotification, Map("CONTENT" -> content))
   }
 
