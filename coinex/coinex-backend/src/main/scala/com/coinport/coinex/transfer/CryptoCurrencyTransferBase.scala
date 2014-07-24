@@ -72,26 +72,26 @@ trait CryptoCurrencyTransferBase {
     }
   }
 
-  def loadSnapshotItems(snapshotItems: collection.Map[Long, CryptoCurrencyTransferItem]) {
+  def loadSnapshotItems(snapshotItems: Option[collection.Map[Long, CryptoCurrencyTransferItem]]) {
     id2HandlerMap.clear()
-    if (snapshotItems != null)
-      snapshotItems.values map {
+    if (snapshotItems.isDefined)
+      snapshotItems.get.values map {
         item => id2HandlerMap.put(item.id, newHandlerFromItem(item))
       }
   }
 
-  def loadSnapshotSucceededItems(snapshotItems: collection.Map[Long, CryptoCurrencyTransferItem]) {
+  def loadSnapshotSucceededItems(snapshotItems: Option[collection.Map[Long, CryptoCurrencyTransferItem]]) {
     succeededId2HandlerMap.clear()
-    if (snapshotItems != null)
-      snapshotItems.values map {
+    if (snapshotItems.isDefined)
+      snapshotItems.get.values map {
         item => succeededId2HandlerMap.put(item.id, newHandlerFromItem(item))
       }
   }
 
-  def loadSigId2MinerFeeMap(snapshotMap: collection.Map[String, Long]) {
+  def loadSigId2MinerFeeMap(snapshotMap: Option[collection.Map[String, Long]]) {
     sigId2MinerFeeMap.clear()
-    if (snapshotMap != null)
-      sigId2MinerFeeMap ++= snapshotMap
+    if (snapshotMap.isDefined)
+      sigId2MinerFeeMap ++= snapshotMap.get
   }
 
   def getTransferItemsMap(): Map[Long, CryptoCurrencyTransferItem] = {
@@ -248,15 +248,17 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
     removeItemHandlerFromMap(handler.item.sigId.get, handler.item.to.get)
   }
 
-  override def loadSnapshotItems(snapshotItems: collection.Map[Long, CryptoCurrencyTransferItem]) {
+  override def loadSnapshotItems(snapshotItems: Option[collection.Map[Long, CryptoCurrencyTransferItem]]) {
     super.loadSnapshotItems(snapshotItems)
     sigIdWithTxPort2HandlerMap.clear()
-    snapshotItems.values map {
-      item =>
-        if (!sigIdWithTxPort2HandlerMap.contains(item.sigId.get)) {
-          sigIdWithTxPort2HandlerMap.put(item.sigId.get, Map.empty[CryptoCurrencyTransactionPort, CryptoCurrencyTransferHandler])
-        }
-        sigIdWithTxPort2HandlerMap(item.sigId.get).put(item.to.get, id2HandlerMap(item.id))
+    if (snapshotItems.isDefined) {
+      snapshotItems.get.values map {
+        item =>
+          if (!sigIdWithTxPort2HandlerMap.contains(item.sigId.get)) {
+            sigIdWithTxPort2HandlerMap.put(item.sigId.get, Map.empty[CryptoCurrencyTransactionPort, CryptoCurrencyTransferHandler])
+          }
+          sigIdWithTxPort2HandlerMap(item.sigId.get).put(item.to.get, id2HandlerMap(item.id))
+      }
     }
   }
 

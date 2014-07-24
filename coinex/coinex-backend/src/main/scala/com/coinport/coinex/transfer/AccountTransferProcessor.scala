@@ -312,9 +312,9 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
     transferHandlerObjectMap.keys foreach {
       txType =>
         val handler = transferHandlerObjectMap(txType)
-        handler.loadSnapshotItems(s.transferMap(txType))
-        handler.loadSnapshotSucceededItems(s.succeededMap(txType))
-        handler.loadSigId2MinerFeeMap(s.sigId2MinerFeeMapInnner(txType))
+        handler.loadSnapshotItems(s.transferMap.get(txType))
+        handler.loadSnapshotSucceededItems(s.succeededMap.get(txType))
+        handler.loadSigId2MinerFeeMap(s.sigId2MinerFeeMapInnner.get(txType))
     }
     loadFiltersSnapshot(s.filters)
   }
