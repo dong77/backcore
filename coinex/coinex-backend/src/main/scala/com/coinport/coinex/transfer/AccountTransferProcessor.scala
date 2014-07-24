@@ -4,6 +4,7 @@ import akka.actor._
 import akka.event.LoggingReceive
 import akka.event.LoggingAdapter
 import akka.persistence._
+import com.coinport.coinex.api.model.CurrencyWrapper
 import com.coinport.coinex.common.{ ExtendedProcessor, Manager }
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.common.support.ChannelSupport
@@ -133,7 +134,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                   event =>
                     updateState(event)
                     sendBitwayMsg(updated.currency)
-                    sendWithdrawalNotification(transfer.userId, transfer.fee.get.amount, transfer.fee.get.currency.toString)
+                    sendWithdrawalNotification(transfer.userId, transfer.amount, transfer.currency)
                     sender ! AdminCommandResult(Ok)
                 }
               case TransferType.ColdToHot =>
@@ -153,7 +154,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                 persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {
                   event =>
                     updateState(event)
-                    sendWithdrawalNotification(transfer.userId, transfer.fee.get.amount, transfer.fee.get.currency.toString)
+                    sendWithdrawalNotification(transfer.userId, transfer.amount, transfer.currency)
                 }
               case _ =>
                 val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Succeeded)
@@ -161,6 +162,9 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                   event =>
                     deliverToAccountManager(event)
                     updateState(event)
+                    if (event.transfer.`type` == Withdrawal) {
+                      sendWithdrawalNotification(transfer.userId, transfer.amount, transfer.currency)
+                    }
                 }
             }
             sender ! AdminCommandResult(Ok)
@@ -220,9 +224,9 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
       }
   }
 
-  private def sendWithdrawalNotification(uid: Long, amount: Long, currency: String) = {
+  private def sendWithdrawalNotification(uid: Long, amount: Long, currency: Currency) = {
     val email = userReader.getEmailByUid(uid)
-    val amountDouble = amount / 100000000
+    val amountDouble = new CurrencyWrapper(amount).externalValue(currency).toString
     val content = "We are informing you that today, the amount of " + amountDouble + currency.toString +
       " has been drawn out of your account. "
     mailer ! DoSendEmail(email, EmailType.WithdrawalNotification, Map("CONTENT" -> content))
