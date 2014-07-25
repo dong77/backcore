@@ -244,7 +244,7 @@ CryptoProxy.prototype.transfer = function(request, callback) {
     self.log.info("transfer req: " + JSON.stringify(request));
     var ids = [];
     for (var i = 0; i < request.transferInfos.length; i++) {
-        self.makeTransfer_(request.type, request.transferInfos[i]);
+        self.makeTransfer_bind(self)(request.type, request.transferInfos[i]);
     }
 };
 
@@ -310,15 +310,16 @@ CryptoProxy.prototype.getSigId_ = function(signatures) {
 };
 
 CryptoProxy.prototype.makeTransfer_ = function(type, transferInfo) {
+    var self = this;
     switch (type) {
         case TransferType.WITHDRAWAL:
         case TransferType.HOT_TO_COLD:
             Async.parallel ([
                 function(cb) {self.getAccountByAccountName_.bind(self)(self.hotAccountName, cb)},
-                function(cb) {self.addWithdrawalAccount_.bind(self)(transferInfo.from.accountName, cb)}
+                function(cb) {self.addWithdrawalAccount_.bind(self)(transferInfo, cb)}
                 ], function(error, results){
                 if (!error) {
-                     self.walletTransfer_(transferInfo.amount, results[0], results[1], transferInfo.id);
+                     self.walletTransfer_(type, transferInfo.amount, results[0], results[1], transferInfo.id);
                 } else {
                     var response = new CryptoCurrencyTransaction({ids: transferInfo.id, txType: type, 
                         status: TransferStatus.FAILED});
@@ -359,8 +360,8 @@ CryptoProxy.prototype.addWithdrawalAccount_ = function(transferInfo, callback) {
         self.log.info("addWithdrawalAccount_ request: ", request);
         self.httpRequest_(request, function(error, result) {
             if (!error) {
-                var account = new CryptoCurrencyTransactionPort({accountName: transferInfo.id, 
-                    address: transferInfo.to});
+                var account = new CryptoCurrencyTransactionPort({accountName: params[0], 
+                    address: params[1]});
                 callback(null, account);
             } else {
                 callback(error, null);
