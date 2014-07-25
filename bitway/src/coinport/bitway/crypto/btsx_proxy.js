@@ -85,7 +85,6 @@ CryptoProxy.EventType = {
     BLOCK_ARRIVED : 'block_arrived',
     HOT_ADDRESS_GENERATE : 'hot_address_generate'
 };
-
 CryptoProxy.prototype.logFunction = function log(type) {
     var self = this;
     return function() {
@@ -124,7 +123,6 @@ CryptoProxy.prototype.httpRequest_ = function(request, callback) {
                 var pos = buf.indexOf('{');
                 var body = buf.substring(pos, buf.length);
                 var parsedBuf = JSON.parse(body.data || body);
-                console.log(parsedBuf);
                 callback(null, parsedBuf);
             } catch(e) {
                 self.log.error("e.stack", e.stack);
@@ -597,14 +595,7 @@ CryptoProxy.prototype.getNextCCBlockSinceLastIndex_ = function(index, callback) 
             var nextIndex = (index == -1) ? count : index + 1;
             self.log.info("getNextCCBlockSinceLastIndex_ nextIndex: ", nextIndex);
             self.redis.del(self.getProcessedSigidsByHeight_(nextIndex - 1), function() {});
-            self.redis.set(self.lastIndex, nextIndex, function(error, replay) {
-                if (!error) {
-                    self.getCCBlockByIndex_(nextIndex, callback);
-                } else {
-                    self.log.error(error);
-                    callback(error);
-                }
-            });
+            self.getCCBlockByIndex_(nextIndex, callback);
         }
     });
 };
@@ -627,17 +618,24 @@ CryptoProxy.prototype.getCCBlockByIndex_ = function(index, callback) {
         function(cb) {self.getWalletTransactionByIndex_.bind(self)(index, cb)},
         function(cb) {self.getBlockHash_.bind(self)(index - 1, cb)},
         function(cb) {self.getBlockHash_.bind(self)(index, cb)}
-        ], function(err, results){
-        if (!err) {
+        ], function(error, results){
             self.log.info("getCCBlockByIndex_ results: ", results);
-            var prevIndex = new BlockIndex({id: results[1], height: index - 1});
-            var currentIndex = new BlockIndex({id: results[2], height: index});
-            var ccBlock = new CryptoCurrencyBlock({index: currentIndex, prevIndex: prevIndex, txs: results[0]});
-            callback(null, ccBlock);
-        } else {
-            self.log.error("getCCBlockByIndex_ err: ", err);
-            callback(err, null);
-        }
+            if (!error && results[1] && results[2]) {
+                self.redis.set(self.lastIndex, index, function(errorRedis, retRedis) {
+                    if (!errorRedis) {
+                        var prevIndex = new BlockIndex({id: results[1], height: index - 1});
+                        var currentIndex = new BlockIndex({id: results[2], height: index});
+                        var ccBlock = new CryptoCurrencyBlock({index: currentIndex, prevIndex: prevIndex, txs: results[0]});
+                        callback(null, ccBlock);
+                    } else {
+                        self.log.error("getCCBlockByIndex_errorRedis: ", errorRedis);
+                        callback(errorRedis);
+                    }
+                });
+            } else {
+                self.log.error("getCCBlockByIndex_ error: ", error);
+                callback(error, null);
+            }
     });
 };
 
@@ -783,7 +781,7 @@ CryptoProxy.prototype.getAccountByAccountName_ = function(accountName, callback)
                 var account = new CryptoAddress({accountName: accountName, address: result.result.owner_key});
                 callback(null, account);
             } else {
-                var account = new CryptoAddress({accountName: accountName, address: null});
+                var account = new CryptoAddress({accountName: accountName, address: accountName});
                 callback(null, account);
             }
         } else {
