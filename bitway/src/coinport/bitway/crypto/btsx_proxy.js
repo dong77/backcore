@@ -260,7 +260,7 @@ CryptoProxy.prototype.walletTransfer_ = function(type, amount, from, to, id) {
     self.log.info("walletTransfer_ request: ", request);
     self.httpRequest_(request, function(error, result) {
         self.log.info("walletTransfer_ result: ", result);
-        if (!error && !result.result.error) {
+        if (!error && result.result) {
             var cctx = new CryptoCurrencyTransaction({ids: [], status: TransferStatus.CONFIRMING});
             cctx.ids.push(id);
             cctx.txType = type;
@@ -275,7 +275,7 @@ CryptoProxy.prototype.walletTransfer_ = function(type, amount, from, to, id) {
                 self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, cctx));
         } else {
             self.log.info("error: ", error);
-            var response = new CryptoCurrencyTransaction({ids: ids, txType: type, 
+            var response = new CryptoCurrencyTransaction({ids: id, txType: type, 
                 status: TransferStatus.FAILED});
             self.emit(CryptoProxy.EventType.TX_ARRIVED,
                 self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, response));
@@ -317,6 +317,7 @@ CryptoProxy.prototype.makeTransfer_ = function(type, transferInfo) {
                 function(cb) {self.getAccountByAccountName_.bind(self)(self.hotAccountName, cb)},
                 function(cb) {self.addWithdrawalAccount_.bind(self)(transferInfo, cb)}
                 ], function(error, results){
+                self.log.info("makeTransfer_ results: ", results);
                 if (!error) {
                      self.walletTransfer_(type, transferInfo.amount, results[0], results[1], transferInfo.id);
                 } else {
@@ -360,15 +361,18 @@ CryptoProxy.prototype.addWithdrawalAccount_ = function(transferInfo, callback) {
         var request = JSON.stringify(requestBody);
         self.log.info("addWithdrawalAccount_ request: ", request);
         self.httpRequest_(request, function(error, result) {
-            if (!error && result == null) {
+            self.log.info("addWithdrawalAccount_ result: ", result);
+            if (!error && result.result == null) {
                 var account = new CryptoCurrencyTransactionPort({accountName: params[0], 
                     address: params[1]});
                 callback(null, account);
             } else {
+                self.log.error("addWithdrawalAccount failed");
                 callback("addWithdrawalAccount failed", null);
             }
         });
     } else {
+        self.log.error("transferInfo.id is null");
         var errMessage = "transferInfo.id is null";
         callback(errMessage, null);
     }
@@ -703,10 +707,12 @@ CryptoProxy.prototype.constructCCTXByTxHistory_ = function(txHistory, callback) 
         if (!err) {
             var cctx = new CryptoCurrencyTransaction({sigId: results[0], txid: txHistory.trx_id,
                 ids: [], inputs: results[1], outputs: results[2], 
-                minerFee: self.convertAmount_(txHistory.fee)});
+                minerFee: self.convertAmount_(txHistory.fee.amount)});
             self.redis.get(results[0], function(error, id) {
                 if (!error) {
-                    cctx.ids.push(id);
+                    if (id) {
+                        cctx.ids.push(Number(id));
+                    }
                     callback(null, cctx);
                 } else {
                     self.log.error("constructCCTXByTxHistory_", error);
