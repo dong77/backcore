@@ -265,7 +265,7 @@ CryptoProxy.prototype.walletTransfer_ = function(type, amount, from, to, id) {
             cctx.ids = id;
             cctx.txType = type;
             cctx.status = TransferStatus.CONFIRMING;
-            cctx.sigId = self.getSigId_(result.reuslt.signatures);
+            cctx.sigId = self.getSigId_(result.result.signatures[0]);
             self.log.info("ids: " + id + " sigId: " + cctx.sigId);
             self.redis.set(cctx.sigId, cctx.ids, function(redisError, redisReply){
                 if (redisError) {
@@ -281,9 +281,27 @@ CryptoProxy.prototype.walletTransfer_ = function(type, amount, from, to, id) {
             self.emit(CryptoProxy.EventType.TX_ARRIVED,
                 self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, response));
         }
+        if (type == TransferType.WITHDRAWAL || type == TransferType.HOT_TO_COLD) {
+            self.removeContactAccount_.bind(self)(to);
+        }
     });
 };
 
+CryptoProxy.prototype.removeContactAccount_ = function(contactAccount) {
+    var self = this;
+    var params = [];
+    params.push(contactAccount.accountName);
+    var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_remove_contact_account", params: params};
+    var request = JSON.stringify(requestBody);
+    self.log.info("wallet_remove_contact_account request: ", request);
+    self.httpRequest_(request, function(error, result) {
+        if (!error) {
+            self.log.info("remove contactAccount success accountName: ", contactAccount.accountName);
+        } else {
+            self.log.error("removeContactAccount_ error: ", error);
+        }
+    });
+};
 
 CryptoProxy.prototype.getSigId_ = function(signatures) {
     var sha256 = Crypto.createHash('sha256');
@@ -365,7 +383,6 @@ CryptoProxy.prototype.multi_transfer = function(request, callback) {
         requestAarry.push(singleRequest);
     }
     Async.map(requestAarry, self.transfer.bind(self), function(results) {
-        //callback(results);    
     });
 }
 
