@@ -510,7 +510,7 @@ CryptoProxy.prototype.getReorgPosition_ = function(request, callback) {
             var flag = false;
             for (var i = 0; i < request.startIndexs.length; i++) {
                position = i;
-               if (request.startIndexs[i].id != hashArray[i].hash) {
+               if (request.startIndexs[i].id != hashArray[i]) {
                    flag = true;
                    break;
                }
