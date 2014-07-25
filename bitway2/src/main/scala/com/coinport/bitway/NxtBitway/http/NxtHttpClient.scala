@@ -26,7 +26,7 @@ class NxtHttpClient(targetUrl: String) {
       accountId = json.getOrElse("accountId", ""),
       accountRS = json.getOrElse("accountRS", ""),
       secret = secret,
-      publicKey = "",
+      publicKey = None,
       addressType = addType,
       created = System.currentTimeMillis(),
       updated = System.currentTimeMillis())

@@ -6,7 +6,7 @@ case class NxtAddress(
                             accountId: String,
                             accountRS: String,
                             secret: String,
-                            publicKey: String,
+                            publicKey: Option[String],
                             addressType: CryptoCurrencyAddressType,
                             created: Long,
                             updated: Long)

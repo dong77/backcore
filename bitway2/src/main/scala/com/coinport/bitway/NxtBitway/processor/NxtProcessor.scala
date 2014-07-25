@@ -13,7 +13,7 @@ import com.redis.RedisClient
  */
 
 class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisClient) {
-  val txsSet = Set.empty[String]
+  val txsSet = scala.collection.mutable.Set.empty[String]
   var lastIndex = Currency.Nxt.toString + "last_index"
   val hotAccount = getOrGenerateHotAccount
   val prefix_transaction = "Nxt_tran_"
@@ -81,27 +81,29 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     val blockStatus = nxtHttp.getBlockChainStatus()
 
     val (lastBlockId, lastBlockHeight)= getRedisLastIndex(redis.get[String](lastIndex).getOrElse("-1//-1"))
+
     if (lastBlockHeight < 0) {
       val nxtBlock = nxtHttp.getBlock(blockStatus.lastBlockId)
       redis.set(lastIndex, makeRedisLastIndex(nxtBlock.blockId, nxtBlock.height))
       Seq(nxtBlock2Thrift(nxtBlock))
     } else {
-      val heightDiff = blockStatus.lastBlockHeight - lastBlockHeight
+      var heightDiff = blockStatus.lastBlockHeight - lastBlockHeight
 
       var blockList = Seq.empty[NxtBlock]
 
       if (heightDiff == 0) Nil
       else if (heightDiff < 0) Nil
       else {
-        var nxtBlock = nxtHttp.getBlock(lastBlockId)
-        while (nxtBlock.nextBlock.isDefined) {
+        var nxtBlock = nxtHttp.getBlock(blockStatus.lastBlockId)
+        while (heightDiff >= 0) {
           blockList = blockList :+ nxtBlock
-          nxtBlock = nxtHttp.getBlock(nxtBlock.nextBlock.get)
+          nxtBlock = nxtHttp.getBlock(nxtBlock.previousBlock)
+          heightDiff = heightDiff - 1
         }
-        redis.set(lastIndex, makeRedisLastIndex(nxtBlock.blockId, nxtBlock.height))
+        redis.set(lastIndex, makeRedisLastIndex(blockStatus.lastBlockId, blockStatus.lastBlockHeight))
         blockList
       }
-      blockList.map(nxtBlock2Thrift)
+      blockList.reverse.map(nxtBlock2Thrift)
     }
   }
 
@@ -117,7 +119,8 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
       // if the transaction is about bitway user
       val senderIds = nxtMongo.queryByAccountIds(txs2.map(_.senderId)).map(_.accountId).toSet
       val recipientIds = nxtMongo.queryByAccountIds(txs2.map(_.recipientId)).map(_.accountId).toSet
-      txs2 = txs2.filter(tx => senderIds.contains(tx.senderId) && recipientIds.contains(tx.recipientId))
+      txs2 = txs2.filter(tx => senderIds.contains(tx.senderId) || recipientIds.contains(tx.recipientId))
+      txs2.foreach(tx => txsSet.add(tx.fullHash))
 
       // model to thrift
       txs2.map { tx =>
