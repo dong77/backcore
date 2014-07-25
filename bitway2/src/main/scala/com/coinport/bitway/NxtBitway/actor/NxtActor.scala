@@ -31,11 +31,11 @@ class NxtActor(processor: NxtProcessor, config: BitwayConfig) extends Actor with
   def receive = LoggingReceive {
     case ListenAtRedis =>
       processor.getNewBlock.foreach{m =>
-        log.debug("find new block, height: %d".format(m.blockMsg.get.block.index.height.get))
+        log.info("find new block, height: %d".format(m.blockMsg.get.block.index.height.get))
         client.rpush(responseChannel, serializer.toBinary(m))}
 
       processor.getUnconfirmedTransactions.foreach{m =>
-        log.debug("find unconfirmed transactions: %s".format(m.tx.get.txid))
+        log.info("find unconfirmed transactions: %s".format(m.tx.get.txid))
         client.rpush(responseChannel, serializer.toBinary(m))}
 
       client.lpop(requestChannel) match {

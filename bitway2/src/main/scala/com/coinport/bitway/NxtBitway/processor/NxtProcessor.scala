@@ -229,5 +229,4 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     val list = value.split("//")
     (list(0), list(1).toInt)
   }
-
 }

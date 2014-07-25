@@ -23,14 +23,14 @@ case class NxtTransaction(
                            senderRS: String,
                            recipientId: String,
                            recipientRS: String,
-                           blockId: String,
+                           blockId: Option[String],
                            amount: Double,
                            fee: Double,
                            timestamp: Long,
                            height: Int,
                            deadline: Int,
                            tType: Int,
-                           confirms: Int)
+                           confirms: Option[Int])
 
 case class NxtBlock(
                      blockId: String,
