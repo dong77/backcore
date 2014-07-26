@@ -85,16 +85,20 @@ class AssetView extends ExtendedView {
 
   private def succeededTransfer(t: AccountTransfer) {
     t.`type` match {
-      case Deposit =>
-        // Deposit fee not included the t.amount
-        val feeAmount = t.fee match {
-          case Some(f) if f.amount > 0 => f.amount
-          case _ => 0L
-        }
-        manager.updateAsset(t.userId, t.updated.get, t.currency, t.amount - feeAmount)
+      case Deposit => depositAction(t)
+      case DepositHot => depositAction(t)
       // Withdrawal fee is included in t.amount, so no need to substract again
       case Withdrawal => manager.updateAsset(t.userId, t.updated.get, t.currency, -t.amount)
       case _ =>
+    }
+
+    def depositAction(transfer: AccountTransfer) {
+      // Deposit fee not included the transfer.amount
+      val feeAmount = transfer.fee match {
+        case Some(f) if f.amount > 0 => f.amount
+        case _ => 0L
+      }
+      manager.updateAsset(transfer.userId, transfer.updated.get, transfer.currency, transfer.amount - feeAmount)
     }
   }
 }

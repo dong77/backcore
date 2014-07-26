@@ -121,11 +121,11 @@ class AccountProcessor(
       }
 
     case m: CryptoTransferResult =>
-      hanleCryptoTransferResult(m)
+      handleCryptoTransferResult(m)
 
     case p @ ConfirmablePersistent(m: CryptoTransferResult, _, _) =>
       confirm(p)
-      hanleCryptoTransferResult(m)
+      handleCryptoTransferResult(m)
 
     case DoRequestGenerateABCode(userId, amount, _, _) => {
       val adjustment = CashAccount(Currency.Cny, -amount, amount, 0)
@@ -237,14 +237,14 @@ class AccountProcessor(
   }
 
   private def appendFeeIfNecessary(t: AccountTransfer) = {
-    if ((t.`type` == Withdrawal || t.`type` == Deposit) && !t.fee.isDefined && t.status == TransferStatus.Succeeded) {
+    if ((t.`type` == Withdrawal || t.`type` == Deposit || t.`type` == DepositHot) && !t.fee.isDefined && t.status == TransferStatus.Succeeded) {
       countFee(t)
     } else {
       t
     }
   }
 
-  private def hanleCryptoTransferResult(m: CryptoTransferResult) {
+  private def handleCryptoTransferResult(m: CryptoTransferResult) {
     persist(m.copy(multiTransfers = m.multiTransfers.map(kv => kv._1 -> kv._2.copy(transfers = kv._2.transfers map { appendFeeIfNecessary(_) })))) {
       event =>
         updateState(event)
@@ -291,7 +291,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
 
     case CryptoTransferSucceeded(txType, t, minerFee) => {
       t foreach { succeededTransfer(_) }
-      if (txType != Deposit) {
+      if (txType != Deposit && txType != DepositHot) {
         minerFee foreach { substractMinerFee(t(0).currency, _) }
       }
     }
@@ -308,7 +308,8 @@ trait AccountManagerBehavior extends CountFeeSupport {
                 case _ => logger.error("Unexpected transferStatus" + transfer.toString)
               }
           }
-          if (transferWithFee.transfers(0).`type` != Deposit) {
+          val txType = transferWithFee.transfers(0).`type`
+          if (txType != Deposit && txType != DepositHot) {
             transferWithFee.minerFee foreach (substractMinerFee(transferWithFee.transfers(0).currency, _))
           }
       }
@@ -354,13 +355,8 @@ trait AccountManagerBehavior extends CountFeeSupport {
 
   private def succeededTransfer(t: AccountTransfer) {
     t.`type` match {
-      case Deposit =>
-        manager.updateCashAccount(t.userId, CashAccount(t.currency, t.amount, 0, 0))
-        t.fee match {
-          case Some(f) if (f.amount > 0) =>
-            manager.transferFundFromAvailable(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
-          case _ => None
-        }
+      case Deposit => depositAction(t)
+      case DepositHot => depositAction(t)
       case Withdrawal =>
         t.fee match {
           case Some(f) if (f.amount > 0) =>
@@ -370,6 +366,15 @@ trait AccountManagerBehavior extends CountFeeSupport {
             manager.updateCashAccount(t.userId, CashAccount(t.currency, 0, 0, -t.amount))
         }
       case _ =>
+    }
+
+    def depositAction(transfer: AccountTransfer) {
+      manager.updateCashAccount(transfer.userId, CashAccount(transfer.currency, transfer.amount, 0, 0))
+      transfer.fee match {
+        case Some(f) if (f.amount > 0) =>
+          manager.transferFundFromAvailable(f.payer, f.payee.getOrElse(COINPORT_UID), f.currency, f.amount)
+        case _ => None
+      }
     }
   }
 

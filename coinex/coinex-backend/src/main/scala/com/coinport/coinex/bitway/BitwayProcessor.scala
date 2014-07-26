@@ -276,7 +276,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       val passedInfos = collection.mutable.Map.empty[TransferType, Seq[CryptoCurrencyTransferInfo]]
       val failedInfos = collection.mutable.Map.empty[TransferType, Seq[CryptoCurrencyTransferInfo]]
       var hotAmount: Option[Long] = None
-
+      // handle withdrawal before hotToCold by sorting transfers, avoid unnecessary hotToCold
       transferInfos.toSeq.sortBy(_._1.value).foreach {
         kv =>
           val (ps, fs, hm) = partitionInfos(kv._1, kv._2, hotAmount)

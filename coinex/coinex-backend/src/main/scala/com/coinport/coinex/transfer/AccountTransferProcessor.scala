@@ -130,6 +130,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
           if (isTransferByBitway(transfer.currency, Some(transferConfig)) && !transferDebugConfig) {
             transfer.`type` match {
               case TransferType.Deposit => sender ! RequestTransferFailed(UnsupportTransferType)
+              case TransferType.DepositHot => sender ! RequestTransferFailed(UnsupportTransferType)
               case TransferType.Withdrawal if transfer.address.isDefined =>
                 val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Accepted)
                 persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {

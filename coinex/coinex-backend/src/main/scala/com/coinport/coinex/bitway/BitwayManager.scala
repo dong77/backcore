@@ -220,6 +220,8 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
               BAD
           case Some(BlockIndex(None, _)) => OTHER_BRANCH
         }
+      case _ if blockMsg.block == null =>
+        BAD
       case _ => SUCCESSOR
     }
   }
