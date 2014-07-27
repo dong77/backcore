@@ -154,7 +154,30 @@ var zet = {
     }
 };
 
-var configs = [ btc, ltc, dog, drk, bc, vrc, zet ];
+var btsx = {
+    currency: Currency.BTSX,
+    cryptoConfig: {
+        cryptoRpcConfig: {
+            protocol: 'http',
+            user: 'test',
+            pass: 'test',
+            host: 'bitway',
+            port: 9989,
+        },
+        hotAccountName: "coinport-deposit",
+        minConfirm: 20,
+        checkInterval : 5000,
+        walletName: "coinport",
+        walletPassPhrase: "coinportpassword"
+    },
+    redisProxyConfig: {
+        currency: Currency.BTSX,
+        ip: 'bitway',
+        port: '6379',
+    }
+};
+
+var configs = [ btc, ltc, dog, drk, bc, vrc, zet btsx];
 // var configs = [ btc ];
 // var configs = [ dog ];
 program.parse(process.argv);
