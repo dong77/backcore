@@ -177,7 +177,7 @@ var btsx = {
     }
 };
 
-var configs = [ btc, ltc, dog, drk, bc, vrc, zet btsx];
+var configs = [ btc, ltc, dog, drk, bc, vrc, zeti, btsx];
 // var configs = [ btc ];
 // var configs = [ dog ];
 program.parse(process.argv);
