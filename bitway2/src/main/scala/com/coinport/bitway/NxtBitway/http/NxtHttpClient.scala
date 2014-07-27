@@ -12,7 +12,7 @@ import com.coinport.coinex.data.CryptoCurrencyAddressType
 import dispatch.Req
 
 class NxtHttpClient(targetUrl: String) {
-  val amountUnit = 10*8
+  val NXT2NQT = 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10
 
   def getMultiAddresses(secretList: Seq[String], addType: CryptoCurrencyAddressType) =
     secretList.map(s => getAddress(s, addType))
@@ -77,8 +77,8 @@ class NxtHttpClient(targetUrl: String) {
         deadline = json.get("deadline").get.asInstanceOf[Double].toInt,
         tType = json.get("type").get.asInstanceOf[Double].toInt,
         confirms  = json.get("confirmations").map(_.asInstanceOf[Double].toInt),
-        amount = json.get("amountNQT").get.asInstanceOf[String].toDouble/amountUnit,
-        fee = json.get("feeNQT").get.asInstanceOf[String].toDouble/amountUnit,
+        amount = json.get("amountNQT").get.asInstanceOf[String].toDouble/NXT2NQT,
+        fee = json.get("feeNQT").get.asInstanceOf[String].toDouble/NXT2NQT,
         fullHash =  json.get("fullHash").get.asInstanceOf[String]
       )
     }.filter(_.tType == 0)
@@ -91,17 +91,20 @@ class NxtHttpClient(targetUrl: String) {
     getTransactions(txIds)
   }
 
-  def sendMoney(secret: String, recipient: String, amount: Double, fee: Double, deadline: Int = 900): String = {
+  def sendMoney(secret: String, recipient: String, amount: Long, fee: Long, deadline: Int = 900) = {
     val queryMap = Map(
       "secretPhrase" -> secret,
       "recipient" -> recipient,
-      "amount" -> amount.toString,
-      "fee" -> fee.toString,
+      "amountNQT" -> amount.toString,
+      "feeNQT" -> fee.toString,
       "deadline" -> deadline.toString
     )
 
     val json = JSON.parseFull(getHttpResult("sendMoney", queryMap)).get.asInstanceOf[Map[String, String]]
-    json.get("transaction").getOrElse("")
+    NxtSendMoneyResponse(
+      transactionId = json.get("transaction").get,
+      fullHash = json.get("fullHash").get
+    )
   }
 
   private def getHttpResult(commend: String, map: Map[String, String]): String = {

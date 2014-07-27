@@ -17,7 +17,8 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
   var lastIndex = Currency.Nxt.toString + "last_index"
   val hotAccount = getOrGenerateHotAccount
   val prefix_transaction = "Nxt_tran_"
-  val transfer_fee = 1.0
+  val NXT2NQT = 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10
+  val transfer_fee = 1 * NXT2NQT
 
   def getRedisClient = redis
 
@@ -79,8 +80,12 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
 
   def getNewBlock: Seq[BitwayMessage] = {
     val blockStatus = nxtHttp.getBlockChainStatus()
+    println("last block id from nxt net:", blockStatus.lastBlockId)
+    println("last height from nxt net:", blockStatus.lastBlockHeight)
 
     val (lastBlockId, lastBlockHeight)= getRedisLastIndex(redis.get[String](lastIndex).getOrElse("-1//-1"))
+    println("last block id from redis:", lastBlockId)
+    println("last height from redis:", lastBlockHeight)
 
     if (lastBlockHeight < 0) {
       val nxtBlock = nxtHttp.getBlock(blockStatus.lastBlockId)
@@ -137,17 +142,17 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     transfer.`type` match {
       case TransferType.HotToCold | TransferType.Withdrawal =>
         infos.foreach{ info =>
-          val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, info.amount.get, transfer_fee)
-          if(!txid.isEmpty) redis.set(getTransactionKey(txid), info.id)
+          val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, (info.amount.get * NXT2NQT).toLong, transfer_fee)
+          if(!txid.fullHash.isEmpty) redis.set(getTransactionKey(txid.fullHash), info.id)
         }
 
       case TransferType.UserToHot =>
         infos.foreach{ info =>
           val userSecret = nxtMongo.queryOneUser(info.from.get).get.secret
-          val txid = nxtHttp.sendMoney(userSecret, hotAccount.accountId, info.amount.get, transfer_fee)
-          if(!txid.isEmpty) redis.set(getTransactionKey(txid), info.id)
+          val txid = nxtHttp.sendMoney(userSecret, hotAccount.accountId, (info.amount.get * NXT2NQT).toLong, transfer_fee)
+          println("txid>>>>>>>>>>"+txid)
+          if(!txid.fullHash.isEmpty) redis.set(getTransactionKey(txid.fullHash), info.id)
         }
-
       case x =>
     }
     None
@@ -207,7 +212,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
       ))
   }
 
-  private def getTransactionKey(id: String) = prefix_transaction+id
+  private def getTransactionKey(fullHash: String) = prefix_transaction+fullHash
 
   private def getBitwayMessageWithReorgIndex(loop: Boolean, blockNxt: NxtBlock, block: BlockIndex) = {
     if (loop == false) BitwayMessage(

@@ -40,3 +40,8 @@ case class NxtBlock(
                      timestamp: Long,
                      height: Long)
 
+case class NxtSendMoneyResponse(
+                              transactionId: String,
+                              fullHash: String
+                              )
+
