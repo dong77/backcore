@@ -330,45 +330,53 @@ CryptoProxy.prototype.makeTransfer_ = function(type, transferInfo) {
                 }
             });
             break;
-        case TransferType.USER_TO_HOT:
-            self.log.info("makeTransfer_ USER_TO_HOT do nothing!");
-            //Async.parallel ([
-            //    function(cb) {self.getAccountByAccountName_.bind(self)(CryptoProxy.DEPOSIT_ACCOUNT, cb)},
-            //    function(cb) {self.getAccountByAccountName_.bind(self)(self.hotAccountName, cb)}
-            //    ], function(error, results){
-            //        if (!error) {
-            //             self.walletTransfer_(transferInfo.amount, results[0], results[1], transferInfo.id);
-            //        } else {
-            //            var response = new CryptoCurrencyTransaction({ids: transferInfo.id, txType: type, 
-            //                status: TransferStatus.FAILED});
-            //            self.emit(CryptoProxy.EventType.TX_ARRIVED,
-            //                self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, response));
-            //        }
-            //});
-            break;
         default:
             this.log.error("Invalid type: " + type);
     }
 };
 
+CryptoProxy.prototype.validateAddress_ = function(address, callback) {
+    var self = this;
+    var params = [];
+    params.push(address);
+    var requestBody = {jsonrpc: '2.0', id: 2, method: "validate_address", params: params};
+    var request = JSON.stringify(requestBody);
+    self.log.info("validateAddress_ request: ", request);
+    self.httpRequest_(request, function(error, result) {
+        self.log.info("validateAddress_ result: ", result);
+        if (!error && result.result.isvalid == true) {
+            callback(null, true);
+        } else {
+            var errMsg = "Invalid address!";
+            callback(errMsg, null);
+        }
+    });
+};
+
 CryptoProxy.prototype.addWithdrawalAccount_ = function(transferInfo, callback) {
     var self = this;
     if (transferInfo.id) {
-        var params = [];
-        params.push("out" + transferInfo.id);
-        params.push(transferInfo.to);
-        var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_add_contact_account", params: params};
-        var request = JSON.stringify(requestBody);
-        self.log.info("addWithdrawalAccount_ request: ", request);
-        self.httpRequest_(request, function(error, result) {
-            self.log.info("addWithdrawalAccount_ result: ", result);
-            if (!error && result.result == null) {
-                var account = new CryptoCurrencyTransactionPort({accountName: params[0], 
-                    address: params[1]});
-                callback(null, account);
+        self.validateAddress_.bind(self)(transferInfo.to, function(validateError, validateResult) {
+            if (!validateError) {
+                var params = [];
+                params.push("out" + transferInfo.id);
+                params.push(transferInfo.to);
+                var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_add_contact_account", params: params};
+                var request = JSON.stringify(requestBody);
+                self.log.info("addWithdrawalAccount_ request: ", request);
+                self.httpRequest_(request, function(error, result) {
+                    self.log.info("addWithdrawalAccount_ result: ", result);
+                    if (!error && result.result == null) {
+                        var account = new CryptoCurrencyTransactionPort({accountName: params[0], 
+                            address: params[1]});
+                        callback(null, account);
+                    } else {
+                        self.log.error("addWithdrawalAccount failed");
+                        callback("addWithdrawalAccount failed", null);
+                    }
+                });
             } else {
-                self.log.error("addWithdrawalAccount failed");
-                callback("addWithdrawalAccount failed", null);
+                callback(validateError, null);
             }
         });
     } else {
