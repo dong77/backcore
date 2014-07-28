@@ -101,9 +101,11 @@ class NxtHttpClient(targetUrl: String) {
     )
 
     val json = JSON.parseFull(getHttpResult("sendMoney", queryMap)).get.asInstanceOf[Map[String, String]]
+    println("sendMoney>>response>>json"+json)
+
     NxtSendMoneyResponse(
-      transactionId = json.get("transaction").get,
-      fullHash = json.get("fullHash").get
+      transactionId = json.get("transaction").getOrElse(""),
+      fullHash = json.get("fullHash").getOrElse("")
     )
   }
 

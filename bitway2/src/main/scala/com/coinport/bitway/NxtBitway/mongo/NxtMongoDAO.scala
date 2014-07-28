@@ -21,9 +21,9 @@ class NxtMongoDAO(collection: MongoCollection) {
 
   def countAddress() = collection.count()
 
-  def queryByTypes(aType: CryptoCurrencyAddressType) = collection.find(MongoDBObject(TYPE -> aType)).toSeq.map(toClass)
+  def queryByTypes(aType: CryptoCurrencyAddressType) = collection.find(MongoDBObject(TYPE -> aType.getValue())).toSeq.map(toClass)
 
-  def queryOneByTypes(aType: CryptoCurrencyAddressType) = collection.findOne(MongoDBObject(TYPE -> aType)).map(toClass)
+  def queryOneByTypes(aType: CryptoCurrencyAddressType) = collection.findOne(MongoDBObject(TYPE -> aType.getValue())).map(toClass)
 
   def queryByAccountIds(accountIds: Seq[String]) = collection.find(ACCOUNT_ID $in accountIds).map(toClass)
 

@@ -80,12 +80,14 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
 
   def getNewBlock: Seq[BitwayMessage] = {
     val blockStatus = nxtHttp.getBlockChainStatus()
-    println("last block id from nxt net:", blockStatus.lastBlockId)
-    println("last height from nxt net:", blockStatus.lastBlockHeight)
-
     val (lastBlockId, lastBlockHeight)= getRedisLastIndex(redis.get[String](lastIndex).getOrElse("-1//-1"))
-    println("last block id from redis:", lastBlockId)
-    println("last height from redis:", lastBlockHeight)
+    if (blockStatus.lastBlockHeight != lastBlockHeight) {
+      println("last block id from nxt net:", blockStatus.lastBlockId)
+      println("last height from nxt net:", blockStatus.lastBlockHeight)
+
+      println("last block id from redis:", lastBlockId)
+      println("last height from redis:", lastBlockHeight)
+    }
 
     if (lastBlockHeight < 0) {
       val nxtBlock = nxtHttp.getBlock(blockStatus.lastBlockId)
@@ -93,14 +95,13 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
       Seq(nxtBlock2Thrift(nxtBlock))
     } else {
       var heightDiff = blockStatus.lastBlockHeight - lastBlockHeight
-
       var blockList = Seq.empty[NxtBlock]
 
       if (heightDiff == 0) Nil
       else if (heightDiff < 0) Nil
       else {
         var nxtBlock = nxtHttp.getBlock(blockStatus.lastBlockId)
-        while (heightDiff >= 0) {
+        while (heightDiff > 0) {
           blockList = blockList :+ nxtBlock
           nxtBlock = nxtHttp.getBlock(nxtBlock.previousBlock)
           heightDiff = heightDiff - 1
@@ -150,7 +151,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
         infos.foreach{ info =>
           val userSecret = nxtMongo.queryOneUser(info.from.get).get.secret
           val txid = nxtHttp.sendMoney(userSecret, hotAccount.accountId, (info.amount.get * NXT2NQT).toLong, transfer_fee)
-          println("txid>>>>>>>>>>"+txid)
+          println("txid>>>>>>>>>>>>>>>>>"+txid)
           if(!txid.fullHash.isEmpty) redis.set(getTransactionKey(txid.fullHash), info.id)
         }
       case x =>
