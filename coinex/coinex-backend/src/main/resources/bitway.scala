@@ -65,5 +65,12 @@ BitwayConfigs(Map(
     confirmNum = 10,
     userIdFromMemo = true,
     isDepositHot = true
+  ),
+  Nxt -> BitwayConfig(
+    ip = "bitway",
+    port = 6379,
+    maintainedChainLength = 120,
+    enableHotColdTransfer = false,
+    confirmNum = 10
   )
 ))
