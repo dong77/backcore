@@ -33,6 +33,7 @@ typedef data.CryptoCurrencyTransactionPort CryptoCurrencyTransactionPort
 typedef data.CryptoCurrencyTransferItem    CryptoCurrencyTransferItem
 typedef data.TAddressStatus                TAddressStatus
 typedef data.TransferType                  TransferType
+typedef data.AccountTransfer               AccountTransfer
 
 struct TUserState {
     1: map<i64, i64> idMap
@@ -76,6 +77,7 @@ struct TAccountTransferState {
     5: map <TransferType, map<i64, CryptoCurrencyTransferItem>> succeededMap
     6: map <TransferType, map<string, i64>> sigId2MinerFeeMapInnner
     7: RedeliverFilters filters
+    8: map <i64, map<Currency, set<AccountTransfer>>> userId2WithdrawalsInner
 }
 
 struct TCandleDataState {

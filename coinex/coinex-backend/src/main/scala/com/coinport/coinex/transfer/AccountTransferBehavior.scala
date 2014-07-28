@@ -62,6 +62,9 @@ trait AccountTransferBehavior {
       } else {
         transferHandler.put(t)
       }
+      if (t.`type` == TransferType.Withdrawal && transferConfig.get.enableAutoConfirm.getOrElse(false)) {
+        manager.addUserId2Withdrawals(t)
+      }
       manager.setLastTransferId(t.id)
 
     case AdminConfirmTransferFailure(t, _) => transferHandler.put(t)

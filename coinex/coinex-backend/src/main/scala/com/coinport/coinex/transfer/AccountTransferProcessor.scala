@@ -30,10 +30,10 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   implicit val manager = new AccountTransferManager()
   val accountTransferConfig = loadConfig(context.system.settings.config.getString("akka.exchange.transfer-path"))
   val transferDebugConfig: Boolean = accountTransferConfig.transferDebug
-  val transferConfig = TransferConfig(manualCurrency = Some(accountTransferConfig.manualCurrency))
+  val transferConfig = TransferConfig(manualCurrency = Some(accountTransferConfig.manualCurrency), enableAutoConfirm = Some(accountTransferConfig.enableAutoConfirm))
   private val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
   private val bitwayChannels = bitwayProcessors.map(kv => kv._1 -> createChannelTo(BITWAY_PROCESSOR << kv._1))
-
+  private val AutoConfirmSumAmt = 1E8.toLong
   private val userReader = new UserReader(db)
 
   setSucceededRetainNum(accountTransferConfig.succeededRetainNum)
@@ -86,6 +86,9 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
       } else { // No need to send message, as accountProcessor will ignore it, just for integration test
         handleTransfer(msg)
         sender ! RequestTransferSucceeded(msg.transfer) // wait for admin confirm
+      }
+      if (w.`type` == TransferType.Withdrawal && transferConfig.enableAutoConfirm.getOrElse(false)) {
+        tryAutoConfirm(msg.transfer)
       }
 
     case AdminConfirmTransferFailure(t, error) =>
@@ -270,6 +273,14 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
       bitwayChannels(currency) ! Deliver(Persistent(event), bitwayProcessors(currency).path)
     }
   }
+
+  private def tryAutoConfirm(transfer: AccountTransfer) {
+    if (manager.getUserWithdrawalAmount(transfer.userId, transfer.currency) + transfer.amount
+      < accountTransferConfig.autoConfirmAmount.getOrElse(transfer.currency, AutoConfirmSumAmt)) {
+      self ! AdminConfirmTransferSuccess(transfer)
+    }
+  }
+
 }
 
 class AccountTransferManager() extends Manager[TAccountTransferState] {
@@ -280,6 +291,8 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
   private val succeededMapInnner = Map.empty[TransferType, Map[Long, CryptoCurrencyTransferItem]]
   private val sigId2MinerFeeMapInnner = Map.empty[TransferType, Map[String, Long]]
   private var transferHandlerObjectMap = Map.empty[TransferType, CryptoCurrencyTransferBase]
+  private val userId2Withdrawals = Map.empty[Long, Map[Currency, collection.mutable.Set[AccountTransfer]]]
+  private val AutoWithdrawalReferTime = 24 * 3600 * 1000 // 1 Day
 
   def setTransferHandlers(transferHandlerObjectMap: Map[TransferType, CryptoCurrencyTransferBase]) {
     this.transferHandlerObjectMap = transferHandlerObjectMap
@@ -296,6 +309,7 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
         succeededMapInnner.put(txType, handler.getSucceededItemsMap())
         sigId2MinerFeeMapInnner.put(txType, handler.getSigId2MinerFeeMap())
     }
+
     TAccountTransferState(
       lastTransferId,
       lastTransferItemId,
@@ -303,7 +317,8 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
       transferMapInnner,
       succeededMapInnner,
       sigId2MinerFeeMapInnner,
-      getFiltersSnapshot)
+      getFiltersSnapshot,
+      Map.empty[Long, Map[Currency, collection.Set[AccountTransfer]]] ++= userId2Withdrawals.map(kv => kv._1 -> (Map.empty[Currency, collection.Set[AccountTransfer]] ++= kv._2.map(cwd => cwd._1 -> cwd._2.clone))))
   }
 
   def loadSnapshot(s: TAccountTransferState) = {
@@ -318,6 +333,15 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
         handler.loadSigId2MinerFeeMap(s.sigId2MinerFeeMapInnner.get(txType))
     }
     loadFiltersSnapshot(s.filters)
+    userId2Withdrawals.clear()
+    userId2Withdrawals ++= s.userId2WithdrawalsInner
+      .map(
+        kv =>
+          kv._1 -> (
+            Map.empty[Currency, collection.mutable.Set[AccountTransfer]] ++= kv._2
+            .map(
+              cwdKv =>
+                cwdKv._1 -> (collection.mutable.Set.empty[AccountTransfer] ++= cwdKv._2.map(t => t)))))
   }
 
   def getTransferId = lastTransferId + 1
@@ -334,4 +358,39 @@ class AccountTransferManager() extends Manager[TAccountTransferState] {
   def getLastBlockHeight(currency: Currency): Long = lastBlockHeight.getOrElse(currency, 0L)
 
   def setLastBlockHeight(currency: Currency, height: Long) = { lastBlockHeight.put(currency, height) }
+
+  def addUserId2Withdrawals(wd: AccountTransfer) {
+    userId2Withdrawals
+      .getOrElseUpdate(wd.userId, Map.empty[Currency, collection.mutable.Set[AccountTransfer]])
+      .getOrElseUpdate(wd.currency, collection.mutable.Set.empty[AccountTransfer]) += wd
+    userId2Withdrawals.keys.foreach {
+      userId =>
+        val uwds: collection.mutable.Map[Currency, collection.mutable.Set[AccountTransfer]] = userId2Withdrawals(userId)
+        uwds.keys.foreach {
+          currency =>
+            val currencyWds: collection.mutable.Set[AccountTransfer] = uwds(currency)
+            currencyWds.foreach {
+              transfer =>
+                if (System.currentTimeMillis() - transfer.created.get > AutoWithdrawalReferTime) {
+                  currencyWds -= transfer
+                }
+            }
+            if (currencyWds.isEmpty) {
+              uwds -= currency
+            }
+        }
+        if (uwds.isEmpty) {
+          userId2Withdrawals -= userId
+        }
+    }
+  }
+
+  def getUserWithdrawalAmount(userId: Long, currency: Currency): Long = {
+    var withdrawalAmount = 0L
+    userId2Withdrawals
+      .getOrElse(userId, Map.empty[Currency, collection.mutable.Set[AccountTransfer]])
+      .getOrElse(currency, collection.mutable.Set.empty[AccountTransfer])
+      .foreach(withdrawalAmount += _.amount)
+    withdrawalAmount
+  }
 }

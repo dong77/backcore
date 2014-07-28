@@ -656,4 +656,5 @@ struct Notification {
 
 struct TransferConfig {
     1: optional set<Currency> manualCurrency
+    2: optional bool enableAutoConfirm
 }
