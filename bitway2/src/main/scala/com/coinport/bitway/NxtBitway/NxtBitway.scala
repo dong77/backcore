@@ -8,7 +8,6 @@ import com.coinport.bitway.NxtBitway.mongo.NxtMongoDAO
 import com.coinport.bitway.NxtBitway.http.NxtHttpClient
 import com.coinport.bitway.NxtBitway.processor.NxtProcessor
 import com.coinport.bitway.NxtBitway.actor.NxtActor
-import com.coinport.bitway.NxtBitway.StartupConfig
 import com.redis.RedisClient
 
 class NxtBitway(config: Config) {
@@ -21,8 +20,6 @@ class NxtBitway(config: Config) {
 
   def start(): Unit = {
     val nxtProcessor = new NxtProcessor(mongoClient, httpClient, redisClient)
-    val system = ActorSystem.create()
-    println()
     ActorSystem().actorOf(Props(new NxtActor(nxtProcessor, BitwayConfig())), name = "nxtReciever")
   }
 }
