@@ -24,3 +24,11 @@ final case class BitwayConfig(
 
 final case class BitwayConfigs(
   configs: Map[Currency, BitwayConfig] = Map.empty)
+
+final case class StartupConfig(
+  redisHost: String = "localhost",
+  redisPort: Int = 6379,
+  mongoHost: String = "localhost",
+  mongoPort: Int = 27017,
+  nxtHost: String = "localhost",
+  nxtPort: Int = 7876)

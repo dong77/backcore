@@ -6,13 +6,12 @@ package com.coinport.bitway.NxtBitway.actor
 import akka.actor.{ActorLogging, Actor}
 import akka.event.LoggingReceive
 import scala.concurrent.duration._
-import com.redis._
 import com.redis.serialization.Parse.Implicits.parseByteArray
 import com.coinport.coinex.serializers.ThriftBinarySerializer
 import com.coinport.coinex.data.{BitwayMessage, BitwayRequest, Currency}
 import com.coinport.coinex.data.BitwayRequestType._
 import com.coinport.bitway.NxtBitway.processor.NxtProcessor
-import com.coinport.bitway.NxtBitway.{ListenAtRedis, BitwayConfig}
+import com.coinport.bitway.NxtBitway.BitwayConfig
 
 class NxtActor(processor: NxtProcessor, config: BitwayConfig) extends Actor with ActorLogging {
   val client = processor.getRedisClient
@@ -60,5 +59,7 @@ class NxtActor(processor: NxtProcessor, config: BitwayConfig) extends Actor with
   private def sendMessageToSelf(timeout: Long = 0) {
     context.system.scheduler.scheduleOnce(timeout.seconds, self, ListenAtRedis)(context.system.dispatcher)
   }
+
+  case object ListenAtRedis
 }
 
