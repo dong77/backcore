@@ -668,6 +668,7 @@ CryptoProxy.prototype.getWalletTransactionByIndex_ = function(height, callback) 
     var params = [];
     params.push("");
     params.push("BTSX");
+    params.push(0);
     params.push(height);
     params.push(height);
     var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_account_transaction_history", params: params};
