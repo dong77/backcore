@@ -71,6 +71,6 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     enableHotColdTransfer = false,
-    confirmNum = 3
+    confirmNum = 1
   )
 ))
