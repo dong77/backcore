@@ -78,39 +78,50 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     Some(getBitwayMessageWithReorgIndex(loop, nxtBlock, block))
   }
 
+  //by way of getting new block status to know the new block is shit
   def getNewBlock: Seq[BitwayMessage] = {
     val blockStatus = nxtHttp.getBlockChainStatus()
     val (lastBlockId, lastBlockHeight)= getRedisLastIndex(redis.get[String](lastIndex).getOrElse("-1//-1"))
     if (blockStatus.lastBlockHeight != lastBlockHeight) {
-      println("last block id from nxt net:", blockStatus.lastBlockId)
-      println("last height from nxt net:", blockStatus.lastBlockHeight)
+//      println("last block id from nxt net:", blockStatus.lastBlockId)
+//      println("last height from nxt net:", blockStatus.lastBlockHeight)
+//
+//      println("last block id from redis:", lastBlockId)
+//      println("last height from redis:", lastBlockHeight)
 
-      println("last block id from redis:", lastBlockId)
-      println("last height from redis:", lastBlockHeight)
-    }
+      if (lastBlockHeight < 0) {
+        val nxtBlock = nxtHttp.getBlock(blockStatus.lastBlockId)
+        redis.set(lastIndex, makeRedisLastIndex(nxtBlock.blockId, nxtBlock.height))
+        Seq(nxtBlock2Thrift(nxtBlock))
+      } else {
+        var heightDiff = blockStatus.lastBlockHeight - lastBlockHeight
+        var blockList = Seq.empty[NxtBlock]
 
-    if (lastBlockHeight < 0) {
-      val nxtBlock = nxtHttp.getBlock(blockStatus.lastBlockId)
-      redis.set(lastIndex, makeRedisLastIndex(nxtBlock.blockId, nxtBlock.height))
-      Seq(nxtBlock2Thrift(nxtBlock))
-    } else {
-      var heightDiff = blockStatus.lastBlockHeight - lastBlockHeight
-      var blockList = Seq.empty[NxtBlock]
+        if (heightDiff == 0) Nil
+        else if (heightDiff < 0) Nil
+        else {
+//          var nxtBlock = nxtHttp.getBlock(blockStatus.lastBlockId)
+//          if (nxtBlock.height != blockStatus.lastBlockHeight || nxtBlock.blockId != blockStatus.lastBlockId) {
+//            println("nxtBlock>>>>>>>"+nxtBlock)
+//            println("blockStatus>>>>"+blockStatus)
+//            println("nxtBlock>>>>try 2>>>"+nxtHttp.getBlock(blockStatus.lastBlockId))
+//            println("blockStatus>try 2>>>"+nxtHttp.getState())
+//          }
 
-      if (heightDiff == 0) Nil
-      else if (heightDiff < 0) Nil
-      else {
-        var nxtBlock = nxtHttp.getBlock(blockStatus.lastBlockId)
-        while (heightDiff > 0) {
-          blockList = blockList :+ nxtBlock
-          nxtBlock = nxtHttp.getBlock(nxtBlock.previousBlock)
-          heightDiff = heightDiff - 1
+          var queryBlockId = blockStatus.lastBlockId
+          var nxtBlock: NxtBlock = null
+          while (heightDiff > 0) {
+            nxtBlock = nxtHttp.getBlock(queryBlockId)
+            blockList = blockList :+ nxtBlock
+            queryBlockId = nxtBlock.previousBlock
+            heightDiff = heightDiff - 1
+          }
+          redis.set(lastIndex, makeRedisLastIndex(blockList.head.blockId, blockList.head.height))
+          blockList
         }
-        redis.set(lastIndex, makeRedisLastIndex(blockStatus.lastBlockId, blockStatus.lastBlockHeight))
-        blockList
+        blockList.reverse.map(nxtBlock2Thrift)
       }
-      blockList.reverse.map(nxtBlock2Thrift)
-    }
+    } else Nil
   }
 
   def getUnconfirmedTransactions: Seq[BitwayMessage] = {
