@@ -26,6 +26,8 @@ case class NxtTransaction(
                            blockId: Option[String],
                            amountNQT: Long,
                            feeNQT: Long,
+                           amount: Double,
+                           fee: Double,
                            timestamp: Long,
                            height: Int,
                            deadline: Int,

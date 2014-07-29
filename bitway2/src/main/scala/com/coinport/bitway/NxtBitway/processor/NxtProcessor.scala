@@ -152,14 +152,14 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     transfer.`type` match {
       case TransferType.HotToCold | TransferType.Withdrawal =>
         infos.foreach{ info =>
-          val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, info.amount.get.toLong - transfer_fee, transfer_fee)
+          val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, (info.amount.get * NXT2NQT).toLong - transfer_fee, transfer_fee)
           if(!txid.fullHash.isEmpty) redis.set(getTransactionKey(txid.fullHash), info.id)
         }
 
       case TransferType.UserToHot =>
         infos.foreach{ info =>
           val userSecret = nxtMongo.queryOneUser(info.from.get).get.secret
-          val txid = nxtHttp.sendMoney(userSecret, hotAccount.accountId, info.amount.get.toLong - transfer_fee, transfer_fee)
+          val txid = nxtHttp.sendMoney(userSecret, hotAccount.accountId, (info.amount.get * NXT2NQT).toLong - transfer_fee, transfer_fee)
           println("txid>>>>>>>>>>>>>>>>>"+txid)
           if(!txid.fullHash.isEmpty) redis.set(getTransactionKey(txid.fullHash), info.id)
         }
@@ -202,10 +202,9 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
               sigId = Some(tx.fullHash),
               txid = Some(tx.transactionId),
               ids = redis.get(getTransactionKey(tx.transactionId)).map(x => Seq(x.toLong)),
-              outputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.recipientId, nxtRsAddress = Some(tx.recipientRS), internalAmount = Some(tx.amountNQT)))),
+              outputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.recipientId, nxtRsAddress = Some(tx.recipientRS), amount = Some(tx.amount)))),
               inputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.senderId, nxtRsAddress = Some(tx.senderRS)))),
               status = TransferStatus.Confirming
-//              minerFee = Some(transfer_fee)
             )
   }
 
