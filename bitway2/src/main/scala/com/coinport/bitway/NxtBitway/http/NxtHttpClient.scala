@@ -77,8 +77,8 @@ class NxtHttpClient(targetUrl: String) {
         deadline = json.get("deadline").get.asInstanceOf[Double].toInt,
         tType = json.get("type").get.asInstanceOf[Double].toInt,
         confirms  = json.get("confirmations").map(_.asInstanceOf[Double].toInt),
-        amount = json.get("amountNQT").get.asInstanceOf[String].toDouble/NXT2NQT,
-        fee = json.get("feeNQT").get.asInstanceOf[String].toDouble/NXT2NQT,
+        amountNQT = json.get("amountNQT").get.asInstanceOf[String].toLong,
+        feeNQT = json.get("feeNQT").get.asInstanceOf[String].toLong,
         fullHash =  json.get("fullHash").get.asInstanceOf[String]
       )
     }.filter(_.tType == 0)
