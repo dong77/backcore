@@ -32,7 +32,7 @@ object CryptoCurrencyTransferUserToHotHandler extends CryptoCurrencyTransferBase
     new CryptoCurrencyTransferUserToHotHandler(item)
   }
 
-  override def handleFailed(handler: CryptoCurrencyTransferHandler, error: ErrorCode = ErrorCode.Unknown) {
+  override def handleFailed(handler: CryptoCurrencyTransferHandler, error: Option[ErrorCode] = None) {
     handler.onFail()
     id2HandlerMap.remove(handler.item.id)
   }

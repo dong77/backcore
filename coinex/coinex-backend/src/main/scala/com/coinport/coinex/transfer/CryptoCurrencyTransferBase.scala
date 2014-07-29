@@ -45,7 +45,7 @@ trait CryptoCurrencyTransferBase {
     innerHandleTx(currency, tx, timestamp)
   }
 
-  def handleBitwayFail(info: CryptoCurrencyTransferInfo, currency: Currency, timestamp: Option[Long], error: ErrorCode) {
+  def handleBitwayFail(info: CryptoCurrencyTransferInfo, currency: Currency, timestamp: Option[Long], error: Option[ErrorCode]) {
     if (id2HandlerMap.contains(info.id)) {
       handleFailed(id2HandlerMap(info.id).setTimeStamp(timestamp), error)
     } else {
@@ -207,7 +207,7 @@ trait CryptoCurrencyTransferBase {
     }
   }
 
-  protected def handleFailed(handler: CryptoCurrencyTransferHandler, error: ErrorCode = ErrorCode.Unknown) {}
+  protected def handleFailed(handler: CryptoCurrencyTransferHandler, error: Option[ErrorCode] = None) {}
 
   protected def updateSigId2MinerFee(tx: CryptoCurrencyTransaction) {
     tx.minerFee match {
@@ -242,7 +242,7 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
     super.handleSucceeded(itemId)
   }
 
-  override def handleFailed(handler: CryptoCurrencyTransferHandler, error: ErrorCode = ErrorCode.Unknown) {
+  override def handleFailed(handler: CryptoCurrencyTransferHandler, error: Option[ErrorCode] = None) {
     handler.onFail()
     id2HandlerMap.remove(handler.item.id)
     removeItemHandlerFromMap(handler.item.sigId.get, handler.item.to.get)
@@ -347,9 +347,9 @@ trait CryptoCurrencyTransferWithdrawalLikeBase extends CryptoCurrencyTransferBas
     new CryptoCurrencyTransferWithdrawalLikeHandler(item)
   }
 
-  override def handleFailed(handler: CryptoCurrencyTransferHandler, error: ErrorCode = ErrorCode.Unknown) {
+  override def handleFailed(handler: CryptoCurrencyTransferHandler, error: Option[ErrorCode] = None) {
     val item = id2HandlerMap.remove(handler.item.id).get.item
-    if (error != ErrorCode.InsufficientHot) { // withdrawal and hotToCold should do nothing when meet insufficient hot error
+    if (error != Some(ErrorCode.InsufficientHot)) { // withdrawal and hotToCold should do nothing when meet insufficient hot error
       msgBoxMap.put(item.id, item)
     }
   }
