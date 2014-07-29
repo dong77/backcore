@@ -6,6 +6,7 @@ import com.coinport.bitway.NxtBitway.http.NxtHttpClient
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Currency.Nxt
 import com.coinport.bitway.NxtBitway.model._
+import java.util.UUID
 import com.redis.RedisClient
 
 /**
@@ -151,14 +152,14 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     transfer.`type` match {
       case TransferType.HotToCold | TransferType.Withdrawal =>
         infos.foreach{ info =>
-          val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, (info.amount.get * NXT2NQT).toLong, transfer_fee)
+          val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, (info.amount.get * NXT2NQT).toLong - transfer_fee, transfer_fee)
           if(!txid.fullHash.isEmpty) redis.set(getTransactionKey(txid.fullHash), info.id)
         }
 
       case TransferType.UserToHot =>
         infos.foreach{ info =>
           val userSecret = nxtMongo.queryOneUser(info.from.get).get.secret
-          val txid = nxtHttp.sendMoney(userSecret, hotAccount.accountId, (info.amount.get * NXT2NQT).toLong, transfer_fee)
+          val txid = nxtHttp.sendMoney(userSecret, hotAccount.accountId, (info.amount.get * NXT2NQT).toLong - transfer_fee, transfer_fee)
           println("txid>>>>>>>>>>>>>>>>>"+txid)
           if(!txid.fullHash.isEmpty) redis.set(getTransactionKey(txid.fullHash), info.id)
         }
@@ -178,9 +179,9 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     val rand = new Random()
     val count = nxtMongo.countAddress()
     (0 until addressNum).map{ i =>
-      "www.coinport.com" + "%%%" + rand.nextString(10) +
-        (count + i) + "%%%" + rand.nextString(10) +
-        System.currentTimeMillis() + "%%%" + rand.nextString(10)
+      "www.coinport.com" + "%%%" + UUID.randomUUID() +
+        (count + i) + "%%%" + UUID.randomUUID() +
+        System.currentTimeMillis() + "%%%" + UUID.randomUUID()
     }.toSeq
   }
 
@@ -200,10 +201,10 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     CryptoCurrencyTransaction(
               sigId = Some(tx.fullHash),
               txid = Some(tx.transactionId),
-              ids = Some(Seq(redis.get(getTransactionKey(tx.transactionId)).getOrElse("0").toLong)),
-              inputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.recipientId, nxtRsAddress = Some(tx.recipientRS)))),
-              outputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.senderId, nxtRsAddress = Some(tx.senderRS)))),
-              status = TransferStatus.Accepted
+              ids = redis.get(getTransactionKey(tx.transactionId)).map(x => Seq(x.toLong)),
+              outputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.recipientId, nxtRsAddress = Some(tx.recipientRS)))),
+              inputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.senderId, nxtRsAddress = Some(tx.senderRS)))),
+              status = TransferStatus.Confirming
             )
   }
 
