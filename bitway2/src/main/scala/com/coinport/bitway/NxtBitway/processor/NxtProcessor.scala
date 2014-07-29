@@ -83,11 +83,8 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     val blockStatus = nxtHttp.getBlockChainStatus()
     val (lastBlockId, lastBlockHeight)= getRedisLastIndex(redis.get[String](lastIndex).getOrElse("-1//-1"))
     if (blockStatus.lastBlockHeight != lastBlockHeight) {
-//      println("last block id from nxt net:", blockStatus.lastBlockId)
-//      println("last height from nxt net:", blockStatus.lastBlockHeight)
-//
-//      println("last block id from redis:", lastBlockId)
-//      println("last height from redis:", lastBlockHeight)
+      println("last block id: %s, height: %d from nxt net:".format(blockStatus.lastBlockId, blockStatus.lastBlockHeight))
+      println("last block id : %s, height: %d from redis:".format(lastBlockId, lastBlockHeight))
 
       if (lastBlockHeight < 0) {
         val nxtBlock = nxtHttp.getBlock(blockStatus.lastBlockId)
