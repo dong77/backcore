@@ -29,7 +29,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
 
     Some(BitwayMessage(
       currency = Nxt,
-      generateAddressResponse = Some(GenerateAddressesResult(ErrorCode.Ok, Some(nxts.map(nxtAddress2Thrift).toSet)))
+      generateAddressResponse = Some(GenerateAddressesResult(error = ErrorCode.Ok, addresses = Some(nxts.map(nxtAddress2Thrift).toSet), addressType = Some(CryptoCurrencyAddressType.Unused)))
     ))
   }
 
