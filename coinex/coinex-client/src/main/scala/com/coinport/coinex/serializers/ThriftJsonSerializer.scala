@@ -75,6 +75,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cAdjustAddressAmountResult = JsonScalaCodec(AdjustAddressAmountResult)
   lazy val _cAdminCommandResult = JsonScalaCodec(AdminCommandResult)
   lazy val _cAdminConfirmTransferFailure = JsonScalaCodec(AdminConfirmTransferFailure)
+  lazy val _cAdminConfirmTransferProcessed = JsonScalaCodec(AdminConfirmTransferProcessed)
   lazy val _cAdminConfirmTransferSuccess = JsonScalaCodec(AdminConfirmTransferSuccess)
   lazy val _cAllocateNewAddress = JsonScalaCodec(AllocateNewAddress)
   lazy val _cAllocateNewAddressResult = JsonScalaCodec(AllocateNewAddressResult)
@@ -290,6 +291,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: AdjustAddressAmountResult => _cAdjustAddressAmountResult(m)
     case m: AdminCommandResult => _cAdminCommandResult(m)
     case m: AdminConfirmTransferFailure => _cAdminConfirmTransferFailure(m)
+    case m: AdminConfirmTransferProcessed => _cAdminConfirmTransferProcessed(m)
     case m: AdminConfirmTransferSuccess => _cAdminConfirmTransferSuccess(m)
     case m: AllocateNewAddress => _cAllocateNewAddress(m)
     case m: AllocateNewAddressResult => _cAllocateNewAddressResult(m)
@@ -509,6 +511,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[AdjustAddressAmountResult.Immutable] => _cAdjustAddressAmountResult.invert(bytes).get
     case Some(c) if c == classOf[AdminCommandResult.Immutable] => _cAdminCommandResult.invert(bytes).get
     case Some(c) if c == classOf[AdminConfirmTransferFailure.Immutable] => _cAdminConfirmTransferFailure.invert(bytes).get
+    case Some(c) if c == classOf[AdminConfirmTransferProcessed.Immutable] => _cAdminConfirmTransferProcessed.invert(bytes).get
     case Some(c) if c == classOf[AdminConfirmTransferSuccess.Immutable] => _cAdminConfirmTransferSuccess.invert(bytes).get
     case Some(c) if c == classOf[AllocateNewAddress.Immutable] => _cAllocateNewAddress.invert(bytes).get
     case Some(c) if c == classOf[AllocateNewAddressResult.Immutable] => _cAllocateNewAddressResult.invert(bytes).get
