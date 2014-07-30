@@ -64,7 +64,8 @@ BitwayConfigs(Map(
     enableHotColdTransfer = false,
     confirmNum = 10,
     userIdFromMemo = true,
-    isDepositHot = true
+    isDepositHot = true,
+    enableFetchAddress = false
   ),
   Nxt -> BitwayConfig(
     ip = "bitway",

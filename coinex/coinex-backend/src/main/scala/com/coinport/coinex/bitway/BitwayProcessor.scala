@@ -54,7 +54,9 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
 
   override def preStart() = {
     super.preStart
-    scheduleTryPour()
+    if (config.enableFetchAddress) {
+      scheduleTryPour()
+    }
     scheduleSyncHotAddresses()
     initScheduleTransfer()
   }
@@ -119,16 +121,20 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       }
 
     case m @ AllocateNewAddress(currency, _, _) =>
-      val (address, needFetch) = manager.allocateAddress
-      if (needFetch) self ! FetchAddresses(currency)
-      if (address.isDefined) {
-        persist(m.copy(assignedAddress = address)) {
-          event =>
-            updateState(event)
-            sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.Ok, address, manager.address2NxtRsAddressMap.get(address.get))
-        }
+      if (!config.enableFetchAddress) { //Btsx disable fetching address for every user
+        sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.DisableFetchAddress, None)
       } else {
-        sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.NotEnoughAddressInPool, None)
+        val (address, needFetch) = manager.allocateAddress
+        if (needFetch) self ! FetchAddresses(currency)
+        if (address.isDefined) {
+          persist(m.copy(assignedAddress = address)) {
+            event =>
+              updateState(event)
+              sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.Ok, address, manager.address2NxtRsAddressMap.get(address.get))
+          }
+        } else {
+          sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.NotEnoughAddressInPool, None)
+        }
       }
 
     // deprecated

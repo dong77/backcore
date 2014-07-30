@@ -26,7 +26,8 @@ final case class BitwayConfig(
   cold2HotTransferInterval: FiniteDuration = 3600 seconds,
   confirmNum: Int = 1,
   userIdFromMemo: Boolean = false,
-  isDepositHot: Boolean = false)
+  isDepositHot: Boolean = false,
+  enableFetchAddress: Boolean = true)
 
 final case class BitwayConfigs(
   configs: Map[Currency, BitwayConfig] = Map.empty)

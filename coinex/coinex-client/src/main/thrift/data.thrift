@@ -58,6 +58,7 @@ enum ErrorCode {
     NO_ADDRESS_FOUND                 = 8004
     WITHDRAWAL_TO_BAD_ADDRESS        = 8005
     ADDRESS_FAIL                     = 8006 // NO_ADDRESS_FOUND or WITHDRAWAL_TO_BAD_ADDRESS
+    DISABLE_FETCH_ADDRESS            = 8007
 
     // Controller && Services
     PARAM_EMPTY                      = 9001
