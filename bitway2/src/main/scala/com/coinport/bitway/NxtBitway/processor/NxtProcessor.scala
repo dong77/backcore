@@ -231,7 +231,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
   private def getTransactionKey(fullHash: String) = prefix_transaction+fullHash
 
   private def getBitwayMessageWithReorgIndex(loop: Boolean, blockNxt: NxtBlock, block: BlockIndex) = {
-    if (loop == false) BitwayMessage(
+    if (loop == true) BitwayMessage(
       currency = Nxt,
       blockMsg = Some(CryptoCurrencyBlockMessage(
         reorgIndex = Some(BlockIndex(None, None)),
