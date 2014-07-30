@@ -385,10 +385,10 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
   //                          -amount means transfer from cold to hot.
   def needHotColdTransfer(): Option[Long] = {
     val hotAmount = getAvailableReserveAmount(CryptoCurrencyAddressType.Hot, Some(config.confirmNum))
-    if (hotAmount <= config.hotColdTransferNumThreshold) {
+    val coldAmount = getAvailableReserveAmount(CryptoCurrencyAddressType.Cold, Some(config.confirmNum))
+    if (hotAmount <= config.hotColdTransferNumThreshold && coldAmount <= config.hotColdTransferNumThreshold) {
       return None
     }
-    val coldAmount = getAvailableReserveAmount(CryptoCurrencyAddressType.Cold, Some(config.confirmNum))
     val HotColdTransferStrategy(highThreshold, lowThreshold) = config.hotColdTransfer.getOrElse(HotColdTransferStrategy(1, 0))
     val mid = (highThreshold + lowThreshold) / 2
     val allAmount = hotAmount + coldAmount

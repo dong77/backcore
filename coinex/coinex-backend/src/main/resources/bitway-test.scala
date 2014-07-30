@@ -70,7 +70,9 @@ BitwayConfigs(Map(
     ip = "bitway",
     port = 6379,
     maintainedChainLength = 120,
-    enableHotColdTransfer = false,
-    confirmNum = 1
+    confirmNum = 1,
+    coldAddresses = List("6592471235496785385"),
+    enableHotColdTransfer = true,
+    hotColdTransferNumThreshold = 10E8.toLong
   )
 ))

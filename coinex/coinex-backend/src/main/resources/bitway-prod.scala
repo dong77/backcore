@@ -17,7 +17,7 @@ BitwayConfigs(Map(
     batchFetchAddressNum = 10,
     maintainedChainLength = 120,
     coldAddresses = List("1GbJtdiidFnbsGfuC5VtMKrRaoyrP2rRXk"),
-    hotColdTransferNumThreshold = 3,
+    hotColdTransferNumThreshold = 3E8.toLong,
     confirmNum = 1
   ),
   Ltc -> BitwayConfig(
@@ -25,7 +25,7 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     coldAddresses = List("LTaaHE4JpeMFuexYZi19wJxbWqcHAC4DFp"),
-    hotColdTransferNumThreshold = 20,
+    hotColdTransferNumThreshold = 20E8.toLong,
     confirmNum = 4
   ),
   Doge -> BitwayConfig(
@@ -33,7 +33,7 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     coldAddresses = List("D8mHXhuo9XFH5VKVWVWa25eCHbAPu3iGyp"),
-    hotColdTransferNumThreshold = 50000,
+    hotColdTransferNumThreshold = 50000E8.toLong,
     confirmNum = 4
   ),
   Bc -> BitwayConfig(
@@ -41,7 +41,7 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     coldAddresses = List("B4h1qQkghc8gwNWqEfHNyVi4DvjnJhPCs1"),
-    hotColdTransferNumThreshold = 1000,
+    hotColdTransferNumThreshold = 1000E8.toLong,
     confirmNum = 10
   ),
   Drk -> BitwayConfig(
@@ -49,7 +49,7 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     coldAddresses = List("XjDSA4wfcigb9a13yoT4tQrS31dDuMzRp8"),
-    hotColdTransferNumThreshold = 30,
+    hotColdTransferNumThreshold = 30E8.toLong,
     confirmNum = 4
   ),
   Vrc -> BitwayConfig(
@@ -57,7 +57,7 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     coldAddresses = List("VEb5y22HNyRvhiT28jGNjpRVxBE6x4FJyt"),
-    hotColdTransferNumThreshold = 20,
+    hotColdTransferNumThreshold = 20E8.toLong,
     confirmNum = 4
   ),
   Zet -> BitwayConfig(
@@ -65,7 +65,7 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     coldAddresses = List("ZKa4mZ2K9J9SJKFNGwFT55SjR3BzNd7LLP"),
-    hotColdTransferNumThreshold = 80,
+    hotColdTransferNumThreshold = 80E8.toLong,
     confirmNum = 10
   ),
   Btsx -> BitwayConfig(
@@ -82,6 +82,7 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     enableHotColdTransfer = false,
-    confirmNum = 5
+    confirmNum = 5,
+    hotColdTransferNumThreshold = 10E8.toLong
   )
 ))

@@ -20,7 +20,7 @@ final case class BitwayConfig(
   coldAddresses: List[String] = Nil,
   hotColdTransfer: Option[HotColdTransferStrategy] = Some(HotColdTransferStrategy(0.2, 0.1)),
   enableHotColdTransfer: Boolean = true,
-  hotColdTransferNumThreshold: Long = 20L,
+  hotColdTransferNumThreshold: Long = 20E8.toLong,
   hot2ColdTransferInterval: FiniteDuration = 5 * 60 seconds,
   hot2ColdTransferIntervalLarge: FiniteDuration = 3600 seconds,
   cold2HotTransferInterval: FiniteDuration = 3600 seconds,

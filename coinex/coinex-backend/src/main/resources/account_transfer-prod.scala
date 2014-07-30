@@ -16,5 +16,5 @@ new AccountTransferConfig {
       Vrc -> 20E8.toLong,
       Zet -> 1000E8.toLong,
       Btsx -> 20000E8.toLong,
-      Nxt -> 30E8.toLong)
+      Nxt -> 300E8.toLong)
 }
