@@ -152,15 +152,22 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     transfer.`type` match {
       case TransferType.HotToCold | TransferType.Withdrawal =>
         infos.foreach{ info =>
-          val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, (info.amount.get * NXT2NQT).toLong - transfer_fee, transfer_fee)
+          println("transfer type"+transfer.`type`)
+          println("secret"+hotAccount.secret)
+          println("to"+info.to)
+          println("amount"+info.amount)
+          val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, (info.amount.get * NXT2NQT).toLong, transfer_fee)
           if(!txid.fullHash.isEmpty) redis.set(getTransactionKey(txid.fullHash), info.id)
         }
 
       case TransferType.UserToHot =>
         infos.foreach{ info =>
+          println("transfer type"+transfer.`type`)
+          println("secret"+hotAccount.secret)
+          println("to"+info.to)
+          println("amount"+info.amount)
           val userSecret = nxtMongo.queryOneUser(info.from.get).get.secret
           val txid = nxtHttp.sendMoney(userSecret, hotAccount.accountId, (info.amount.get * NXT2NQT).toLong - transfer_fee, transfer_fee)
-          println("txid>>>>>>>>>>>>>>>>>"+txid)
           if(!txid.fullHash.isEmpty) redis.set(getTransactionKey(txid.fullHash), info.id)
         }
       case x =>
@@ -176,7 +183,6 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
   }
 
   private def generateSecret(addressNum: Int): Seq[String] = {
-    val rand = new Random()
     val count = nxtMongo.countAddress()
     (0 until addressNum).map{ i =>
       "www.coinport.com" + "%%%" + UUID.randomUUID() +
@@ -201,9 +207,9 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     CryptoCurrencyTransaction(
               sigId = Some(tx.fullHash),
               txid = Some(tx.transactionId),
-              ids = redis.get(getTransactionKey(tx.transactionId)).map(x => Seq(x.toLong)),
+              ids = redis.get(getTransactionKey(tx.fullHash)).map(x => Seq(x.toLong)),
               outputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.recipientId, nxtRsAddress = Some(tx.recipientRS), amount = Some(tx.amount)))),
-              inputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.senderId, nxtRsAddress = Some(tx.senderRS)))),
+              inputs = Some(Seq(CryptoCurrencyTransactionPort(address = tx.senderId, nxtRsAddress = Some(tx.senderRS), amount = Some(tx.amount + tx.fee)))),
               status = TransferStatus.Confirming
             )
   }
