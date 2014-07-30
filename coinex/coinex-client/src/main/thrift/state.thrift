@@ -120,4 +120,5 @@ struct TBitwayState {
     8: set<string> sigIdsSinceLastBlock
     9: optional map<string, string> privateKeysBackup
     10: optional map<string, string> address2AccountNameMap
+    11: optional map<string, string> address2NxtRsAddressMap
 }

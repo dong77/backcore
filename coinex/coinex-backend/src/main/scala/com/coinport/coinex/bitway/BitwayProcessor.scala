@@ -125,7 +125,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         persist(m.copy(assignedAddress = address)) {
           event =>
             updateState(event)
-            sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.Ok, address)
+            sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.Ok, address, manager.address2NxtRsAddressMap.get(address.get))
         }
       } else {
         sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.NotEnoughAddressInPool, None)

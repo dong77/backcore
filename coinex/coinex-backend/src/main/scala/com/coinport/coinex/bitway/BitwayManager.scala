@@ -37,6 +37,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
   var lastAlive: Long = -1
   private[bitway] val privateKeysBackup = Map.empty[String, String]
   private[bitway] val address2AccountNameMap = Map.empty[String, String]
+  private[bitway] val address2NxtRsAddressMap = Map.empty[String, String]
 
   final val SPECIAL_ACCOUNT_ID: Map[CryptoCurrencyAddressType, Long] = Map(
     CryptoCurrencyAddressType.Hot -> HOT_UID,
@@ -59,7 +60,8 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     addressUidMap.clone,
     sigIdsSinceLastBlock.clone,
     privateKeysBackup = if (privateKeysBackup.size > 0) Some(privateKeysBackup.clone) else None,
-    address2AccountNameMap = if (address2AccountNameMap.nonEmpty) Some(address2AccountNameMap.clone) else None
+    address2AccountNameMap = if (address2AccountNameMap.nonEmpty) Some(address2AccountNameMap.clone) else None,
+    address2NxtRsAddressMap = if (address2NxtRsAddressMap.nonEmpty) Some(address2NxtRsAddressMap.clone) else None
   )
 
   def loadSnapshot(s: TBitwayState) {
@@ -82,6 +84,10 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     if (s.address2AccountNameMap.isDefined) {
       address2AccountNameMap.clear
       address2AccountNameMap ++= s.address2AccountNameMap.get
+    }
+    if (s.address2NxtRsAddressMap.isDefined) {
+      address2NxtRsAddressMap.clear
+      address2NxtRsAddressMap ++= s.address2NxtRsAddressMap.get
     }
 
     if (config.coldAddresses.nonEmpty)
@@ -120,6 +126,9 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     val accountNames = addrs.filter(_.accountName.isDefined)
     if (accountNames.nonEmpty)
       address2AccountNameMap ++= Map(accountNames.map(i => (i.address -> i.accountName.get)).toSeq: _*)
+    val nxtRsNames = addrs.filter(_.nxtRsAddress.isDefined)
+    if (nxtRsNames.nonEmpty)
+      address2NxtRsAddressMap ++= Map(nxtRsNames.map(i => (i.address -> i.nxtRsAddress.get)).toSeq: _*)
   }
 
   def updateLastAlive(ts: Long) {
@@ -258,10 +267,10 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
       if (txType.isDefined) {
         val regularizeInputs = inputs.map(_.map(i => i.copy(
           internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)),
-          userId = addressUidMap.get(i.address), accountName = address2AccountNameMap.get(i.address))))
+          userId = addressUidMap.get(i.address), accountName = address2AccountNameMap.get(i.address), nxtRsAddress = address2NxtRsAddressMap.get(i.address))))
         val regularizeOutputs = outputs.map(_.map(i => i.copy(
           internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)),
-          userId = getUserId(i, tx, txType.get), accountName = address2AccountNameMap.get(i.address))))
+          userId = getUserId(i, tx, txType.get), accountName = address2AccountNameMap.get(i.address), nxtRsAddress = address2NxtRsAddressMap.get(i.address))))
         val sumInput = regularizeInputs.get.map(i => i.internalAmount.getOrElse(0L)).sum
         val sumOutput = regularizeOutputs.get.map(i => i.internalAmount.getOrElse(0L)).sum
         val minerFee = if (sumInput > sumOutput) {
