@@ -136,10 +136,12 @@ trait CryptoCurrencyTransferHandler {
       accountTransferId =>
         transferHandler.get(accountTransferId) foreach {
           transfer =>
-            transferHandler.put(transfer.copy(status = status, updated = getTimestamp(), txid = item.txid))
+            transferHandler.put(prepareTransfer(transfer).copy(status = status, updated = getTimestamp(), txid = item.txid))
         }
     }
   }
+
+  protected def prepareTransfer(transfer: AccountTransfer): AccountTransfer = transfer
 
   private def updateAccountTransferConfirmNum(lastBlockHeight: Long) {
     if (item.includedBlock.isDefined && item.includedBlock.get.height.isDefined && lastBlockHeight >= item.includedBlock.get.height.get) {

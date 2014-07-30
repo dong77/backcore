@@ -10,6 +10,10 @@ class CryptoCurrencyTransferWithdrawalLikeHandler extends CryptoCurrencyTransfer
     setEnv(env, None)
   }
 
+  override def prepareTransfer(transfer: AccountTransfer): AccountTransfer = {
+    transfer.copy(nxtRsAddress = item.to.get.nxtRsAddress)
+  }
+
   def this(t: AccountTransfer, from: Option[CryptoCurrencyTransactionPort], to: Option[CryptoCurrencyTransactionPort], timestamp: Option[Long])(implicit env: TransferEnv) {
     this()
     setEnv(env, timestamp)
