@@ -105,7 +105,10 @@ object UserService extends AkkaService {
     val ListOfFuture = currencySeq.map { c =>
       backend ? AllocateNewAddress(c, userId) map {
         case rv: AllocateNewAddressResult =>
-          (rv.currency, rv.address.getOrElse(""))
+          val addr =
+            if (rv.currency == Currency.Nxt) rv.address.getOrElse("") + "//" + rv.nxtRsAddress.getOrElse("")
+            else rv.address.getOrElse("")
+          (rv.currency, addr)
       }
     }
     val futureList = scala.concurrent.Future.sequence(ListOfFuture)
