@@ -267,10 +267,10 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
       if (txType.isDefined) {
         val regularizeInputs = inputs.map(_.map(i => i.copy(
           internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)),
-          userId = addressUidMap.get(i.address), accountName = address2AccountNameMap.get(i.address), nxtRsAddress = address2NxtRsAddressMap.get(i.address))))
+          userId = addressUidMap.get(i.address), accountName = address2AccountNameMap.get(i.address), nxtRsAddress = getNxtRsAddress(i))))
         val regularizeOutputs = outputs.map(_.map(i => i.copy(
           internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)),
-          userId = getUserId(i, tx, txType.get), accountName = address2AccountNameMap.get(i.address), nxtRsAddress = address2NxtRsAddressMap.get(i.address))))
+          userId = getUserId(i, tx, txType.get), accountName = address2AccountNameMap.get(i.address), nxtRsAddress = getNxtRsAddress(i))))
         val sumInput = regularizeInputs.get.map(i => i.internalAmount.getOrElse(0L)).sum
         val sumOutput = regularizeOutputs.get.map(i => i.internalAmount.getOrElse(0L)).sum
         val minerFee = if (sumInput > sumOutput) {
@@ -481,6 +481,13 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
       }
     } else {
       addressUidMap.get(port.address)
+    }
+  }
+
+  private def getNxtRsAddress(i: CryptoCurrencyTransactionPort ): Option[String] = {
+    i.nxtRsAddress match {
+      case Some(add) => Some(add)
+      case _ => address2NxtRsAddressMap.get(i.address)
     }
   }
 }

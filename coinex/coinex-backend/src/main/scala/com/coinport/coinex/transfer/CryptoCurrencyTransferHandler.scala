@@ -31,10 +31,15 @@ trait CryptoCurrencyTransferHandler {
     item.includedBlock match {
       case Some(_) =>
       case None =>
-        item = item.copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock, status = Some(Confirming), updated = getTimestamp, minerFee = tx.minerFee)
+        prepareItem(tx)
         setAccountTransferStatus(Confirming)
         saveItemToMongo()
     }
+  }
+
+  // To be Override by Nxt Withdrawal
+  def prepareItem(tx: CryptoCurrencyTransaction) {
+    item = item.copy(sigId = tx.sigId, txid = tx.txid, includedBlock = tx.includedBlock, status = Some(Confirming), updated = getTimestamp, minerFee = tx.minerFee)
   }
 
   def onSucceeded() {
