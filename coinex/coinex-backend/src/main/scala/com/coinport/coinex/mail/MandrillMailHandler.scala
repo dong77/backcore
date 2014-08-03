@@ -32,7 +32,6 @@ class MandrillMailHandler(mandrillApiKey: String)(implicit val system: ActorSyst
   val passwordResetTemplate = "passwordreset"
   val monitorTemplate = "monitor"
   val codeTemplate = "verificationcode"
-  val depositTemplate = "depositnotification"
   val withdrawalTemplate = "withdrawalnotification"
 
   case class TemplateContent(name: String, content: String)
