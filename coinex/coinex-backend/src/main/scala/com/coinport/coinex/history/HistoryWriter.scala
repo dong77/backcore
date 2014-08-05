@@ -1,12 +1,13 @@
 package com.coinport.coinex.history
 
-import akka.actor.Actor
+import akka.actor.{ ActorLogging, Actor }
 import com.coinport.coinex.data._
 import com.mongodb.casbah.Imports._
+import com.coinport.coinex.common.ExtendedActor
 import com.coinport.coinex.common.mongo.SimpleJsonMongoCollection
 import org.json4s.native.Serialization.{ read, write }
 
-class HistoryWriter(db: MongoDB) extends Actor {
+class HistoryWriter(db: MongoDB) extends ExtendedActor with ActorLogging {
   val userActions = new SimpleJsonMongoCollection[UserAction, UserAction.Immutable] {
     val coll = db("user_actions")
     def extractId(userAction: UserAction) = userAction.id

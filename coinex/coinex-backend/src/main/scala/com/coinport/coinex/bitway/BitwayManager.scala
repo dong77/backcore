@@ -484,7 +484,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     }
   }
 
-  private def getNxtRsAddress(i: CryptoCurrencyTransactionPort ): Option[String] = {
+  private def getNxtRsAddress(i: CryptoCurrencyTransactionPort): Option[String] = {
     i.nxtRsAddress match {
       case Some(add) => Some(add)
       case _ => address2NxtRsAddressMap.get(i.address)
