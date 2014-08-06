@@ -56,7 +56,7 @@ AccountConfig(
       Bc -> ConstantFee(0.0002.internalValue(Bc)),
       Vrc -> ConstantFee(0.0002.internalValue(Vrc)),
       Zet -> ConstantFee(0.0002.internalValue(Zet)),
-      Btsx -> ConstantFee(0.0002.internalValue(Btsx)),
+      Btsx -> ConstantFee(0.5.internalValue(Btsx)),
       Nxt -> ConstantFee(2.internalValue(Nxt)),
       Cny -> PercentageFee(0.005)),
 
