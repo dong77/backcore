@@ -247,7 +247,7 @@ CryptoProxy.prototype.transfer = function(request, callback) {
             self.log.error("Transfer failed! ids: " + ids);
             var response = new CryptoCurrencyTransaction({ids: ids, txType: request.type, 
                 status: TransferStatus.FAILED});
-            callback(self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, response));
+            callback(null, self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, response));
         } else {
             cctx.ids = ids;
             cctx.txType = request.type;
@@ -258,7 +258,7 @@ CryptoProxy.prototype.transfer = function(request, callback) {
                     self.log.error("redis sadd error! ids: ", cctx.ids);
                 }
             });
-            callback(self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, cctx));
+            callback(null, self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, cctx));
         }
     });
 };
@@ -273,8 +273,8 @@ CryptoProxy.prototype.multi_transfer = function(request, callback) {
             transferInfos: request.transferInfos[key], type: Number(key)});
         requestAarry.push(singleRequest);
     }
-    Async.map(requestAarry, self.transfer.bind(self), function(result) {
-        callback(result);    
+    Async.map(requestAarry, self.transfer.bind(self), function(errors, results) {
+        callback(null, results);    
     });
 }
 

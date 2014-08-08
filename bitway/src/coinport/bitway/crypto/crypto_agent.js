@@ -32,15 +32,15 @@ var CryptoAgent = module.exports.CryptoAgent = function(cryptoProxy, redisProxy)
     });
 
     self.redisProxy.on(RedisProxy.EventType.TRANSFER, function(currency, request) {
-        self.cryptoProxy.transfer(request, function(message) {
+        self.cryptoProxy.transfer(request, function(error, message) {
             self.redisProxy.publish(message);
         });
     });
 
     self.redisProxy.on(RedisProxy.EventType.MULTI_TRANSFER, function(currency, request) {
-        self.cryptoProxy.multi_transfer(request, function(message) {
-            for (var i = 0; i < message.length; i++) {
-                self.redisProxy.publish(message[i]);
+        self.cryptoProxy.multi_transfer(request, function(error, messages) {
+            for (var i = 0; i < messages.length; i++) {
+                self.redisProxy.publish(messages[i]);
             }
         });
     });
