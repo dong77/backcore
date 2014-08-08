@@ -63,9 +63,13 @@ class AccountProcessor(
           sender ! RequestTransferFailed(InsufficientFund)
         } else {
           val updated = countFee(t.copy(created = Some(System.currentTimeMillis)))
-          persist(DoRequestTransfer(updated)) { event =>
-            updateState(event)
-            channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
+          if (!isFeeSubToAmount(updated)){
+            sender ! RequestTransferFailed(InvalidAmount)
+          } else {
+            persist(DoRequestTransfer(updated)) { event =>
+              updateState(event)
+              channelToDepositWithdrawalProcessor forward Deliver(Persistent(event), depositWithdrawProcessorPath)
+            }
           }
         }
 
@@ -248,6 +252,14 @@ class AccountProcessor(
     persist(m.copy(multiTransfers = m.multiTransfers.map(kv => kv._1 -> kv._2.copy(transfers = kv._2.transfers map { appendFeeIfNecessary(_) })))) {
       event =>
         updateState(event)
+    }
+  }
+
+  private def isFeeSubToAmount(transfer: AccountTransfer): Boolean = {
+    transfer.fee match {
+      case Some(f) if transfer.amount > 0 && transfer.amount - f.amount > 0 => true
+      case None if transfer.amount > 0 => true
+      case _ => false
     }
   }
 }
