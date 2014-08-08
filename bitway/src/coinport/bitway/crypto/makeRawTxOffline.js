@@ -54,7 +54,7 @@ var drk = {
     minerFee: 0.0001,
 };
 
-var bt = {
+var bc = {
     cryptoRpcConfig: {
         protocol: 'http',
         user: 'user',
