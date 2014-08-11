@@ -44,6 +44,16 @@ class NxtHttpClient(targetUrl: String) {
     )
   }
 
+  def getBlockByHeight(height: Int): Option[NxtBlock] = {
+    val queryMap = Map("height" -> height.toString)
+    val json = JSON.parseFull(getHttpResult("getBlockId", queryMap)).get.asInstanceOf[Map[String, Any]]
+
+    json.get("blockId") match {
+      case Some(blockId) => Some(getBlock(blockId.asInstanceOf[String]))
+      case None => None
+    }
+  }
+
   def getBlock(blockId: String) = {
     val queryMap = Map("block" -> blockId)
     val json = JSON.parseFull(getHttpResult("getBlock", queryMap)).get.asInstanceOf[Map[String, Any]]
@@ -64,26 +74,30 @@ class NxtHttpClient(targetUrl: String) {
   private def getTransactions(ids: Seq[String]) =
     ids.map{ tid =>
       val json = JSON.parseFull(getHttpResult("getTransaction", Map("transaction" -> tid))).get.asInstanceOf[Map[String, Any]]
-
-      NxtTransaction(
-        transactionId = json.get("transaction").get.asInstanceOf[String],
-        senderId = json.get("sender").get.asInstanceOf[String],
-        senderRS = json.get("senderRS").get.asInstanceOf[String],
-        recipientId = json.get("recipient").get.asInstanceOf[String],
-        recipientRS = json.get("recipientRS").get.asInstanceOf[String],
-        timestamp = json.get("timestamp").get.asInstanceOf[Double].toLong,
-        blockId = json.get("block").map(_.asInstanceOf[String]),
-        height = json.get("height").get.asInstanceOf[Double].toInt,
-        deadline = json.get("deadline").get.asInstanceOf[Double].toInt,
-        tType = json.get("type").get.asInstanceOf[Double].toInt,
-        confirms  = json.get("confirmations").map(_.asInstanceOf[Double].toInt),
-        amountNQT = json.get("amountNQT").get.asInstanceOf[String].toLong,
-        feeNQT = json.get("feeNQT").get.asInstanceOf[String].toLong,
-        amount = json.get("amountNQT").get.asInstanceOf[String].toDouble/NXT2NQT,
-        fee = json.get("feeNQT").get.asInstanceOf[String].toDouble/NXT2NQT,
-        fullHash =  json.get("fullHash").get.asInstanceOf[String]
-      )
-    }.filter(_.tType == 0)
+      val x: Option[NxtTransaction] = json.get("type").get.asInstanceOf[Double].toInt match {
+        case 0 =>
+          Some(NxtTransaction(
+            transactionId = json.get("transaction").get.asInstanceOf[String],
+            senderId = json.get("sender").get.asInstanceOf[String],
+            senderRS = json.get("senderRS").get.asInstanceOf[String],
+            recipientId = json.get("recipient").get.asInstanceOf[String],
+            recipientRS = json.get("recipientRS").get.asInstanceOf[String],
+            timestamp = json.get("timestamp").get.asInstanceOf[Double].toLong,
+            blockId = json.get("block").map(_.asInstanceOf[String]),
+            height = json.get("height").get.asInstanceOf[Double].toInt,
+            deadline = json.get("deadline").get.asInstanceOf[Double].toInt,
+            tType = json.get("type").get.asInstanceOf[Double].toInt,
+            confirms  = json.get("confirmations").map(_.asInstanceOf[Double].toInt),
+            amountNQT = json.get("amountNQT").get.asInstanceOf[String].toLong,
+            feeNQT = json.get("feeNQT").get.asInstanceOf[String].toLong,
+            amount = json.get("amountNQT").get.asInstanceOf[String].toDouble/NXT2NQT,
+            fee = json.get("feeNQT").get.asInstanceOf[String].toDouble/NXT2NQT,
+            fullHash =  json.get("fullHash").get.asInstanceOf[String]
+          ))
+        case _ => None
+      }
+      x
+    }.filter(x => x.isDefined).map(_.get)
 
   def getUnconfirmedTransactions() = {
     val queryMap = Map.empty[String, String]
