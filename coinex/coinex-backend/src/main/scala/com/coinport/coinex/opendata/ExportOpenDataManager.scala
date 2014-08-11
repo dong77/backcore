@@ -32,7 +32,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
   private val messagesTable = config.getString("hbase-journal.table")
   private val messagesFamily = config.getString("hbase-journal.family")
   private val cryptKey = config.getString("akka.persistence.encryption-settings")
-  private val SCAN_MAX_NUM_ROWS = 30
+  private val SCAN_MAX_NUM_ROWS = 100
   private val ReplayGapRetry = 5
   implicit var pluginPersistenceSettings = PluginPersistenceSettings(config, JOURNAL_CONFIG)
   implicit var executionContext = context.system.dispatcher
