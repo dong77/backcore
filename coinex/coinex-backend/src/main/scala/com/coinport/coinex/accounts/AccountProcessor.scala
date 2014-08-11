@@ -63,7 +63,7 @@ class AccountProcessor(
           sender ! RequestTransferFailed(InsufficientFund)
         } else {
           val updated = countFee(t.copy(created = Some(System.currentTimeMillis)))
-          if (!isFeeSubToAmount(updated)){
+          if (!isFeeSubToAmount(updated)) {
             sender ! RequestTransferFailed(InvalidAmount)
           } else {
             persist(DoRequestTransfer(updated)) { event =>

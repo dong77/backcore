@@ -1,6 +1,7 @@
 package com.coinport.coinex.opendata
 
 import akka.actor.ActorContext
+import akka.event.LoggingAdapter
 import akka.persistence.PersistentRepr
 import akka.persistence.hbase.journal.PluginPersistenceSettings
 import akka.persistence.hbase.common.Const._
@@ -22,8 +23,6 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.ListBuffer
 import scala.collection.JavaConverters._
 
-import DeferredConversions._
-
 class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context: ActorContext, implicit val openDataConfig: OpenDataConfig)
     extends Manager[ExportOpenDataMap] with EventWriter {
   private val config = context.system.settings.config
@@ -38,6 +37,9 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
   implicit var pluginPersistenceSettings = PluginPersistenceSettings(config, JOURNAL_CONFIG)
   implicit var executionContext = context.system.dispatcher
   implicit var serialization = EncryptingSerializationExtension(context.system, cryptKey)
+  implicit val logger: LoggingAdapter = context.system.log
+
+  import DeferredConversions._
 
   // [pid, dumpFileName]
   implicit val pFileMap: mutable.Map[String, String] = openDataConfig.pFileMap
@@ -117,7 +119,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
       val processingSeqNr = sequenceNr(columns)
       if (tryStartSeqNr != processingSeqNr) {
         if (tryStartSeqNr > processingSeqNr) {
-          sys.error(s"Replay $processorId Meet duplicated message: to process is $tryStartSeqNr, actual is $processingSeqNr")
+          logger.error(s"Replay $processorId Meet duplicated message: to process is $tryStartSeqNr, actual is $processingSeqNr")
           isDuplicate = true
         }
         return true
@@ -151,7 +153,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
           if (isDuplicate) {
             return (true, "Duplicated message", List.empty[(Long, Any)])
           }
-          sys.error(s"Meet gap at ${tryStartSeqNr}")
+          logger.error(s"Meet gap at ${tryStartSeqNr}")
           retryTimes += 1
           Thread.sleep(100)
           initScanner()
@@ -191,7 +193,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
             writeMessages(processorId, tryStartSeqNr - 1, messages)
           }
           if (isFailed) {
-            sys.error(errMsg)
+            logger.error(errMsg)
             Future.failed(new Exception(errMsg))
           } else {
             handleRows()
