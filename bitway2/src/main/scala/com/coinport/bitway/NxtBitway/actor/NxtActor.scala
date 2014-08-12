@@ -40,14 +40,14 @@ class NxtActor(processor: NxtProcessor, config: BitwayConfig) extends Actor with
       client.lpop(requestChannel) match {
         case Some(s) =>
           val request = serializer.fromBinary(s, classOf[BitwayRequest.Immutable]).asInstanceOf[BitwayRequest]
-          val message: Option[BitwayMessage] = request.`type` match {
+          val message: Seq[BitwayMessage] = request.`type` match {
             case GenerateAddress => processor.generateAddresses(request.generateAddresses.get)
             case Transfer => processor.sendMoney(request.transferCryptoCurrency.get)
             case MultiTransfer => processor.multiSendMoney(request.multiTransferCryptoCurrency.get)
             case GetMissedBlocks => processor.getMissedBlocks(request.getMissedCryptoCurrencyBlocksRequest.get)
             case SyncHotAddresses => processor.syncHotAddresses(request.syncHotAddresses.get)
             case SyncPrivateKeys => processor.syncPrivateKeys(request.syncPrivateKeys.get)
-            case x => None
+            case x => Nil
           }
           message.foreach(m => client.rpush(responseChannel, serializer.toBinary(m)))
           sendMessageToSelf(0)

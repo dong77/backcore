@@ -28,7 +28,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     val nxts = nxtHttp.getMultiAddresses(secretSeq, CryptoCurrencyAddressType.Unused)
     nxtMongo.insertAddresses(nxts)
 
-    Some(BitwayMessage(
+    Seq(BitwayMessage(
       currency = Nxt,
       generateAddressResponse = Some(GenerateAddressesResult(error = ErrorCode.Ok, addresses = Some(nxts.map(nxtAddress2Thrift).toSet), addressType = Some(CryptoCurrencyAddressType.Unused)))
     ))
@@ -36,7 +36,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
 
   def syncHotAddresses(sync: SyncHotAddresses) = {
     val nxts = nxtMongo.queryByTypes(CryptoCurrencyAddressType.Hot)
-    Some(BitwayMessage(
+    Seq(BitwayMessage(
       currency = Nxt,
       syncHotAddressesResult = Some(SyncHotAddressesResult(ErrorCode.Ok, nxts.map(nxtAddress2Thrift).toSet))
     ))
@@ -44,7 +44,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
 
   def syncPrivateKeys(sync: SyncPrivateKeys) = {
     val nxts = nxtMongo.queryByAccountIds(sync.pubKeys.get.toSeq)
-    Some(BitwayMessage(
+    Seq(BitwayMessage(
       currency = Nxt,
       syncPrivateKeysResult = Some(SyncPrivateKeysResult(ErrorCode.Ok, nxts.map(nxtAddress2Thrift).toSet))
     ))
@@ -76,7 +76,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     }
 
     //get bitway message by reorg index
-    Some(getBitwayMessageWithReorgIndex(loop, nxtBlock, block))
+    Seq(getBitwayMessageWithReorgIndex(loop, nxtBlock, block))
   }
 
   //by way of getting new block status to know the new block is shit
@@ -147,40 +147,50 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     }
   }
 
-  def sendMoney(transfer: TransferCryptoCurrency) = {
+  def sendMoney(transfer: TransferCryptoCurrency): Seq[BitwayMessage] = {
     val infos  = transfer.transferInfos
-    transfer.`type` match {
+    val x: Seq[Option[CryptoCurrencyTransaction]] = transfer.`type` match {
       case TransferType.HotToCold | TransferType.Withdrawal =>
-        infos.foreach{ info =>
+        infos.map{ info =>
           println("transfer type"+transfer.`type`)
           println("secret"+hotAccount.secret)
           println("to"+info.to)
           println("amount"+info.amount)
           val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, (info.amount.get * NXT2NQT).toLong, transfer_fee)
-          if(!txid.fullHash.isEmpty) redis.set(getTransactionKey(txid.fullHash), info.id)
+          val y: Option[CryptoCurrencyTransaction] = if(!txid.fullHash.isEmpty){
+            redis.set(getTransactionKey(txid.fullHash), info.id)
+            None
+          } else Some(CryptoCurrencyTransaction(status = TransferStatus.Rejected, ids = Some(Seq(info.id)), txType = Some(transfer.`type`)))
+          y
         }
-
       case TransferType.UserToHot =>
-        infos.foreach{ info =>
+        infos.map{ info =>
           println("transfer type"+transfer.`type`)
           println("secret"+hotAccount.secret)
           println("to"+info.to)
           println("amount"+info.amount)
           val userSecret = nxtMongo.queryOneUser(info.from.get).get.secret
           val txid = nxtHttp.sendMoney(userSecret, hotAccount.accountId, (info.amount.get * NXT2NQT).toLong - transfer_fee, transfer_fee)
-          if(!txid.fullHash.isEmpty) redis.set(getTransactionKey(txid.fullHash), info.id)
+          val y: Option[CryptoCurrencyTransaction] = if(!txid.fullHash.isEmpty) {
+            redis.set(getTransactionKey(txid.fullHash), info.id)
+            None
+          } else Some(CryptoCurrencyTransaction(status = TransferStatus.Rejected, ids = Some(Seq(info.id)), txType = Some(transfer.`type`)))
+          y
         }
-      case x =>
+      case _ => Nil
     }
-    None
+    x.filter(_.isDefined).map{ cct =>
+      BitwayMessage(
+        currency = Nxt,
+        tx = Some(cct.get)
+      )
+    }
   }
 
-  def multiSendMoney(multiTransfer: MultiTransferCryptoCurrency) = {
+  def multiSendMoney(multiTransfer: MultiTransferCryptoCurrency): Seq[BitwayMessage] =
     multiTransfer.transferInfos.map(transfers =>
       sendMoney(TransferCryptoCurrency(multiTransfer.currency, transfers._2, transfers._1))
-    )
-    None
-  }
+    ).flatten[BitwayMessage].toSeq
 
   private def generateSecret(addressNum: Int): Seq[String] = {
     val count = nxtMongo.countAddress()
