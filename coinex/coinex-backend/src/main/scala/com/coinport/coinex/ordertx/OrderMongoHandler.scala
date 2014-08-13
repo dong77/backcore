@@ -22,19 +22,19 @@ trait OrderMongoHandler {
 
   val coll: MongoCollection
 
-  def addItem(item: OrderInfo, quantity: Long) = coll.insert(toBson(item, quantity))
+  def addItem(item: OrderInfo, quantity: Long) = coll.save(toBson(item, quantity), com.mongodb.WriteConcern.ACKNOWLEDGED)
 
   def updateItem(orderId: Long, inAmount: Long, quantity: Long, status: Int, side: MarketSide, timestamp: Long, refund: Option[Refund]) = {
     if (refund.isDefined)
       coll.update(MongoDBObject(OID -> orderId), $set(IN_AMOUNT -> inAmount, QUANTITY -> quantity, STATUS -> status,
-        UPDATED_TIME -> timestamp, SIDE -> side.ordered, REFUND -> converter.toBinary(refund.get)), false, false)
+        UPDATED_TIME -> timestamp, SIDE -> side.ordered, REFUND -> converter.toBinary(refund.get)), false, false, com.mongodb.WriteConcern.ACKNOWLEDGED)
     else
       coll.update(MongoDBObject(OID -> orderId), $set(IN_AMOUNT -> inAmount, QUANTITY -> quantity, STATUS -> status,
-        UPDATED_TIME -> timestamp, SIDE -> side.ordered), false, false)
+        UPDATED_TIME -> timestamp, SIDE -> side.ordered), false, false, com.mongodb.WriteConcern.ACKNOWLEDGED)
   }
 
   def cancelItem(orderId: Long) =
-    coll.update(MongoDBObject(OID -> orderId), $set(STATUS -> OrderStatus.Cancelled.getValue()), false, false)
+    coll.update(MongoDBObject(OID -> orderId), $set(STATUS -> OrderStatus.Cancelled.getValue()), false, false, com.mongodb.WriteConcern.ACKNOWLEDGED)
 
   def countItems(q: QueryOrder): Long = coll.count(mkQuery(q))
 

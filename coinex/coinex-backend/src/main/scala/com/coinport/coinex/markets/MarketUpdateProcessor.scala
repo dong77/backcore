@@ -15,7 +15,7 @@ import com.coinport.coinex.data._
 import Implicits._
 
 // This is an empty processor to support various views.
-class MarketUpdateProcessor extends ExtendedProcessor with Processor {
+class MarketUpdateProcessor extends ExtendedProcessor with EventsourcedProcessor {
   override def processorId = MARKET_UPDATE_PROCESSOR <<
 
   val manager = new SimpleManager()
@@ -24,8 +24,17 @@ class MarketUpdateProcessor extends ExtendedProcessor with Processor {
     case _ => "ap"
   }
 
-  def receive = LoggingReceive {
-    case p: ConfirmablePersistent => confirm(p)
+  def receiveRecover = PartialFunction.empty[Any, Unit]
+
+  def receiveCommand = LoggingReceive {
+    case p @ ConfirmablePersistent(m, _, _) =>
+      persist(m) {
+        event =>
+          confirm(p)
+      }
+  }
+
+  def updateState: Receive = {
     case _ =>
   }
 }

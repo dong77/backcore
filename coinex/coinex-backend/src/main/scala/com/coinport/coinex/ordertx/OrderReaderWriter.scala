@@ -5,10 +5,9 @@ import com.mongodb.casbah.MongoDB
 import akka.actor.{ ActorLogging, Actor }
 import akka.event.LoggingReceive
 import Implicits._
-import com.coinport.coinex.common.ExtendedView
+import com.coinport.coinex.common.{ SimpleManager, ExtendedView, ExtendedActor }
 import com.coinport.coinex.common.PersistentId._
 import akka.persistence.Persistent
-import com.coinport.coinex.common.ExtendedActor
 
 class OrderReader(db: MongoDB) extends ExtendedActor with OrderMongoHandler with ActorLogging {
   val coll = db("orders")
@@ -20,7 +19,11 @@ class OrderReader(db: MongoDB) extends ExtendedActor with OrderMongoHandler with
 }
 
 class OrderWriter(db: MongoDB) extends ExtendedView with OrderMongoHandler with ActorLogging {
-  val processorId = MARKET_UPDATE_PROCESSOR <<
+  override val processorId = MARKET_UPDATE_PROCESSOR <<
+  override val viewId = ORDER_WRITE_VIEW <<
+
+  val manager = new SimpleManager()
+
   val coll = db("orders")
 
   def receive = LoggingReceive {

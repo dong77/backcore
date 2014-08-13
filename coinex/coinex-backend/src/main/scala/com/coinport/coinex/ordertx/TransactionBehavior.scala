@@ -20,7 +20,7 @@ trait TransactionBehavior {
   val coll: MongoCollection
   val converter = new ThriftBinarySerializer
 
-  def addItem(item: Transaction) = coll.insert(toBson(item))
+  def addItem(item: Transaction) = coll.save(toBson(item), com.mongodb.WriteConcern.ACKNOWLEDGED)
 
   def countItems(q: QueryTransaction) = coll.count(mkQuery(q))
 

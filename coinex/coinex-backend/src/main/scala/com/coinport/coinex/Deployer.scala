@@ -108,15 +108,15 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       deploySingleton(props, market_processor << m)
     }
 
-    deploySingleton(Props(new MarketUpdateProcessor() with StackableCmdsourced[TSimpleState, SimpleManager]), market_update_processor <<)
+    deploySingleton(Props(new MarketUpdateProcessor() with StackableEventsourced[TSimpleState, SimpleManager]), market_update_processor <<)
     deploySingleton(Props(new UserProcessor(routers.mailer, userManagerSecret) with StackableEventsourced[TUserState, UserManager]), user_processor <<)
     deploySingleton(Props(new ApiAuthProcessor(apiAuthSecret) with StackableCmdsourced[TApiSecretState, ApiAuthManager]), api_auth_processor <<)
     // recomment this if needed
     // deploySingleton(Props(new RobotProcessor(routers) with StackableCmdsourced[TRobotState, RobotManager]), robot_processor <<)
     deploySingleton(Props(new AccountTransferProcessor(dbForViews, routers.accountProcessor.path, routers.bitwayProcessors, routers.mailer) with StackableEventsourced[TAccountTransferState, AccountTransferManager]), account_transfer_processor <<)
 
-    deploySingleton(Props(new TransactionWriter(dbForViews)), transaction_mongo_writer <<)
-    deploySingleton(Props(new OrderWriter(dbForViews)), order_mongo_writer <<)
+    deploySingleton(Props(new TransactionWriter(dbForViews) with StackableView[TSimpleState, SimpleManager]), transaction_mongo_writer <<)
+    deploySingleton(Props(new OrderWriter(dbForViews) with StackableView[TSimpleState, SimpleManager]), order_mongo_writer <<)
     deploySingleton(Props(new ExportOpenDataProcessor(asyncHBaseClient) with StackableEventsourced[ExportOpenDataMap, ExportOpenDataManager]), opendata_exporter <<)
 
     deploySingleton(Props(new HistoryWriter(dbForViews)), history_writer <<)
