@@ -79,8 +79,18 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     Seq(getBitwayMessageWithReorgIndex(loop, nxtBlock, block))
   }
 
-  //by way of getting new block status to know the new block is shit
   def getNewBlock: Seq[BitwayMessage] = {
+    val (lastBlockId, lastBlockHeight)= getRedisLastIndex(redis.get[String](lastIndex).getOrElse("-1//-1"))
+    nxtHttp.getBlockByHeight(lastBlockHeight+1) match {
+      case None=> Nil
+      case Some(nxtBlock) =>
+        redis.set(lastIndex, makeRedisLastIndex(nxtBlock.blockId, nxtBlock.height))
+        Seq(nxtBlock2Thrift(nxtBlock))
+    }
+  }
+
+  //by way of getting new block status to know the new block is shit
+/*  def getNewBlock: Seq[BitwayMessage] = {
     val blockStatus = nxtHttp.getBlockChainStatus()
     val (lastBlockId, lastBlockHeight)= getRedisLastIndex(redis.get[String](lastIndex).getOrElse("-1//-1"))
     if (blockStatus.lastBlockHeight != lastBlockHeight) {
@@ -98,13 +108,6 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
         if (heightDiff == 0) Nil
         else if (heightDiff < 0) Nil
         else {
-//          var nxtBlock = nxtHttp.getBlock(blockStatus.lastBlockId)
-//          if (nxtBlock.height != blockStatus.lastBlockHeight || nxtBlock.blockId != blockStatus.lastBlockId) {
-//            println("nxtBlock>>>>>>>"+nxtBlock)
-//            println("blockStatus>>>>"+blockStatus)
-//            println("nxtBlock>>>>try 2>>>"+nxtHttp.getBlock(blockStatus.lastBlockId))
-//            println("blockStatus>try 2>>>"+nxtHttp.getState())
-//          }
 
           var queryBlockId = blockStatus.lastBlockId
           var nxtBlock: NxtBlock = null
@@ -120,7 +123,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
         blockList.reverse.map(nxtBlock2Thrift)
       }
     } else Nil
-  }
+  }*/
 
   def getUnconfirmedTransactions: Seq[BitwayMessage] = {
     val txs = nxtHttp.getUnconfirmedTransactions()
