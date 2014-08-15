@@ -30,7 +30,7 @@ CACHE_TEXT_SIZE = 32
 
 mail_from = "cp_admin_alarm@163.com"
 mail_from_pwd = "coinport1234567"
-mail_to = ['jaice_229@163.com','xiaolu@coinport.com']
+mail_to = ['jaice_229@163.com','xiaolu@coinport.com', 'c@coinport.com', 'weichao@coinport.com','chunming@coinport.com','chenxi@coinport.com', 'yangli@coinport.com', 'kongliang@coinport.com']
 #mail_to = "xiaolu@coinport.com"
 SERVER_NAME = "exchange frontend "
 
