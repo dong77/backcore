@@ -714,7 +714,7 @@ CryptoProxy.prototype.constructCCTXByTxHistory_ = function(txHistory, callback) 
         function(cb) {self.constructOutputs_.bind(self)(ledger_entries, cb)}
         ], function(err, results){
         if (!err) {
-            results[1].amount += self.convertAmount_(txHistory.fee.amount);
+            results[1][0].amount += self.convertAmount_(txHistory.fee.amount);
             var cctx = new CryptoCurrencyTransaction({sigId: results[0], txid: txHistory.trx_id,
                 ids: [], inputs: results[1], outputs: results[2], 
                 minerFee: self.convertAmount_(txHistory.fee.amount)});
