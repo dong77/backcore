@@ -32,8 +32,10 @@ describe('crypto proxy', function() {
             });
             cryptoProxy.generateUserAddress(new GenerateAddresses({num: 4}), function(response) {
                 var expectRes = new BitwayMessage({currency: Currency.BTC, generateAddressResponse:
-                    new GenerateAddressesResult({error: ErrorCode.OK, addresses: [{"address":"addr","privateKey":"priv"},
-                        {"address":"addr","privateKey":"priv"},{"address":"addr","privateKey":"priv"},{"address":"addr","privateKey":"priv"}],
+                    new GenerateAddressesResult({error: ErrorCode.OK, addresses: [{"address":"addr","privateKey":"priv","nxtRsAddress":null,"accountName":null},
+                        {"address":"addr","privateKey":"priv","nxtRsAddress":null,"accountName":null},
+                        {"address":"addr","privateKey":"priv","nxtRsAddress":null,"accountName":null},
+                        {"address":"addr","privateKey":"priv","nxtRsAddress":null,"accountName":null}],
                         addressType: CryptoCurrencyAddressType.UNUSED})})
                 Assert.deepEqual(response, expectRes);
                 done();
@@ -88,18 +90,21 @@ describe('crypto proxy', function() {
                     {
                         "address": "n1YiTZ9SczJM5ZpRgBmRP2B5Gax7JHptAa",
                         "amount": 4.6498,
-                        "internalAmount": null, "userId": null
+                        "internalAmount": null, "userId": null,
+                        "nxtRsAddress":null,"accountName":null,"memo":null
                     }],
                     "outputs": [
                     {
                         "address": "mgen5m7yqkXckzqgug1cZFbtZz8cRZApqY",
                         "amount": 4.6178,
-                        "internalAmount": null, "userId": null
+                        "internalAmount": null, "userId": null,
+                        "nxtRsAddress":null,"accountName":null,"memo":null
                     },
                     {
                         "address": "mhfF1SYE8juppzWTFX2T7UBuSWT13yX5Jk",
                         "amount": 0.032,
-                        "internalAmount": null, "userId":null
+                        "internalAmount": null, "userId":null,
+                        "nxtRsAddress":null,"accountName":null,"memo":null
                     }],
                     "prevBlock": null,
                     "includedBlock": null,
@@ -129,10 +134,11 @@ describe('crypto proxy', function() {
                 Assert.deepEqual(redisClient.map, {'1000_processed_sigids_244497': undefined, '1000_last_index': 244498});
                 Assert.equal(block.index.id, '000000003471884e402aa2383121c4cc9e4f769c6d16e1ce920a7c35d852f872');
                 Assert.equal(block.txs.length, 18);
-                Assert.deepEqual(block.txs[1].inputs, [{"address":"n2JjGvghqD9vPF1HGnxHiKABmCZUEskwEU","amount":2.823,"internalAmount":null,"userId":null}]);
+                Assert.deepEqual(block.txs[1].inputs, [{"address":"n2JjGvghqD9vPF1HGnxHiKABmCZUEskwEU","amount":2.823,
+                    "internalAmount":null,"userId":null,"nxtRsAddress":null,"accountName":null,"memo":null}]);
                 Assert.deepEqual(block.txs[1].outputs, [
-                    {"address":"mkSmF1qmmpdaaSLt2qayVitSedX7stXbSQ","amount":0.3,"internalAmount":null,"userId":null},
-                    {"address":"mrCC7TwxfTTMxC796474wTmbXN1n5JWLu3","amount":2.523,"internalAmount":null,"userId":null}]);
+                    {"address":"mkSmF1qmmpdaaSLt2qayVitSedX7stXbSQ","amount":0.3,"internalAmount":null,"userId":null,"nxtRsAddress":null,"accountName":null,"memo":null},
+                    {"address":"mrCC7TwxfTTMxC796474wTmbXN1n5JWLu3","amount":2.523,"internalAmount":null,"userId":null,"nxtRsAddress":null,"accountName":null,"memo":null}]);
                 done();
             });
         });
@@ -296,9 +302,9 @@ describe('crypto proxy', function() {
                 Assert.equal(block.txs[0].sigId, "d1d2883deeea0f4bbda6d5e0294026608141d59482f446947cea937c8d14625b");
                 Assert.equal(block.txs[0].txid, "367e72d39abc002d930745b64a4b36d5af783094b93da5c2e8a2cc82ece9ad3a");
                 Assert.deepEqual(block.txs[0].inputs, [{"address":"coinbase","amount":0,
-                    "internalAmount":null,"userId":null}]);
+                    "internalAmount":null,"userId":null,"nxtRsAddress":null,"accountName":null,"memo":null}]);
                 Assert.deepEqual(block.txs[0].outputs, [
-                    {"address":"nrrPrREiPuZua2XmL7YMj4BDSCuZKhemQo","amount":535256,"internalAmount":null,"userId":null}]);
+                    {"address":"nrrPrREiPuZua2XmL7YMj4BDSCuZKhemQo","amount":535256,"internalAmount":null,"userId":null,"nxtRsAddress":null,"accountName":null,"memo":null}]);
                 done();
             });
         });
@@ -334,9 +340,10 @@ describe('crypto proxy', function() {
                 Assert.deepEqual(block.txs[0].sigId, "8a1022f784393927f36d177a63a8d44d8e26dac211baafcd68ab8251615651ad");
                 Assert.deepEqual(block.txs[0].txid, "acb2aa6da8fb98d9ee650de1aad8ae181b8b387fd3af2d7c89d0003efa1bff87");
                 Assert.deepEqual(block.txs[0].inputs, [{"address":"coinbase","amount":0,
-                    "internalAmount":null,"userId":null}]);
+                    "internalAmount":null,"userId":null,"nxtRsAddress":null,"accountName":null,"memo":null}]);
                 Assert.deepEqual(block.txs[0].outputs, [
-                    {"address":"ne5quHyCBQc9kL4zHxR38gVSFu3tb9AEbN","amount":603718,"internalAmount":null,"userId":null}]);
+                    {"address":"ne5quHyCBQc9kL4zHxR38gVSFu3tb9AEbN","amount":603718,"internalAmount":null,"userId":null,
+                    "nxtRsAddress":null,"accountName":null,"memo":null}]);
                 done();
             });
         });
