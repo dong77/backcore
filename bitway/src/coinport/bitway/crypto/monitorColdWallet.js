@@ -347,7 +347,7 @@ var getData_ = function(callback) {
                     Async.compose(checkTxs_,
                         getBlock_,
                         getBlockHash_)(height++, function(errInner) {
-                        setTimeout(cb, 0);
+                        setTimeout(cb, 100);
                     });
                 },
                 function(error) {
