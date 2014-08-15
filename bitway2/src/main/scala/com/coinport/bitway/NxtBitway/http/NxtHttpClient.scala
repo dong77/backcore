@@ -44,11 +44,11 @@ class NxtHttpClient(targetUrl: String) {
     )
   }
 
-  def getBlockByHeight(height: Int): Option[NxtBlock] = {
+  def getBlockByHeight(height: Long): Option[NxtBlock] = {
     val queryMap = Map("height" -> height.toString)
     val json = JSON.parseFull(getHttpResult("getBlockId", queryMap)).get.asInstanceOf[Map[String, Any]]
 
-    json.get("blockId") match {
+    json.get("block") match {
       case Some(blockId) => Some(getBlock(blockId.asInstanceOf[String]))
       case None => None
     }

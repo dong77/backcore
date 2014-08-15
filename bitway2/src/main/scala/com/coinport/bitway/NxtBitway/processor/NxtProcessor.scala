@@ -80,8 +80,15 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
   }
 
   def getNewBlock: Seq[BitwayMessage] = {
-    val (lastBlockId, lastBlockHeight)= getRedisLastIndex(redis.get[String](lastIndex).getOrElse("-1//-1"))
-    nxtHttp.getBlockByHeight(lastBlockHeight+1) match {
+    val (lastBlockId: String, lastBlockHeight: Long)= redis.get[String](lastIndex) match {
+      case Some(stringIndex) => getRedisLastIndex(stringIndex)
+      case None =>
+        val blockStatus = nxtHttp.getBlockChainStatus()
+        (blockStatus.lastBlockId, blockStatus.lastBlockHeight - 1)
+
+    }
+
+    nxtHttp.getBlockByHeight(lastBlockHeight + 1L) match {
       case None=> Nil
       case Some(nxtBlock) =>
         redis.set(lastIndex, makeRedisLastIndex(nxtBlock.blockId, nxtBlock.height))
@@ -270,6 +277,6 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
 
   private def getRedisLastIndex(value: String) = {
     val list = value.split("//")
-    (list(0), list(1).toInt)
+    (list(0), list(1).toLong)
   }
 }
