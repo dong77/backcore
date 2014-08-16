@@ -8,7 +8,7 @@ new AccountTransferConfig {
   override val succeededRetainNum: collection.Map[Currency, Int] = collection.Map(Btc -> 100, Ltc -> 200, Doge -> 300)
   override val autoConfirmAmount: collection.Map[Currency, Long] =
     collection.Map(
-      Btc -> 2E8.toLong,
+      Btc -> 3E8.toLong,
       Ltc -> 40E8.toLong,
       Doge -> 1000000E8.toLong,
       Bc -> 1000E8.toLong,
