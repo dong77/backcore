@@ -253,8 +253,8 @@ CryptoProxy.prototype.walletTransfer_ = function(type, amount, from, to, id) {
     var params = [];
     params.push(amount);
     params.push("BTSX");
-    params.push(from.accountName);
-    params.push(to.accountName);
+    params.push(from);
+    params.push(to);
     var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_transfer", params: params};
     var request = JSON.stringify(requestBody);
     self.log.info("walletTransfer_ request: ", request);
@@ -279,9 +279,6 @@ CryptoProxy.prototype.walletTransfer_ = function(type, amount, from, to, id) {
                 status: TransferStatus.FAILED});
             self.emit(CryptoProxy.EventType.TX_ARRIVED,
                 self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, response));
-        }
-        if (type == TransferType.WITHDRAWAL || type == TransferType.HOT_TO_COLD) {
-            self.removeContactAccount_.bind(self)(to);
         }
     });
 };
@@ -313,13 +310,9 @@ CryptoProxy.prototype.makeTransfer_ = function(type, transferInfo) {
     switch (type) {
         case TransferType.WITHDRAWAL:
         case TransferType.HOT_TO_COLD:
-            Async.parallel ([
-                function(cb) {self.getAccountByAccountName_.bind(self)(self.hotAccountName, cb)},
-                function(cb) {self.addWithdrawalAccount_.bind(self)(transferInfo, cb)}
-                ], function(error, results){
-                self.log.info("makeTransfer_ results: ", results);
+            self.getAccountFromBlockchain_(transferInfo.to, function(error, result) {
                 if (!error) {
-                     self.walletTransfer_(type, transferInfo.amount, results[0], results[1], transferInfo.id);
+                     self.walletTransfer_(type, transferInfo.amount, self.hotAccountName, transferInfo.to, transferInfo.id);
                 } else {
                     var ids = [];
                     ids.push(transferInfo.id);
@@ -384,6 +377,47 @@ CryptoProxy.prototype.addWithdrawalAccount_ = function(transferInfo, callback) {
         var errMessage = "transferInfo.id is null";
         callback(errMessage, null);
     }
+};
+
+CryptoProxy.prototype.addContactAccount_ = function(account, callback) {
+    var self = this;
+    var params = [];
+    params.push(account.accountName);
+    params.push(account.address);
+    var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_add_contact_account", params: params};
+    var request = JSON.stringify(requestBody);
+    self.log.info("addContactAccount_ request: ", request);
+    self.httpRequest_(request, function(error, result) {
+        self.log.info("addContactAccount_ result: ", result);
+        if (!error && result.result == null) {
+            var account = new CryptoCurrencyTransactionPort({accountName: params[0], 
+                address: params[1]});
+            callback(null, account);
+        } else {
+            self.log.error("addContactAccount_ failed");
+            callback("addContactAccount_ failed", null);
+        }
+    });
+};
+
+CryptoProxy.prototype.getAccountFromBlockchain_ = function(accountName, callback) {
+    var self = this;
+    var params = [];
+    params.push(accountName);
+    var requestBody = {jsonrpc: '2.0', id: 2, method: "blockchain_get_account", params: params};
+    var request = JSON.stringify(requestBody);
+    self.log.info("getAccountFromBlockchain_ request: ", request);
+    self.httpRequest_(request, function(error, result) {
+        self.log.info("getAccountFromBlockchain_ result: ", result);
+        if (!error && result.result && result.result.name == accountName) {
+            var account = new CryptoCurrencyTransactionPort({accountName: result.result.name, 
+                address: result.result.owner_key});
+            callback(null, account);
+        } else {
+            self.log.error("getAccountFromBlockchain_ failed");
+            callback("getAccountFromBlockchain_ failed", null);
+        }
+    });
 };
 
 CryptoProxy.prototype.multi_transfer = function(request, callback) {
