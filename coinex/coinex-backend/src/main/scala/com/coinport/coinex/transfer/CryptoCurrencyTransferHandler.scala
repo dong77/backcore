@@ -108,6 +108,7 @@ trait CryptoCurrencyTransferHandler {
   def reOrgnizeSucceeded(reOrgHeight: Long): Boolean = {
     if (reOrgHeight - item.includedBlock.get.height.get < itemComfirmNum - 1) {
       logger.warning(s"reOrgnize() reOrgnize happened(Succeeded) :item -> ${item.toString()}")
+      saveItemToMongo()
       setAccountTransferStatus(Reorging)
       return true
     }
