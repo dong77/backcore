@@ -264,7 +264,8 @@ CryptoProxy.prototype.walletTransfer_ = function(type, amount, from, to, id) {
             var cctx = new CryptoCurrencyTransaction({ids: [], status: TransferStatus.CONFIRMING});
             cctx.ids.push(id);
             cctx.txType = type;
-            cctx.sigId = self.getSigId_(result.result.signatures[0]);
+            cctx.txid = result.result.record_id;
+            cctx.sigId = result.result.record_id;
             self.log.info("ids: " + id + " sigId: " + cctx.sigId);
             self.redis.set(cctx.sigId, cctx.ids, function(redisError, redisReply){
                 if (redisError) {
@@ -743,16 +744,15 @@ CryptoProxy.prototype.constructCCTXByTxHistory_ = function(txHistory, callback) 
     self.log.info("ledger_entries: ", ledger_entries);
 
     Async.parallel ([
-        function(cb) {self.getSigIdByTxId_.bind(self)(txHistory.trx_id, cb)},
         function(cb) {self.constructInputs_.bind(self)(ledger_entries, cb)},
         function(cb) {self.constructOutputs_.bind(self)(ledger_entries, cb)}
         ], function(err, results){
         if (!err) {
-            results[1][0].amount += self.convertAmount_(txHistory.fee.amount);
-            var cctx = new CryptoCurrencyTransaction({sigId: results[0], txid: txHistory.trx_id,
-                ids: [], inputs: results[1], outputs: results[2], 
+            results[0][0].amount += self.convertAmount_(txHistory.fee.amount);
+            var cctx = new CryptoCurrencyTransaction({sigId: txHistory.trx_id, txid: txHistory.trx_id,
+                ids: [], inputs: results[0], outputs: results[1], 
                 minerFee: self.convertAmount_(txHistory.fee.amount)});
-            self.redis.get(results[0], function(error, id) {
+            self.redis.get(cctx.sigId, function(error, id) {
                 if (!error) {
                     if (id) {
                         cctx.ids.push(Number(id));
