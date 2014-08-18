@@ -418,6 +418,7 @@ struct ApiSecret {
     1: string secret
     2: optional string identifier
     3: optional i64 userId
+    4: optional i64 createTs
 }
 
 struct AccountTransfer {

@@ -41,13 +41,14 @@ class ApiAuthManager(initialSeed: String) extends Manager[TApiSecretState] {
       Left(ErrorCode.TooManySecrets)
     } else {
       val (identifier, secret) = generateNewSecret()
-      val identifierLookupMap = state.identifierLookupMap + (identifier -> ApiSecret(secret, None, Some(userId)))
+      val timestamp = System.currentTimeMillis
+      val identifierLookupMap = state.identifierLookupMap + (identifier -> ApiSecret(secret, None, Some(userId), Some(timestamp)))
 
-      val secrets = existing :+ ApiSecret(secret, Some(identifier), None)
+      val secrets = existing :+ ApiSecret(secret, Some(identifier), None, Some(timestamp))
       val userSecretMap = state.userSecretMap + (userId -> secrets)
 
       state = state.copy(identifierLookupMap = identifierLookupMap, userSecretMap = userSecretMap)
-      Right(ApiSecret(secret, Some(identifier), Some(userId)))
+      Right(ApiSecret(secret, Some(identifier), Some(userId), Some(timestamp)))
     }
   }
 

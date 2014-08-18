@@ -72,6 +72,26 @@ object UserService extends AkkaService {
     }
   }
 
+  def getApiSecret(userId: Long) = {
+    val command = QueryApiSecrets(userId, None)
+    backend ? command map {
+      case QueryApiSecretsResult(userId, secrets) if secrets.nonEmpty =>
+        val secret = secrets.head.secret
+        ApiResult(true, 0, "", Some(secret))
+      case _ => ApiResult(true, 0, "", None)
+    }
+  }
+
+  def generateApiSecret(userId: Long) = {
+    val command = DoAddNewApiSecret(userId)
+    backend ? command map {
+      case ApiSecretOperationResult(error, secrets) if secrets.nonEmpty =>
+        val secret = secrets.head.secret
+        ApiResult(true, 0, "", Some(secret))
+      case _ => ApiResult(false, -1, "", None)
+    }
+  }
+
   def getDepositAddress(currencySeq: Seq[Currency], userId: Long) = {
     backend ? QueryProfile(Some(userId)) map {
       case qpr: QueryProfileResult =>
