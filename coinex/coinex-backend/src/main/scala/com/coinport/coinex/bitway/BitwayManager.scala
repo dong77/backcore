@@ -173,6 +173,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     if (inputsMatched.contains(USER) && outputsMatched.contains(HOT)) {
       Some(TransferType.UserToHot)
     } else if (inputsMatched.contains(HOT)) {
+      //TODO: add interest transfer type, with input and output all are hot address
       if (outputsMatched.contains(COLD))
         Some(TransferType.HotToCold)
       else
@@ -183,6 +184,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
       else
         Some(TransferType.Withdrawal)
     } else if (outputsMatched.contains(USER)) {
+      //TODO: add interest transfer type, with input and output all are user address
       if (!inputsMatched.contains(USER))
         Some(TransferType.Deposit)
       else
