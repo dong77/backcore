@@ -19,12 +19,12 @@ object CryptoCurrencyTransferUserToHotHandler extends CryptoCurrencyTransferBase
                   id2HandlerMap(id).setTimeStamp(timestamp).onNormal(tx)
               }
             } else {
-              logger.warning(s"""${"~" * 50} innerHandleTx() UserToHot item confirm id not contained in id2HandlerMap : ${tx.toString}""")
+              logger.warning(s"""${"~" * 50} ${currency.toString} innerHandleTx() UserToHot item confirm id not contained in id2HandlerMap : ${tx.toString}""")
             }
         }
         updateSigId2MinerFee(tx)
       case _ =>
-        logger.warning(s"""${"~" * 50} innerHandleTx() UserToHot tx not define ids : ${tx.toString}""")
+        logger.warning(s"""${"~" * 50} ${currency.toString} innerHandleTx() UserToHot tx not define ids : ${tx.toString}""")
     }
   }
 

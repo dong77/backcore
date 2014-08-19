@@ -104,14 +104,14 @@ trait AccountTransferBehavior {
         tx =>
           tx.txType match {
             case None =>
-              logger.warning(s"Unexpected tx meet : ${tx.toString}")
+              logger.warning(s"Unexpected tx meet : ${currency.toString} ${tx.toString}")
               CryptoCurrencyTransferUnknownHandler.handleTx(currency, tx, None)
             case Some(txType) =>
               transferHandlerObjectMap.contains(txType) match {
                 case true =>
                   transferHandlerObjectMap(txType).handleTx(currency, tx, timestamp)
                 case _ =>
-                  logger.warning(s"Unknown tx meet : ${tx.toString}")
+                  logger.warning(s"Unknown tx meet : ${currency.toString} ${tx.toString}")
               }
           }
       }

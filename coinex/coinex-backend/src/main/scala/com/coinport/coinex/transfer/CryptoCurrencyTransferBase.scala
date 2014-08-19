@@ -49,7 +49,7 @@ trait CryptoCurrencyTransferBase {
     if (id2HandlerMap.contains(info.id)) {
       handleFailed(id2HandlerMap(info.id).setTimeStamp(timestamp), error)
     } else {
-      logger.warning(s"""${"~" * 50} bitway Fail not match existing item : id2HandleMap.size = ${id2HandlerMap.size}, info = ${info.toString}""")
+      logger.warning(s"""${"~" * 50} ${currency.toString} bitway Fail not match existing item : id2HandleMap.size = ${id2HandlerMap.size}, info = ${info.toString}""")
     }
   }
 
@@ -123,7 +123,7 @@ trait CryptoCurrencyTransferBase {
             }
         }
       case _ =>
-        logger.warning(s"""${"~" * 50} reOrgnize() wrong reOrgnize height : [${manager.getLastBlockHeight(currency)}, ${reOrgBlock.toString()}]""")
+        logger.warning(s"""${"~" * 50} ${currency.toString} reOrgnize() wrong reOrgnize height : [${manager.getLastBlockHeight(currency)}, ${reOrgBlock.toString()}]""")
     }
   }
 
@@ -307,7 +307,7 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
           updateSigId2MinerFee(tx)
         }
       case _ =>
-        logger.warning(s"""${"~" * 50} innerHandleTx() ${tx.txType.get.toString} tx not define outputs : ${tx.toString}""")
+        logger.warning(s"""${"~" * 50} ${currency.toString} innerHandleTx() ${tx.txType.get.toString} tx not define outputs : ${tx.toString}""")
     }
   }
 
@@ -368,12 +368,12 @@ trait CryptoCurrencyTransferWithdrawalLikeBase extends CryptoCurrencyTransferBas
                   id2HandlerMap(id).setTimeStamp(timestamp).onNormal(tx)
               }
             } else {
-              logger.warning(s"""${"~" * 50} innerHandlerTx() ${tx.txType.get.toString} item id ${id} not contained in id2HandlerMap : ${tx.toString}""")
+              logger.warning(s"""${"~" * 50} ${currency.toString} innerHandlerTx() ${tx.txType.get.toString} item id ${id} not contained in id2HandlerMap : ${tx.toString}""")
             }
         }
         updateSigId2MinerFee(tx)
       case _ =>
-        logger.warning(s"""${"~" * 50} innerHandlerTx() ${tx.txType.get.toString} tx not define ids : ${tx.toString}""")
+        logger.warning(s"""${"~" * 50} ${currency.toString} innerHandlerTx() ${tx.txType.get.toString} tx not define ids : ${tx.toString}""")
     }
   }
 }
