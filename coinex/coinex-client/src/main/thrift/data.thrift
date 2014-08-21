@@ -564,6 +564,8 @@ struct CryptoAddress {
     2: optional string privateKey
     3: optional string nxtRsAddress
     4: optional string accountName
+    5: optional string signMessage
+    6: optional string message
 }
 
 struct TAddressStatus {

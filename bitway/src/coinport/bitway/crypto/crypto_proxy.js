@@ -129,10 +129,19 @@ CryptoProxy.prototype.synchronousHotAddr =  function(request, callback) {
                 Async.map(addresses, self.getPrivateKey_.bind(self), function(errPriv, cryptoAddrs){
                     if (errPriv) {
                         shr.error = ErrorCode.RPC_ERROR;
+                        callback(self.makeNormalResponse_(BitwayResponseType.SYNC_HOT_ADDRESSES, self.currency, shr));
                     } else {
                         shr.addresses = cryptoAddrs;
+                        Async.map(shr.addresses, self.getSignMessage_.bind(self), function(errSign, signAddresses){
+                            if (errSign) {
+                                shr.error = ErrorCode.RPC_ERROR;
+                            } else {
+                                console.log(signAddresses);
+                                shr.addresses = signAddresses;
+                            }
+                            callback(self.makeNormalResponse_(BitwayResponseType.SYNC_HOT_ADDRESSES, self.currency, shr));
+                        });
                     }
-                    callback(self.makeNormalResponse_(BitwayResponseType.SYNC_HOT_ADDRESSES, self.currency, shr));
                 });
             } else {
                 Async.times(CryptoProxy.HOT_ADDRESS_NUM, self.generateAHotAddress_.bind(self), function(error, results) {
@@ -143,10 +152,18 @@ CryptoProxy.prototype.synchronousHotAddr =  function(request, callback) {
                         Async.map(results, self.getPrivateKey_.bind(self), function(errPriv, cryptoAddrs){
                             if (errPriv) {
                                 shr.error = ErrorCode.RPC_ERROR;
+                                callback(self.makeNormalResponse_(BitwayResponseType.SYNC_HOT_ADDRESSES, self.currency, shr));
                             } else {
                                 shr.addresses = cryptoAddrs;
+                                Async.map(addresses, self.getSignMessage_.bind(self), function(errSign, signAddresses){
+                                    if (errSign) {
+                                        shr.error = ErrorCode.RPC_ERROR;
+                                    } else {
+                                        shr.addresses = signAddresses;         
+                                    }
+                                    callback(self.makeNormalResponse_(BitwayResponseType.SYNC_HOT_ADDRESSES, self.currency, shr));
+                                });
                             }
-                            callback(self.makeNormalResponse_(BitwayResponseType.SYNC_HOT_ADDRESSES, self.currency, shr));
                         });
                     }
                 });
@@ -174,6 +191,45 @@ CryptoProxy.prototype.syncPrivateKeys =  function(request, callback) {
     }
 };
 
+CryptoProxy.prototype.getSignMessage_ = function(address, callback) {
+    var self = this;
+    console.log("Enter into getSignMessage_");
+    if (self.walletPassPhrase) {
+        Async.series([
+            function(cb) {
+                self.walletPassPhrase_.bind(self)(cb)},
+            function(cb) {
+                self.signMessage_.bind(self)(address, cb)},
+            function(cb) {
+                self.walletLock_.bind(self)(cb)}
+        ], function(err, values) {
+            if (err) {
+                self.log.error(err);
+                callback(err, null);
+            } else {
+                console.log(values[1]);
+                callback(null, values[1]);
+            }
+        });
+    } else {
+        self.log.warn("no password!");
+        self.signMessage.bind(self)(address, callback);
+    }
+};
+
+CryptoProxy.prototype.signMessage_ = function(address, callback) {
+    var self = this;
+    self.rpc.signMessage(address.address, "coinport", function(error, signReply) {
+        if (error) {
+            self.log.error("sign error: " + error);
+            callback(error);
+        } else {
+            address.signMessage = signReply.result; 
+            address.message = "coinport";
+            callback(null, address);
+        }
+    });
+};
 
 CryptoProxy.prototype.encryptPrivKey_ = function(priv, key) {
     var cipher = Crypto.createCipher('aes-256-cbc', key);
