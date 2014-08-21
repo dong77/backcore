@@ -16,8 +16,8 @@ class FixNxtAddressBug extends Specification {
   "fix bug " should {
     "find bug" in {
       var count = 0
-      coll.find().foreach {
-        u: DBObject =>
+      (1000000000 to 1000003000).foreach { id =>
+        coll.findOne(MongoDBObject("_id" -> id)).foreach { u =>
           val data: DBObject = u.getAs[DBObject]("data").get
           if (data.containsField("depositAddresses")) {
             val list = data.getAs[MongoDBList]("depositAddresses").get
@@ -29,9 +29,9 @@ class FixNxtAddressBug extends Specification {
               }
             }
           }
+        }
       }
       success
     }
   }
-
 }
