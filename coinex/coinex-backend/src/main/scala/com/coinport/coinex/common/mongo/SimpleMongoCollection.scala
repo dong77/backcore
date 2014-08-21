@@ -23,7 +23,12 @@ abstract class SimpleJsonMongoCollection[T <: AnyRef, S <: T](implicit man: Mani
   def put(data: T) = coll += MongoDBObject(ID -> extractId(data), DATA -> JSON.parse(write(data)))
 
   def find(q: MongoDBObject, skip: Int, limit: Int): Seq[T] =
-    coll.find(q).sort(MongoDBObject(ID -> -1)).skip(skip).limit(limit).map { json => read[S](json.get(DATA).toString) }.toSeq
+    try {
+      coll.find(q).sort(MongoDBObject(ID -> -1)).skip(skip).limit(limit).map { json => read[S](json.get(DATA).toString) }.toSeq
+    } catch {
+      case e: Exception =>
+        Seq.empty[T]
+    }
 
   def count(q: MongoDBObject): Long = coll.count(q)
 }
