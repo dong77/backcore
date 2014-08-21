@@ -426,6 +426,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     addressStatus -= ""
     addressUidMap -= ""
     privateKeysBackup -= ""
+    address2NxtRsAddressMap -= ""
   }
 
   private def getCurrentHeight: Option[Long] = {
