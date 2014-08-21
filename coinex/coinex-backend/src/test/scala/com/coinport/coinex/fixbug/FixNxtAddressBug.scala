@@ -12,27 +12,22 @@ class FixNxtAddressBug extends Specification {
 
   //  val ip = "172.13.8.201"
   val ip = "localhost"
-  val profiles = new SimpleJsonMongoCollection[UserProfile, UserProfile.Immutable] {
-    val coll = MongoConnection(ip, 27017)("coinex_readers")("user_profiles")
-    def extractId(profile: UserProfile) = profile.id
-  }
-  println("start to test")
+  val coll = MongoConnection(ip, 27017)("coinex_readers")("user_profiles")
   "fix bug " should {
     "find bug" in {
-      profiles.find(MongoDBObject(), 0, 200000).foreach {
-        u =>
-          println("user profile>>>>>>>>" + u)
-          u.depositAddresses match {
-            case Some(map) =>
-              println("address map>>>>>>>>" + map)
-              map.get(Currency.Nxt) match {
-                case Some(addr) =>
-                  println(addr)
-                  if (addr.startsWith("//"))
-                    println(u.email)
-                case None =>
+      var count = 0
+      coll.find().foreach {
+        u: DBObject =>
+          val data: DBObject = u.getAs[DBObject]("data").get
+          if (data.containsField("depositAddresses")) {
+            val list = data.getAs[MongoDBList]("depositAddresses").get
+            list.foreach { a =>
+              val b = a.asInstanceOf[DBObject]
+              if (b.getAs[String]("_1").get == "Nxt" && b.getAs[String]("_2").get.startsWith("//")) {
+                count = count + 1
+                println(u.getAs[DBObject]("data").get.getAs[String]("email").get)
               }
-            case None =>
+            }
           }
       }
       success
