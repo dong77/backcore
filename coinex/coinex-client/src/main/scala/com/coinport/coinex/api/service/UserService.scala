@@ -102,7 +102,7 @@ object UserService extends AkkaService {
               getDepositAddressFromBackend(currencySeq, userId)
             } else {
               val curSeq = profile.depositAddresses.get.map { pair =>
-                if (pair._1 == "Nxt" && !pair._2.startsWith("//")) pair._1
+                if (pair._1 == Currency.Nxt && pair._2.startsWith("//NXT")) null
                 else if (pair._2 != "") pair._1
                 else null
               }.filter(_ != null)
