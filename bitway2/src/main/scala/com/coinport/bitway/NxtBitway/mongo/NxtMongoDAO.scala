@@ -17,7 +17,14 @@ class NxtMongoDAO(collection: MongoCollection) {
   val UPDATED = "@u"
   val TYPE = "t"
 
-  def insertAddresses(nxts: Seq[NxtAddress]) = collection.insert(nxts.map(toBson): _*)
+  def insertAddresses(nxts: Seq[NxtAddress]) = {
+    collection.insert(nxts.map(toBson): _*)
+
+    nxts.map{ n =>
+      if (collection.findOne(MongoDBObject(ACCOUNT_ID -> n.accountId)).isDefined) n
+      else null
+    }.filter(_ != null)
+  }
 
   def countAddress() = collection.count()
 

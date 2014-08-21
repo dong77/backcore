@@ -15,8 +15,16 @@ object NxtTest {
   val requestChannel = "creq_" + Currency.Nxt.value.toString
 
   def main(args: Array[String]): Unit = {
-    sendMoney()
+//    sendMoney()
+    genrateAddress()
 
+    Thread.sleep(5000)
+
+    genrateAddress()
+
+    Thread.sleep(5000)
+
+    genrateAddress()
   }
 
   def sendMoney() = {
@@ -33,7 +41,7 @@ object NxtTest {
 
   def genrateAddress() = {
 
-    val ga = GenerateAddresses(20)
+    val ga = GenerateAddresses(100)
     val br = BitwayRequest(`type` = BitwayRequestType.GenerateAddress, currency = Currency.Nxt, generateAddresses = Some(ga))
 
     val s = serializer.toBinary(br)

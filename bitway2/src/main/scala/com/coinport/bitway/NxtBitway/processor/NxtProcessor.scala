@@ -25,12 +25,17 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
 
   def generateAddresses(gen: GenerateAddresses) = {
     val secretSeq = generateSecret(gen.num)
-    val nxts = nxtHttp.getMultiAddresses(secretSeq, CryptoCurrencyAddressType.Unused)
-    nxtMongo.insertAddresses(nxts)
+    var nxts = nxtHttp.getMultiAddresses(secretSeq, CryptoCurrencyAddressType.Unused)
+    nxts = nxts.filter(!_.accountId.isEmpty).filter(!_.accountRS.isEmpty)
+
+    nxts = nxtMongo.insertAddresses(nxts)
 
     Seq(BitwayMessage(
       currency = Nxt,
-      generateAddressResponse = Some(GenerateAddressesResult(error = ErrorCode.Ok, addresses = Some(nxts.map(nxtAddress2Thrift).toSet), addressType = Some(CryptoCurrencyAddressType.Unused)))
+      generateAddressResponse = Some(GenerateAddressesResult(
+        error = ErrorCode.Ok,
+        addresses = Some(nxts.map(nxtAddress2Thrift).toSet),
+        addressType = Some(CryptoCurrencyAddressType.Unused)))
     ))
   }
 

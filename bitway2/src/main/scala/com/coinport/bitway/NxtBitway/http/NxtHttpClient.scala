@@ -23,10 +23,10 @@ class NxtHttpClient(targetUrl: String) {
 
     //todo(xichen): decode the secret
     NxtAddress(
-      accountId = json.getOrElse("accountId", ""),
+      accountId = json.getOrElse("account", ""),
       accountRS = json.getOrElse("accountRS", ""),
       secret = secret,
-      publicKey = None,
+      publicKey = json.get("publicKey"),
       addressType = addType,
       created = System.currentTimeMillis(),
       updated = System.currentTimeMillis())
