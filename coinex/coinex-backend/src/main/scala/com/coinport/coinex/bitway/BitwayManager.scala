@@ -421,6 +421,13 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     Math.min(getReserveAmount(t, confirmationNum), getReserveAmount(t))
   }
 
+  def cleanNxtDepositAddress() {
+    addresses.values.filter(_.nonEmpty).foreach { _ -= "" }
+    addressStatus -= ""
+    addressUidMap -= ""
+    privateKeysBackup -= ""
+  }
+
   private def getCurrentHeight: Option[Long] = {
     blockIndexes.lastOption match {
       case None => None

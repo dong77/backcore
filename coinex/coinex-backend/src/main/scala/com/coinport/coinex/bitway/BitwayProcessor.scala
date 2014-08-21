@@ -256,6 +256,10 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
               log.error("Get unexpected DoRequestTransfer transfer type : " + event.toString)
           }
       }
+    case m @ CleanBitwayData(currency, actions) =>
+      if (actions.nonEmpty) {
+        persist(m)(updateState)
+      }
   }
 
   private def sendTransferRequest(m: TransferCryptoCurrency) {
@@ -468,6 +472,15 @@ trait BitwayManagerBehavior {
       manager.cleanBlockChain()
 
     case DoRequestTransfer(_, _, _) =>
+
+    case CleanBitwayData(currency, actions) =>
+      actions.foreach {
+        ac =>
+          ac match {
+            case CleanActionType.NxtAddressIncomplete =>
+              manager.cleanNxtDepositAddress()
+          }
+      }
 
     case e => println("bitway updateState doesn't handle the message: ", e)
   }

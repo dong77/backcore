@@ -17,6 +17,7 @@ package com.coinport.coinex.users
 
 import scala.collection.mutable.Map
 import com.coinport.coinex.data._
+import com.coinport.coinex.data.Currency.Nxt
 import com.coinport.coinex.common.Manager
 import com.coinport.coinex.util._
 import com.google.common.io.BaseEncoding
@@ -119,6 +120,16 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
     profile
   }
 
+  def cleanData(actions: scala.collection.Set[CleanActionType]) {
+    actions.foreach {
+      ac =>
+        ac match {
+          case CleanActionType.NxtAddressIncomplete =>
+            cleanNxtDepositAddress()
+        }
+    }
+  }
+
   def checkLogin(email: String, password: String): Either[ErrorCode, UserProfile] =
     getUser(email) match {
       case None => Left(ErrorCode.UserNotExist)
@@ -151,4 +162,20 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
 
   private def computePassword(id: Long, email: String, password: String) =
     MHash.sha256Base64(email + passwordSecret + MHash.sha256Base64(id + password.trim + passwordSecret))
+
+  private def cleanNxtDepositAddress() {
+    profileMap.keys.foreach {
+      userId =>
+        val pf = profileMap(userId)
+        pf.depositAddresses.foreach {
+          addresses =>
+            if (addresses.contains(Nxt)) {
+              val nxtAd = addresses.get(Nxt).getOrElse("")
+              if (nxtAd.length < 35 || nxtAd.startsWith("//NXT")) {
+                profileMap.update(userId, pf.copy(depositAddresses = Some(addresses - Nxt)))
+              }
+            }
+        }
+    }
+  }
 }

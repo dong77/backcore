@@ -178,6 +178,11 @@ class UserProcessor(mailer: ActorRef, secret: String)
         case None =>
           sender ! QueryProfileResult(None)
       }
+    case m @ CleanUserData(actions) =>
+      if (actions.nonEmpty) {
+        persist(m)(updateState)
+      }
+
   }
 
   def updateState: Receive = {
@@ -191,6 +196,7 @@ class UserProcessor(mailer: ActorRef, secret: String)
     case DoResetPassword(password, token) => manager.resetPassword(password, token)
     case DoChangePassword(email, oldPassword, newPassword) => manager.changePassword(email, newPassword)
     case VerifyEmail(token) => manager.verifyEmail(token)
+    case CleanUserData(actions) => manager.cleanData(actions)
   }
 
   private def sendVerificationCodeEmail(email: String, code: String) {

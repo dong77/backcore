@@ -60,6 +60,7 @@ typedef data.Payment                            _Payment
 typedef data.TransferConfig                     _TransferConfig
 typedef data.UserAction                         _UserAction
 typedef data.UserActionType                     _UserActionType
+typedef data.CleanActionType                    _CleanActionType
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -86,6 +87,7 @@ typedef data.UserActionType                     _UserActionType
 /* C,P  */ struct DoRegisterUser                          {1: _UserProfile userProfile, 2: string password, 3: optional _ReferralParams rparams}
 /* R-   */ struct RegisterUserFailed                      {1: _ErrorCode error}
 /* R+   */ struct RegisterUserSucceeded                   {1: _UserProfile userProfile}
+/* R+   */ struct CleanUserData                           {1: set<_CleanActionType> cleanActions}
 
 /* C,P  */ struct DoResendVerifyEmail                     {1: string email}
 /* R-   */ struct ResendVerifyEmailFailed                 {1: _ErrorCode error}
@@ -217,6 +219,7 @@ typedef data.UserActionType                     _UserActionType
 /* R    */ struct QueryReserveStatusResult                {1: _Currency currency, 2: map<_CryptoCurrencyAddressType, i64> amounts}
 /* C    */ struct AdjustAddressAmount                     {1: _Currency currency, 2: string address, 3: i64 adjustAmount}
 /* R    */ struct AdjustAddressAmountResult               {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: string address, 4: optional i64 adjustAmount}
+/* R    */ struct CleanBitwayData                         {1: _Currency currency, 2: set<_CleanActionType> cleanActions}
 
 ////////// Bitway nodejs
 /* C    */ struct CleanBlockChain                         {1: _Currency currency} // use this only if want re-start up from fatal new branch error. and must make sure the new coming block height is higher than previous highest block height
