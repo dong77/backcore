@@ -29,6 +29,7 @@ class UserWriter(db: MongoDB, secret: String) extends ExtendedView {
     case DoResetPassword(password, token) => profiles.put(manager.resetPassword(password, token))
     case DoChangePassword(email, oldPassword, newPassword) => profiles.put(manager.changePassword(email, newPassword))
     case VerifyEmail(token) => profiles.put(manager.verifyEmail(token))
+    case _ =>
   }
 
   val profiles = new SimpleJsonMongoCollection[UserProfile, UserProfile.Immutable] {
