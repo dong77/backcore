@@ -213,7 +213,7 @@ CryptoProxy.prototype.getSignMessage_ = function(address, callback) {
         });
     } else {
         self.log.warn("no password!");
-        self.signMessage.bind(self)(address, callback);
+        self.signMessage_.bind(self)(address, callback);
     }
 };
 
