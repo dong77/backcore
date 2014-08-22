@@ -151,16 +151,17 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
       for (row <- rows.asScala) {
         if (hasSequenceGap(row.asScala) && retryTimes < ReplayGapRetry) {
           if (isDuplicate) {
-            return (true, "Duplicated message", List.empty[(Long, Any)])
+            return (true, s"Export open data for ${processorId} meet duplicated message", List.empty[(Long, Any)])
           }
-          logger.error(s"Meet gap at ${tryStartSeqNr}")
+          logger.error(s"Export open data for ${processorId} meet gap at ${tryStartSeqNr}")
           retryTimes += 1
           Thread.sleep(100)
           initScanner()
           return (false, "", List.empty[(Long, Any)])
         } else {
           if (retryTimes >= ReplayGapRetry) {
-            return (true, s"Gap retry times reach ${ReplayGapRetry}", List.empty[(Long, Any)])
+//            return (true, s"Export open data for ${processorId}, gap retry times reach ${ReplayGapRetry}", List.empty[(Long, Any)])
+            logger.error(s"Export open data for ${processorId}, gap retry times reach ${ReplayGapRetry}")
           }
           var seqNum = 0L
           var payload: Any = null
