@@ -39,7 +39,7 @@ BitwayConfigs(Map(
         message = Some("coinport"),
         signMessage = Some("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"))
     ),
-    enableHotColdTransfer = true
+    enableHotColdTransfer = false
   ),
   Bc -> BitwayConfig(
     ip = "bitway",

@@ -10,7 +10,7 @@ new AccountTransferConfig {
     collection.Map(
       Btc -> 3E7.toLong,
       Ltc -> 10E8.toLong,
-      Doge -> 10E8.toLong,
+      Doge -> 1000E8.toLong,
       Bc -> 300E8.toLong,
       Drk -> 10E8.toLong,
       Vrc -> 20E8.toLong,

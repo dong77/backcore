@@ -60,7 +60,7 @@ case class AddressStatus(txid: Option[String] = None, height: Option[Long] = Non
   def getAddressStatusResult(currentHeight: Option[Long], confirmationNum: Option[Int] = None, signData: Option[List[String]] = None) = {
     val (msg, signMsg): (Option[String], Option[String]) =
       signData match {
-        case Some(sd) if sd.size == 2 => (Some(sd(1)), Some(sd(2)))
+        case Some(sd) if sd.size == 2 => (Some(sd(0)), Some(sd(1)))
         case _ => (None, None)
       }
     AddressStatusResult(txid, height, getAmount(currentHeight, confirmationNum.getOrElse(1)), message = msg, signMessage = signMsg)
