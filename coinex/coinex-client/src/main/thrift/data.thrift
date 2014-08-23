@@ -565,6 +565,7 @@ struct AddressStatusResult {
     5: optional string message
 }
 
+// TODO: need a better name, eg. signMessage -> signature
 struct CryptoAddress {
     1: string address
     2: optional string privateKey

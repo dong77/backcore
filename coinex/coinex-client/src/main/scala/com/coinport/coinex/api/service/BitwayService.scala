@@ -40,7 +40,9 @@ object BitwayService extends AkkaService {
               accumulated = CurrencyObject(currency, accumulatedAmount),
               walletType = addressType.toString.toLowerCase,
               lastTx = kv._2.txid,
-              height = kv._2.height
+              height = kv._2.height,
+              message = kv._2.message,
+              signature = kv._2.signMessage
             )
         }
         ApiResult(data = Some(data))

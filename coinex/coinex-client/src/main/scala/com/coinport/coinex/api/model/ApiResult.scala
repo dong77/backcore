@@ -38,7 +38,7 @@ case class ApiNotification(id: Long, ntype: String, title: String, content: Stri
 
 case class ApiNetworkStatus(currency: String, timestamp: Long, delay: Long, height: Option[Long], block: Option[String])
 
-case class ApiWallet(currency: String, address: String, amount: CurrencyObject, accumulated: CurrencyObject, walletType: String, lastTx: Option[String], height: Option[Long])
+case class ApiWallet(currency: String, address: String, amount: CurrencyObject, accumulated: CurrencyObject, walletType: String, lastTx: Option[String], height: Option[Long], message: Option[String], signature: Option[String])
 
 case class ApiActorsPath(ip: String, actors: Seq[String])
 
