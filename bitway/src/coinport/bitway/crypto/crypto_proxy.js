@@ -404,11 +404,12 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
                         amountUnspent += unspentTxs[i].amount;
                         var transaction = {txid: unspentTxs[i].txid, vout: unspentTxs[i].vout};
                         transactions.push(transaction);
-                        if (amountUnspent > (amountTotalPay + self.minerFee)) {
-                            addresses[changeAddress] = self.jsonToAmount_(amountUnspent - amountTotalPay - self.minerFee);
+                        var minerFee = self.minerFee * Math.ceil((i + 1)/4.0);
+                        if (amountUnspent > (amountTotalPay + minerFee)) {
+                            addresses[changeAddress] = self.jsonToAmount_(amountUnspent - amountTotalPay - minerFee);
                             break;
-                        } else if((amountUnspent < (amountTotalPay + self.minerFee) && amountUnspent > amountTotalPay)
-                                || amountUnspent == (amountTotalPay + self.minerFee)) {
+                        } else if((amountUnspent < (amountTotalPay + minerFee) && amountUnspent > amountTotalPay)
+                                || amountUnspent == (amountTotalPay + minerFee)) {
                             break;
                         }
                     }

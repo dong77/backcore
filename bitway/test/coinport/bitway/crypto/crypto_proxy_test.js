@@ -32,11 +32,13 @@ describe('crypto proxy', function() {
             });
             cryptoProxy.generateUserAddress(new GenerateAddresses({num: 4}), function(response) {
                 var expectRes = new BitwayMessage({currency: Currency.BTC, generateAddressResponse:
-                    new GenerateAddressesResult({error: ErrorCode.OK, addresses: [{"address":"addr","privateKey":"priv","nxtRsAddress":null,"accountName":null},
-                        {"address":"addr","privateKey":"priv","nxtRsAddress":null,"accountName":null},
-                        {"address":"addr","privateKey":"priv","nxtRsAddress":null,"accountName":null},
-                        {"address":"addr","privateKey":"priv","nxtRsAddress":null,"accountName":null}],
+                    new GenerateAddressesResult({error: ErrorCode.OK, 
+                        addresses: [{"address":"addr","privateKey":"priv","nxtRsAddress":null,"accountName":null,"signMessage":null,"message":null},
+                        {"address":"addr","privateKey":"priv","nxtRsAddress":null,"accountName":null,"signMessage":null,"message":null},
+                        {"address":"addr","privateKey":"priv","nxtRsAddress":null,"accountName":null,"signMessage":null,"message":null},
+                        {"address":"addr","privateKey":"priv","nxtRsAddress":null,"accountName":null,"signMessage":null,"message":null}],
                         addressType: CryptoCurrencyAddressType.UNUSED})})
+                console.log("%j",response);
                 Assert.deepEqual(response, expectRes);
                 done();
             });
