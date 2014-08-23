@@ -136,7 +136,6 @@ CryptoProxy.prototype.synchronousHotAddr =  function(request, callback) {
                             if (errSign) {
                                 shr.error = ErrorCode.RPC_ERROR;
                             } else {
-                                console.log(signAddresses);
                                 shr.addresses = signAddresses;
                             }
                             callback(self.makeNormalResponse_(BitwayResponseType.SYNC_HOT_ADDRESSES, self.currency, shr));
@@ -193,7 +192,7 @@ CryptoProxy.prototype.syncPrivateKeys =  function(request, callback) {
 
 CryptoProxy.prototype.getSignMessage_ = function(address, callback) {
     var self = this;
-    console.log("Enter into getSignMessage_");
+    self.log.info("Enter into getSignMessage_");
     if (self.walletPassPhrase) {
         Async.series([
             function(cb) {
@@ -207,7 +206,6 @@ CryptoProxy.prototype.getSignMessage_ = function(address, callback) {
                 self.log.error(err);
                 callback(err, null);
             } else {
-                console.log(values[1]);
                 callback(null, values[1]);
             }
         });
