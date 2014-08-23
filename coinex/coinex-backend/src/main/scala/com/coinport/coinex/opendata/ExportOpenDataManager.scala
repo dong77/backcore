@@ -159,9 +159,13 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
           initScanner()
           return (false, "", List.empty[(Long, Any)])
         } else {
+          var meetGap: Boolean = false
+          var gapSeq: Long = 0L
           if (retryTimes >= ReplayGapRetry) {
             //            return (true, s"Export open data for ${processorId}, gap retry times reach ${ReplayGapRetry}", List.empty[(Long, Any)])
-            logger.error(s"Export open data for ${processorId}, gap retry times reach ${ReplayGapRetry}")
+            logger.error(s"Export open data for ${processorId}, gap at ${tryStartSeqNr} after ${ReplayGapRetry} times retry")
+            meetGap = true
+            gapSeq = tryStartSeqNr
           }
           var seqNum = 0L
           var payload: Any = null
@@ -175,6 +179,9 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
                 tryStartSeqNr = seqNum + 1
               }
             }
+          }
+          if (meetGap) {
+            logger.error(s"Export open data for ${processorId} meet gap at ${gapSeq}, jump to first valid seq ${seqNum}")
           }
           messages.append((seqNum, payload))
           retryTimes = 0
