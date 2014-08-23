@@ -5,6 +5,7 @@
 
 package com.coinport.coinex.bitway
 
+import com.coinport.coinex.data.CryptoAddress
 import com.coinport.coinex.data.Currency
 import scala.concurrent.duration._
 
@@ -17,7 +18,7 @@ final case class BitwayConfig(
   requestChannelPrefix: String = "creq_",
   responseChannelPrefix: String = "cres_",
   maintainedChainLength: Int = 20,
-  coldAddresses: List[String] = Nil,
+  coldAddresses: List[CryptoAddress] = Nil,
   hotColdTransfer: Option[HotColdTransferStrategy] = Some(HotColdTransferStrategy(0.2, 0.1)),
   enableHotColdTransfer: Boolean = true,
   hotColdTransferNumThreshold: Long = 20E8.toLong,
@@ -31,3 +32,4 @@ final case class BitwayConfig(
 
 final case class BitwayConfigs(
   configs: Map[Currency, BitwayConfig] = Map.empty)
+

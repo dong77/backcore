@@ -561,6 +561,8 @@ struct AddressStatusResult {
     1: optional string txid // last tx with include the address
     2: optional i64 height // tx first included block height
     3: i64 confirmedAmount
+    4: optional string signMessage
+    5: optional string message
 }
 
 struct CryptoAddress {

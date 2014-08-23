@@ -10,7 +10,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 
-import com.coinport.coinex.api.model._
+import com.coinport.coinex.api.model.CurrencyWrapper
 import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.common.Manager
 import com.coinport.coinex.data._
@@ -38,6 +38,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
   private[bitway] val privateKeysBackup = Map.empty[String, String]
   private[bitway] val address2AccountNameMap = Map.empty[String, String]
   private[bitway] val address2NxtRsAddressMap = Map.empty[String, String]
+  private[bitway] val address2SignDataMap = Map.empty[String, List[String]]
 
   final val SPECIAL_ACCOUNT_ID: Map[CryptoCurrencyAddressType, Long] = Map(
     CryptoCurrencyAddressType.Hot -> HOT_UID,
@@ -61,7 +62,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     sigIdsSinceLastBlock.clone,
     privateKeysBackup = if (privateKeysBackup.size > 0) Some(privateKeysBackup.clone) else None,
     address2AccountNameMap = if (address2AccountNameMap.nonEmpty) Some(address2AccountNameMap.clone) else None,
-    address2NxtRsAddressMap = if (address2NxtRsAddressMap.nonEmpty) Some(address2NxtRsAddressMap.clone) else None
+    address2SignDataMap = if (address2SignDataMap.nonEmpty) Some(Map.empty[String, List[String]] ++= address2SignDataMap.map(kv => kv._1 -> (List.empty[String] ++ kv._2))) else None
   )
 
   def loadSnapshot(s: TBitwayState) {
@@ -88,6 +89,10 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     if (s.address2NxtRsAddressMap.isDefined) {
       address2NxtRsAddressMap.clear
       address2NxtRsAddressMap ++= s.address2NxtRsAddressMap.get
+    }
+    if (s.address2SignDataMap.isDefined) {
+      address2SignDataMap.clear
+      address2SignDataMap ++= s.address2SignDataMap.get.map { kv => kv._1 -> (List.empty[String] ++ kv._2) }
     }
 
     if (config.coldAddresses.nonEmpty)
@@ -129,6 +134,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     val nxtRsNames = addrs.filter(_.nxtRsAddress.isDefined)
     if (nxtRsNames.nonEmpty)
       address2NxtRsAddressMap ++= Map(nxtRsNames.map(i => (i.address -> i.nxtRsAddress.get)).toSeq: _*)
+    syncSignData(addrs.toSeq)
   }
 
   def updateLastAlive(ts: Long) {
@@ -320,7 +326,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
   def getAddressStatus(t: CryptoCurrencyAddressType, confirmationNum: Option[Int] = None): Map[String, AddressStatusResult] = {
     Map(addresses(t).filter(d =>
       addressStatus.contains(d) && addressStatus(d) != AddressStatus()).toSeq.map(address =>
-      (address -> addressStatus(address).getAddressStatusResult(getCurrentHeight, confirmationNum))
+      (address -> addressStatus(address).getAddressStatusResult(getCurrentHeight, confirmationNum, address2SignDataMap.get(address)))
     ): _*)
   }
 
@@ -379,13 +385,15 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     val unseenAddresses = addrs.filter(i => !origAddresses.contains(i.address))
     if (unseenAddresses.size > 0)
       faucetAddress(Hot, unseenAddresses)
+    syncSignData((addrs --= unseenAddresses).toSeq)
   }
 
-  def syncColdAddresses(addrs: List[String]) {
+  def syncColdAddresses(addrs: List[CryptoAddress]) {
     val origAddresses = addresses.getOrElse(Cold, Set.empty[String])
-    val unseenAddresses = addrs.filter(i => !origAddresses.contains(i))
+    val unseenAddresses = addrs.filter(i => !origAddresses.contains(i.address))
     if (unseenAddresses.size > 0)
-      faucetAddress(Cold, Set.empty[CryptoAddress] ++ unseenAddresses.map(CryptoAddress(_)))
+      faucetAddress(Cold, Set.empty[CryptoAddress] ++ unseenAddresses)
+    syncSignData((addrs.toSet -- unseenAddresses).toSeq)
   }
 
   def cleanBlockChain() {
@@ -499,5 +507,10 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
       case Some(add) => Some(add)
       case _ => address2NxtRsAddressMap.get(i.address)
     }
+  }
+
+  private def syncSignData(addrs: Seq[CryptoAddress]) {
+    val unsetSignData = addrs.filter(i => i.message.isDefined && i.signMessage.isDefined && !address2SignDataMap.contains(i.address))
+    address2SignDataMap ++= Map(unsetSignData.map(i => (i.address -> List(i.message.get, i.signMessage.get))).toSeq: _*)
   }
 }

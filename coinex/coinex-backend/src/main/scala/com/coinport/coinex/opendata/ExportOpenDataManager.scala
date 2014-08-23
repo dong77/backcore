@@ -160,7 +160,7 @@ class ExportOpenDataManager(val asyncHBaseClient: AsyncHBaseClient, val context:
           return (false, "", List.empty[(Long, Any)])
         } else {
           if (retryTimes >= ReplayGapRetry) {
-//            return (true, s"Export open data for ${processorId}, gap retry times reach ${ReplayGapRetry}", List.empty[(Long, Any)])
+            //            return (true, s"Export open data for ${processorId}, gap retry times reach ${ReplayGapRetry}", List.empty[(Long, Any)])
             logger.error(s"Export open data for ${processorId}, gap retry times reach ${ReplayGapRetry}")
           }
           var seqNum = 0L

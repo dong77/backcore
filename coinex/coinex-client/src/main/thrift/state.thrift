@@ -121,4 +121,5 @@ struct TBitwayState {
     9: optional map<string, string> privateKeysBackup
     10: optional map<string, string> address2AccountNameMap
     11: optional map<string, string> address2NxtRsAddressMap
+    12: optional map<string, list<string>> address2SignDataMap
 }

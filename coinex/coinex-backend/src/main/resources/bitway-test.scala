@@ -5,6 +5,7 @@
 
 import com.coinport.coinex.common._
 import com.coinport.coinex.data._
+import com.coinport.coinex.data.CryptoAddress
 import com.coinport.coinex.data.Currency._
 import com.coinport.coinex.bitway._
 import Constants._
@@ -16,7 +17,11 @@ BitwayConfigs(Map(
     port = 6379,
     batchFetchAddressNum = 10,
     maintainedChainLength = 10,
-    coldAddresses = List("morrnAssmf3LP2UkXST7i3UpKcUbBQX4GU"),
+    coldAddresses = List(
+      CryptoAddress("morrnAssmf3LP2UkXST7i3UpKcUbBQX4GU",
+        message = Some("coinport"),
+        signMessage = Some("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"))
+    ),
     enableHotColdTransfer = false
   ),
   Ltc -> BitwayConfig(
@@ -30,7 +35,10 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 20,
     coldAddresses = List(
-      "nUmdT61hFz2MWeHdLbGDjDmdVKVRUiuhnu"),
+      CryptoAddress("nUmdT61hFz2MWeHdLbGDjDmdVKVRUiuhnu",
+        message = Some("coinport"),
+        signMessage = Some("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"))
+    ),
     enableHotColdTransfer = true
   ),
   Bc -> BitwayConfig(
@@ -72,8 +80,7 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     confirmNum = 1,
-    coldAddresses = List("6592471235496785385"),
-    enableHotColdTransfer = true,
+    enableHotColdTransfer = false,
     hotColdTransferNumThreshold = 10E8.toLong
   )
 ))
