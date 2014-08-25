@@ -18,6 +18,7 @@ trait AccountTransferBehavior {
   implicit val logger: LoggingAdapter
   var succeededRetainNum = collection.Map.empty[Currency, Int]
   val transferHandlerObjectMap = Map.empty[TransferType, CryptoCurrencyTransferBase]
+  private val ONE_DAY = 24 * 3600
 
   def setSucceededRetainNum(succeededRetainNum: collection.Map[Currency, Int]) = {
     this.succeededRetainNum ++= succeededRetainNum
@@ -117,12 +118,13 @@ trait AccountTransferBehavior {
       }
       transferHandlerObjectMap.values foreach { _.checkConfirm(currency, timestamp, confirmNum) }
 
+    // deprecated
     case rs @ TransferCryptoCurrencyResult(currency, _, request, timestamp) =>
       logger.info(s">>>>>>>>>>>>>>>>>>>>> updateState  => ${rs.toString}")
       transferHandlerObjectMap.values foreach { _.init() }
       request.get.transferInfos foreach {
         info =>
-          transferHandlerObjectMap(request.get.`type`).handleBitwayFail(info, currency, timestamp, info.error)
+          transferHandlerObjectMap(request.get.`type`).handleBackcoreFail(info, currency, timestamp, info.error)
       }
 
     case mr @ MultiTransferCryptoCurrencyResult(currency, _, transferInfos, timestamp) =>
@@ -132,7 +134,7 @@ trait AccountTransferBehavior {
         txType =>
           transferInfos.get.get(txType).get foreach {
             info =>
-              transferHandlerObjectMap(txType).handleBitwayFail(info, currency, timestamp, info.error)
+              transferHandlerObjectMap(txType).handleBackcoreFail(info, currency, timestamp, info.error)
           }
       }
   }
@@ -170,6 +172,11 @@ trait AccountTransferBehavior {
         }
     }
     multiAccountTransfers
+
+  }
+
+  def canHotColdInterTransfer(currency: Currency, transferType: TransferType): Boolean = {
+    !transferHandlerObjectMap(transferType).hasUnExpiredItems(System.currentTimeMillis() - ONE_DAY)
   }
 
   implicit val transferHandler = new SimpleJsonMongoCollection[AccountTransfer, AccountTransfer.Immutable]() {

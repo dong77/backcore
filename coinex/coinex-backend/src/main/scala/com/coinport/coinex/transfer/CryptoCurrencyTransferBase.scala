@@ -45,11 +45,15 @@ trait CryptoCurrencyTransferBase {
     innerHandleTx(currency, tx, timestamp)
   }
 
-  def handleBitwayFail(info: CryptoCurrencyTransferInfo, currency: Currency, timestamp: Option[Long], error: Option[ErrorCode]) {
+  def hasUnExpiredItems(expireStartTime: Long): Boolean = {
+    id2HandlerMap.values.exists(i => i.item.created.get > expireStartTime)
+  }
+
+  def handleBackcoreFail(info: CryptoCurrencyTransferInfo, currency: Currency, timestamp: Option[Long], error: Option[ErrorCode]) {
     if (id2HandlerMap.contains(info.id)) {
       handleFailed(id2HandlerMap(info.id).setTimeStamp(timestamp), error)
     } else {
-      logger.warning(s"""${"~" * 50} ${currency.toString} bitway Fail not match existing item : id2HandleMap.size = ${id2HandlerMap.size}, info = ${info.toString}""")
+      logger.warning(s"""${"~" * 50} ${currency.toString} backcore Fail not match existing item : id2HandleMap.size = ${id2HandlerMap.size}, info = ${info.toString}""")
     }
   }
 
@@ -348,8 +352,8 @@ trait CryptoCurrencyTransferWithdrawalLikeBase extends CryptoCurrencyTransferBas
   }
 
   override def handleFailed(handler: CryptoCurrencyTransferHandler, error: Option[ErrorCode] = None) {
-    val item = id2HandlerMap.remove(handler.item.id).get.item
     if (error != Some(ErrorCode.InsufficientHot)) { // withdrawal and hotToCold should do nothing when meet insufficient hot error
+      val item = id2HandlerMap.remove(handler.item.id).get.item
       msgBoxMap.put(item.id, item)
     }
   }

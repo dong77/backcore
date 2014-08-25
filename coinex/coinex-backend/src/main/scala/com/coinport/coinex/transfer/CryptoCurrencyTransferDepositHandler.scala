@@ -83,12 +83,15 @@ object CryptoCurrencyTransferUnknownHandler extends CryptoCurrencyTransferBase {
 object CryptoCurrencyTransferWithdrawalHandler extends CryptoCurrencyTransferWithdrawalLikeBase {
 
   override def handleFailed(handler: CryptoCurrencyTransferHandler, error: Option[ErrorCode] = None) {
-    if (error == Some(ErrorCode.InsufficientHot)) {
-      handler.onFail(HotInsufficient)
-    } else {
-      handler.onFail()
+    error match {
+      // Failed by bitway, not by backcore, should ignore
+      case None =>
+      case Some(ErrorCode.InsufficientHot) =>
+        handler.onFail(HotInsufficient)
+      case _ =>
+        handler.onFail()
+        super.handleFailed(handler, error)
     }
-    super.handleFailed(handler, error)
   }
 
   override def item2CryptoCurrencyTransferInfo(item: CryptoCurrencyTransferItem): Option[CryptoCurrencyTransferInfo] = {

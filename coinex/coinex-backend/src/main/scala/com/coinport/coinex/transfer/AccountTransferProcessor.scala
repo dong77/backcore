@@ -208,7 +208,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
           sendBitwayMsg(event.currency)
           sendAccountMsg(event.currency)
       }
-
+    // deprecated
     case tr: TransferCryptoCurrencyResult =>
       if (tr.error != ErrorCode.Ok && tr.request.isDefined && !tr.request.get.transferInfos.isEmpty) {
         persist(tr.copy(timestamp = Some(System.currentTimeMillis()))) {
@@ -227,6 +227,12 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
             sendBitwayMsg(event.currency)
             sendAccountMsg(event.currency)
         }
+      }
+    case CanHotColdInterTransfer(currency, transferType) =>
+      if (transferType == HotToCold || transferType == ColdToHot) {
+        sender ! CanHotColdInterTransferResult(canHotColdInterTransfer(currency, transferType))
+      } else {
+        sender ! CanHotColdInterTransferResult(false)
       }
   }
 

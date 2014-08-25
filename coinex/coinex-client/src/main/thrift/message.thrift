@@ -220,6 +220,8 @@ typedef data.CleanActionType                    _CleanActionType
 /* C    */ struct AdjustAddressAmount                     {1: _Currency currency, 2: string address, 3: i64 adjustAmount}
 /* R    */ struct AdjustAddressAmountResult               {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: string address, 4: optional i64 adjustAmount}
 /* R    */ struct CleanBitwayData                         {1: _Currency currency, 2: set<_CleanActionType> cleanActions}
+/* C,I  */ struct CanHotColdInterTransfer                 {1: _Currency currency, 2: _TransferType transferType}
+/* R    */ struct CanHotColdInterTransferResult           {1: bool enable}
 
 ////////// Bitway nodejs
 /* C    */ struct CleanBlockChain                         {1: _Currency currency} // use this only if want re-start up from fatal new branch error. and must make sure the new coming block height is higher than previous highest block height
