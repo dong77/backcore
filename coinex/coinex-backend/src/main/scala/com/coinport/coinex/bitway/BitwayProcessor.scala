@@ -8,6 +8,7 @@ package com.coinport.coinex.bitway
 import akka.actor.{ Cancellable, Actor, ActorLogging, ActorRef }
 import akka.actor.Actor.Receive
 import akka.event.LoggingReceive
+import akka.pattern.ask
 import akka.persistence.Deliver
 import akka.persistence.Persistent
 import akka.persistence.ConfirmablePersistent
@@ -27,6 +28,7 @@ import com.coinport.coinex.data.TransferType._
 import com.coinport.coinex.serializers._
 import Implicits._
 import scala.Some
+import scala.util.Success
 
 class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, config: BitwayConfig)
     extends ExtendedProcessor with EventsourcedProcessor with BitwayManagerBehavior with ActorLogging {
@@ -409,10 +411,10 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     manager.needHotColdTransfer match {
       case None =>
       case Some(amount) if amount == 0 =>
-      case Some(amount) if amount > 0 && txType == HotToCold =>
+      case Some(amount) if amount > 0 && txType == HotToCold && canInterTransfer(HotToCold) =>
         self ! DoRequestTransfer(AccountTransfer(0, 0, HotToCold, supportedCurrency, amount, created = Some(System.currentTimeMillis)))
         isTransfer = true
-      case Some(amount) if amount < 0 && txType == ColdToHot =>
+      case Some(amount) if amount < 0 && txType == ColdToHot && canInterTransfer(ColdToHot) =>
         self ! DoRequestTransfer(AccountTransfer(0, 0, ColdToHot, supportedCurrency, -amount, created = Some(System.currentTimeMillis)))
       case _ =>
     }
@@ -424,6 +426,15 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       case _ =>
         log.error(s"transferHotColdIfNeed get wrong txType: ${txType.toString}")
     }
+  }
+
+  private def canInterTransfer(transferType: TransferType): Boolean = {
+    var canTransfer = false
+    transferProcessor ? CanHotColdInterTransfer(supportedCurrency, transferType) onComplete {
+      case Success(CanHotColdInterTransferResult(true)) => canTransfer = true
+      case _ => canTransfer = false
+    }
+    canTransfer
   }
 
   private def scheduleTransfer(txType: TransferType, interval: FiniteDuration) {
