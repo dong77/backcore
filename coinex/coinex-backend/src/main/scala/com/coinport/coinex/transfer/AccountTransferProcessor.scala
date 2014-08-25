@@ -93,12 +93,22 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
 
     case AdminConfirmTransferFailure(t, error) =>
       transferHandler.get(t.id) match {
-        case Some(transfer) if transfer.status == Pending || transfer.status == Processing =>
-          val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Rejected, reason = Some(error))
+        case Some(transfer) if transfer.status == Pending || transfer.status == HotInsufficient || transfer.status == Processing || transfer.status == BitwayFailed || transfer.status == ReorgingSucceeded =>
+          val toStatus = transfer.status match {
+            case Pending => Rejected
+            case HotInsufficient => Rejected
+            case Processing => ProcessedFail
+            case BitwayFailed => ConfirmBitwayFail
+            case ReorgingSucceeded => ReorgingFail
+            case _ => transfer.status
+          }
+          val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = toStatus, reason = Some(error))
           persist(AdminConfirmTransferFailure(updated, error)) {
             event =>
               sender ! AdminCommandResult(Ok)
-              deliverToAccountManager(event)
+              if (event.transfer.status != ReorgingFail) { //ReorgingSucceeded already send message to account
+                deliverToAccountManager(event)
+              }
               updateState(event)
           }
         case Some(_) => sender ! AdminCommandResult(AlreadyConfirmed)
@@ -110,7 +120,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
         case Some(transfer) if transfer.status == Pending =>
           if (t.userId == transfer.userId) {
             val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Cancelled, reason = Some(ErrorCode.UserCanceled))
-            if (transfer.`type` == ColdToHot || transfer.`type` == Withdrawal) {
+            if (transfer.`type` == Withdrawal) {
               persist(DoCancelTransfer(updated)) {
                 event =>
                   sender ! AdminCommandResult(Ok)
@@ -129,39 +139,33 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
 
     case AdminConfirmTransferSuccess(t, _, _) =>
       transferHandler.get(t.id) match {
-        case Some(transfer) if transfer.status == Pending || transfer.status == HotInsufficient =>
+        case Some(transfer) if transfer.status == Pending || transfer.status == HotInsufficient || transfer.status == Processing || transfer.status == BitwayFailed || transfer.status == ReorgingSucceeded =>
           if (isTransferByBitway(transfer.currency, Some(transferConfig)) && !transferDebugConfig) {
             transfer.`type` match {
-              case TransferType.Deposit => sender ! RequestTransferFailed(UnsupportTransferType)
-              case TransferType.DepositHot => sender ! RequestTransferFailed(UnsupportTransferType)
-              case TransferType.Withdrawal if transfer.address.isDefined =>
-                val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Accepted)
-                persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {
-                  event =>
-                    updateState(event)
-                    sendBitwayMsg(updated.currency)
-                    sendWithdrawalNotification(transfer.userId, transfer.amount, transfer.currency)
-                    sender ! AdminCommandResult(Ok)
-                }
+              case TransferType.Deposit if transfer.status == ReorgingSucceeded =>
+                confirmSuccess(transfer, Succeeded)
+              case TransferType.DepositHot if transfer.status == ReorgingSucceeded =>
+                confirmSuccess(transfer, Succeeded)
+              case TransferType.Withdrawal if transfer.address.isDefined && (transfer.status == Pending || transfer.status == HotInsufficient || transfer.status == BitwayFailed) =>
+                confirmSuccess(transfer, Accepted)
+                sendBitwayMsg(transfer.currency)
+                if (transfer.status == Pending)
+                  sendWithdrawalNotification(transfer.userId, transfer.amount, transfer.currency)
+              // Don't send message to account again
+              case TransferType.Withdrawal if transfer.status == ReorgingSucceeded =>
+                confirmSuccess(transfer, Succeeded)
               case TransferType.ColdToHot =>
-                val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Accepted)
-                persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {
-                  event =>
-                    updateState(event)
-                    sender ! AdminCommandResult(Ok)
-                }
+                confirmSuccess(transfer, Accepted)
               case _ =>
                 sender ! RequestTransferFailed(UnsupportTransferType)
             }
           } else {
             transfer.`type` match {
-              case TransferType.Withdrawal if !transferDebugConfig =>
-                val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Processing)
-                persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {
-                  event =>
-                    updateState(event)
-                    sendWithdrawalNotification(transfer.userId, transfer.amount, transfer.currency)
-                }
+              // Manual withdrawal, not debug
+              case TransferType.Withdrawal if !transferDebugConfig && transfer.status == Pending =>
+                confirmSuccess(transfer, Processing)
+                sendWithdrawalNotification(transfer.userId, transfer.amount, transfer.currency)
+              // debug, or confirm processing
               case _ =>
                 val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Succeeded)
                 persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {
@@ -172,13 +176,14 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                       sendWithdrawalNotification(transfer.userId, transfer.amount, transfer.currency)
                     }
                 }
+                sender ! AdminCommandResult(Ok)
             }
-            sender ! AdminCommandResult(Ok)
           }
         case Some(_) => sender ! AdminCommandResult(AlreadyConfirmed)
         case None => sender ! AdminCommandResult(TransferNotExist)
       }
 
+    // Deprecated
     case AdminConfirmTransferProcessed(t) =>
       transferHandler.get(t.id) match {
         case Some(transfer) if transfer.status == Processing =>
@@ -274,7 +279,6 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
 
   private def deliverToBitwayProcessor(currency: Currency, event: Any) = {
     log.info(s">>>>>>>>>>>>>>>>>>>>> deliverToBitwayProcessor => currency = ${currency.toString}, event = ${event.toString}, path = ${bitwayProcessors(currency).path.toString}")
-
     if (!recoveryRunning) {
       bitwayChannels(currency) ! Deliver(Persistent(event), bitwayProcessors(currency).path)
     }
@@ -284,6 +288,15 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
     if (manager.getUserWithdrawalAmount(transfer.userId, transfer.currency) + transfer.amount
       < accountTransferConfig.autoConfirmAmount.getOrElse(transfer.currency, AutoConfirmSumAmt)) {
       self ! AdminConfirmTransferSuccess(transfer)
+    }
+  }
+
+  private def confirmSuccess(transfer: AccountTransfer, updatedStatus: TransferStatus) {
+    val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = updatedStatus)
+    persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {
+      event =>
+        updateState(event)
+        sender ! AdminCommandResult(Ok)
     }
   }
 

@@ -68,14 +68,18 @@ trait AccountTransferBehavior {
       }
       manager.setLastTransferId(t.id)
 
-    case AdminConfirmTransferFailure(t, _) => transferHandler.put(t)
+    case AdminConfirmTransferFailure(t, _) =>
+      if (t.status == TransferStatus.ConfirmBitwayFail) { // should handle the bitway fail
+        transferHandlerObjectMap(t.`type`).manualFailTransfer(t.id)
+      }
+      transferHandler.put(t)
 
     case DoCancelTransfer(t) => transferHandler.put(t)
 
     case AdminConfirmTransferSuccess(t, transferDebug, transferConfig) => {
       if (isTransferByBitway(t.currency, transferConfig) && !(transferDebug.isDefined && transferDebug.get)) {
         t.`type` match {
-          case TransferType.Withdrawal =>
+          case TransferType.Withdrawal if t.status == TransferStatus.Accepted =>
             val transferAmount = t.fee match {
               case Some(withdrawalFee: Fee) if withdrawalFee.amount > 0 => t.amount - withdrawalFee.amount
               case _ => t.amount

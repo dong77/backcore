@@ -148,17 +148,40 @@ package object model {
     ApiTicker(market, price, high, low, volume, gain, trend)
   }
 
-  def fromTransferItem(t: AccountTransfer) = {
+  def fromTransferItem(t: AccountTransfer, fromAdmin: Boolean = false) = {
+    import TransferStatus._
+    import TransferType._
     val id = t.id.toString
     val uid = t.userId.toString
     val amount = CurrencyObject(t.currency, t.amount)
-    val status = t.status.value
+    val status = fromAdmin match {
+      case false => t.status match {
+        case Confirmed => Confirming
+        case Reorging => Confirming
+        case ReorgingSucceeded => Succeeded
+        case Rejected => Failed
+        case HotInsufficient => Confirming
+        case Processing => Confirming
+        case BitwayFailed => Confirming
+        case ProcessedFail => Failed
+        case ConfirmBitwayFail => Failed
+        case ReorgingFail => Failed
+        case st => st
+      }
+      case true => t.status
+    }
     val created = t.created.getOrElse(0L)
     val updated = t.updated.getOrElse(0L)
-    val operation = t.`type`.getValue
+    val operation = fromAdmin match {
+      case false => t.`type` match {
+        case DepositHot => Deposit
+        case tp => tp
+      }
+      case true => t.`type`
+    }
     val txid = t.txid.getOrElse("")
 
-    ApiTransferItem(id, uid, amount, status, created, updated, operation, t.address.getOrElse(""), txid, t.nxtRsAddress)
+    ApiTransferItem(id, uid, amount, status.value, created, updated, operation.getValue, t.address.getOrElse(""), txid, t.nxtRsAddress)
   }
 
   def fromMarketDepth(depth: MarketDepth) = {

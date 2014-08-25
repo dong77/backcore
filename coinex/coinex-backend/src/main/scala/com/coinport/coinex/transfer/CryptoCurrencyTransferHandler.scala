@@ -29,7 +29,7 @@ trait CryptoCurrencyTransferHandler {
 
   def onNormal(tx: CryptoCurrencyTransaction) {
     item.includedBlock match {
-      case Some(_) =>
+      case Some(block) if item.sigId == tx.sigId && item.txid == tx.txid && tx.includedBlock.isDefined && tx.includedBlock.get.height == block.height =>
       case None =>
         prepareItem(tx)
         setAccountTransferStatus(Confirming)
@@ -51,6 +51,12 @@ trait CryptoCurrencyTransferHandler {
   def onFail(failStatus: TransferStatus = Failed) {
     item = item.copy(status = Some(failStatus), updated = getTimestamp())
     setAccountTransferStatus(failStatus)
+    saveItemToMongo()
+  }
+
+  def retry() {
+    item = item.copy(status = Some(Confirming), updated = getTimestamp())
+    setAccountTransferStatus(Confirming)
     saveItemToMongo()
   }
 
@@ -108,8 +114,9 @@ trait CryptoCurrencyTransferHandler {
   def reOrgnizeSucceeded(reOrgHeight: Long): Boolean = {
     if (reOrgHeight - item.includedBlock.get.height.get < itemComfirmNum - 1) {
       logger.warning(s"reOrgnize() reOrgnize happened(Succeeded) :item -> ${item.toString()}")
+      item = item.copy(status = Some(ReorgingSucceeded))
       saveItemToMongo()
-      setAccountTransferStatus(Reorging)
+      setAccountTransferStatus(ReorgingSucceeded)
       return true
     }
     false

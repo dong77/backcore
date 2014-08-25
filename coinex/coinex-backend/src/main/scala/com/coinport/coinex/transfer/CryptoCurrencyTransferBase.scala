@@ -175,6 +175,15 @@ trait CryptoCurrencyTransferBase {
     resMap
   }
 
+  def manualFailTransfer(transferId: Long) {
+    val toFailHandlers = id2HandlerMap.values.filter(_.item.accountTransferId == Some(transferId)).toSeq
+    if (toFailHandlers.size == 1) {
+      id2HandlerMap.remove(toFailHandlers.head.item.id)
+    } else if (toFailHandlers.size > 1) {
+      logger.error(s"Found more than one transferItem with same accountTransferId ${transferId}, items : ${toFailHandlers}")
+    }
+  }
+
   protected def item2BitwayInfo(item: CryptoCurrencyTransferItem): Option[CryptoCurrencyTransferInfo] = {
     item.status match {
       case Some(Confirming) =>
@@ -231,6 +240,14 @@ trait CryptoCurrencyTransferBase {
   protected def refreshLastBlockHeight(currency: Currency, tx: CryptoCurrencyTransaction) {
     val txHeight: Long = if (tx.includedBlock.isDefined) tx.includedBlock.get.height.getOrElse(0L) else 0L
     if (manager.getLastBlockHeight(currency) < txHeight) manager.setLastBlockHeight(currency, txHeight)
+  }
+
+  protected def isRetry(t: AccountTransfer): (Boolean, CryptoCurrencyTransferHandler) = {
+    val existHandler = id2HandlerMap.values.filter(i => i.item.accountTransferId == Some(t.id)).toSeq
+    existHandler.nonEmpty match {
+      case true => (true, existHandler.head)
+      case false => (false, null)
+    }
   }
 
 }
@@ -342,9 +359,15 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
 trait CryptoCurrencyTransferWithdrawalLikeBase extends CryptoCurrencyTransferBase {
 
   def newHandlerFromAccountTransfer(t: AccountTransfer, from: Option[CryptoCurrencyTransactionPort], to: Option[CryptoCurrencyTransactionPort], timestamp: Option[Long]) {
-    val handler = new CryptoCurrencyTransferWithdrawalLikeHandler(t, from, to, timestamp)
-    msgBoxMap.put(handler.item.id, handler.item)
-    id2HandlerMap.put(handler.item.id, handler)
+    isRetry(t) match {
+      case (true, handler) =>
+        handler.setTimeStamp(timestamp).retry()
+        msgBoxMap.put(handler.item.id, handler.item)
+      case (false, _) =>
+        val handler = new CryptoCurrencyTransferWithdrawalLikeHandler(t, from, to, timestamp)
+        msgBoxMap.put(handler.item.id, handler.item)
+        id2HandlerMap.put(handler.item.id, handler)
+    }
   }
 
   override def newHandlerFromItem(item: CryptoCurrencyTransferItem): CryptoCurrencyTransferHandler = {
@@ -352,7 +375,8 @@ trait CryptoCurrencyTransferWithdrawalLikeBase extends CryptoCurrencyTransferBas
   }
 
   override def handleFailed(handler: CryptoCurrencyTransferHandler, error: Option[ErrorCode] = None) {
-    if (error != Some(ErrorCode.InsufficientHot)) { // withdrawal and hotToCold should do nothing when meet insufficient hot error
+    // withdrawal and hotToCold should do nothing when meet insufficient hot error
+    if (error != Some(ErrorCode.InsufficientHot)) {
       val item = id2HandlerMap.remove(handler.item.id).get.item
       msgBoxMap.put(item.id, item)
     }

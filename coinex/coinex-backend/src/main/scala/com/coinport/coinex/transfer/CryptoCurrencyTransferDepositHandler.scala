@@ -84,8 +84,9 @@ object CryptoCurrencyTransferWithdrawalHandler extends CryptoCurrencyTransferWit
 
   override def handleFailed(handler: CryptoCurrencyTransferHandler, error: Option[ErrorCode] = None) {
     error match {
-      // Failed by bitway, not by backcore, should ignore
+      // Failed by bitway, not by backcore, should not terminate transfer
       case None =>
+        handler.onFail(BitwayFailed)
       case Some(ErrorCode.InsufficientHot) =>
         handler.onFail(HotInsufficient)
       case _ =>
