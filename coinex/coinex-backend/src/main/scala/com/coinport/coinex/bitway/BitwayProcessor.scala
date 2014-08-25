@@ -13,11 +13,13 @@ import akka.persistence.Deliver
 import akka.persistence.Persistent
 import akka.persistence.ConfirmablePersistent
 import akka.persistence.EventsourcedProcessor
+import akka.util.Timeout
 
 import com.redis._
 import com.redis.serialization.Parse.Implicits.parseByteArray
 import scala.collection.mutable.Set
 import scala.concurrent.duration._
+import scala.util.Success
 
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.PersistentId._
@@ -27,8 +29,6 @@ import com.coinport.coinex.data.TransferBetweenHotCold
 import com.coinport.coinex.data.TransferType._
 import com.coinport.coinex.serializers._
 import Implicits._
-import scala.Some
-import scala.util.Success
 
 class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, config: BitwayConfig)
     extends ExtendedProcessor with EventsourcedProcessor with BitwayManagerBehavior with ActorLogging {
@@ -48,6 +48,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     case ex: Throwable => None
   }
 
+  implicit val executionContext = context.system.dispatcher
   val delayinSeconds = 4
   override val processorId = BITWAY_PROCESSOR << supportedCurrency
   val channelToTransferProcessor = createChannelTo(ACCOUNT_TRANSFER_PROCESSOR <<) // DO NOT CHANGE
@@ -429,6 +430,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
   }
 
   private def canInterTransfer(transferType: TransferType): Boolean = {
+    implicit val timeout: Timeout = 2 second
     var canTransfer = false
     transferProcessor ? CanHotColdInterTransfer(supportedCurrency, transferType) onComplete {
       case Success(CanHotColdInterTransferResult(true)) => canTransfer = true
