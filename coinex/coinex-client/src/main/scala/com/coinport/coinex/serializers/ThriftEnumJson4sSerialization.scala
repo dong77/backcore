@@ -22,6 +22,7 @@ object MapSerializer extends Serializer[Map[Any, Any]] {
           case ks: BitwayRequestType => ks.name.toUpperCase
           case ks: BitwayResponseType => ks.name.toUpperCase
           case ks: ChartTimeDimension => ks.name.toUpperCase
+          case ks: CleanActionType => ks.name.toUpperCase
           case ks: CryptoCurrencyAddressType => ks.name.toUpperCase
           case ks: Currency => ks.name.toUpperCase
           case ks: Direction => ks.name.toUpperCase
@@ -64,6 +65,11 @@ object ThriftEnumJson4sSerialization {
   class ChartTimeDimensionSerializer extends CustomSerializer[ChartTimeDimension](format => (
     { case JString(s) => ChartTimeDimension.valueOf(s).get }, {
       case x: ChartTimeDimension => JString(x.name)
+    }))
+
+  class CleanActionTypeSerializer extends CustomSerializer[CleanActionType](format => (
+    { case JString(s) => CleanActionType.valueOf(s).get }, {
+      case x: CleanActionType => JString(x.name)
     }))
 
   class CryptoCurrencyAddressTypeSerializer extends CustomSerializer[CryptoCurrencyAddressType](format => (
@@ -145,6 +151,7 @@ object ThriftEnumJson4sSerialization {
     new BitwayRequestTypeSerializer +
     new BitwayResponseTypeSerializer +
     new ChartTimeDimensionSerializer +
+    new CleanActionTypeSerializer +
     new CryptoCurrencyAddressTypeSerializer +
     new CurrencySerializer +
     new DirectionSerializer +

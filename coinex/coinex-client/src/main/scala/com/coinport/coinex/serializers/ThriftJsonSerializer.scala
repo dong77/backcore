@@ -82,8 +82,12 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cApiSecretOperationResult = JsonScalaCodec(ApiSecretOperationResult)
   lazy val _cBitwayMessage = JsonScalaCodec(BitwayMessage)
   lazy val _cBitwayRequest = JsonScalaCodec(BitwayRequest)
+  lazy val _cCanHotColdInterTransfer = JsonScalaCodec(CanHotColdInterTransfer)
+  lazy val _cCanHotColdInterTransferResult = JsonScalaCodec(CanHotColdInterTransferResult)
   lazy val _cCancelOrderFailed = JsonScalaCodec(CancelOrderFailed)
+  lazy val _cCleanBitwayData = JsonScalaCodec(CleanBitwayData)
   lazy val _cCleanBlockChain = JsonScalaCodec(CleanBlockChain)
+  lazy val _cCleanUserData = JsonScalaCodec(CleanUserData)
   lazy val _cCryptoCurrencyBlockMessage = JsonScalaCodec(CryptoCurrencyBlockMessage)
   lazy val _cCryptoTransferFailed = JsonScalaCodec(CryptoTransferFailed)
   lazy val _cCryptoTransferResult = JsonScalaCodec(CryptoTransferResult)
@@ -298,8 +302,12 @@ class ThriftJsonSerializer extends Serializer {
     case m: ApiSecretOperationResult => _cApiSecretOperationResult(m)
     case m: BitwayMessage => _cBitwayMessage(m)
     case m: BitwayRequest => _cBitwayRequest(m)
+    case m: CanHotColdInterTransfer => _cCanHotColdInterTransfer(m)
+    case m: CanHotColdInterTransferResult => _cCanHotColdInterTransferResult(m)
     case m: CancelOrderFailed => _cCancelOrderFailed(m)
+    case m: CleanBitwayData => _cCleanBitwayData(m)
     case m: CleanBlockChain => _cCleanBlockChain(m)
+    case m: CleanUserData => _cCleanUserData(m)
     case m: CryptoCurrencyBlockMessage => _cCryptoCurrencyBlockMessage(m)
     case m: CryptoTransferFailed => _cCryptoTransferFailed(m)
     case m: CryptoTransferResult => _cCryptoTransferResult(m)
@@ -518,8 +526,12 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[ApiSecretOperationResult.Immutable] => _cApiSecretOperationResult.invert(bytes).get
     case Some(c) if c == classOf[BitwayMessage.Immutable] => _cBitwayMessage.invert(bytes).get
     case Some(c) if c == classOf[BitwayRequest.Immutable] => _cBitwayRequest.invert(bytes).get
+    case Some(c) if c == classOf[CanHotColdInterTransfer.Immutable] => _cCanHotColdInterTransfer.invert(bytes).get
+    case Some(c) if c == classOf[CanHotColdInterTransferResult.Immutable] => _cCanHotColdInterTransferResult.invert(bytes).get
     case Some(c) if c == classOf[CancelOrderFailed.Immutable] => _cCancelOrderFailed.invert(bytes).get
+    case Some(c) if c == classOf[CleanBitwayData.Immutable] => _cCleanBitwayData.invert(bytes).get
     case Some(c) if c == classOf[CleanBlockChain.Immutable] => _cCleanBlockChain.invert(bytes).get
+    case Some(c) if c == classOf[CleanUserData.Immutable] => _cCleanUserData.invert(bytes).get
     case Some(c) if c == classOf[CryptoCurrencyBlockMessage.Immutable] => _cCryptoCurrencyBlockMessage.invert(bytes).get
     case Some(c) if c == classOf[CryptoTransferFailed.Immutable] => _cCryptoTransferFailed.invert(bytes).get
     case Some(c) if c == classOf[CryptoTransferResult.Immutable] => _cCryptoTransferResult.invert(bytes).get
