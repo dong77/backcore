@@ -8,6 +8,8 @@ import com.coinport.coinex.data._
 import com.coinport.coinex.data.CryptoAddress
 import com.coinport.coinex.data.Currency._
 import com.coinport.coinex.bitway._
+import scala.concurrent.duration._
+
 import Constants._
 import Implicits._
 
@@ -35,11 +37,15 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 20,
     coldAddresses = List(
+ //     CryptoAddress("D8mHXhuo9XFH5VKVWVWa25eCHbAPu3iGyp",
       CryptoAddress("nUmdT61hFz2MWeHdLbGDjDmdVKVRUiuhnu",
         message = Some("coinport"),
         signMessage = Some("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"))
     ),
-    enableHotColdTransfer = false
+    enableHotColdTransfer = false,
+    hot2ColdTransferInterval = 60 seconds,
+    hot2ColdTransferIntervalLarge = 150 seconds,
+    cold2HotTransferInterval = 300 seconds
   ),
   Bc -> BitwayConfig(
     ip = "bitway",

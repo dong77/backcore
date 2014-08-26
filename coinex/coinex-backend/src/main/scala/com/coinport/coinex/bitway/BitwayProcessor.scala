@@ -424,7 +424,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     implicit val timeout = Timeout(2 seconds)
     transferProcessor ? CanHotColdInterTransfer(supportedCurrency, transferType) onComplete {
       case Success(e: CanHotColdInterTransferResult) if e.enable == true =>
-//        println(s"${transferType.toString} canInterTransfer success")
+        //        println(s"${transferType.toString} canInterTransfer success")
         transferType match {
           case HotToCold =>
             self ! DoRequestTransfer(AccountTransfer(0, 0, HotToCold, supportedCurrency, amount, created = Some(System.currentTimeMillis)))
@@ -432,17 +432,19 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
           case ColdToHot =>
             self ! DoRequestTransfer(AccountTransfer(0, 0, ColdToHot, supportedCurrency, -amount, created = Some(System.currentTimeMillis)))
             rescheduleAll(transferType, false)
+          case _ =>
         }
       case Failure(e) =>
-//        println(s"${transferType.toString} canInterTransfer Failure" + e.getStackTrace.toString)
+        //        println(s"${transferType.toString} canInterTransfer Failure" + e.getStackTrace.toString)
         rescheduleAll(transferType, false)
       case r =>
-//        println(s"${transferType.toString} canInterTransfer fail" + r.toString)
+        //        println(s"${transferType.toString} canInterTransfer fail" + r.toString)
         rescheduleAll(transferType, false)
     }
   }
 
   private def rescheduleAll(txType: TransferType, isTransfer: Boolean) {
+    //   println(s"${txType.toString} schedule")
     txType match {
       case HotToCold =>
         scheduleTransfer(HotToCold, if (isTransfer) config.hot2ColdTransferIntervalLarge else config.hot2ColdTransferInterval)
