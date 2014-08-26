@@ -19,7 +19,7 @@ import com.redis._
 import com.redis.serialization.Parse.Implicits.parseByteArray
 import scala.collection.mutable.Set
 import scala.concurrent.duration._
-import scala.util.Success
+import scala.concurrent.Future
 
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.PersistentId._
@@ -408,17 +408,30 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
   }
 
   private def transferHotColdIfNeed(txType: TransferType) {
-    var isTransfer = false
     manager.needHotColdTransfer match {
       case None =>
       case Some(amount) if amount == 0 =>
-      case Some(amount) if amount > 0 && txType == HotToCold && canInterTransfer(HotToCold) =>
-        self ! DoRequestTransfer(AccountTransfer(0, 0, HotToCold, supportedCurrency, amount, created = Some(System.currentTimeMillis)))
-        isTransfer = true
-      case Some(amount) if amount < 0 && txType == ColdToHot && canInterTransfer(ColdToHot) =>
-        self ! DoRequestTransfer(AccountTransfer(0, 0, ColdToHot, supportedCurrency, -amount, created = Some(System.currentTimeMillis)))
+      case Some(amount) if amount > 0 && txType == HotToCold =>
+        canInterTransfer(HotToCold) map {
+          case true =>
+            self ! DoRequestTransfer(AccountTransfer(0, 0, HotToCold, supportedCurrency, amount, created = Some(System.currentTimeMillis)))
+            rescheduleAll(txType, true)
+          case _ =>
+            rescheduleAll(txType, false)
+        }
+      case Some(amount) if amount < 0 && txType == ColdToHot =>
+        canInterTransfer(ColdToHot) map {
+          case true =>
+            self ! DoRequestTransfer(AccountTransfer(0, 0, ColdToHot, supportedCurrency, -amount, created = Some(System.currentTimeMillis)))
+            rescheduleAll(txType, false)
+          case _ =>
+            rescheduleAll(txType, false)
+        }
       case _ =>
     }
+  }
+
+  private def rescheduleAll(txType: TransferType, isTransfer: Boolean) {
     txType match {
       case HotToCold =>
         scheduleTransfer(HotToCold, if (isTransfer) config.hot2ColdTransferIntervalLarge else config.hot2ColdTransferInterval)
@@ -429,14 +442,14 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     }
   }
 
-  private def canInterTransfer(transferType: TransferType): Boolean = {
-    implicit val timeout: Timeout = 2 second
-    var canTransfer = false
-    transferProcessor ? CanHotColdInterTransfer(supportedCurrency, transferType) onComplete {
-      case Success(CanHotColdInterTransferResult(true)) => canTransfer = true
-      case _ => canTransfer = false
+  private def canInterTransfer(transferType: TransferType): Future[Boolean] = {
+    implicit val timeout = Timeout(2 seconds)
+    transferProcessor ? CanHotColdInterTransfer(supportedCurrency, transferType) map {
+      case CanHotColdInterTransferResult(true) =>
+        true
+      case _ =>
+        false
     }
-    canTransfer
   }
 
   private def scheduleTransfer(txType: TransferType, interval: FiniteDuration) {

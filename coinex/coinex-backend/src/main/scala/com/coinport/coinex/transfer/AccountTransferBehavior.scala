@@ -18,7 +18,7 @@ trait AccountTransferBehavior {
   implicit val logger: LoggingAdapter
   var succeededRetainNum = collection.Map.empty[Currency, Int]
   val transferHandlerObjectMap = Map.empty[TransferType, CryptoCurrencyTransferBase]
-  private val ONE_DAY = 24 * 3600
+  private val ONE_DAY = 24 * 3600 * 1000
 
   def setSucceededRetainNum(succeededRetainNum: collection.Map[Currency, Int]) = {
     this.succeededRetainNum ++= succeededRetainNum
