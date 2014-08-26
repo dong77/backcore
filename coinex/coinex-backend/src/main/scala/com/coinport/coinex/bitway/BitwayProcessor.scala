@@ -410,7 +410,6 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
 
   private def transferHotColdIfNeed(txType: TransferType) {
     manager.needHotColdTransfer match {
-      case None =>
       case Some(amount) if amount == 0 =>
       case Some(amount) if amount > 0 && txType == HotToCold =>
         trySchedule(txType, amount)
