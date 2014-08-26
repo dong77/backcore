@@ -417,6 +417,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       case Some(amount) if amount < 0 && txType == ColdToHot =>
         trySchedule(txType, amount)
       case _ =>
+        rescheduleAll(txType, false)
     }
   }
 
