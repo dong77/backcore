@@ -69,7 +69,7 @@ trait AccountTransferBehavior {
       manager.setLastTransferId(t.id)
 
     case AdminConfirmTransferFailure(t, _) =>
-      if (t.status == TransferStatus.ConfirmBitwayFail) { // should handle the bitway fail
+      if (t.status == TransferStatus.ConfirmBitwayFail || t.status == TransferStatus.HotInsufficientFail) { // should handle the bitway fail
         transferHandlerObjectMap(t.`type`).manualFailTransfer(t.id)
       }
       transferHandler.put(t)

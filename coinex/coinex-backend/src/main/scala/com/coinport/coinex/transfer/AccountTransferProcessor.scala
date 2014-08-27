@@ -96,7 +96,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
         case Some(transfer) if transfer.status == Pending || transfer.status == HotInsufficient || transfer.status == Processing || transfer.status == BitwayFailed || transfer.status == ReorgingSucceeded =>
           val toStatus = transfer.status match {
             case Pending => Rejected
-            case HotInsufficient => Rejected
+            case HotInsufficient => HotInsufficientFail
             case Processing => ProcessedFail
             case BitwayFailed => ConfirmBitwayFail
             case ReorgingSucceeded => ReorgingFail

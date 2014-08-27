@@ -187,6 +187,7 @@ enum TransferStatus {
     PROCESSED_FAIL       = 13
     CONFIRM_BITWAY_FAIL  = 14
     REORGING_FAIL        = 15
+    HOT_INSUFFICIENT_FAIL = 16
 }
 
 enum ExportedEventType {
