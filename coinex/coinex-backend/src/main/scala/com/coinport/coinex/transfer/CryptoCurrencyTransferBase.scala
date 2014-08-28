@@ -175,10 +175,11 @@ trait CryptoCurrencyTransferBase {
     resMap
   }
 
-  def manualFailTransfer(transferId: Long) {
+  def manualFailTransfer(transferId: Long, status: TransferStatus) {
     val toFailHandlers = id2HandlerMap.values.filter(_.item.accountTransferId == Some(transferId)).toSeq
     if (toFailHandlers.size == 1) {
-      id2HandlerMap.remove(toFailHandlers.head.item.id)
+      val handler = id2HandlerMap.remove(toFailHandlers.head.item.id)
+      postProcessManualFail(handler.get, status)
     } else if (toFailHandlers.size > 1) {
       logger.error(s"Found more than one transferItem with same accountTransferId ${transferId}, items : ${toFailHandlers}")
     }
@@ -193,6 +194,8 @@ trait CryptoCurrencyTransferBase {
         None
     }
   }
+
+  protected def postProcessManualFail(handler: CryptoCurrencyTransferHandler, status: TransferStatus) {}
 
   protected def item2CryptoCurrencyTransferInfo(item: CryptoCurrencyTransferItem): Option[CryptoCurrencyTransferInfo] = None
 
@@ -241,6 +244,8 @@ trait CryptoCurrencyTransferBase {
     val txHeight: Long = if (tx.includedBlock.isDefined) tx.includedBlock.get.height.getOrElse(0L) else 0L
     if (manager.getLastBlockHeight(currency) < txHeight) manager.setLastBlockHeight(currency, txHeight)
   }
+
+  def newHandlerFromAccountTransfer(t: AccountTransfer, from: Option[CryptoCurrencyTransactionPort], to: Option[CryptoCurrencyTransactionPort], timestamp: Option[Long]) {}
 
   protected def isRetry(t: AccountTransfer): (Boolean, CryptoCurrencyTransferHandler) = {
     val existHandler = id2HandlerMap.values.filter(i => i.item.accountTransferId == Some(t.id)).toSeq
@@ -358,7 +363,7 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
 
 trait CryptoCurrencyTransferWithdrawalLikeBase extends CryptoCurrencyTransferBase {
 
-  def newHandlerFromAccountTransfer(t: AccountTransfer, from: Option[CryptoCurrencyTransactionPort], to: Option[CryptoCurrencyTransactionPort], timestamp: Option[Long]) {
+  override def newHandlerFromAccountTransfer(t: AccountTransfer, from: Option[CryptoCurrencyTransactionPort], to: Option[CryptoCurrencyTransactionPort], timestamp: Option[Long]) {
     isRetry(t) match {
       case (true, handler) =>
         handler.setTimeStamp(timestamp).retry()

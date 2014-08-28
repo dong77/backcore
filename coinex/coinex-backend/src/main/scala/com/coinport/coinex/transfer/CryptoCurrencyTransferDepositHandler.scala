@@ -14,11 +14,11 @@ object CryptoCurrencyTransferDepositHandler extends CryptoCurrencyTransferDeposi
     new CryptoCurrencyTransferDepositHandler(item)
   }
 
-  def updateByUserToHot(depositId: Long, userToHotStatus: TransferStatus) {
+  def updateByUserToHot(depositId: Long, isSucceeded: Boolean = true) {
     // check coresponded deposit item has not been removed from map
     if (id2HandlerMap.contains(depositId)) {
-      userToHotStatus match {
-        case Failed =>
+      isSucceeded match {
+        case false =>
           handleFailed(id2HandlerMap(depositId))
         case _ =>
           handleSucceeded(depositId)

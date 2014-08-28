@@ -33,12 +33,31 @@ object CryptoCurrencyTransferUserToHotHandler extends CryptoCurrencyTransferBase
   }
 
   override def handleFailed(handler: CryptoCurrencyTransferHandler, error: Option[ErrorCode] = None) {
-    handler.onFail()
-    id2HandlerMap.remove(handler.item.id)
+    error match {
+      case None =>
+        handler.onFail(BitwayFailed)
+      case _ =>
+        handler.onFail()
+        id2HandlerMap.remove(handler.item.id)
+    }
   }
 
   override def item2CryptoCurrencyTransferInfo(item: CryptoCurrencyTransferItem): Option[CryptoCurrencyTransferInfo] = {
     Some(CryptoCurrencyTransferInfo(item.id, None, item.from.get.internalAmount, item.from.get.amount, Some(item.from.get.address)))
+  }
+
+  override def postProcessManualFail(handler: CryptoCurrencyTransferHandler, status: TransferStatus) {
+    handler.onFail(status)
+  }
+
+  override def newHandlerFromAccountTransfer(t: AccountTransfer, from: Option[CryptoCurrencyTransactionPort], to: Option[CryptoCurrencyTransactionPort], timestamp: Option[Long]) {
+    isRetry(t) match {
+      case (true, handler) =>
+        handler.setTimeStamp(timestamp).retry()
+        msgBoxMap.put(handler.item.id, handler.item)
+      case (false, _) =>
+        logger.error(s"Retry not exists userToHot AccountTransfer ${t.toString} ")
+    }
   }
 
   def createUserToHot(depositItem: CryptoCurrencyTransferItem, timestamp: Option[Long]) {
@@ -71,8 +90,10 @@ class CryptoCurrencyTransferUserToHotHandler extends CryptoCurrencyTransferHandl
   }
 
   override def onFail(failStatus: TransferStatus = Failed) {
-    super.onFail()
-    updateDepositTx()
+    super.onFail(failStatus)
+    if (failStatus != BitwayFailed) { //Failed by bitway should ignore
+      updateDepositTx(false)
+    }
   }
 
   override def onNormal(tx: CryptoCurrencyTransaction) {
@@ -80,10 +101,10 @@ class CryptoCurrencyTransferUserToHotHandler extends CryptoCurrencyTransferHandl
     updateDepositTx()
   }
 
-  private def updateDepositTx() {
+  private def updateDepositTx(isSucceeded: Boolean = true) {
     item.userToHotMapedDepositId match {
       case Some(depositId) =>
-        CryptoCurrencyTransferDepositHandler.updateByUserToHot(depositId, item.status.get)
+        CryptoCurrencyTransferDepositHandler.updateByUserToHot(depositId, isSucceeded)
       case None =>
         logger.error(s"""${"~" * 50} updateDepositTx() UserToHot item not define userToHotMapedDepositId : ${item.toString}""")
     }

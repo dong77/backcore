@@ -56,7 +56,7 @@ trait AccountTransferBehavior {
             transferHandler.put(t)
             val from = CryptoCurrencyTransactionPort("", None, Some(t.amount), Some(t.userId))
             val to = CryptoCurrencyTransactionPort("", None, Some(t.amount), Some(t.userId))
-            prepareBitwayMsg(t, Some(from), Some(to), transferHandlerObjectMap(HotToCold).asInstanceOf[CryptoCurrencyTransferWithdrawalLikeBase], t.created)
+            prepareBitwayMsg(t, Some(from), Some(to), transferHandlerObjectMap(HotToCold), t.created)
           case TransferType.Unknown =>
             transferHandler.put(t)
         }
@@ -70,7 +70,7 @@ trait AccountTransferBehavior {
 
     case AdminConfirmTransferFailure(t, _) =>
       if (t.status == TransferStatus.ConfirmBitwayFail || t.status == TransferStatus.HotInsufficientFail) { // should handle the bitway fail
-        transferHandlerObjectMap(t.`type`).manualFailTransfer(t.id)
+        transferHandlerObjectMap(t.`type`).manualFailTransfer(t.id, t.status)
       }
       transferHandler.put(t)
 
@@ -85,7 +85,11 @@ trait AccountTransferBehavior {
               case _ => t.amount
             }
             val to = CryptoCurrencyTransactionPort(t.address.get, None, Some(transferAmount), Some(t.userId))
-            prepareBitwayMsg(t, None, Some(to), transferHandlerObjectMap(Withdrawal).asInstanceOf[CryptoCurrencyTransferWithdrawalLikeBase], t.updated)
+            prepareBitwayMsg(t, None, Some(to), transferHandlerObjectMap(Withdrawal), t.updated)
+          case TransferType.UserToHot if t.status == TransferStatus.Accepted =>
+            val userToHotHandler = transferHandlerObjectMap(UserToHot)
+            userToHotHandler.init()
+            userToHotHandler.newHandlerFromAccountTransfer(t, None, None, t.updated)
           case _ => // Just handle other type, do nothing
         }
       }
@@ -144,7 +148,7 @@ trait AccountTransferBehavior {
   }
 
   def prepareBitwayMsg(transfer: AccountTransfer, from: Option[CryptoCurrencyTransactionPort],
-    to: Option[CryptoCurrencyTransactionPort], handler: CryptoCurrencyTransferWithdrawalLikeBase, timestamp: Option[Long]) {
+    to: Option[CryptoCurrencyTransactionPort], handler: CryptoCurrencyTransferBase, timestamp: Option[Long]) {
     handler.init()
     handler.newHandlerFromAccountTransfer(transfer, from, to, timestamp)
   }

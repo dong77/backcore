@@ -158,6 +158,14 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                   sendWithdrawalNotification(transfer.userId, transfer.amount, transfer.currency)
               case TransferType.ColdToHot =>
                 confirmSuccess(transfer, Accepted)
+              case TransferType.UserToHot if transfer.status == BitwayFailed =>
+                val updated = transfer.copy(updated = Some(System.currentTimeMillis), status = Accepted)
+                persist(AdminConfirmTransferSuccess(updated, Some(transferDebugConfig), Some(transferConfig))) {
+                  event =>
+                    updateState(event)
+                    sendBitwayMsg(transfer.currency)
+                    sender ! AdminCommandResult(Ok)
+                }
               // Don't send message to account again
               case _ if transfer.status == ReorgingSucceeded =>
                 confirmSuccess(transfer, Succeeded)
