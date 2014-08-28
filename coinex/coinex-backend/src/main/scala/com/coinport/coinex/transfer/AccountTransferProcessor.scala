@@ -156,11 +156,11 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                 }
                 if (transfer.status == Pending)
                   sendWithdrawalNotification(transfer.userId, transfer.amount, transfer.currency)
-              // Don't send message to account again
-              case TransferType.Withdrawal if transfer.status == ReorgingSucceeded =>
-                confirmSuccess(transfer, Succeeded)
               case TransferType.ColdToHot =>
                 confirmSuccess(transfer, Accepted)
+              // Don't send message to account again
+              case _ if transfer.status == ReorgingSucceeded =>
+                confirmSuccess(transfer, Succeeded)
               case _ =>
                 sender ! RequestTransferFailed(UnsupportTransferType)
             }
