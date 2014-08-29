@@ -48,7 +48,7 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] with
   // The following are not part of persistent state.
   private val tailSide = headSide.reverse
   private val bothSides = Seq(headSide, tailSide)
-  private val MAX_NUM_TX_PER_ORDER = 500
+  private val MAX_NUM_TX_PER_ORDER = 999
 
   import MarketManager._
 
