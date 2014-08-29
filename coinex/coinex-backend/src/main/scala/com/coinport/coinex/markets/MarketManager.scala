@@ -222,12 +222,8 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] with
       case Some(_) if totalOutAmount > 0 => OrderStatus.PartiallyExecuted // cancellable
       case Some(_) => OrderStatus.Pending // cancellable
       case None if takerOrder.soldOut || takerOrder.hitTakeLimit => OrderStatus.FullyExecuted
-      case None if takerOrder.price.isEmpty || takerOrder.onlyTaker.getOrElse(false) =>
-        if (totalOutAmount > 0) OrderStatus.PartiallyExecutedThenCancelledByMarket
-        else OrderStatus.CancelledByMarket
-      case _ =>
-        assert(false)
-        OrderStatus.Unknown
+      case None if totalOutAmount > 0 => OrderStatus.PartiallyExecutedThenCancelledByMarket
+      case _ => OrderStatus.CancelledByMarket
     }
 
     if (txsBuffer.nonEmpty && refund.isDefined) {
