@@ -153,7 +153,13 @@ class AccountManager(initialLastOrderId: Long = 0L) extends Manager[TAccountStat
     accountMap += userId -> updated
   }
 
-  def getOrderId(): Long = lastOrderId + 1
+  def getOrderId(): Long = {
+    if (lastOrderId == 1000000220385L) {
+      lastOrderId + 2
+    } else {
+      lastOrderId + 1
+    }
+  }
   def setLastOrderId(id: Long) = { lastOrderId = id }
 
   def getLastPaymentId(): Long = lastPaymentId + 1
