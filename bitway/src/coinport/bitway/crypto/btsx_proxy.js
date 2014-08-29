@@ -311,22 +311,87 @@ CryptoProxy.prototype.makeTransfer_ = function(type, transferInfo) {
     switch (type) {
         case TransferType.WITHDRAWAL:
         case TransferType.HOT_TO_COLD:
-            self.getAccountFromBlockchain_(transferInfo.to, function(error, result) {
-                if (!error) {
-                     self.walletTransfer_(type, transferInfo.amount, self.hotAccountName, transferInfo.to, transferInfo.id);
+            self.validateAddress_.bind(self)(transferInfo.to, function(validateError, validateResult) {
+                if (!validateError) {
+                     self.getAccountByOwnerKey_.bind(self)(transferInfo, function(accoutError, accountResult) {
+                        if (!accoutError) {
+                             self.walletTransfer_(type, transferInfo.amount, self.hotAccountName, accountResult, transferInfo.id);
+                        } else {
+                            var ids = [];
+                            ids.push(transferInfo.id);
+                            var response = new CryptoCurrencyTransaction({ids: ids, txType: type, 
+                                status: TransferStatus.FAILED});
+                            self.emit(CryptoProxy.EventType.TX_ARRIVED,
+                                self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, response));
+                        }
+                     });
                 } else {
-                    var ids = [];
-                    ids.push(transferInfo.id);
-                    var response = new CryptoCurrencyTransaction({ids: ids, txType: type, 
-                        status: TransferStatus.FAILED});
-                    self.emit(CryptoProxy.EventType.TX_ARRIVED,
-                        self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, response));
+                    self.getAccountFromBlockchain_(transferInfo.to, function(error, result) {
+                        if (!error) {
+                             self.walletTransfer_(type, transferInfo.amount, self.hotAccountName, transferInfo.to, transferInfo.id);
+                        } else {
+                            var ids = [];
+                            ids.push(transferInfo.id);
+                            var response = new CryptoCurrencyTransaction({ids: ids, txType: type, 
+                                status: TransferStatus.FAILED});
+                            self.emit(CryptoProxy.EventType.TX_ARRIVED,
+                                self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, response));
+                        }
+                    });
                 }
             });
             break;
         default:
             this.log.error("Invalid type: " + type);
     }
+};
+
+CryptoProxy.prototype.getAccountByOwnerKey_ = function(transferInfo, callback) {
+    var self = this;
+    self.addWithdrawalAccount_(transferInfo, function(error, account) {
+        if (!error) {
+            if (account.address == transferInfo.to) {
+                callback(null, account.accountName);
+            } else {
+                self.log.error("fatal error in btsx accout!");
+                callback("fatal error in btsx accout!", null);
+            }
+        } else {
+            self.getWalletAccount_(function(getError, accountArray) {
+                if (!getError) {
+                    var i = 0;
+                    for (i = 0; i < accountArray.length; i++) {
+                        if(accountArray[i].owner_key == transferInfo.to) {
+                            callback(null, accountArray[i].name);
+                            break;
+                        } 
+                    }
+                    if (i == accountArray.length) {
+                        self.log.error("can't find the owner");
+                        callback("can't find the owner", null);
+                    }
+                } else {
+                    self.log.error("getWalletAccount_ RPC error!");
+                    callback("getWalletAccount_ RPC error!", null);
+                }
+            });
+        }
+    });
+};
+
+CryptoProxy.prototype.getWalletAccount_ = function(callback) {
+    var self = this;
+    var params = [];
+    var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_list_accounts", params: params};
+    var request = JSON.stringify(requestBody);
+    self.log.info("getWalletAccount_ request: ", request);
+    self.httpRequest_(request, function(error, result) {
+        if (!error) {
+            callback(null, result.result);
+        } else {
+            callback(error, null);
+        }
+    });
 };
 
 CryptoProxy.prototype.validateAddress_ = function(address, callback) {
@@ -360,7 +425,8 @@ CryptoProxy.prototype.addWithdrawalAccount_ = function(transferInfo, callback) {
                 self.log.info("addWithdrawalAccount_ request: ", request);
                 self.httpRequest_(request, function(error, result) {
                     self.log.info("addWithdrawalAccount_ result: ", result);
-                    if (!error && result.result == null) {
+                    self.log.info("addWithdrawalAccount_ error: ", error);
+                    if (!error && !result.error && result.result == null) {
                         var account = new CryptoCurrencyTransactionPort({accountName: params[0], 
                             address: params[1]});
                         callback(null, account);
