@@ -19,14 +19,15 @@ import com.coinport.coinex.common.PersistentId._
 
 class MarketProcessor(
   marketSide: MarketSide,
-  accountProcessorPath: ActorPath)
+  accountProcessorPath: ActorPath,
+  maxNumOfTxPerOrder: Int)
     extends ExtendedProcessor with EventsourcedProcessor with ChannelSupport {
 
   override def processorId = MARKET_PROCESSOR << marketSide
 
   val channelToAccountProcessor = createChannelTo(ACCOUNT_PROCESSOR <<) // DO NOT CHANGE
 
-  val manager = new MarketManager(marketSide)
+  val manager = new MarketManager(marketSide, maxNumOfTxPerOrder)
 
   def receiveRecover = PartialFunction.empty[Any, Unit]
 

@@ -50,6 +50,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
   implicit val system = cluster.system
   val paths = new ListBuffer[String]
   val allPaths = new ListBuffer[String]
+  val maxNumOfTxPerOrder = config.getInt("akka.exchange.max-num-of-tx-per-order")
+
   val secret = config.getString("akka.exchange.secret")
   val userManagerSecret = MHash.sha256Base64(secret + "userProcessorSecret")
   val apiAuthSecret = MHash.sha256Base64(secret + "apiAuthSecret")
@@ -76,7 +78,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     // Deploy views first
     markets foreach { m =>
-      deploy(Props(new MarketDepthView(m) with StackableView[TMarketState, MarketManager]), market_depth_view << m)
+      deploy(Props(new MarketDepthView(m, maxNumOfTxPerOrder) with StackableView[TMarketState, MarketManager]), market_depth_view << m)
       deploy(Props(new CandleDataView(m) with StackableView[TCandleDataState, CandleDataManager]), candle_data_view << m)
     }
 
@@ -104,7 +106,8 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
 
     markets foreach { m =>
       def props = Props(new MarketProcessor(m,
-        routers.accountProcessor.path) with StackableEventsourced[TMarketState, MarketManager])
+        routers.accountProcessor.path,
+        maxNumOfTxPerOrder) with StackableEventsourced[TMarketState, MarketManager])
       deploySingleton(props, market_processor << m)
     }
 

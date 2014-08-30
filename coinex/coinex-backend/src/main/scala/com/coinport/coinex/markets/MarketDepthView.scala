@@ -14,14 +14,14 @@ import Implicits._
 import scala.collection.SortedSet
 import scala.collection.mutable.{ ListBuffer, Map }
 
-class MarketDepthView(market: MarketSide) extends ExtendedView {
+class MarketDepthView(market: MarketSide, maxNumOfTxPerOrder: Int) extends ExtendedView {
   override val processorId = MARKET_PROCESSOR << market
   override val viewId = MARKET_DEPTH_VIEW << market
 
   case class Cached(depth: Int, asks: Seq[MarketDepthItem], bids: Seq[MarketDepthItem])
   case class CachedByPrice(askPrice: Double, bidPrice: Double, asks: Seq[MarketDepthItem], bids: Seq[MarketDepthItem])
 
-  val manager = new MarketManager(market)
+  val manager = new MarketManager(market, maxNumOfTxPerOrder)
   private var cacheMap = Map.empty[MarketSide, Cached]
   private var cacheByPriceMap = Map.empty[MarketSide, CachedByPrice]
 

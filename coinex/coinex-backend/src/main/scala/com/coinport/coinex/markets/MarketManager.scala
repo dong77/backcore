@@ -39,7 +39,7 @@ object MarketManager {
   }
 }
 
-class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] with Logging {
+class MarketManager(val headSide: MarketSide, maxNumOfTxPerOrder: Int = 1000) extends Manager[TMarketState] with Logging {
   // The following are part of persistent state.
   private[markets] var orderPools = Map.empty[MarketSide, SortedSet[Order]]
   private[markets] var orderMap = Map.empty[Long, Order]
@@ -48,14 +48,13 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] with
   // The following are not part of persistent state.
   private val tailSide = headSide.reverse
   private val bothSides = Seq(headSide, tailSide)
-  private val MAX_NUM_TX_PER_ORDER = 999
 
   import MarketManager._
 
   def addOrderToMarket(takerSide: MarketSide, order: Order): OrderSubmitted = {
     val txsBuffer = new ListBuffer[Transaction]
     val makerSide = takerSide.reverse
-    var lastTxId = order.id * 1000 // keep a range that is greter than MAX_NUM_TX_PER_ORDER
+    var lastTxId = order.id * 1000 // keep a range that is greter than maxNumOfTxPerOrder
 
     // START of internal matching logic.
     case class TakerState(takerOrder: Order, totalOutAmount: Long, totalInAmount: Long)
@@ -101,7 +100,7 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] with
     def recursivelyMatchOrder(state: TakerState): TakerState = {
       val takerOrder = state.takerOrder
       val makerOrderOption = orderPool(makerSide).headOption
-      if (txsBuffer.size >= MAX_NUM_TX_PER_ORDER || makerOrderOption.isEmpty || makerOrderOption.get.vprice * takerOrder.vprice > 1) {
+      if (txsBuffer.size >= maxNumOfTxPerOrder || makerOrderOption.isEmpty || makerOrderOption.get.vprice * takerOrder.vprice > 1) {
         state
       } else {
         // We get the top maker order, the one with the lowest price, and we know for sure
@@ -215,7 +214,7 @@ class MarketManager(val headSide: MarketSide) extends Manager[TMarketState] with
 
     val TakerState(takerOrder, totalOutAmount, totalInAmount) = recursivelyMatchOrder(TakerState(order, 0, 0))
 
-    val (updatedTakerToAdd, refund) = calculateRefund(takerOrder, txsBuffer.size == MAX_NUM_TX_PER_ORDER)
+    val (updatedTakerToAdd, refund) = calculateRefund(takerOrder, txsBuffer.size == maxNumOfTxPerOrder)
     updatedTakerToAdd foreach { addOrder(takerSide, _) }
 
     val status = updatedTakerToAdd match {
