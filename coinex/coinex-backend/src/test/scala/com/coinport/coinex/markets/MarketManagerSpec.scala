@@ -22,7 +22,7 @@ class MarketManagerSpec extends Specification {
 
   "MarketManager" should {
 
-    "very low sell order should take all much higher buy order" in {
+    "allow very low sell order to take all much higher buy order" in {
       val manager = new MarketManager(Btc ~> Cny)
       val buySide = Cny ~> Btc
       val sellSide = Btc ~> Cny

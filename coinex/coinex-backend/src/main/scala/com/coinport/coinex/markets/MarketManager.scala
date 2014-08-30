@@ -255,7 +255,8 @@ class MarketManager(val headSide: MarketSide, maxNumOfTxPerOrder: Int = 1000) ex
       assert(txs.lastOption.map(_.takerUpdate.current).getOrElse(orderInfo.order).canBecomeMaker == true)
     } else {
       assert(updatedTakerToAdd.isEmpty)
-      assert(txs.lastOption.map(_.takerUpdate.current).getOrElse(orderInfo.order).canBecomeMaker == false)
+      assert(txs.size == maxNumOfTxPerOrder ||
+        txs.lastOption.map(_.takerUpdate.current).getOrElse(orderInfo.order).canBecomeMaker == false)
     }
 
     for {
