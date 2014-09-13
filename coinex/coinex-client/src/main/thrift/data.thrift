@@ -73,6 +73,7 @@ enum ErrorCode {
     INVALID_GOOGLE_VERIFY_CODE       = 9010
     INVALID_GOOGLE_SECRET            = 9011
     INVALID_EMAIL_VERIFY_CODE        = 9012
+    LOGIN_FAILED_AND_LOCKED          = 9013
 
     // Transfer
     TRANSFER_REJECT                  = 10001
