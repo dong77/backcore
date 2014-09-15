@@ -9,12 +9,12 @@ new AccountTransferConfig {
   override val autoConfirmAmount: collection.Map[Currency, Long] =
     collection.Map(
       Btc -> 3E8.toLong,
-      Ltc -> 40E8.toLong,
-      Doge -> 1000000E8.toLong,
-      Bc -> 1000E8.toLong,
-      Drk -> 15E8.toLong,
-      Vrc -> 500E8.toLong,
-      Zet -> 2000E8.toLong,
-      Btsx -> 100000E8.toLong,
-      Nxt -> 1000E8.toLong)
+      Ltc -> 120E8.toLong,
+      Doge -> 2000000E8.toLong,
+      Bc -> 5000E8.toLong,
+      Drk -> 140E8.toLong,
+      Vrc -> 2000E8.toLong,
+      Zet -> 5000E8.toLong,
+      Btsx -> 50000E8.toLong,
+      Nxt -> 3000E8.toLong)
 }
