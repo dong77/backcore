@@ -34,7 +34,7 @@ BitwayConfigs(Map(
         message = Some("coinport"),
         signMessage = Some("IOO7xXEp5RgrcPE+MWr+LJSQlwPOpCDAmuFbVz+1CMb5uFr8VJPaySsjxYXs65+rp8+torB7/G/DJwx4c/h3nzA="))
     ),
-    hotColdTransfer = Some(HotColdTransferStrategy(0.7, 0.5)),
+    hotColdTransfer = Some(HotColdTransferStrategy(0.6, 0.2)),
     hotColdTransferNumThreshold = 20E8.toLong,
     confirmNum = 4
   ),
@@ -47,7 +47,7 @@ BitwayConfigs(Map(
         message = Some("coinport"),
         signMessage = Some("H9gsmheo4pcjQzDr+aessL6u0DVwymAu2HynKNSn99j/RGvNAcW3Kjvc20ZqBYG5lGeEsLc3Be+kkHI9PSQAtfU="))
     ),
-    hotColdTransfer = Some(HotColdTransferStrategy(0.7, 0.5)),
+    hotColdTransfer = Some(HotColdTransferStrategy(0.6, 0.2)),
     hotColdTransferNumThreshold = 50000E8.toLong,
     confirmNum = 4
   ),
@@ -59,7 +59,7 @@ BitwayConfigs(Map(
       CryptoAddress("B4h1qQkghc8gwNWqEfHNyVi4DvjnJhPCs1",
         message = Some("coinport"),
         signMessage = Some("IKPVXzuNDmIqov3MSQNUWB9eKEPaqFiifWJUsTxELDBcAo6131AdnVxNsGo5lP7IQ0Svo1rFXB55NGIAviea65I="))),
-    hotColdTransfer = Some(HotColdTransferStrategy(0.7, 0.5)),
+    hotColdTransfer = Some(HotColdTransferStrategy(0.6, 0.2)),
     hotColdTransferNumThreshold = 1000E8.toLong,
     confirmNum = 10
   ),
@@ -72,7 +72,7 @@ BitwayConfigs(Map(
         message = Some("coinport"),
         signMessage = Some("H9X8t4F4Hou4SwmvU+OCeEiV7avqPEFJv/Kj+1QllYeZGuxvn+hn9Zw1/x8EIXSU/wjIvs19OiqHR7nUlHsPRgk="))
     ),
-    hotColdTransfer = Some(HotColdTransferStrategy(0.7, 0.5)),
+    hotColdTransfer = Some(HotColdTransferStrategy(0.6, 0.2)),
     hotColdTransferNumThreshold = 30E8.toLong,
     confirmNum = 4
   ),
@@ -85,7 +85,7 @@ BitwayConfigs(Map(
         message = Some("coinport"),
         signMessage = Some("IL6UjDPgrzcDJ6RomadVdWiTFqcS5ck11qAiKYmP8bZiO8pl8WTptqFw6ymq8HTlx4n8u985kYRnWys/qOZ4Hgo="))
     ),
-    hotColdTransfer = Some(HotColdTransferStrategy(0.7, 0.5)),
+    hotColdTransfer = Some(HotColdTransferStrategy(0.6, 0.2)),
     hotColdTransferNumThreshold = 20E8.toLong,
     confirmNum = 4
   ),
@@ -98,7 +98,7 @@ BitwayConfigs(Map(
         message = Some("coinport"),
         signMessage = Some("IGnKrdkB1386bAQrsYzZ8ExC6Ro/OGU6DK8CwWK6ElhXSOQO3r8XFKTv87SW7/Qa96Jnr9W1W1WF0EMCn12UmQs="))
     ),
-    hotColdTransfer = Some(HotColdTransferStrategy(0.7, 0.5)),
+    hotColdTransfer = Some(HotColdTransferStrategy(0.6, 0.2)),
     hotColdTransferNumThreshold = 80E8.toLong,
     confirmNum = 10
   ),
