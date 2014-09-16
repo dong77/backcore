@@ -19,6 +19,7 @@ trait AccountTransferBehavior {
   var succeededRetainNum = collection.Map.empty[Currency, Int]
   val transferHandlerObjectMap = Map.empty[TransferType, CryptoCurrencyTransferBase]
   private val ONE_DAY = 24 * 3600 * 1000
+  var needPersistCryptoMsg: Boolean = false
 
   def setSucceededRetainNum(succeededRetainNum: collection.Map[Currency, Int]) = {
     this.succeededRetainNum ++= succeededRetainNum
@@ -99,9 +100,11 @@ trait AccountTransferBehavior {
     case AdminConfirmTransferProcessed(t) => transferHandler.put(t)
 
     case m @ MultiCryptoCurrencyTransactionMessage(currency, txs, newIndex: Option[BlockIndex], confirmNum, timestamp) =>
+      needPersistCryptoMsg = false
       logger.info(s">>>>>>>>>>>>>>>>>>>>> updateState  => ${m.toString}")
       if (manager.getLastBlockHeight(currency) > 0) newIndex foreach {
         reOrgBlockIndex =>
+          needPersistCryptoMsg = true
           transferHandlerObjectMap.values foreach {
             _.reOrganize(currency, reOrgBlockIndex, manager, timestamp)
           }
@@ -118,6 +121,7 @@ trait AccountTransferBehavior {
             case Some(txType) =>
               transferHandlerObjectMap.contains(txType) match {
                 case true =>
+                  needPersistCryptoMsg = true
                   transferHandlerObjectMap(txType).handleTx(currency, tx, timestamp)
                 case _ =>
                   logger.warning(s"Unknown tx meet : ${currency.toString} ${tx.toString}")
@@ -125,7 +129,8 @@ trait AccountTransferBehavior {
           }
       }
       transferHandlerObjectMap.values foreach { _.checkConfirm(currency, timestamp, confirmNum) }
-
+      if (transferHandlerObjectMap.values.exists(_.msgBoxMap.nonEmpty)) 
+        needPersistCryptoMsg = true
     // deprecated
     case rs @ TransferCryptoCurrencyResult(currency, _, request, timestamp) =>
       logger.info(s">>>>>>>>>>>>>>>>>>>>> updateState  => ${rs.toString}")

@@ -211,21 +211,12 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
       }
 
     case p @ ConfirmablePersistent(msg: MultiCryptoCurrencyTransactionMessage, _, _) =>
-      persist(msg.copy(confirmNum = accountTransferConfig.confirmNumMap.get(msg.currency), timestamp = Some(System.currentTimeMillis()))) {
-        event =>
-          confirm(p)
-          updateState(event)
-          sendBitwayMsg(event.currency)
-          sendAccountMsg(event.currency)
-      }
+      confirm(p)
+      handleCryptoMessage(msg)
+
 
     case msg: MultiCryptoCurrencyTransactionMessage =>
-      persist(msg.copy(confirmNum = accountTransferConfig.confirmNumMap.get(msg.currency), timestamp = Some(System.currentTimeMillis()))) {
-        event =>
-          updateState(event)
-          sendBitwayMsg(event.currency)
-          sendAccountMsg(event.currency)
-      }
+      handleCryptoMessage(msg)
     // deprecated
     case tr: TransferCryptoCurrencyResult =>
       if (tr.error != ErrorCode.Ok && tr.request.isDefined && !tr.request.get.transferInfos.isEmpty) {
@@ -310,6 +301,18 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
       event =>
         updateState(event)
         sender ! AdminCommandResult(Ok)
+    }
+  }
+
+  private def handleCryptoMessage(msg: MultiCryptoCurrencyTransactionMessage) {
+    val message = msg.copy(confirmNum = accountTransferConfig.confirmNumMap.get(msg.currency), timestamp = Some(System.currentTimeMillis()))
+    updateState(message)
+    if (needPersistCryptoMsg) {
+      persist(message) {
+        event =>
+          sendBitwayMsg(event.currency)
+          sendAccountMsg(event.currency)
+      }
     }
   }
 
