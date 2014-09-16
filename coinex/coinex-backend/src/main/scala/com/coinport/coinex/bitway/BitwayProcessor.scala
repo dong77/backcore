@@ -198,13 +198,13 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         case DUP => log.info("receive block which has been seen: " + blockMsg.block.index)
         case SUCCESSOR | REORG =>
           sendGetMissedBlockTime = 0
-          val blocksMsgWithTime = if (blockMsg.timestamp.isDefined)
-            blockMsg
-          else blockMsg.copy(timestamp = Some(System.currentTimeMillis))
-          persist(m.copy(blockMsg = Some(blocksMsgWithTime))) {
+          val relatedTxs = manager.extractTxsFromBlock(blockMsg.block)
+          val blocksMsgTime = if (blockMsg.timestamp.isDefined)
+            blockMsg.timestamp
+          else Some(System.currentTimeMillis)
+          persist(m.copy(blockMsg = Some(blockMsg.copy(block = blockMsg.block.copy(txs = relatedTxs), timestamp = blocksMsgTime)))) {
             event =>
               updateState(event)
-              val relatedTxs = manager.extractTxsFromBlock(blockMsg.block)
               if (relatedTxs.nonEmpty) {
                 val reorgIndex = if (continuity == REORG) {
                   log.info("reorg to index: " + blockMsg.reorgIndex)
