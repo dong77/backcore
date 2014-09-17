@@ -214,7 +214,6 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
       confirm(p)
       handleCryptoMessage(msg)
 
-
     case msg: MultiCryptoCurrencyTransactionMessage =>
       handleCryptoMessage(msg)
     // deprecated

@@ -234,6 +234,12 @@ class AccountProcessor(
         updateState(event)
         channelToMarketUpdateProcessor forward Deliver(Persistent(event), marketUpdateProcessoressorPath)
       }
+
+    // direct message OrderCancelled is only for manual fixing bug, not programing usage
+    case m: OrderCancelled =>
+      persist(m) { event =>
+        updateState(event)
+      }
   }
 
   private def getProcessorPath(side: MarketSide): ActorPath = {

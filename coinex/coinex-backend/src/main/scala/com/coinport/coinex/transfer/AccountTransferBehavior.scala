@@ -129,7 +129,7 @@ trait AccountTransferBehavior {
           }
       }
       transferHandlerObjectMap.values foreach { _.checkConfirm(currency, timestamp, confirmNum) }
-      if (transferHandlerObjectMap.values.exists(_.msgBoxMap.nonEmpty)) 
+      if (transferHandlerObjectMap.values.exists(_.msgBoxMap.nonEmpty))
         needPersistCryptoMsg = true
     // deprecated
     case rs @ TransferCryptoCurrencyResult(currency, _, request, timestamp) =>
