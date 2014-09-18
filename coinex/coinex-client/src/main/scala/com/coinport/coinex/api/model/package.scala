@@ -166,6 +166,7 @@ package object model {
         case ProcessedFail => Failed
         case ConfirmBitwayFail => Failed
         case ReorgingFail => Failed
+        case HotInsufficientFail => Failed
         case st => st
       }
       case true => t.status
