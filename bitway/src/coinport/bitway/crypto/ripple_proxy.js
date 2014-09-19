@@ -332,15 +332,21 @@ CryptoProxy.prototype.getBlockCount_ = function(callback) {
     });
 };
 
+CryptoProxy.prototype.convertAmount_ = function(valueStr) {
+    var value = parseFloat(valueStr);
+    return value/1000000;
+};
+
 CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
-    var input = new CryptoCurrencyTransactionPort({address: tx.Account, amount: (tx.Amount + tx.Fee)});
+    var self = this;
+    var input = new CryptoCurrencyTransactionPort({address: tx.Account, amount: (self.convertAmount_(tx.Amount) + self.convertAmount_(tx.Fee))});
     var inputs = [];
     inputs.push(input);
     if (tx.Destination) {
-        var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: tx.Amount, 
+        var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: self.convertAmount_(tx.Amount), 
             memo: (tx.DestinationTag).toString()});
     } else {
-        var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: tx.Amount});
+        var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: self.convertAmount_(tx.Amount)});
     }
     var outputs = [];
     outputs.push(output);
