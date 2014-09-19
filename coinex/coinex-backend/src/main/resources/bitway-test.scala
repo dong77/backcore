@@ -79,6 +79,7 @@ BitwayConfigs(Map(
     confirmNum = 3,
     userIdFromMemo = true,
     isDepositHot = true,
+    checkDepositAccountName = true,
     enableFetchAddress = false
   ),
   Nxt -> BitwayConfig(
@@ -93,6 +94,9 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     enableHotColdTransfer = false,
-    confirmNum = 1
+    confirmNum = 1,
+    userIdFromMemo = true,
+    isDepositHot = true,
+    enableFetchAddress = false
   )
 ))
