@@ -132,7 +132,7 @@ CryptoProxy.prototype.sign_ = function(transferInfo, callback) {
                   "secret": self.secret,                          
                   "tx_json": {                                                        
                      "Account": self.hotAccount,                 
-                     "Amount": transferInfo.amount,                                                   
+                     "Amount": (transferInfo.amount) * 1000000,                                                   
                      "Destination": transferInfo.to,             
                      "TransactionType": "Payment"                                     
                    }                                                                  
@@ -149,8 +149,9 @@ CryptoProxy.prototype.sign_ = function(transferInfo, callback) {
     }, function (error, response, body) {
         if (!error) {
             console.log('Response:', body);
-            if (response.statusCode ==200 && body.status == success) {
-                callback(null, body.result.tx_blob);
+            var responseBody = JSON.parse(body);
+            if (response.statusCode ==200 && responseBody.result.status == "success") {
+                callback(null, responseBody.result.tx_blob);
             } else {
                 self.log.error("sign_error");
                 callback("sign_ error", null);
@@ -182,9 +183,9 @@ CryptoProxy.prototype.submit_ = function(tx_blob, callback) {
     }, function (error, response, body) {
         if (!error) {
             console.log('Response:', body);
-            var responseBody = JSON.toString();
-            if (response.statusCode ==200 && responseBody.status == success) {
-                tx = responseBody.result.tx_json;
+            var responseBody = JSON.parse(body);
+            if (response.statusCode == 200 && responseBody.result.status == "success") {
+                var tx = responseBody.result.tx_json;
                 var cctx = self.constructCctxByTxJson_(tx); 
                 callback(null, cctx);
             } else {
@@ -205,12 +206,14 @@ CryptoProxy.prototype.makeTransfer_ = function(type, transferInfo) {
         case TransferType.HOT_TO_COLD:
             Async.compose(self.submit_.bind(self),
                 self.sign_.bind(self))(transferInfo, function(error, cctx) {
+                    var ids = [];
+                    ids.push(transferInfo.id);
                     if (!error) {
+                        cctx.ids = ids;
+                        cctx.txType = type;
                         self.emit(CryptoProxy.EventType.TX_ARRIVED, 
                             self.makeNormalResponse_(BitwayResponseType.TRANSACTION, self.currency, cctx));
                     } else {
-                        var ids = [];
-                        ids.push(transferInfo.id);
                         var response = new CryptoCurrencyTransaction({ids: ids, txType: type, 
                             status: TransferStatus.FAILED});
                         self.emit(CryptoProxy.EventType.TX_ARRIVED,
@@ -261,7 +264,7 @@ CryptoProxy.prototype.checkMissedRange_ = function(request) {
     self.log.warn("Missed start end position: " + request.startIndexs[request.startIndexs.length - 1].height);
     self.log.warn("Required block position: " + request.endIndex.height);
     self.log.warn("Behind: " + (request.endIndex.height - request.startIndexs[request.startIndexs.length - 1].height));
-    self.redis.set(self.lastIndex, request.startIndexs[request.startIndexs.length - 1].height, function(errorRedis, retRedis) {
+    self.redis.set(self.lastIndex, request.startIndexs[request.startIndexs.length - 1].height, function(errorRedis, retRedis)     {
         if (!errorRedis) {
             self.log.info("change position to ", request.startIndexs[request.startIndexs.length - 1].height);
         } else {
@@ -338,10 +341,9 @@ CryptoProxy.prototype.getBlockCount_ = function(callback) {
         },
         body: JSON.stringify(requestBody)
     }, function (error, response, body) {
-        console.log('statusCode:', response.statusCode);
-        var responseBody = JSON.parse(body);
-        console.log('responseBody:', responseBody);
         if (!error) {
+            var responseBody = JSON.parse(body);
+            console.log('responseBody:', responseBody);
             if (response.statusCode == 200 && responseBody.result.status == "success") {
                 callback(null, responseBody.result.ledger_index);
             } else {
@@ -362,10 +364,12 @@ CryptoProxy.prototype.convertAmount_ = function(valueStr) {
 
 CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
     var self = this;
+    self.log.info("~~~~~~~~~~~~");
     var input = new CryptoCurrencyTransactionPort({address: tx.Account, amount: (self.convertAmount_(tx.Amount) + self.convertAmount_(tx.Fee))});
+    self.log.info("**************");
     var inputs = [];
     inputs.push(input);
-    if (tx.Destination) {
+    if (tx.DestinationTag) {
         var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: self.convertAmount_(tx.Amount), 
             memo: (tx.DestinationTag).toString()});
     } else {
@@ -415,10 +419,13 @@ CryptoProxy.prototype.getCCBlockByIndex_ = function(index, callback) {
                             var tx = responseBody.result.transactions[i].tx;
                             self.log.info(tx);
                             if (tx.TransactionType == "Payment") {
+                                self.log.info("yangli 1");
                                 cctxs.push(self.constructCctxByTxJson_(tx));
                             }
                         }    
+                        self.log.info("cctxs", cctxs);
                         var ccBlock = new CryptoCurrencyBlock({index: currentIndex, prevIndex: prevIndex, txs: cctxs});
+                        self.log.info("ccBlock", ccBlock);
                         callback(null, ccBlock);
                     } else {
                         self.log.error("getCCBlockByIndex_errorRedis: ", errorRedis);
@@ -439,7 +446,7 @@ CryptoProxy.prototype.getCCBlockByIndex_ = function(index, callback) {
 CryptoProxy.prototype.makeNormalResponse_ = function(type, currency, response) {
     switch (type) {
         case BitwayResponseType.SYNC_HOT_ADDRESSES:
-            this.log.info("sync hot addr response");
+            this.log.info("sync hot addr response", response);
             return new BitwayMessage({currency: currency, syncHotAddressesResult: response});
         case BitwayResponseType.SYNC_PRIVATE_KEYS:
             this.log.info("sync addr response");
