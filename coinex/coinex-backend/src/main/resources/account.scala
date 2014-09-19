@@ -40,7 +40,10 @@ AccountConfig(
       (Btsx ~> Btc) -> PercentageFee(0.001),
 
       (Btc ~> Nxt) -> PercentageFee(0.001),
-      (Nxt ~> Btc) -> PercentageFee(0.001)
+      (Nxt ~> Btc) -> PercentageFee(0.001),
+
+      (Btc ~> Xrp) -> PercentageFee(0.001),
+      (Xrp ~> Btc) -> PercentageFee(0.001)
     ),
 
     robotFeeRules = Map(
@@ -58,6 +61,7 @@ AccountConfig(
       Zet -> ConstantFee(0.0005.internalValue(Zet)),
       Btsx -> ConstantFee(2.internalValue(Btsx)),
       Nxt -> ConstantFee(2.internalValue(Nxt)),
+      Xrp -> ConstantFee(1.internalValue(Xrp)),
       Cny -> PercentageFee(0.005)),
 
     freeOfTxChargeUserIdThreshold = 1E9.toLong + 2000 // 1 thousand

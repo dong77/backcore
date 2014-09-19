@@ -4,7 +4,7 @@ import com.coinport.coinex.data.Currency._
 
 new AccountTransferConfig {
   override val transferDebug = false
-  override val confirmNumMap: collection.Map[Currency, Int] = collection.Map(Btc -> 1, Ltc -> 4, Doge -> 4, Bc -> 10, Drk -> 4, Vrc -> 4, Zet -> 10, Btsx -> 50, Nxt -> 5)
+  override val confirmNumMap: collection.Map[Currency, Int] = collection.Map(Btc -> 1, Ltc -> 4, Doge -> 4, Bc -> 10, Drk -> 4, Vrc -> 4, Zet -> 10, Btsx -> 50, Nxt -> 5, Xrp -> 1)
   override val succeededRetainNum: collection.Map[Currency, Int] = collection.Map(Btc -> 100, Ltc -> 200, Doge -> 300)
   override val autoConfirmAmount: collection.Map[Currency, Long] =
     collection.Map(
@@ -16,5 +16,6 @@ new AccountTransferConfig {
       Vrc -> 2000E8.toLong,
       Zet -> 5000E8.toLong,
       Btsx -> 50000E8.toLong,
-      Nxt -> 3000E8.toLong)
+      Nxt -> 3000E8.toLong,
+      Xrp -> 100000E8.toLong)
 }

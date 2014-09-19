@@ -86,7 +86,13 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     confirmNum = 1,
+    enableHotColdTransfer = false
+  ),
+  Xrp -> BitwayConfig(
+    ip = "bitway",
+    port = 6379,
+    maintainedChainLength = 120,
     enableHotColdTransfer = false,
-    hotColdTransferNumThreshold = 10E8.toLong
+    confirmNum = 1
   )
 ))

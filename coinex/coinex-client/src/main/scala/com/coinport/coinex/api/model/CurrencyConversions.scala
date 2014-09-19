@@ -24,7 +24,8 @@ object CurrencyConversion {
     Nxt -> 8,
     Qora -> 8,
     Cny -> 5,
-    Usd -> 5
+    Usd -> 5,
+    Xrp -> 6
   )
 
   val multipliers: Map[Currency, Double] = exponents map {
@@ -43,7 +44,8 @@ object CurrencyConversion {
     Zet -> 3,
     Btsx -> 8,
     Nxt -> 8,
-    Qora -> 8
+    Qora -> 8,
+    Xrp -> 6
   )
 
   val priceDecimals = Map[MarketSide, Int](
@@ -57,7 +59,8 @@ object CurrencyConversion {
     Btsx ~> Btc -> 8,
     Nxt ~> Btc -> 8,
     Qora ~> Btc -> 8,
-    Btc ~> Btc -> 1
+    Btc ~> Btc -> 1,
+    Xrp ~> Btc -> 6
   )
 
   def getExponent(currency: Currency) = exponents.get(currency).getOrElse(1.0).toInt
