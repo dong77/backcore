@@ -80,7 +80,7 @@ CryptoProxy.EventType = {
 CryptoProxy.prototype.logFunction = function log(type) {
     var self = this;
     return function() {
-        self.log.info(type, 'btsx crypto_proxy');
+        self.log.info(type, 'ripple crypto_proxy');
     };
 };
 
@@ -101,6 +101,7 @@ CryptoProxy.prototype.synchronousHotAddr =  function(request, callback) {
     self.log.info("Synchronous Hot Addr Request: " + JSON.stringify(request));
     var shr = new SyncHotAddressesResult({error: ErrorCode.OK, addresses: []});
     var cryptoAddress = new CryptoAddress({address: self.hotAccount, privateKey: self.secret});
+    shr.addresses.push(cryptoAddress);
     callback(self.makeNormalResponse_(BitwayResponseType.SYNC_HOT_ADDRESSES, self.currency, shr));
 };
 
@@ -146,9 +147,14 @@ CryptoProxy.prototype.sign_ = function(transferInfo, callback) {
         },
         body: JSON.stringify(requestBody)
     }, function (error, response, body) {
-        console.log('Response:', body);
-        if (response.statusCode ==200 && body.status == success) {
-            callback(null, body.result.tx_blob);
+        if (!error) {
+            console.log('Response:', body);
+            if (response.statusCode ==200 && body.status == success) {
+                callback(null, body.result.tx_blob);
+            } else {
+                self.log.error("sign_error");
+                callback("sign_ error", null);
+            }
         } else {
             self.log.error("sign_error", error);
             callback("sign_ error", null);
@@ -174,12 +180,17 @@ CryptoProxy.prototype.submit_ = function(tx_blob, callback) {
         },
         body: JSON.stringify(requestBody)
     }, function (error, response, body) {
-        console.log('Response:', body);
-        var responseBody = JSON.toString();
-        if (response.statusCode ==200 && responseBody.status == success) {
-            tx = responseBody.result.tx_json;
-            var cctx = self.constructCctxByTxJson_(tx); 
-            callback(null, cctx);
+        if (!error) {
+            console.log('Response:', body);
+            var responseBody = JSON.toString();
+            if (response.statusCode ==200 && responseBody.status == success) {
+                tx = responseBody.result.tx_json;
+                var cctx = self.constructCctxByTxJson_(tx); 
+                callback(null, cctx);
+            } else {
+                self.log.error("submit_error");
+                callback("submit_ error", null);
+            }
         } else {
             self.log.error("submit_error", error);
             callback("submit_ error", null);
@@ -250,6 +261,13 @@ CryptoProxy.prototype.checkMissedRange_ = function(request) {
     self.log.warn("Missed start end position: " + request.startIndexs[request.startIndexs.length - 1].height);
     self.log.warn("Required block position: " + request.endIndex.height);
     self.log.warn("Behind: " + (request.endIndex.height - request.startIndexs[request.startIndexs.length - 1].height));
+    self.redis.set(self.lastIndex, request.startIndexs[request.startIndexs.length - 1].height, function(errorRedis, retRedis) {
+        if (!errorRedis) {
+            self.log.info("change position to ", request.startIndexs[request.startIndexs.length - 1].height);
+        } else {
+           self.log.error("checkMissedRange_ error!"); 
+        }
+    });
 };
 
 CryptoProxy.prototype.checkBlock_ = function() {
@@ -323,8 +341,13 @@ CryptoProxy.prototype.getBlockCount_ = function(callback) {
         console.log('statusCode:', response.statusCode);
         var responseBody = JSON.parse(body);
         console.log('responseBody:', responseBody);
-        if (response.statusCode == 200 && responseBody.result.status == "success") {
-            callback(null, responseBody.result.ledger_index);
+        if (!error) {
+            if (response.statusCode == 200 && responseBody.result.status == "success") {
+                callback(null, responseBody.result.ledger_index);
+            } else {
+                self.log.error("getBlockCount_error");
+                callback("getBlockCount_ error", null);
+            }
         } else {
             self.log.error("getBlockCount_error", error);
             callback("getBlockCount_ error", null);
@@ -379,28 +402,33 @@ CryptoProxy.prototype.getCCBlockByIndex_ = function(index, callback) {
         },
         body: JSON.stringify(requestBody)
     }, function (error, response, body) {
-        var responseBody = JSON.parse(body);
-        console.log('responseBody:', responseBody);
-        if (response.statusCode == 200 && !error) {
-            self.redis.set(self.lastIndex, index, function(errorRedis, retRedis) {
-                if (!errorRedis) {
-                    var prevIndex = new BlockIndex({id: (index - 1).toString(), height: index - 1});
-                    var currentIndex = new BlockIndex({id: (index).toString(), height: index});
-                    var cctxs = [];
-                    for (var i = 0; i < responseBody.result.transactions.length; i++) {
-                        var tx = responseBody.result.transactions[i].tx;
-                        self.log.info(tx);
-                        if (tx.TransactionType == "Payment") {
-                            cctxs.push(self.constructCctxByTxJson_(tx));
-                        }
-                    }    
-                    var ccBlock = new CryptoCurrencyBlock({index: currentIndex, prevIndex: prevIndex, txs: cctxs});
-                    callback(null, ccBlock);
-                } else {
-                    self.log.error("getCCBlockByIndex_errorRedis: ", errorRedis);
-                    callback(errorRedis);
-                }
-            });
+        if (!error) {
+            var responseBody = JSON.parse(body);
+            console.log('responseBody:', responseBody);
+            if (response.statusCode == 200 && !error) {
+                self.redis.set(self.lastIndex, index, function(errorRedis, retRedis) {
+                    if (!errorRedis) {
+                        var prevIndex = new BlockIndex({id: (index - 1).toString(), height: index - 1});
+                        var currentIndex = new BlockIndex({id: (index).toString(), height: index});
+                        var cctxs = [];
+                        for (var i = 0; i < responseBody.result.transactions.length; i++) {
+                            var tx = responseBody.result.transactions[i].tx;
+                            self.log.info(tx);
+                            if (tx.TransactionType == "Payment") {
+                                cctxs.push(self.constructCctxByTxJson_(tx));
+                            }
+                        }    
+                        var ccBlock = new CryptoCurrencyBlock({index: currentIndex, prevIndex: prevIndex, txs: cctxs});
+                        callback(null, ccBlock);
+                    } else {
+                        self.log.error("getCCBlockByIndex_errorRedis: ", errorRedis);
+                        callback(errorRedis);
+                    }
+                });
+            } else {
+                self.log.error("getBlockCount_error");
+                callback("getCCBlockByIndex_ error", null);
+            }
         } else {
             self.log.error("getBlockCount_error", error);
             callback("getCCBlockByIndex_ error", null);
