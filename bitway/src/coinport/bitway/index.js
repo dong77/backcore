@@ -162,14 +162,14 @@ var btsx = {
             protocol: 'http',
             user: 'test',
             pass: 'test',
-            host: 'bitway',
+            host: '192.168.0.104',
             port: 9989,
         },
-        hotAccountName: "hot105",
+        hotAccountName: "",
         minConfirm: 20,
         checkInterval : 5000,
-        walletName: "coinporttest",
-        walletPassPhrase: "coinport"
+        walletName: "default",
+        walletPassPhrase: ""
     },
     redisProxyConfig: {
         currency: Currency.BTSX,
@@ -177,9 +177,32 @@ var btsx = {
         port: '6379',
     }
 };
+
+
+var xrp = {
+    currency: Currency.XRP,
+    cryptoConfig: {
+        cryptoRpcConfig: {
+            protocol: 'http',
+            user: 'test',
+            pass: 'test',
+            host: '192.168.0.104',
+            port: 9989,
+        },
+        hotAccount: "rpX6Sujw8hkK8bBiFqH9oVQdNaogtT81z2",
+        checkInterval : 5000,
+        walletPassPhrase: "shGbSXqEM3gvtNDKHae21scBBVbRQ"
+    },
+    redisProxyConfig: {
+        currency: Currency.XRP,
+        ip: 'bitway',
+        port: '6379',
+    }
+};
+
 // var configs = [ btc, ltc, dog, drk, bc, vrc, zet ];
 // var configs = [ btc ];
-var configs = [ btsx ];
+var configs = [ xrp ];
 
 
 fs.readFile('./pw', function(error, data){

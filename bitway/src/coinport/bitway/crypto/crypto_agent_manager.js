@@ -11,6 +11,7 @@ var CryptoAgent = require('./crypto_agent').CryptoAgent,
     DataTypes   = require('../../../../gen-nodejs/data_types'),
     Currency    = DataTypes.Currency,
     BtsxCryptoProxy = require('./btsx_proxy').CryptoProxy;
+    RippleCryptoProxy = require('./ripple_proxy').CryptoProxy;
 
 var CryptoAgentManager = module.exports.CryptoAgentManager = function(configs) {
     this.agents = [];
@@ -24,6 +25,9 @@ var CryptoAgentManager = module.exports.CryptoAgentManager = function(configs) {
         if (config.currency == Currency.BTSX) {
             console.log("BTSX");
             var cryptoProxy = new BtsxCryptoProxy(config.currency, cryptoConfig);
+        } else if (config.currency == Currency.XRP) {
+            console.log("XRP");
+            var cryptoProxy = new RippleCryptoProxy(config.currency, cryptoConfig);
         } else {
             console.log(config.currency.toString());
             cryptoConfig.cryptoRpc = new RpcClient(cryptoConfig.cryptoRpcConfig);

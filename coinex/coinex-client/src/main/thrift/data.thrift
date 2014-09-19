@@ -106,6 +106,7 @@ enum Currency {
     BTSX = 2100
     NXT  = 2200
     QORA = 2210
+    XRP  = 3100
 }
 
 enum OrderStatus {

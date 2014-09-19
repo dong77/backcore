@@ -81,6 +81,13 @@ log4js.configure({
             alwaysIncludePattern: true,
             category: "2100"
         },
+        {
+            type: "dateFile",
+            filename: 'logs/XRP.log',
+            pattern: "-yyyy-MM-dd",
+            alwaysIncludePattern: true,
+            category: "3100"
+        },
     ],
     replaceConsole: true, //替换console.log
     levels:{
@@ -92,6 +99,7 @@ log4js.configure({
         1500: 'INFO',
         1600: 'INFO',
         2100: 'DEBUG',
+        3100: 'INFO',
     }
 });
 
