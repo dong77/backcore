@@ -483,8 +483,8 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
 
   private def getUserId(port: CryptoCurrencyTransactionPort, tx: CryptoCurrencyTransaction, txType: TransferType): Option[Long] = {
     if (config.userIdFromMemo && txType == DepositHot) {
-      if (port.accountName.isDefined && port.accountName.get.nonEmpty &&
-        port.accountName.get.equals(address2AccountNameMap.getOrElse(port.address, ""))) {
+      if (!config.checkDepositAccountName || (port.accountName.isDefined && port.accountName.get.nonEmpty &&
+        port.accountName.get.equals(address2AccountNameMap.getOrElse(port.address, "")))) {
         val userId: String = port.memo.getOrElse("0")
         val reg = "1([0-9]{9})".r
         if (reg.pattern.matcher(userId).matches) {

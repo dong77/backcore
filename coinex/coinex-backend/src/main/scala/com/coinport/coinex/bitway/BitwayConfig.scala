@@ -28,6 +28,7 @@ final case class BitwayConfig(
   confirmNum: Int = 1,
   userIdFromMemo: Boolean = false,
   isDepositHot: Boolean = false,
+  checkDepositAccountName: Boolean = false,
   enableFetchAddress: Boolean = true)
 
 final case class BitwayConfigs(
