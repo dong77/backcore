@@ -163,6 +163,7 @@ enum TransferType {
     COLD_TO_HOT = 4
     UNKNOWN     = 5
     DEPOSIT_HOT = 6
+    USERS_TO_INNER = 7
 }
 
 enum RechargeCodeStatus {
@@ -615,6 +616,7 @@ struct CryptoCurrencyTransferInfo {
     4: optional double amount
     5: optional string from
     6: optional ErrorCode error
+    7: optional i32 coldPercent // 0 - 100 percent
 }
 
 struct CryptoCurrencyTransaction {
