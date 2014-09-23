@@ -191,7 +191,7 @@ var xrp = {
         },
         hotAccount: "rpX6Sujw8hkK8bBiFqH9oVQdNaogtT81z2",
         checkInterval : 5000,
-        walletPassPhrase: "shGbSXqEM3gvtNDKHae21scBBVbRQ"
+        secret: "shGbSXqEM3gvtNDKHae21scBBVbRQ"
     },
     redisProxyConfig: {
         currency: Currency.XRP,

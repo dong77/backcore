@@ -340,6 +340,7 @@ CryptoProxy.prototype.getNextCCBlockSinceLastIndex_ = function(index, callback) 
 
 CryptoProxy.prototype.getBlockCount_ = function(callback) {
     var self = this;
+    self.log.debug("enter into getBlockCount_!");
     var requestBody = {
         "method": "ledger_closed",
         "params": [
@@ -393,6 +394,7 @@ CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
         var cctx = new CryptoCurrencyTransaction({txid: tx.hash, inputs: inputs, outputs: outputs,            
             status: TransferStatus.CONFIRMING});                                                                    
         cctx.sigId = tx.hash;        
+        cctx.ids = [];
         return cctx;
     } else {
         return null;
@@ -401,22 +403,28 @@ CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
 
 CryptoProxy.prototype.getIds_ = function(cctx, callback) {
     var self = this;
-    self.redis.get(cctx.sigId, function(error, id) {                                                            
-        if (!error) {                                                                                           
-            if (id) {                                                                                           
-                cctx.ids.push(Number(id));                                                                      
-            }                                                                                                   
-            callback(null, cctx);                                                                               
-        } else {                                                                                                
-            self.log.error("constructCCTXByTxHistory_", error);                                                 
-            callback(error, null);                                                                              
-        }                                                                                                       
-    });                              
+    if (cctx && cctx.sigId) {
+        console.log("getIds_cctx.sigId: ", cctx.sigId);
+        self.redis.get(cctx.sigId, function(error, id) {                                                            
+            console.log("getIds_sigId error: ", error);
+            console.log("getIds_sigId id: ", id);
+            if (!error) {                                                                                           
+                if (id) {                                                                                           
+                    cctx.ids.push(Number(id));                                                                      
+                }                                                                                                   
+                callback(null, cctx);                                                                               
+            } else {                                                                                                
+                self.log.error("constructCCTXByTxHistory_", error);                                                 
+                callback(error, null);                                                                              
+            }                                                                                                       
+        });                              
+    } else {
+        callback(null, cctx);                                                                               
+    }
 };
 
 CryptoProxy.prototype.fillinIds_ = function(ccblock, callback) {
     var self = this;
-    self.log.info("fillinIds_ccblock", ccblock);
     Async.map(ccblock.txs, self.getIds_.bind(self), function(error, result) {
         if (!error) {
             ccblock.txs = result;
