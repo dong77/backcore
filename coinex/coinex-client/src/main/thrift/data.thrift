@@ -617,6 +617,7 @@ struct CryptoCurrencyTransferInfo {
     5: optional string from
     6: optional ErrorCode error
     7: optional i32 coldPercent // 0 - 100 percent
+    8: optional string memo  // for btsx withdrawal
 }
 
 struct CryptoCurrencyTransaction {

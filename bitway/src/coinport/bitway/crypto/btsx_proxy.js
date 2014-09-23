@@ -248,13 +248,14 @@ CryptoProxy.prototype.transfer = function(request, callback) {
     }
 };
 
-CryptoProxy.prototype.walletTransfer_ = function(type, amount, from, to, id) {
+CryptoProxy.prototype.walletTransfer_ = function(type, amount, from, to, id, memo) {
     var self = this;
     var params = [];
     params.push(amount);
     params.push("BTSX");
     params.push(from);
     params.push(to);
+    params.push(memo);
     var requestBody = {jsonrpc: '2.0', id: 2, method: "wallet_transfer", params: params};
     var request = JSON.stringify(requestBody);
     self.log.info("walletTransfer_ request: ", request);
@@ -315,7 +316,8 @@ CryptoProxy.prototype.makeTransfer_ = function(type, transferInfo) {
                 if (!validateError) {
                      self.getAccountByOwnerKey_.bind(self)(transferInfo, function(accoutError, accountResult) {
                         if (!accoutError) {
-                             self.walletTransfer_(type, transferInfo.amount, self.hotAccountName, accountResult, transferInfo.id);
+                             self.walletTransfer_(type, transferInfo.amount, self.hotAccountName, 
+                                 accountResult, transferInfo.id, transferInfo.memo);
                         } else {
                             var ids = [];
                             ids.push(transferInfo.id);
@@ -328,7 +330,8 @@ CryptoProxy.prototype.makeTransfer_ = function(type, transferInfo) {
                 } else {
                     self.getAccountFromBlockchain_(transferInfo.to, function(error, result) {
                         if (!error) {
-                             self.walletTransfer_(type, transferInfo.amount, self.hotAccountName, transferInfo.to, transferInfo.id);
+                             self.walletTransfer_(type, transferInfo.amount, self.hotAccountName,
+                                 transferInfo.to, transferInfo.id, transferInfo.memo);
                         } else {
                             var ids = [];
                             ids.push(transferInfo.id);
