@@ -177,6 +177,21 @@ var btsx = {
     }
 };
 
+var xrp = {
+    currency: Currency.XRP,
+    cryptoConfig: {
+        hotAccount: "",
+        checkInterval : 10000,
+        secret: ""
+        walletPassPhrase: ""
+    },
+    redisProxyConfig: {
+        currency: Currency.XRP,
+        ip: 'bitway',
+        port: '6379',
+    }
+};
+
 var configs = [ btc, ltc, dog, drk, bc, vrc, zet, btsx];
 // var configs = [ btc ];
 // var configs = [ dog ];

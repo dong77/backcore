@@ -63,13 +63,14 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
     this.redis.on('end'         , this.logFunction('end'));
 
     this.checkInterval || (this.checkInterval = 10000);
-    this.processedSigids = this.currency + '_processed_sigids';
     this.lastIndex = this.currency + '_last_index';
     this.log = Logger.logger(this.currency.toString());
     this.hotAccountName = opt_config.hotAccountName;
 };
 
 Util.inherits(CryptoProxy, Events.EventEmitter);
+
+CryptoProxy.DROP_CONVERSION = 1000000;
 
 CryptoProxy.EventType = {
     TX_ARRIVED : 'tx_arrived',
@@ -82,10 +83,6 @@ CryptoProxy.prototype.logFunction = function log(type) {
     return function() {
         self.log.info(type, 'ripple crypto_proxy');
     };
-};
-
-CryptoProxy.URL = {
-    transfer: 'http://localhost:5990/v1/payments',
 };
 
 CryptoProxy.prototype.generateUserAddress = function(request, callback) {
@@ -127,17 +124,17 @@ CryptoProxy.prototype.sign_ = function(transferInfo, callback) {
     var requestBody = {                                                                      
        "method": "sign",                                                              
        "params": [                                                                    
-              {                                                                       
-                  "offline": false,                                                   
-                  "secret": self.secret,                          
-                  "tx_json": {                                                        
-                     "Account": self.hotAccount,                 
-                     "Amount": (transferInfo.amount) * 1000000,                                                   
-                     "Destination": transferInfo.to,             
-                     "TransactionType": "Payment"                                     
-                   }                                                                  
-               }                                                                      
-           ]                                                                          
+          {                                                                       
+              "offline": false,                                                   
+              "secret": self.secret,                          
+              "tx_json": {                                                        
+                 "Account": self.hotAccount,                 
+                 "Amount": (transferInfo.amount) * CryptoProxy.DROP_CONVERSION,                                                   
+                 "Destination": transferInfo.to,             
+                 "TransactionType": "Payment"                                     
+               }                                                                  
+           }                                                                      
+        ]                                                                          
     };      
     request({
         method: 'POST',
@@ -147,17 +144,17 @@ CryptoProxy.prototype.sign_ = function(transferInfo, callback) {
         },
         body: JSON.stringify(requestBody)
     }, function (error, response, body) {
-        if (!error) {
-            console.log('Response:', body);
+        if (!error && response && body) {
+            self.log.debug('sign_ Response:', body);
             var responseBody = JSON.parse(body);
-            if (response.statusCode ==200 && responseBody.result.status == "success") {
+            if (response.statusCode == 200 && responseBody.result.status == "success") {
                 callback(null, responseBody.result.tx_blob);
             } else {
-                self.log.error("sign_error");
+                self.log.error("sign_ error");
                 callback("sign_ error", null);
             }
         } else {
-            self.log.error("sign_error", error);
+            self.log.error("sign_ error", error);
             callback("sign_ error", null);
         }
     });
@@ -181,19 +178,19 @@ CryptoProxy.prototype.submit_ = function(tx_blob, callback) {
         },
         body: JSON.stringify(requestBody)
     }, function (error, response, body) {
-        if (!error) {
-            console.log('Response:', body);
+        if (!error && response && body) {
+            self.log.info('submit_ Response:', body);
             var responseBody = JSON.parse(body);
             if (response.statusCode == 200 && responseBody.result.status == "success") {
                 var tx = responseBody.result.tx_json;
                 var cctx = self.constructCctxByTxJson_(tx); 
                 callback(null, cctx);
             } else {
-                self.log.error("submit_error");
+                self.log.error("submit_ error");
                 callback("submit_ error", null);
             }
         } else {
-            self.log.error("submit_error", error);
+            self.log.error("submit_ error", error);
             callback("submit_ error", null);
         }
     });
@@ -282,7 +279,7 @@ CryptoProxy.prototype.checkBlock_ = function() {
     var self = this;
     self.getNextCCBlock_(function(error, result){
         if (!error) {
-            self.log.info("checkBlock_ result: ", result);
+            self.log.debug("checkBlock_ result: ", result);
             Async.map(result, self.fillinIds_.bind(self), function(errFill, resFill) {
                 if (!errFill) {
                     for (var i = 0; i < resFill.length; i++) {
@@ -355,13 +352,13 @@ CryptoProxy.prototype.getBlockCount_ = function(callback) {
         },
         body: JSON.stringify(requestBody)
     }, function (error, response, body) {
-        if (!error) {
+        if (!error && response && body) {
             var responseBody = JSON.parse(body);
-            console.log('responseBody:', responseBody);
+            self.log.info('getBlockCount_ responseBody:', responseBody);
             if (response.statusCode == 200 && responseBody.result.status == "success") {
                 callback(null, responseBody.result.ledger_index);
             } else {
-                self.log.error("getBlockCount_error");
+                self.log.error("getBlockCount_ error");
                 callback("getBlockCount_ error", null);
             }
         } else {
@@ -373,7 +370,7 @@ CryptoProxy.prototype.getBlockCount_ = function(callback) {
 
 CryptoProxy.prototype.convertAmount_ = function(valueStr) {
     var value = parseFloat(valueStr);
-    return value/1000000;
+    return value/CryptoProxy.DROP_CONVERSION;
 };
 
 CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
@@ -395,6 +392,7 @@ CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
             status: TransferStatus.CONFIRMING});                                                                    
         cctx.sigId = tx.hash;        
         cctx.ids = [];
+        cctx.minerFee = self.convertAmount_(tx.Fee);
         return cctx;
     } else {
         return null;
@@ -404,17 +402,14 @@ CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
 CryptoProxy.prototype.getIds_ = function(cctx, callback) {
     var self = this;
     if (cctx && cctx.sigId) {
-        console.log("getIds_cctx.sigId: ", cctx.sigId);
         self.redis.get(cctx.sigId, function(error, id) {                                                            
-            console.log("getIds_sigId error: ", error);
-            console.log("getIds_sigId id: ", id);
             if (!error) {                                                                                           
                 if (id) {                                                                                           
                     cctx.ids.push(Number(id));                                                                      
                 }                                                                                                   
                 callback(null, cctx);                                                                               
             } else {                                                                                                
-                self.log.error("constructCCTXByTxHistory_", error);                                                 
+                self.log.error("getIds_ error", error);                                                 
                 callback(error, null);                                                                              
             }                                                                                                       
         });                              
@@ -430,8 +425,8 @@ CryptoProxy.prototype.fillinIds_ = function(ccblock, callback) {
             ccblock.txs = result;
             callback(null, ccblock);
         } else {
-            self.log.error("fillinIds_error", error);
-            callback("fillinIds_error", null);
+            self.log.error("fillinIds_ error", error);
+            callback("fillinIds_ error", null);
         }
     });
 };
@@ -460,10 +455,10 @@ CryptoProxy.prototype.getCCBlockByIndex_ = function(startIndex, endIndex, callba
         },
         body: JSON.stringify(requestBody)
     }, function (error, response, body) {
-        if (!error) {
+        if (!error && response && body) {
             var responseBody = JSON.parse(body);
-            console.log('responseBody:', responseBody.result.transactions);
-            if (response.statusCode == 200 && !error) {
+            self.log.info('account_tx responseBody transactions:', responseBody.result.transactions);
+            if (!error && response.statusCode == 200) {
                 self.redis.set(self.lastIndex, endIndex, function(errorRedis, retRedis) {
                     if (!errorRedis) {
                         var ccBlocks = [];
@@ -502,7 +497,7 @@ CryptoProxy.prototype.getCCBlockByIndex_ = function(startIndex, endIndex, callba
 CryptoProxy.prototype.makeNormalResponse_ = function(type, currency, response) {
     switch (type) {
         case BitwayResponseType.SYNC_HOT_ADDRESSES:
-            this.log.info("sync hot addr response", response);
+            this.log.info("sync hot addr response");
             return new BitwayMessage({currency: currency, syncHotAddressesResult: response});
         case BitwayResponseType.SYNC_PRIVATE_KEYS:
             this.log.info("sync addr response");
@@ -521,13 +516,5 @@ CryptoProxy.prototype.makeNormalResponse_ = function(type, currency, response) {
         default:
             this.log.error("Inavalid Type!");
             return null
-    }
-};
-
-CryptoProxy.invokeCallback_ = function(error, resultFun, callback) {
-    if (error) {
-        callback(error);
-    } else {
-        callback(null, resultFun());
     }
 };

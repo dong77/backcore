@@ -182,16 +182,10 @@ var btsx = {
 var xrp = {
     currency: Currency.XRP,
     cryptoConfig: {
-        cryptoRpcConfig: {
-            protocol: 'http',
-            user: 'test',
-            pass: 'test',
-            host: '192.168.0.104',
-            port: 9989,
-        },
         hotAccount: "rpX6Sujw8hkK8bBiFqH9oVQdNaogtT81z2",
-        checkInterval : 5000,
-        secret: "shGbSXqEM3gvtNDKHae21scBBVbRQ"
+        checkInterval : 10000,
+        secret: "shGbSXqEM3gvtNDKHae21scBBVbRQ",
+        walletPassPhrase: ""
     },
     redisProxyConfig: {
         currency: Currency.XRP,
