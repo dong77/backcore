@@ -22,6 +22,7 @@ import scala.concurrent.duration._
 import scala.concurrent.Future
 import scala.util.{ Failure, Success }
 
+import com.coinport.coinex.api.model.CurrencyWrapper
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
@@ -38,7 +39,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
 
   var sendGetMissedBlockTime = 0L
   val RESEND_GET_MISSED_BLOCK_TIMEOUT = 30 * 1000L
-  val HOT_RESERVE_INTERNAL_AMOUNT = 10000 * 1000L
+  val HOT_RESERVE_INTERNAL_AMOUNT = new CurrencyWrapper(0.1).internalValue(supportedCurrency)
 
   private var hot2ColdCancellable: Cancellable = null
   private var cold2HotCancellable: Cancellable = null
