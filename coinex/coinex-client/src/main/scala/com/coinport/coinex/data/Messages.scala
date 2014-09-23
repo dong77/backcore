@@ -29,6 +29,8 @@ case object TrySyncHotAddresses
 
 case class TransferBetweenHotCold(txType: TransferType)
 
+case object TransferUsersToInner
+
 case class FetchAddresses(currency: Currency)
 
 case object QueryRecoverStats

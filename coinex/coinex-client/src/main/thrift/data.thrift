@@ -663,6 +663,8 @@ struct CryptoCurrencyTransferItem {
     13: optional i64 created
     14: optional i64 updated
     15: optional i64 minerFee
+    16: optional list<CryptoCurrencyTransactionPort> froms
+    17: optional list<CryptoCurrencyTransactionPort> tos
 }
 
 struct CryptoCurrencyNetworkStatus {

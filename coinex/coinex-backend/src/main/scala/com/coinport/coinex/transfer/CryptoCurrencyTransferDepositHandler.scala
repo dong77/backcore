@@ -45,7 +45,7 @@ class CryptoCurrencyTransferDepositHandler(currency: Currency, outputPort: Crypt
     //Reorging item will not confirm again to avoid resend UserToHot message
     val isReorging = item.status.get == Reorging
     if (super.checkConfirm(lastBlockHeight)) {
-      if (!isReorging) {
+      if (!isReorging && !enableUsersToInner) {
         CryptoCurrencyTransferUserToHotHandler.createUserToHot(item, getTimestamp())
       }
       return true

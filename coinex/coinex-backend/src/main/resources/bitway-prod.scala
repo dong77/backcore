@@ -23,7 +23,8 @@ BitwayConfigs(Map(
         signMessage = Some("H0YkvkM11/6tVddcu8dr+TEzhKjNuXVTn1ckaJJQOc0IVoAkCrhiA9CUFUWvTXRBL+DwLgPUrWi7gHnD+LBLztw="))
     ),
     hotColdTransferNumThreshold = 3E8.toLong,
-    confirmNum = 1
+    confirmNum = 1,
+    usersToInnerNumThreshold = 1E7.toLong
   ),
   Ltc -> BitwayConfig(
     ip = "bitway",
@@ -36,7 +37,8 @@ BitwayConfigs(Map(
     ),
     hotColdTransfer = Some(HotColdTransferStrategy(0.6, 0.1)),
     hotColdTransferNumThreshold = 20E8.toLong,
-    confirmNum = 4
+    confirmNum = 4,
+    usersToInnerNumThreshold = 10E8.toLong
   ),
   Doge -> BitwayConfig(
     ip = "bitway",
@@ -49,7 +51,8 @@ BitwayConfigs(Map(
     ),
     hotColdTransfer = Some(HotColdTransferStrategy(0.6, 0.1)),
     hotColdTransferNumThreshold = 50000E8.toLong,
-    confirmNum = 4
+    confirmNum = 4,
+    usersToInnerNumThreshold = 30000E8.toLong
   ),
   Bc -> BitwayConfig(
     ip = "bitway",
@@ -61,7 +64,8 @@ BitwayConfigs(Map(
         signMessage = Some("IKPVXzuNDmIqov3MSQNUWB9eKEPaqFiifWJUsTxELDBcAo6131AdnVxNsGo5lP7IQ0Svo1rFXB55NGIAviea65I="))),
     hotColdTransfer = Some(HotColdTransferStrategy(0.6, 0.1)),
     hotColdTransferNumThreshold = 1000E8.toLong,
-    confirmNum = 10
+    confirmNum = 10,
+    usersToInnerNumThreshold = 300E8.toLong
   ),
   Drk -> BitwayConfig(
     ip = "bitway",
@@ -74,7 +78,8 @@ BitwayConfigs(Map(
     ),
     hotColdTransfer = Some(HotColdTransferStrategy(0.6, 0.1)),
     hotColdTransferNumThreshold = 30E8.toLong,
-    confirmNum = 4
+    confirmNum = 4,
+    usersToInnerNumThreshold = 6E8.toLong
   ),
   Vrc -> BitwayConfig(
     ip = "bitway",
@@ -86,8 +91,9 @@ BitwayConfigs(Map(
         signMessage = Some("IL6UjDPgrzcDJ6RomadVdWiTFqcS5ck11qAiKYmP8bZiO8pl8WTptqFw6ymq8HTlx4n8u985kYRnWys/qOZ4Hgo="))
     ),
     hotColdTransfer = Some(HotColdTransferStrategy(0.6, 0.1)),
-    hotColdTransferNumThreshold = 20E8.toLong,
-    confirmNum = 4
+    hotColdTransferNumThreshold = 60E8.toLong,
+    confirmNum = 4,
+    usersToInnerNumThreshold = 100E8.toLong
   ),
   Zet -> BitwayConfig(
     ip = "bitway",
@@ -99,8 +105,9 @@ BitwayConfigs(Map(
         signMessage = Some("IGnKrdkB1386bAQrsYzZ8ExC6Ro/OGU6DK8CwWK6ElhXSOQO3r8XFKTv87SW7/Qa96Jnr9W1W1WF0EMCn12UmQs="))
     ),
     hotColdTransfer = Some(HotColdTransferStrategy(0.6, 0.1)),
-    hotColdTransferNumThreshold = 80E8.toLong,
-    confirmNum = 10
+    hotColdTransferNumThreshold = 100E8.toLong,
+    confirmNum = 10,
+    usersToInnerNumThreshold = 200E8.toLong
   ),
   Btsx -> BitwayConfig(
     ip = "bitway",
@@ -111,14 +118,16 @@ BitwayConfigs(Map(
     userIdFromMemo = true,
     isDepositHot = true,
     checkDepositAccountName = true,
-    enableFetchAddress = false
+    enableFetchAddress = false,
+    enableUsersToInnerTransfer = false
   ),
   Nxt -> BitwayConfig(
     ip = "bitway",
     port = 6379,
     maintainedChainLength = 120,
     enableHotColdTransfer = false,
-    confirmNum = 5
+    confirmNum = 5,
+    usersToInnerNumThreshold = 100E8.toLong
   ),
   Xrp -> BitwayConfig(
     ip = "bitway",
@@ -128,6 +137,7 @@ BitwayConfigs(Map(
     confirmNum = 1,
     userIdFromMemo = true,
     isDepositHot = true,
-    enableFetchAddress = false
+    enableFetchAddress = false,
+    enableUsersToInnerTransfer = false
   )
 ))

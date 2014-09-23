@@ -26,8 +26,6 @@ import com.coinport.coinex.api.model.CurrencyWrapper
 import com.coinport.coinex.common.ExtendedProcessor
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.data._
-import com.coinport.coinex.data.FetchAddresses
-import com.coinport.coinex.data.TransferBetweenHotCold
 import com.coinport.coinex.data.TransferType._
 import com.coinport.coinex.serializers._
 import Implicits._
@@ -43,6 +41,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
 
   private var hot2ColdCancellable: Cancellable = null
   private var cold2HotCancellable: Cancellable = null
+  private var users2InnerCancellable: Cancellable = null
   val serializer = new ThriftBinarySerializer()
   val client: Option[RedisClient] = try {
     Some(new RedisClient(config.ip, config.port))
@@ -99,7 +98,14 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
             SyncHotAddresses(supportedCurrency)))))
       }
     case TransferBetweenHotCold(txType) =>
-      checkTransferHotCold(txType)
+      if (config.enableHotColdTransfer) {
+        transferHotColdIfNeed(txType)
+      }
+
+    case TransferUsersToInner =>
+      if (config.enableUsersToInnerTransfer) {
+        transferUsersToInnerIfNeed
+      }
 
     case m @ CleanBlockChain(currency) =>
       persist(m) {
@@ -404,30 +410,43 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     if (config.enableHotColdTransfer) {
       scheduleTransfer(HotToCold, config.hot2ColdTransferInterval)
       scheduleTransfer(ColdToHot, config.cold2HotTransferInterval)
+      scheduleTransfer(UsersToInner, config.users2InnerTransferInterval)
     }
   }
 
   private def getRequestChannel = config.requestChannelPrefix + supportedCurrency.value.toString
 
-  private def checkTransferHotCold(txType: TransferType) {
-    if (config.enableHotColdTransfer) {
-      transferHotColdIfNeed(txType)
-    }
-  }
-
   private def transferHotColdIfNeed(txType: TransferType) {
     manager.needHotColdTransfer match {
-      case Some(amount) if amount == 0 =>
       case Some(amount) if amount > 0 && txType == HotToCold =>
-        trySchedule(txType, amount)
+        tryTransfer(txType, amount)
       case Some(amount) if amount < 0 && txType == ColdToHot =>
-        trySchedule(txType, amount)
+        tryTransfer(txType, amount)
       case _ =>
-        rescheduleAll(txType, false)
+        reschedule(txType, false)
     }
   }
 
-  private def trySchedule(transferType: TransferType, amount: Long) {
+  private def transferUsersToInnerIfNeed() {
+    manager.needUsersToInnerTransfer() match {
+      case Some((userAddresses, coldAddress, coldPercent)) =>
+        userAddresses match {
+          case Some(ads) if ads.nonEmpty =>
+            val infos = ads map {
+              ad =>
+                CryptoCurrencyTransferInfo(0L, from = Some(ad), to = coldAddress, coldPercent = coldPercent)
+            }
+            tryTransfer(UsersToInner, 0L, Some(BitwayRequest(BitwayRequestType.MultiTransfer, supportedCurrency, multiTransferCryptoCurrency = Some(MultiTransferCryptoCurrency(supportedCurrency, Map(UsersToInner -> infos))))))
+          case _ =>
+            reschedule(UsersToInner, false)
+        }
+      case _ =>
+        reschedule(UsersToInner, false)
+    }
+
+  }
+
+  private def tryTransfer(transferType: TransferType, amount: Long, request: Option[BitwayRequest] = None) {
     implicit val timeout = Timeout(2 seconds)
     transferProcessor ? CanHotColdInterTransfer(supportedCurrency, transferType) onComplete {
       case Success(e: CanHotColdInterTransferResult) if e.enable == true =>
@@ -435,28 +454,33 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         transferType match {
           case HotToCold =>
             self ! DoRequestTransfer(AccountTransfer(0, 0, HotToCold, supportedCurrency, amount, created = Some(System.currentTimeMillis)))
-            rescheduleAll(transferType, true)
+            reschedule(transferType, true)
           case ColdToHot =>
             self ! DoRequestTransfer(AccountTransfer(0, 0, ColdToHot, supportedCurrency, -amount, created = Some(System.currentTimeMillis)))
-            rescheduleAll(transferType, false)
+            reschedule(transferType, false)
+          case UsersToInner if request.isDefined =>
+            client.get.rpush(getRequestChannel, serializer.toBinary(request.get))
+            reschedule(transferType, false)
           case _ =>
         }
       case Failure(e) =>
         //        println(s"${transferType.toString} canInterTransfer Failure" + e.getStackTrace.toString)
-        rescheduleAll(transferType, false)
+        reschedule(transferType, false)
       case r =>
         //        println(s"${transferType.toString} canInterTransfer fail" + r.toString)
-        rescheduleAll(transferType, false)
+        reschedule(transferType, false)
     }
   }
 
-  private def rescheduleAll(txType: TransferType, isTransfer: Boolean) {
+  private def reschedule(txType: TransferType, isTransfer: Boolean) {
     //   println(s"${txType.toString} schedule")
     txType match {
       case HotToCold =>
         scheduleTransfer(HotToCold, if (isTransfer) config.hot2ColdTransferIntervalLarge else config.hot2ColdTransferInterval)
       case ColdToHot =>
         scheduleTransfer(ColdToHot, config.cold2HotTransferInterval)
+      case UsersToInner =>
+        scheduleTransfer(ColdToHot, config.users2InnerTransferInterval)
       case _ =>
         log.error(s"transferHotColdIfNeed get wrong txType: ${txType.toString}")
     }
@@ -470,6 +494,9 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       case ColdToHot =>
         if (cold2HotCancellable != null && !cold2HotCancellable.isCancelled) cold2HotCancellable.cancel()
         cold2HotCancellable = context.system.scheduler.scheduleOnce(interval, self, TransferBetweenHotCold(ColdToHot))(context.system.dispatcher)
+      case UsersToInner =>
+        if (users2InnerCancellable != null && !users2InnerCancellable.isCancelled) users2InnerCancellable.cancel()
+        users2InnerCancellable = context.system.scheduler.scheduleOnce(interval, self, TransferUsersToInner)(context.system.dispatcher)
       case _ =>
     }
   }

@@ -25,11 +25,14 @@ final case class BitwayConfig(
   hot2ColdTransferInterval: FiniteDuration = 5 * 60 seconds,
   hot2ColdTransferIntervalLarge: FiniteDuration = 3600 seconds,
   cold2HotTransferInterval: FiniteDuration = 3600 seconds,
+  users2InnerTransferInterval: FiniteDuration = 5 * 60 seconds,
   confirmNum: Int = 1,
   userIdFromMemo: Boolean = false,
   isDepositHot: Boolean = false,
   checkDepositAccountName: Boolean = false,
-  enableFetchAddress: Boolean = true)
+  enableFetchAddress: Boolean = true,
+  enableUsersToInnerTransfer: Boolean = true,
+  usersToInnerNumThreshold: Long = 1E8.toLong)
 
 final case class BitwayConfigs(
   configs: Map[Currency, BitwayConfig] = Map.empty)

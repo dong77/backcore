@@ -37,6 +37,7 @@ trait AccountTransferBehavior {
     transferHandlerObjectMap += HotToCold -> CryptoCurrencyTransferHotToColdHandler.setEnv(env)
     transferHandlerObjectMap += ColdToHot -> CryptoCurrencyTransferColdToHotHandler.setEnv(env)
     transferHandlerObjectMap += DepositHot -> CryptoCurrencyTransferDepositHotHandler.setEnv(env)
+    transferHandlerObjectMap += UsersToInner -> CryptoCurrencyTransferUsersToInnerHandler.setEnv(env)
     manager.setTransferHandlers(transferHandlerObjectMap)
     CryptoCurrencyTransferUnknownHandler.setEnv(env)
   }
@@ -58,6 +59,7 @@ trait AccountTransferBehavior {
             val from = CryptoCurrencyTransactionPort("", None, Some(t.amount), Some(t.userId))
             val to = CryptoCurrencyTransactionPort("", None, Some(t.amount), Some(t.userId))
             prepareBitwayMsg(t, Some(from), Some(to), transferHandlerObjectMap(HotToCold), t.created)
+          case TransferType.UsersToInner =>
           case TransferType.Unknown =>
             transferHandler.put(t)
         }
@@ -99,7 +101,7 @@ trait AccountTransferBehavior {
 
     case AdminConfirmTransferProcessed(t) => transferHandler.put(t)
 
-    case m @ MultiCryptoCurrencyTransactionMessage(currency, txs, newIndex: Option[BlockIndex], confirmNum, timestamp) =>
+    case m @ MultiCryptoCurrencyTransactionMessage(currency, txs, newIndex: Option[BlockIndex], confirmNum, timestamp, enableUsersToInner) =>
       needPersistCryptoMsg = false
       logger.info(s">>>>>>>>>>>>>>>>>>>>> updateState  => ${m.toString}")
       if (manager.getLastBlockHeight(currency) > 0) newIndex foreach {
@@ -128,7 +130,7 @@ trait AccountTransferBehavior {
               }
           }
       }
-      transferHandlerObjectMap.values foreach { _.checkConfirm(currency, timestamp, confirmNum) }
+      transferHandlerObjectMap.values foreach { _.checkConfirm(currency, timestamp, confirmNum, enableUsersToInner) }
       if (transferHandlerObjectMap.values.exists(_.msgBoxMap.nonEmpty))
         needPersistCryptoMsg = true
     // deprecated

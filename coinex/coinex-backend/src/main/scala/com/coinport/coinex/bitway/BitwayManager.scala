@@ -186,8 +186,8 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     // Which means one CryptoCurrencyTransaction can't has two types: Deposit as well as Withdrawal
     val inputsMatched = getIntersectSet(inputs)
     val outputsMatched = getIntersectSet(outputs)
-    if (inputsMatched.contains(USER) && outputsMatched.contains(HOT)) {
-      Some(TransferType.UserToHot)
+    if (inputsMatched.contains(USER) && (outputsMatched.contains(COLD) || outputsMatched.contains(HOT))) {
+      Some(TransferType.UsersToInner)
     } else if (inputsMatched.contains(HOT)) {
       //TODO: add interest transfer type, with input and output all are hot address
       if (outputsMatched.contains(COLD))
@@ -440,6 +440,32 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
       } else {
         Some((hotAmount - allAmount * mid).toLong)
       }
+    }
+  }
+  // Option[(Option[userAddresses], Option[coldAddress], Option[coldPercent])]
+  def needUsersToInnerTransfer(): Option[(Option[List[String]], Option[String], Option[Int])] = {
+    val userAmount = getAvailableReserveAmount(CryptoCurrencyAddressType.User, Some(config.confirmNum))
+    if (userAmount < config.usersToInnerNumThreshold) {
+      return None
+    }
+    val userAddresses = addresses(CryptoCurrencyAddressType.User).toList
+    if (!config.enableHotColdTransfer || config.coldAddresses.isEmpty) {
+      return Some((Some(userAddresses), None, None))
+    }
+    val hotAmount = getAvailableReserveAmount(CryptoCurrencyAddressType.Hot, Some(config.confirmNum))
+    val coldAmount = getAvailableReserveAmount(CryptoCurrencyAddressType.Cold, Some(config.confirmNum))
+    val HotColdTransferStrategy(highThreshold, lowThreshold) = config.hotColdTransfer.getOrElse(HotColdTransferStrategy(1, 0))
+    val allAmount = hotAmount + coldAmount + userAmount
+    if ((hotAmount + userAmount).toDouble / allAmount > highThreshold && allAmount > config.hotColdTransferNumThreshold) { // hot is too much
+      if (hotAmount.toDouble / allAmount > lowThreshold) { // hot percent is high enough, all to cold
+        Some((Some(userAddresses), Some(config.coldAddresses.head.address), Some(100)))
+      } else { // need transfer some to cold
+        val mid = (highThreshold + lowThreshold) / 2
+        val coldPercent = ((userAmount.toDouble - (mid * allAmount - hotAmount)) / userAmount * 100).toInt
+        Some((Some(userAddresses), Some(config.coldAddresses.head.address), Some(coldPercent)))
+      }
+    } else {
+      Some((Some(userAddresses), None, None))
     }
   }
 

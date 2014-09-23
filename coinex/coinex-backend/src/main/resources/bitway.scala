@@ -18,13 +18,15 @@ BitwayConfigs(Map(
     batchFetchAddressNum = 10,
     maintainedChainLength = 10,
     coldAddresses = List(CryptoAddress("morrnAssmf3LP2UkXST7i3UpKcUbBQX4GU")),
-    enableHotColdTransfer = false
+    enableHotColdTransfer = false,
+    usersToInnerNumThreshold = 1E7.toLong
   ),
   Ltc -> BitwayConfig(
     ip = "bitway",
     port = 6379,
     maintainedChainLength = 20,
-    enableHotColdTransfer = false
+    enableHotColdTransfer = false,
+    usersToInnerNumThreshold = 2E8.toLong
   ),
   Doge -> BitwayConfig(
     ip = "bitway",
@@ -32,7 +34,8 @@ BitwayConfigs(Map(
     maintainedChainLength = 20,
     coldAddresses = List(CryptoAddress(
       "nUmdT61hFz2MWeHdLbGDjDmdVKVRUiuhnu")),
-    enableHotColdTransfer = false
+    enableHotColdTransfer = false,
+    usersToInnerNumThreshold = 100E8.toLong
   ),
   Bc -> BitwayConfig(
     ip = "bitway",
@@ -67,7 +70,8 @@ BitwayConfigs(Map(
     userIdFromMemo = true,
     isDepositHot = true,
     checkDepositAccountName = true,
-    enableFetchAddress = false
+    enableFetchAddress = false,
+    enableUsersToInnerTransfer = false
   ),
   Nxt -> BitwayConfig(
     ip = "bitway",
@@ -84,6 +88,7 @@ BitwayConfigs(Map(
     confirmNum = 1,
     userIdFromMemo = true,
     isDepositHot = true,
-    enableFetchAddress = false
+    enableFetchAddress = false,
+    enableUsersToInnerTransfer = false
   )
 ))

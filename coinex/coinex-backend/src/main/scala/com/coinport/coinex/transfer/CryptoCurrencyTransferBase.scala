@@ -59,11 +59,11 @@ trait CryptoCurrencyTransferBase {
 
   protected def innerHandleTx(currency: Currency, tx: CryptoCurrencyTransaction, timestamp: Option[Long]) {}
 
-  def checkConfirm(currency: Currency, timestamp: Option[Long], confirmNum: Option[Int]) {
+  def checkConfirm(currency: Currency, timestamp: Option[Long], confirmNum: Option[Int], enableUsersToInner: Option[Boolean]) {
     val lastBlockHeight: Long = manager.getLastBlockHeight(currency)
     id2HandlerMap.values filter (_.item.currency == currency) foreach {
       handler =>
-        handler.setTimeStamp(timestamp).setConfirmNum(confirmNum)
+        handler.setTimeStamp(timestamp).setConfirmNum(confirmNum).setEnableUsersToInner(enableUsersToInner)
         if (handler.checkConfirm(lastBlockHeight) && handler.item.status.get == Succeeded) {
           handleSucceeded(handler.item.id)
         }

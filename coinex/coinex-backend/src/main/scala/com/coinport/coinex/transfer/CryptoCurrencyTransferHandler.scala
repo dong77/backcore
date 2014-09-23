@@ -17,6 +17,7 @@ trait CryptoCurrencyTransferHandler {
   var item: CryptoCurrencyTransferItem = null
   private var innerConfirmNum: Option[Int] = None
   private var innerTimestamp: Option[Long] = None
+  protected var enableUsersToInner: Boolean = false
 
   def setEnv(env: TransferEnv, timestamp: Option[Long]) {
     manager = env.manager
@@ -64,7 +65,14 @@ trait CryptoCurrencyTransferHandler {
     if (item.includedBlock.isDefined && item.status.get != Succeeded && item.status.get != Confirmed) {
       val confirmed = lastBlockHeight - item.includedBlock.get.height.getOrElse(Long.MaxValue) >= itemComfirmNum - 1
       if (confirmed) {
-        val statusUpdate = if (item.txType.get != Deposit) Succeeded else Confirmed
+        val statusUpdate = item.txType.get match {
+          case Deposit =>
+            enableUsersToInner match {
+              case true => Succeeded
+              case false => Confirmed
+            }
+          case _ => Succeeded
+        }
         item = item.copy(status = Some(statusUpdate))
         setAccountTransferStatus(statusUpdate)
         saveItemToMongo()
@@ -136,6 +144,11 @@ trait CryptoCurrencyTransferHandler {
 
   def setConfirmNum(confirmNum: Option[Int]): CryptoCurrencyTransferHandler = {
     this.innerConfirmNum = Some(confirmNum.getOrElse(defaultConfirmNum))
+    this
+  }
+
+  def setEnableUsersToInner(enableUsersToInner: Option[Boolean]): CryptoCurrencyTransferHandler = {
+    this.enableUsersToInner = enableUsersToInner.getOrElse(false)
     this
   }
 

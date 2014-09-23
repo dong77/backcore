@@ -80,7 +80,8 @@ BitwayConfigs(Map(
     userIdFromMemo = true,
     isDepositHot = true,
     checkDepositAccountName = true,
-    enableFetchAddress = false
+    enableFetchAddress = false,
+    enableUsersToInnerTransfer = false
   ),
   Nxt -> BitwayConfig(
     ip = "bitway",
@@ -97,6 +98,7 @@ BitwayConfigs(Map(
     confirmNum = 1,
     userIdFromMemo = true,
     isDepositHot = true,
-    enableFetchAddress = false
+    enableFetchAddress = false,
+    enableUsersToInnerTransfer = false
   )
 ))

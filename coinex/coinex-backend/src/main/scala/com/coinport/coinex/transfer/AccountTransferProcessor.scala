@@ -51,7 +51,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
         case ColdToHot => "bitway_" + r.transfer.currency.toString.toLowerCase()
         case _ => "account"
       }
-    case MultiCryptoCurrencyTransactionMessage(currency, _, _, _, _) => "bitway_" + currency.toString.toLowerCase()
+    case MultiCryptoCurrencyTransactionMessage(currency, _, _, _, _, _) => "bitway_" + currency.toString.toLowerCase()
   }
 
   def receiveRecover = PartialFunction.empty[Any, Unit]
@@ -79,6 +79,8 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                 updateState(event)
                 sendBitwayMsg(msg.transfer.currency)
             }
+          case TransferType.UsersToInner =>
+            sender ! RequestTransferFailed(UnsupportTransferType)
           case TransferType.Unknown => // accept wait for admin accept
             handleTransfer(msg)
             sender ! RequestTransferFailed(UnsupportTransferType)
@@ -237,7 +239,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
         }
       }
     case CanHotColdInterTransfer(currency, transferType) =>
-      if (transferType == HotToCold || transferType == ColdToHot) {
+      if (transferType == HotToCold || transferType == ColdToHot || transferType == UsersToInner) {
         sender ! CanHotColdInterTransferResult(canHotColdInterTransfer(currency, transferType))
       } else {
         sender ! CanHotColdInterTransferResult(false)
@@ -304,7 +306,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   }
 
   private def handleCryptoMessage(msg: MultiCryptoCurrencyTransactionMessage) {
-    val message = msg.copy(confirmNum = accountTransferConfig.confirmNumMap.get(msg.currency), timestamp = Some(System.currentTimeMillis()))
+    val message = msg.copy(confirmNum = accountTransferConfig.confirmNumMap.get(msg.currency), timestamp = Some(System.currentTimeMillis()), enableUsersToInner = Some(accountTransferConfig.enableUsersToInner))
     updateState(message)
     if (needPersistCryptoMsg) {
       persist(message) {
