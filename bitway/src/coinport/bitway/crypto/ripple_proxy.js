@@ -71,6 +71,7 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
 Util.inherits(CryptoProxy, Events.EventEmitter);
 
 CryptoProxy.DROP_CONVERSION = 1000000;
+CryptoProxy.URL = 'https://s1.ripple.com:51234/';
 
 CryptoProxy.EventType = {
     TX_ARRIVED : 'tx_arrived',
@@ -138,7 +139,7 @@ CryptoProxy.prototype.sign_ = function(transferInfo, callback) {
     };      
     request({
         method: 'POST',
-        url: 'http://s1.ripple.com:51234/',
+        url: CryptoProxy.URL,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -172,7 +173,7 @@ CryptoProxy.prototype.submit_ = function(tx_blob, callback) {
     };      
     request({
         method: 'POST',
-        url: 'http://s1.ripple.com:51234/',
+        url: CryptoProxy.URL,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -346,7 +347,7 @@ CryptoProxy.prototype.getBlockCount_ = function(callback) {
     };
     request({
         method: 'POST',
-        url: 'http://s1.ripple.com:51234/',
+        url: CryptoProxy.URL,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -449,7 +450,7 @@ CryptoProxy.prototype.getCCBlockByIndex_ = function(startIndex, endIndex, callba
     };
     request({
         method: 'POST',
-        url: 'http://s1.ripple.com:51234/',
+        url: CryptoProxy.URL,
         headers: {
           'Content-Type': 'application/json',
         },
