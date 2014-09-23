@@ -85,7 +85,7 @@ trait AccountTransferBehavior {
               case Some(withdrawalFee: Fee) if withdrawalFee.amount > 0 => t.amount - withdrawalFee.amount
               case _ => t.amount
             }
-            val to = CryptoCurrencyTransactionPort(t.address.get, None, Some(transferAmount), Some(t.userId))
+            val to = CryptoCurrencyTransactionPort(t.address.get, None, Some(transferAmount), Some(t.userId), memo = t.memo)
             prepareBitwayMsg(t, None, Some(to), transferHandlerObjectMap(Withdrawal), t.updated)
           case TransferType.UserToHot if t.status == TransferStatus.Accepted =>
             val userToHotHandler = transferHandlerObjectMap(UserToHot)
