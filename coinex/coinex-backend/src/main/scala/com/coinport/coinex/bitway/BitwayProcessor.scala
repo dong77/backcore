@@ -106,11 +106,11 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         event =>
           updateState(event)
       }
-    case SyncPrivateKeys(currency, None) =>
+    case SyncPrivateKeys(currency, None, isSyncNxtPublicKey) =>
       if (client.isDefined) {
         client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
           BitwayRequestType.SyncPrivateKeys, currency, syncPrivateKeys = Some(
-            SyncPrivateKeys(supportedCurrency, Some(manager.getPubKeys()))))))
+            SyncPrivateKeys(supportedCurrency, Some(manager.getPubKeys(isSyncNxtPublicKey)))))))
       }
 
     case m @ AdjustAddressAmount(currency, address, adjustAmount) =>
@@ -135,7 +135,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
           persist(m.copy(assignedAddress = address)) {
             event =>
               updateState(event)
-              sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.Ok, address, manager.address2NxtRsAddressMap.get(address.get))
+              sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.Ok, address, manager.address2NxtRsAddressMap.get(address.get), manager.address2NxtPublicKeyMap.get(address.get))
           }
         } else {
           sender ! AllocateNewAddressResult(supportedCurrency, ErrorCode.NotEnoughAddressInPool, None)
@@ -264,6 +264,12 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     case m @ CleanBitwayData(currency, actions) =>
       if (actions.nonEmpty) {
         persist(m)(updateState)
+      }
+    case m @ QueryCryptoAddress(addresses: List[String]) =>
+      if (addresses.nonEmpty) {
+        sender ! QueryCryptoAddressResult(manager.queryCryptoAddress(addresses))
+      } else {
+        sender ! QueryCryptoAddressResult(List.empty[CryptoAddress])
       }
   }
 
@@ -497,6 +503,9 @@ trait BitwayManagerBehavior {
 
     case BitwayMessage(currency, None, None, None, None, Some(res)) =>
       manager.syncPrivateKeys(res.addresses.toList)
+      if (currency == Currency.Nxt) {
+        manager.syncNxtAddressProperties(res.addresses.toList)
+      }
 
     case CleanBlockChain(currency) =>
       manager.cleanBlockChain()

@@ -39,6 +39,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
   private[bitway] val address2AccountNameMap = Map.empty[String, String]
   private[bitway] val address2NxtRsAddressMap = Map.empty[String, String]
   private[bitway] val address2SignDataMap = Map.empty[String, List[String]]
+  private[bitway] val address2NxtPublicKeyMap = Map.empty[String, String]
 
   final val SPECIAL_ACCOUNT_ID: Map[CryptoCurrencyAddressType, Long] = Map(
     CryptoCurrencyAddressType.Hot -> HOT_UID,
@@ -62,7 +63,9 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     sigIdsSinceLastBlock.clone,
     privateKeysBackup = if (privateKeysBackup.size > 0) Some(privateKeysBackup.clone) else None,
     address2AccountNameMap = if (address2AccountNameMap.nonEmpty) Some(address2AccountNameMap.clone) else None,
-    address2SignDataMap = if (address2SignDataMap.nonEmpty) Some(Map.empty[String, List[String]] ++= address2SignDataMap.map(kv => kv._1 -> (List.empty[String] ++ kv._2))) else None
+    address2NxtRsAddressMap = if (address2NxtRsAddressMap.nonEmpty) Some(address2NxtRsAddressMap.clone) else None,
+    address2SignDataMap = if (address2SignDataMap.nonEmpty) Some(Map.empty[String, List[String]] ++= address2SignDataMap.map(kv => kv._1 -> (List.empty[String] ++ kv._2))) else None,
+    address2NxtPublicKeyMap = if (address2NxtPublicKeyMap.nonEmpty) Some(address2NxtPublicKeyMap.clone) else None
   )
 
   def loadSnapshot(s: TBitwayState) {
@@ -93,6 +96,10 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     if (s.address2SignDataMap.isDefined) {
       address2SignDataMap.clear
       address2SignDataMap ++= s.address2SignDataMap.get.map { kv => kv._1 -> (List.empty[String] ++ kv._2) }
+    }
+    if (s.address2NxtPublicKeyMap.isDefined) {
+      address2NxtPublicKeyMap.clear
+      address2NxtPublicKeyMap ++= s.address2NxtPublicKeyMap.get
     }
 
     if (config.coldAddresses.nonEmpty)
@@ -134,6 +141,9 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     val nxtRsNames = addrs.filter(_.nxtRsAddress.isDefined)
     if (nxtRsNames.nonEmpty)
       address2NxtRsAddressMap ++= Map(nxtRsNames.map(i => (i.address -> i.nxtRsAddress.get)).toSeq: _*)
+    val nxtPublicKeys = addrs.filter(_.nxtPublicKey.isDefined)
+    if (nxtPublicKeys.nonEmpty)
+      address2NxtPublicKeyMap ++= Map(nxtPublicKeys.map(i => (i.address -> i.nxtPublicKey.get)).toSeq: _*)
     syncSignData(addrs.toSeq)
   }
 
@@ -378,7 +388,19 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     privateKeysBackup ++= Map(keys.map(i => (i.address -> i.privateKey.getOrElse("no-priv-key"))): _*)
   }
 
-  def getPubKeys() = privateKeysBackup.keySet
+  def syncNxtAddressProperties(keys: List[CryptoAddress]) {
+    keys.filter(_.nxtRsAddress.isDefined).foreach(i => address2NxtRsAddressMap.put(i.address, i.nxtRsAddress.get))
+    keys.filter(_.nxtPublicKey.isDefined).foreach(i => address2NxtPublicKeyMap.put(i.address, i.nxtPublicKey.get))
+  }
+
+  def getPubKeys(isSyncNxtPublicKey: Option[Boolean]): scala.collection.Set[String] = {
+    if (isSyncNxtPublicKey != Some(true)) {
+      privateKeysBackup.keySet
+    } else {
+      val needSyncPubKey = scala.collection.Set.empty[String] ++ address2NxtRsAddressMap.keys.filter(i => address2NxtPublicKeyMap.contains(i))
+      (addresses.values.reduce(_ ++ _) -- needSyncPubKey).take(100)
+    }
+  }
 
   def syncHotAddresses(addrs: Set[CryptoAddress]) {
     val origAddresses = addresses.getOrElse(Hot, Set.empty[String])
@@ -435,6 +457,12 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     addressUidMap -= ""
     privateKeysBackup -= ""
     address2NxtRsAddressMap -= ""
+  }
+
+  def queryCryptoAddress(address: List[String]): List[CryptoAddress] = {
+    address.map { i =>
+      CryptoAddress(i, None, address2NxtRsAddressMap.get(i), address2AccountNameMap.get(i), None, None, address2NxtPublicKeyMap.get(i))
+    }
   }
 
   private def getCurrentHeight: Option[Long] = {

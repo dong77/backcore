@@ -126,6 +126,8 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
         ac match {
           case CleanActionType.NxtAddressIncomplete =>
             cleanNxtDepositAddress()
+          case CleanActionType.CompleteNxtAddressIncomplete =>
+            completeNxtDepositAddress()
         }
     }
   }
@@ -173,6 +175,22 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
               val nxtAd = addresses.get(Nxt).getOrElse("")
               if (nxtAd.length < 35 || nxtAd.startsWith("//NXT")) {
                 profileMap.update(userId, pf.copy(depositAddresses = Some(addresses - Nxt)))
+              }
+            }
+        }
+    }
+  }
+
+  private def completeNxtDepositAddress() {
+    profileMap.keys.foreach {
+      userId =>
+        val pf = profileMap(userId)
+        pf.depositAddresses.foreach {
+          addresses =>
+            if (addresses.contains(Nxt)) {
+              val nxtAd = addresses.get(Nxt).getOrElse("")
+              if (nxtAd.length < 35 || nxtAd.startsWith("//NXT")) {
+
               }
             }
         }
