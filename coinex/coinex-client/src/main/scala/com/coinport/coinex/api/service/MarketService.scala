@@ -74,7 +74,7 @@ object MarketService extends AkkaService {
 
               val priceMap = (start to stop).reverse.map { timeSpot =>
                 curPrice = map.get(timeSpot).getOrElse(curPrice)
-                timeSpot -> curPrice.externalValue(side)
+                timeSpot -> curPrice
               }.toMap
               currencyPriceMap.put(side._1, priceMap)
             }
@@ -107,7 +107,7 @@ object MarketService extends AkkaService {
                       ((BigDecimal(price) * BigDecimal(volume)).longValue(), price)
                     case None => (0L, 0.0)
                   }
-                cur.toString.toUpperCase -> (CurrencyObject(cur, amount), PriceObject(cur ~> baseCurrency, price))
+                cur.toString.toUpperCase -> (CurrencyObject(baseCurrency, amount), PriceObject(cur ~> baseCurrency, price))
             }.toMap
             ApiAssetItem(uid = userId.toString,
               assetMap = assetMap.map(a => a._1.toString.toUpperCase -> CurrencyObject(a._1, a._2)).toMap,
