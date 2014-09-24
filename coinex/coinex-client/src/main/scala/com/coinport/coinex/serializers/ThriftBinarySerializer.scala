@@ -152,6 +152,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cQueryAssetResult = BinaryScalaCodec(QueryAssetResult)
   lazy val _cQueryCandleData = BinaryScalaCodec(QueryCandleData)
   lazy val _cQueryCandleDataResult = BinaryScalaCodec(QueryCandleDataResult)
+  lazy val _cQueryCryptoAddress = BinaryScalaCodec(QueryCryptoAddress)
+  lazy val _cQueryCryptoAddressResult = BinaryScalaCodec(QueryCryptoAddressResult)
   lazy val _cQueryCryptoCurrencyAddressStatus = BinaryScalaCodec(QueryCryptoCurrencyAddressStatus)
   lazy val _cQueryCryptoCurrencyAddressStatusResult = BinaryScalaCodec(QueryCryptoCurrencyAddressStatusResult)
   lazy val _cQueryCryptoCurrencyNetworkStatus = BinaryScalaCodec(QueryCryptoCurrencyNetworkStatus)
@@ -372,6 +374,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: QueryAssetResult => _cQueryAssetResult(m)
     case m: QueryCandleData => _cQueryCandleData(m)
     case m: QueryCandleDataResult => _cQueryCandleDataResult(m)
+    case m: QueryCryptoAddress => _cQueryCryptoAddress(m)
+    case m: QueryCryptoAddressResult => _cQueryCryptoAddressResult(m)
     case m: QueryCryptoCurrencyAddressStatus => _cQueryCryptoCurrencyAddressStatus(m)
     case m: QueryCryptoCurrencyAddressStatusResult => _cQueryCryptoCurrencyAddressStatusResult(m)
     case m: QueryCryptoCurrencyNetworkStatus => _cQueryCryptoCurrencyNetworkStatus(m)
@@ -596,6 +600,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[QueryAssetResult.Immutable] => _cQueryAssetResult.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleData.Immutable] => _cQueryCandleData.invert(bytes).get
     case Some(c) if c == classOf[QueryCandleDataResult.Immutable] => _cQueryCandleDataResult.invert(bytes).get
+    case Some(c) if c == classOf[QueryCryptoAddress.Immutable] => _cQueryCryptoAddress.invert(bytes).get
+    case Some(c) if c == classOf[QueryCryptoAddressResult.Immutable] => _cQueryCryptoAddressResult.invert(bytes).get
     case Some(c) if c == classOf[QueryCryptoCurrencyAddressStatus.Immutable] => _cQueryCryptoCurrencyAddressStatus.invert(bytes).get
     case Some(c) if c == classOf[QueryCryptoCurrencyAddressStatusResult.Immutable] => _cQueryCryptoCurrencyAddressStatusResult.invert(bytes).get
     case Some(c) if c == classOf[QueryCryptoCurrencyNetworkStatus.Immutable] => _cQueryCryptoCurrencyNetworkStatus.invert(bytes).get
