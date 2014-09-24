@@ -253,6 +253,7 @@ enum UserActionType {
 
 enum CleanActionType {
     NXT_ADDRESS_INCOMPLETE = 0
+    COMPLETE_NXT_ADDRESS_INCOMPLETE = 1
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -449,6 +450,7 @@ struct AccountTransfer {
     13: optional string txid
     14: optional string nxtRsAddress
     15: optional string memo
+    16: optional string nxtPublicKey
 }
 
 struct AccountTransfersWithMinerFee {
@@ -582,6 +584,7 @@ struct CryptoAddress {
     4: optional string accountName
     5: optional string signMessage
     6: optional string message
+    7: optional string nxtPublicKey
 }
 
 struct TAddressStatus {

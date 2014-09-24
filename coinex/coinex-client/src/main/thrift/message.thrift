@@ -205,7 +205,7 @@ typedef data.CleanActionType                    _CleanActionType
 
 ////////// BitwayProcessor
 /* C    */ struct AllocateNewAddress                      {1: _Currency currency, 2: i64 userId, 3: optional string assignedAddress}
-/* R    */ struct AllocateNewAddressResult                {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional string address, 4: optional string nxtRsAddress}
+/* R    */ struct AllocateNewAddressResult                {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional string address, 4: optional string nxtRsAddress, 5: optional string nxtPublicKey}
 /* C,I  */ struct TransferCryptoCurrency                  {1: _Currency currency, 2: list<_CryptoCurrencyTransferInfo> transferInfos, 3: _TransferType type}
 /* R    */ struct TransferCryptoCurrencyResult            {1: _Currency currency, 2: _ErrorCode error = data.ErrorCode.OK, 3: optional TransferCryptoCurrency request, 4: optional i64 timestamp}
 /* C,I  */ struct MultiTransferCryptoCurrency             {1: _Currency currency, 2: map<_TransferType, list<_CryptoCurrencyTransferInfo>> transferInfos}
@@ -222,12 +222,14 @@ typedef data.CleanActionType                    _CleanActionType
 /* R    */ struct CleanBitwayData                         {1: _Currency currency, 2: set<_CleanActionType> cleanActions}
 /* C,I  */ struct CanHotColdInterTransfer                 {1: _Currency currency, 2: _TransferType transferType}
 /* R    */ struct CanHotColdInterTransferResult           {1: bool enable}
+/* Q    */ struct QueryCryptoAddress                      {1: list<string> addresses}
+/* R    */ struct QueryCryptoAddressResult                {1: list<_CryptoAddress> addresses}
 
 ////////// Bitway nodejs
 /* C    */ struct CleanBlockChain                         {1: _Currency currency} // use this only if want re-start up from fatal new branch error. and must make sure the new coming block height is higher than previous highest block height
 /* C    */ struct SyncHotAddresses                        {1: _Currency currency}
 /* R    */ struct SyncHotAddressesResult                  {1: _ErrorCode error, 2: set<_CryptoAddress> addresses}
-/* C    */ struct SyncPrivateKeys                         {1: _Currency currency, 2: optional set<string> pubKeys}
+/* C    */ struct SyncPrivateKeys                         {1: _Currency currency, 2: optional set<string> pubKeys, 3: optional bool isSyncNxtPublicKey}
 /* R    */ struct SyncPrivateKeysResult                   {1: _ErrorCode error, 2: set<_CryptoAddress> addresses}
 /* C    */ struct GetMissedCryptoCurrencyBlocks           {1: list<_BlockIndex> startIndexs, 2: _BlockIndex endIndex} // returned (startIndex, endIndex]
 /* C    */ struct GenerateAddresses                       {1: i32 num}
