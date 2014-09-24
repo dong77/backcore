@@ -471,13 +471,17 @@ CryptoProxy.prototype.getCCBlockByIndex_ = function(startIndex, endIndex, callba
                         var prevIndex = new BlockIndex({id: (i - 1).toString(), height: i - 1});
                         var currentIndex = new BlockIndex({id: (i).toString(), height: i});
                         var cctxs = [];
-                        for (var j = 0; j < responseBody.result.transactions.length; j++) {
-                           var tx = responseBody.result.transactions[j].tx;
-                           if (i == tx.ledger_index && tx.TransactionType == "Payment") {
-                               cctxs.push(self.constructCctxByTxJson_(tx));
-                           } else {
+                        if (responseBody.result.transactions) {
+                            for (var j = 0; j < responseBody.result.transactions.length; j++) {
+                               var tx = responseBody.result.transactions[j].tx;
+                               if (i == tx.ledger_index && tx.TransactionType == "Payment") {
+                                   cctxs.push(self.constructCctxByTxJson_(tx));
+                               } else {
 
-                           }
+                               }
+                            }
+                        } else {
+                            self.log.warn("transactions: ", responseBody.result.transactions);
                         }
                         var ccBlock = new CryptoCurrencyBlock({index: currentIndex, prevIndex: prevIndex, txs: cctxs});
                         ccBlocks.push(ccBlock);

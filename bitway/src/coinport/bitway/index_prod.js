@@ -182,7 +182,7 @@ var xrp = {
     cryptoConfig: {
         hotAccount: "",
         checkInterval : 10000,
-        secret: ""
+        secret: "",
         walletPassPhrase: ""
     },
     redisProxyConfig: {
