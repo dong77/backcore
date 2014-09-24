@@ -72,6 +72,7 @@ Util.inherits(CryptoProxy, Events.EventEmitter);
 
 CryptoProxy.DROP_CONVERSION = 1000000;
 CryptoProxy.URL = 'https://s1.ripple.com:51234/';
+CryptoProxy.TIMEOUT = 10000;
 
 CryptoProxy.EventType = {
     TX_ARRIVED : 'tx_arrived',
@@ -140,15 +141,16 @@ CryptoProxy.prototype.sign_ = function(transferInfo, callback) {
     request({
         method: 'POST',
         url: CryptoProxy.URL,
+        timeout: CryptoProxy.TIMEOUT,
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody)
     }, function (error, response, body) {
-        if (!error && response && body) {
+        if (!error && response.statusCode == 200 && body) {
             self.log.debug('sign_ Response:', body);
             var responseBody = JSON.parse(body);
-            if (response.statusCode == 200 && responseBody.result.status == "success") {
+            if (responseBody.result.status == "success") {
                 callback(null, responseBody.result.tx_blob);
             } else {
                 self.log.error("sign_ error");
@@ -174,15 +176,16 @@ CryptoProxy.prototype.submit_ = function(tx_blob, callback) {
     request({
         method: 'POST',
         url: CryptoProxy.URL,
+        timeout: CryptoProxy.TIMEOUT,
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody)
     }, function (error, response, body) {
-        if (!error && response && body) {
+        if (!error && response.statusCode == 200 && body) {
             self.log.info('submit_ Response:', body);
             var responseBody = JSON.parse(body);
-            if (response.statusCode == 200 && responseBody.result.status == "success") {
+            if (responseBody.result.status == "success") {
                 var tx = responseBody.result.tx_json;
                 var cctx = self.constructCctxByTxJson_(tx); 
                 callback(null, cctx);
@@ -348,15 +351,16 @@ CryptoProxy.prototype.getBlockCount_ = function(callback) {
     request({
         method: 'POST',
         url: CryptoProxy.URL,
+        timeout: CryptoProxy.TIMEOUT,
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody)
     }, function (error, response, body) {
-        if (!error && response && body) {
+        if (!error && response.statusCode == 200 && body) {
             var responseBody = JSON.parse(body);
             self.log.info('getBlockCount_ responseBody:', responseBody);
-            if (response.statusCode == 200 && responseBody.result.status == "success") {
+            if (responseBody.result.status == "success") {
                 callback(null, responseBody.result.ledger_index);
             } else {
                 self.log.error("getBlockCount_ error");
@@ -451,43 +455,39 @@ CryptoProxy.prototype.getCCBlockByIndex_ = function(startIndex, endIndex, callba
     request({
         method: 'POST',
         url: CryptoProxy.URL,
+        timeout: CryptoProxy.TIMEOUT,
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody)
     }, function (error, response, body) {
-        if (!error && response && body) {
+        if (!error && response.statusCode == 200 && body) {
             var responseBody = JSON.parse(body);
             self.log.info('account_tx responseBody transactions:', responseBody.result.transactions);
-            if (!error && response.statusCode == 200) {
-                self.redis.set(self.lastIndex, endIndex, function(errorRedis, retRedis) {
-                    if (!errorRedis) {
-                        var ccBlocks = [];
-                        for (var i = startIndex; i < (endIndex + 1); i++) {
-                            var prevIndex = new BlockIndex({id: (i - 1).toString(), height: i - 1});
-                            var currentIndex = new BlockIndex({id: (i).toString(), height: i});
-                            var cctxs = [];
-                            for (var j = 0; j < responseBody.result.transactions.length; j++) {
-                               var tx = responseBody.result.transactions[j].tx;
-                               if (i == tx.ledger_index && tx.TransactionType == "Payment") {
-                                   cctxs.push(self.constructCctxByTxJson_(tx));
-                               } else {
+            self.redis.set(self.lastIndex, endIndex, function(errorRedis, retRedis) {
+                if (!errorRedis) {
+                    var ccBlocks = [];
+                    for (var i = startIndex; i < (endIndex + 1); i++) {
+                        var prevIndex = new BlockIndex({id: (i - 1).toString(), height: i - 1});
+                        var currentIndex = new BlockIndex({id: (i).toString(), height: i});
+                        var cctxs = [];
+                        for (var j = 0; j < responseBody.result.transactions.length; j++) {
+                           var tx = responseBody.result.transactions[j].tx;
+                           if (i == tx.ledger_index && tx.TransactionType == "Payment") {
+                               cctxs.push(self.constructCctxByTxJson_(tx));
+                           } else {
 
-                               }
-                            }
-                            var ccBlock = new CryptoCurrencyBlock({index: currentIndex, prevIndex: prevIndex, txs: cctxs});
-                            ccBlocks.push(ccBlock);
+                           }
                         }
-                        callback(null, ccBlocks);
-                    } else {
-                        self.log.error("getCCBlockByIndex_errorRedis: ", errorRedis);
-                        callback(errorRedis, null);
+                        var ccBlock = new CryptoCurrencyBlock({index: currentIndex, prevIndex: prevIndex, txs: cctxs});
+                        ccBlocks.push(ccBlock);
                     }
-                });
-            } else {
-                self.log.error("getBlockCount_error");
-                callback("getCCBlockByIndex_ error", null);
-            }
+                    callback(null, ccBlocks);
+                } else {
+                    self.log.error("getCCBlockByIndex_errorRedis: ", errorRedis);
+                    callback(errorRedis, null);
+                }
+            });
         } else {
             self.log.error("getBlockCount_error", error);
             callback("getCCBlockByIndex_ error", null);
