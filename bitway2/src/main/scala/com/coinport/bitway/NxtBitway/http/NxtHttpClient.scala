@@ -107,12 +107,13 @@ class NxtHttpClient(targetUrl: String) {
     getTransactions(txIds)
   }
 
-  def sendMoney(secret: String, recipient: String, amount: Long, fee: Long, deadline: Int = 900) = {
+  def sendMoney(secret: String, recipient: String, amount: Long, fee: Long, publicKey: String, deadline: Int = 900) = {
     val queryMap = Map(
       "secretPhrase" -> secret,
       "recipient" -> recipient,
       "amountNQT" -> amount.toString,
       "feeNQT" -> fee.toString,
+      "publicKey" -> publicKey,
       "deadline" -> deadline.toString
     )
 
