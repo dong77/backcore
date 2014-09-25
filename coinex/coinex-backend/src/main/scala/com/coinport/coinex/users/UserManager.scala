@@ -126,8 +126,9 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
         ac match {
           case CleanActionType.NxtAddressIncomplete =>
             cleanNxtDepositAddress()
-          case CleanActionType.CompleteNxtAddressIncomplete =>
-            completeNxtDepositAddress()
+          case CleanActionType.RemoveNxtAddressNoPubkey =>
+            cleanNxtDepositAddress(true)
+          case _ =>
         }
     }
   }
@@ -165,7 +166,7 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
   private def computePassword(id: Long, email: String, password: String) =
     MHash.sha256Base64(email + passwordSecret + MHash.sha256Base64(id + password.trim + passwordSecret))
 
-  private def cleanNxtDepositAddress() {
+  private def cleanNxtDepositAddress(isRemoveNoPubKey: Boolean = false) {
     profileMap.keys.foreach {
       userId =>
         val pf = profileMap(userId)
@@ -173,26 +174,42 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
           addresses =>
             if (addresses.contains(Nxt)) {
               val nxtAd = addresses.get(Nxt).getOrElse("")
-              if (nxtAd.length < 35 || nxtAd.startsWith("//NXT")) {
-                profileMap.update(userId, pf.copy(depositAddresses = Some(addresses - Nxt)))
+              if (isRemoveNoPubKey) {
+                if (nxtAd.length < 50 || nxtAd.split("//").size < 3) {
+                  profileMap.update(userId, pf.copy(depositAddresses = Some(addresses - Nxt)))
+                }
+              } else {
+                if (nxtAd.length < 35 || nxtAd.startsWith("//NXT")) {
+                  profileMap.update(userId, pf.copy(depositAddresses = Some(addresses - Nxt)))
+                }
               }
             }
         }
     }
   }
 
-  private def completeNxtDepositAddress() {
-    profileMap.keys.foreach {
-      userId =>
-        val pf = profileMap(userId)
-        pf.depositAddresses.foreach {
-          addresses =>
-            if (addresses.contains(Nxt)) {
-              val nxtAd = addresses.get(Nxt).getOrElse("")
-              if (nxtAd.length < 35 || nxtAd.startsWith("//NXT")) {
+  def getNxtDepositAddress(): List[String] = {
+    profileMap.values.filter {
+      i => i.depositAddresses.isDefined && i.depositAddresses.get.contains(Nxt) && i.depositAddresses.get.get(Nxt).get.nonEmpty
+    }.map {
+      _.depositAddresses.get.get(Nxt).get
+    }.toList
+  }
 
-              }
-            }
+  def updateNxtDepositAddresses(cryptoAdds: Seq[CryptoAddress]) {
+    val cryptoAddMap = cryptoAdds.map {
+      i => i.address -> i
+    }.toMap
+    profileMap.keys.filter {
+      i => profileMap(i).depositAddresses.isDefined && profileMap(i).depositAddresses.get.contains(Nxt)
+    }.foreach {
+      userId =>
+        val formerAdd = profileMap(userId).depositAddresses.get.get(Nxt).get.split("//").head
+        if (formerAdd.nonEmpty && cryptoAddMap.contains(formerAdd)) {
+          val ca = cryptoAddMap(formerAdd)
+          val newNxtAdd = s"${ca.address}//${ca.nxtRsAddress}//${ca.nxtPublicKey}"
+          val newDepositAddress = Map.empty[Currency, String] += (Nxt -> newNxtAdd)
+          profileMap.update(userId, profileMap(userId).copy(depositAddresses = Some(newDepositAddress ++ profileMap(userId).depositAddresses.get)))
         }
     }
   }

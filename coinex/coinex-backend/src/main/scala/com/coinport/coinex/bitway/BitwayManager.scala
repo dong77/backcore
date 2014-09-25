@@ -388,17 +388,15 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     privateKeysBackup ++= Map(keys.map(i => (i.address -> i.privateKey.getOrElse("no-priv-key"))): _*)
   }
 
-  def syncNxtAddressProperties(keys: List[CryptoAddress]) {
+  def syncNxtRsAddress(keys: List[CryptoAddress]) {
     keys.filter(_.nxtRsAddress.isDefined).foreach(i => address2NxtRsAddressMap.put(i.address, i.nxtRsAddress.get))
-    keys.filter(_.nxtPublicKey.isDefined).foreach(i => address2NxtPublicKeyMap.put(i.address, i.nxtPublicKey.get))
   }
 
-  def getPubKeys(isSyncNxtPublicKey: Option[Boolean]): scala.collection.Set[String] = {
-    if (isSyncNxtPublicKey != Some(true)) {
+  def getSyncKeys(isSyncNxtRsAddress: Option[Boolean]): scala.collection.Set[String] = {
+    if (isSyncNxtRsAddress != Some(true)) {
       privateKeysBackup.keySet
     } else {
-      val needSyncPubKey = scala.collection.Set.empty[String] ++ address2NxtRsAddressMap.keys.filter(i => address2NxtPublicKeyMap.contains(i))
-      (addresses.values.reduce(_ ++ _) -- needSyncPubKey).take(100)
+      addresses(User).filter(!address2NxtRsAddressMap.contains(_)).take(100)
     }
   }
 
@@ -457,6 +455,22 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     addressUidMap -= ""
     privateKeysBackup -= ""
     address2NxtRsAddressMap -= ""
+  }
+
+  def removeNxtAddressNoPubkey() {
+    if (supportedCurrency != Nxt) return
+    addresses.keys.filter(_ != CryptoCurrencyAddressType.Hot).foreach { // remove not dispatched Nxt addresses
+      addressType =>
+        val addressesNoPubKeyNoDispatched = addresses(addressType).filter(i => !addressUidMap.contains(i) && !address2NxtPublicKeyMap.contains(i)).toSet
+        if (addressesNoPubKeyNoDispatched.nonEmpty) {
+          addresses(addressType) --= addressesNoPubKeyNoDispatched
+          addressStatus --= addressesNoPubKeyNoDispatched
+          addressUidMap --= addressesNoPubKeyNoDispatched
+          privateKeysBackup --= addressesNoPubKeyNoDispatched
+          address2AccountNameMap --= addressesNoPubKeyNoDispatched
+          address2NxtRsAddressMap --= addressesNoPubKeyNoDispatched
+        }
+    }
   }
 
   def queryCryptoAddress(address: List[String]): List[CryptoAddress] = {

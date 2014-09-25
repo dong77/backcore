@@ -18,7 +18,7 @@ import ErrorCode._
 import Implicits._
 import java.security.SecureRandom
 
-class UserProcessor(mailer: ActorRef, secret: String)
+class UserProcessor(mailer: ActorRef, bitwayProcessors: collection.immutable.Map[Currency, ActorRef], secret: String)
     extends ExtendedProcessor with EventsourcedProcessor with ActorLogging {
   override val processorId = USER_PROCESSOR <<
 
@@ -181,6 +181,13 @@ class UserProcessor(mailer: ActorRef, secret: String)
     case m @ CleanUserData(actions) =>
       if (actions.nonEmpty) {
         persist(m)(updateState)
+        if (actions.contains(CleanActionType.CompleteNxtAddressIncomplete)) {
+          bitwayProcessors(Currency.Nxt) ! QueryCryptoAddress(manager.getNxtDepositAddress)
+        }
+      }
+    case m @ QueryCryptoAddressResult(cryptoAdds) =>
+      if (cryptoAdds.nonEmpty) {
+        persist(m)(updateState)
       }
 
   }
@@ -197,6 +204,7 @@ class UserProcessor(mailer: ActorRef, secret: String)
     case DoChangePassword(email, oldPassword, newPassword) => manager.changePassword(email, newPassword)
     case VerifyEmail(token) => manager.verifyEmail(token)
     case CleanUserData(actions) => manager.cleanData(actions)
+    case QueryCryptoAddressResult(cryptoAdds) => manager.updateNxtDepositAddresses(cryptoAdds)
   }
 
   private def sendVerificationCodeEmail(email: String, code: String) {

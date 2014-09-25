@@ -254,6 +254,7 @@ enum UserActionType {
 enum CleanActionType {
     NXT_ADDRESS_INCOMPLETE = 0
     COMPLETE_NXT_ADDRESS_INCOMPLETE = 1
+    REMOVE_NXT_ADDRESS_NO_PUBKEY = 2
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -611,6 +612,7 @@ struct CryptoCurrencyTransactionPort {
     5: optional string nxtRsAddress
     6: optional string accountName
     7: optional string memo
+    8: optional string nxtPublicKey
 }
 
 struct CryptoCurrencyTransferInfo {

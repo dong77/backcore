@@ -331,6 +331,8 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
               }
           }
           updateSigId2MinerFee(tx)
+        } else {
+          logger.warning(s"""${"~" * 50} ${currency.toString} innerHandleTx() ${tx.txType.get.toString} tx have no valid outputs : ${tx.toString}""")
         }
       case _ =>
         logger.warning(s"""${"~" * 50} ${currency.toString} innerHandleTx() ${tx.txType.get.toString} tx not define outputs : ${tx.toString}""")

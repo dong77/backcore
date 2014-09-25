@@ -106,11 +106,11 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
         event =>
           updateState(event)
       }
-    case SyncPrivateKeys(currency, None, isSyncNxtPublicKey) =>
+    case SyncPrivateKeys(currency, None, isSyncNxtRsAddress) =>
       if (client.isDefined) {
         client.get.rpush(getRequestChannel, serializer.toBinary(BitwayRequest(
           BitwayRequestType.SyncPrivateKeys, currency, syncPrivateKeys = Some(
-            SyncPrivateKeys(supportedCurrency, Some(manager.getPubKeys(isSyncNxtPublicKey)))))))
+            SyncPrivateKeys(supportedCurrency, Some(manager.getSyncKeys(isSyncNxtRsAddress)))))))
       }
 
     case m @ AdjustAddressAmount(currency, address, adjustAmount) =>
@@ -504,7 +504,7 @@ trait BitwayManagerBehavior {
     case BitwayMessage(currency, None, None, None, None, Some(res)) =>
       manager.syncPrivateKeys(res.addresses.toList)
       if (currency == Currency.Nxt) {
-        manager.syncNxtAddressProperties(res.addresses.toList)
+        manager.syncNxtRsAddress(res.addresses.toList)
       }
 
     case CleanBlockChain(currency) =>
@@ -518,6 +518,8 @@ trait BitwayManagerBehavior {
           ac match {
             case CleanActionType.NxtAddressIncomplete =>
               manager.cleanNxtDepositAddress()
+            case CleanActionType.RemoveNxtAddressNoPubkey =>
+              manager.removeNxtAddressNoPubkey()
           }
       }
 

@@ -338,13 +338,13 @@ class BitwayManagerSpec extends Specification {
         "h2" -> "ph2",
         "c1" -> "pc1")
 
-      bwm.getPubKeys() mustEqual Set("u1", "u2", "u3", "u4", "u5", "u6", "h1", "h2", "c1")
+      bwm.getSyncKeys() mustEqual Set("u1", "u2", "u3", "u4", "u5", "u6", "h1", "h2", "c1")
       bwm.syncPrivateKeys(List(
         CryptoAddress("u1", Some("np1")),
         CryptoAddress("u2", None),
         CryptoAddress("h2", Some("nph2")),
         CryptoAddress("u3", Some("p3"))))
-      bwm.getPubKeys() mustEqual Set("u1", "u2", "u3", "h2")
+      bwm.getSyncKeys() mustEqual Set("u1", "u2", "u3", "h2")
       bwm.privateKeysBackup mustEqual Map(
         "u1" -> "np1",
         "u2" -> "no-priv-key",

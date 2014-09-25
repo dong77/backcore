@@ -112,7 +112,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
     }
 
     deploySingleton(Props(new MarketUpdateProcessor() with StackableEventsourced[TSimpleState, SimpleManager]), market_update_processor <<)
-    deploySingleton(Props(new UserProcessor(routers.mailer, userManagerSecret) with StackableEventsourced[TUserState, UserManager]), user_processor <<)
+    deploySingleton(Props(new UserProcessor(routers.mailer, routers.bitwayProcessors, userManagerSecret) with StackableEventsourced[TUserState, UserManager]), user_processor <<)
     deploySingleton(Props(new ApiAuthProcessor(apiAuthSecret) with StackableCmdsourced[TApiSecretState, ApiAuthManager]), api_auth_processor <<)
     // recomment this if needed
     // deploySingleton(Props(new RobotProcessor(routers) with StackableCmdsourced[TRobotState, RobotManager]), robot_processor <<)

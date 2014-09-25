@@ -96,7 +96,7 @@ object CryptoCurrencyTransferWithdrawalHandler extends CryptoCurrencyTransferWit
   }
 
   override def item2CryptoCurrencyTransferInfo(item: CryptoCurrencyTransferItem): Option[CryptoCurrencyTransferInfo] = {
-    Some(CryptoCurrencyTransferInfo(item.id, Some(item.to.get.address), item.to.get.internalAmount, item.to.get.amount, None, memo = item.to.get.memo))
+    Some(CryptoCurrencyTransferInfo(item.id, Some(item.to.get.address), item.to.get.internalAmount, item.to.get.amount, None, memo = item.to.get.memo, nxtPublicKey = item.to.get.nxtPublicKey))
   }
 
 }
