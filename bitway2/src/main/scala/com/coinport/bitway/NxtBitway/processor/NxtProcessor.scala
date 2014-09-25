@@ -171,7 +171,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
           println("secret"+hotAccount.secret)
           println("to"+info.to)
           println("amount"+info.amount)
-          val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, (info.amount.get * NXT2NQT).toLong, transfer_fee, info.publicKey)
+          val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, (info.amount.get * NXT2NQT).toLong, transfer_fee, info.nxtPublicKey)
           val y: Option[CryptoCurrencyTransaction] = if(!txid.fullHash.isEmpty){
             redis.set(getTransactionKey(txid.fullHash), info.id)
             None
@@ -226,7 +226,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
     } else hotAddr.get
   }
 
-  private def nxtAddress2Thrift(nxt: NxtAddress) = CryptoAddress(nxt.accountId, Some(nxt.secret), Some(nxt.accountRS), publicKey = Some(nxt.publicKey))
+  private def nxtAddress2Thrift(nxt: NxtAddress) = CryptoAddress(nxt.accountId, Some(nxt.secret), Some(nxt.accountRS), nxtPublicKey = Some(nxt.publicKey))
   
   private def nxtTransaction2Thrift(tx: NxtTransaction): CryptoCurrencyTransaction = {
     CryptoCurrencyTransaction(
