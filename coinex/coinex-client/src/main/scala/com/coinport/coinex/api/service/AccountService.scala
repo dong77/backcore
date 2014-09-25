@@ -32,10 +32,11 @@ object AccountService extends AkkaService {
     }
   }
 
-  def withdrawal(uid: Long, currency: Currency, amount: Double, address: String, memo: String): Future[ApiResult] = {
+  def withdrawal(uid: Long, currency: Currency, amount: Double, address: String, memo: String, publicKey: String): Future[ApiResult] = {
     val internalAmount: Long = amount.internalValue(currency)
 
-    val withdrawal = AccountTransfer(0L, uid.toLong, TransferType.Withdrawal, currency, internalAmount, TransferStatus.Pending, address = Some(address), memo = Some(memo))
+    val withdrawal = AccountTransfer(0L, uid.toLong, TransferType.Withdrawal, currency, internalAmount,
+      TransferStatus.Pending, address = Some(address), memo = Some(memo), nxtPublicKey = Some(publicKey))
     backend ? DoRequestTransfer(withdrawal) map {
       case result: RequestTransferSucceeded =>
         ApiResult(true, 0, "提现申请已提交", Some(result))
