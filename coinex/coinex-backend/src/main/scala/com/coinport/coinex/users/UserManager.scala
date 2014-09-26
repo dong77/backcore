@@ -15,7 +15,7 @@
 
 package com.coinport.coinex.users
 
-import scala.collection.mutable.Map
+import scala.collection.mutable.{Map, ListBuffer}
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Currency.Nxt
 import com.coinport.coinex.common.Manager
@@ -120,8 +120,8 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
     profile
   }
 
-  def cleanData(actions: scala.collection.Set[CleanActionType]) {
-    actions.foreach {
+  def cleanData(actions: scala.collection.Set[CleanActionType]): List[UserProfile] = {
+    actions.toList.map {
       ac =>
         ac match {
           case CleanActionType.NxtAddressIncomplete =>
@@ -129,8 +129,9 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
           case CleanActionType.RemoveNxtAddressNoPubkey =>
             cleanNxtDepositAddress(true)
           case _ =>
+            List.empty[UserProfile]
         }
-    }
+    }.reduce(_ ++ _)
   }
 
   def checkLogin(email: String, password: String): Either[ErrorCode, UserProfile] =
@@ -166,7 +167,8 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
   private def computePassword(id: Long, email: String, password: String) =
     MHash.sha256Base64(email + passwordSecret + MHash.sha256Base64(id + password.trim + passwordSecret))
 
-  private def cleanNxtDepositAddress(isRemoveNoPubKey: Boolean = false) {
+  private def cleanNxtDepositAddress(isRemoveNoPubKey: Boolean = false): List[UserProfile] = {
+    val resultProfiles = ListBuffer.empty[UserProfile]
     profileMap.keys.foreach {
       userId =>
         val pf = profileMap(userId)
@@ -176,16 +178,21 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
               val nxtAd = addresses.get(Nxt).getOrElse("")
               if (isRemoveNoPubKey) {
                 if (nxtAd.length < 50 || nxtAd.split("//").size < 3) {
-                  profileMap.update(userId, pf.copy(depositAddresses = Some(addresses - Nxt)))
+                  val newProfile = pf.copy(depositAddresses = Some(addresses - Nxt))
+                  profileMap.update(userId, newProfile)
+                  resultProfiles += newProfile
                 }
               } else {
                 if (nxtAd.length < 35 || nxtAd.startsWith("//NXT")) {
-                  profileMap.update(userId, pf.copy(depositAddresses = Some(addresses - Nxt)))
+                  val newProfile = pf.copy(depositAddresses = Some(addresses - Nxt))
+                  profileMap.update(userId, newProfile)
+                  resultProfiles += newProfile
                 }
               }
             }
         }
     }
+    resultProfiles.toList
   }
 
   def getNxtDepositAddress(): List[String] = {
