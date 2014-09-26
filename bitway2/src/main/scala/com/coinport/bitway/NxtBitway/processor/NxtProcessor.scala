@@ -171,7 +171,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
           println("secret"+hotAccount.secret)
           println("to"+info.to)
           println("amount"+info.amount)
-          val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, (info.amount.get * NXT2NQT).toLong, transfer_fee, info.nxtPublicKey.get)
+          val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, (info.amount.get * NXT2NQT).toLong, transfer_fee, info.nxtPublicKey.getOrElse(""))
           val y: Option[CryptoCurrencyTransaction] = if(!txid.fullHash.isEmpty){
             redis.set(getTransactionKey(txid.fullHash), info.id)
             None
@@ -185,7 +185,7 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
           println("to"+info.to)
           println("amount"+info.amount)
           val userSecret = nxtMongo.queryOneUser(info.from.get).get.secret
-          val txid = nxtHttp.sendMoney(userSecret, hotAccount.accountId, (info.amount.get * NXT2NQT).toLong - transfer_fee, transfer_fee, info.nxtPublicKey.get)
+          val txid = nxtHttp.sendMoney(userSecret, hotAccount.accountId, (info.amount.get * NXT2NQT).toLong - transfer_fee, transfer_fee, info.nxtPublicKey.getOrElse(""))
           val y: Option[CryptoCurrencyTransaction] = if(!txid.fullHash.isEmpty) {
             redis.set(getTransactionKey(txid.fullHash), info.id)
             None

@@ -41,6 +41,7 @@ class NxtMongoDAO(collection: MongoCollection) {
       ACCOUNT_ID -> nxt.accountId,
       ACCOUNT_RS -> nxt.accountRS,
       SECRET -> nxt.secret,
+      PUBLIC_KEY -> nxt.publicKey,
       CREATED -> nxt.created,
       UPDATED -> nxt.updated,
       TYPE -> nxt.addressType.getValue()
