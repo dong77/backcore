@@ -131,7 +131,7 @@ object UserService extends AkkaService {
       backend ? AllocateNewAddress(c, userId) map {
         case rv: AllocateNewAddressResult =>
           val addr =
-            if (rv.currency == Currency.Nxt) rv.address.getOrElse("") + "//" + rv.nxtRsAddress.getOrElse("")
+            if (rv.currency == Currency.Nxt) rv.address.getOrElse("") + "//" + rv.nxtRsAddress.getOrElse("") + "//" + rv.nxtPublicKey.getOrElse("")
             else rv.address.getOrElse("")
           (rv.currency, addr)
       }
