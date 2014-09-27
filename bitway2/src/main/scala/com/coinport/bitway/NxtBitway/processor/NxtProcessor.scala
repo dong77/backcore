@@ -168,7 +168,6 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
       case TransferType.HotToCold | TransferType.Withdrawal =>
         infos.map{ info =>
           println("transfer type"+transfer.`type`)
-          println("secret"+hotAccount.secret)
           println("to"+info.to)
           println("amount"+info.amount)
           val txid = nxtHttp.sendMoney(hotAccount.secret, info.to.get, (info.amount.get * NXT2NQT).toLong, transfer_fee, info.nxtPublicKey.getOrElse(""))
@@ -181,7 +180,6 @@ class NxtProcessor(nxtMongo: NxtMongoDAO, nxtHttp: NxtHttpClient, redis: RedisCl
       case TransferType.UserToHot =>
         infos.map{ info =>
           println("transfer type"+transfer.`type`)
-          println("secret"+hotAccount.secret)
           println("to"+info.to)
           println("amount"+info.amount)
           val userSecret = nxtMongo.queryOneUser(info.from.get).get.secret

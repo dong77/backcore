@@ -113,7 +113,7 @@ class NxtHttpClient(targetUrl: String) {
       "recipient" -> recipient,
       "amountNQT" -> amount.toString,
       "feeNQT" -> fee.toString,
-      "publicKey" -> publicKey,
+      "recipientPublicKey" -> publicKey,
       "deadline" -> deadline.toString
     )
 
