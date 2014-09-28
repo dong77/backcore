@@ -382,97 +382,172 @@ CryptoProxy.prototype.jsonToAmount_ = function(value) {
     return Math.round(1e8 * value)/1e8;
 };
 
+CryptoProxy.prototype.constructWithdrawal_ = function(transferReq, callback) {
+    var self = this;
+    Async.parallel ([
+        function(cb) {self.getHotUnspent_.bind(self)(cb)},
+        function(cb) {self.getAHotAddressByRandom_.bind(self)(cb)}
+        ], function(err, result){
+        if (!err) {
+            var unspentTxs = result[0];
+            var changeAddress = result[1];
+            var amountUnspent = 0;
+            var transactions = [];
+            var addresses = {};
+            var amountTotalPay = self.calTotalPay_(transferReq);
+            for (var i = 0; i < unspentTxs.length; i++) {
+                amountUnspent += unspentTxs[i].amount;
+                var transaction = {txid: unspentTxs[i].txid, vout: unspentTxs[i].vout};
+                transactions.push(transaction);
+                var minerFee = self.minerFee * Math.ceil((i + 1)/4.0);
+                if (amountUnspent > (amountTotalPay + minerFee)) {
+                    addresses[changeAddress] = self.jsonToAmount_(amountUnspent - amountTotalPay - minerFee);
+                    break;
+                } else if((amountUnspent < (amountTotalPay + minerFee) && amountUnspent > amountTotalPay)
+                        || amountUnspent == (amountTotalPay + minerFee)) {
+                    break;
+                }
+            }
+            if (amountUnspent < amountTotalPay) {
+                self.log.error("Lack of balance!");
+                var err = {code: "Lack of balance!", message: "Lack of balance!"};
+                callback(err);
+            } else {
+                for(var j =0; j < transferReq.transferInfos.length; j++)
+                {
+                    addresses[transferReq.transferInfos[j].to] = transferReq.transferInfos[j].amount;
+                }
+                var rawData = {transactions: transactions, addresses: addresses};
+                callback(null, rawData);
+            }
+        } else {
+            callback(err);
+        }
+    });
+};
+
+CryptoProxy.prototype.constructUser2Hot_ = function(transferReq, callback) {
+    var self = this;
+    var newTransferInfos = self.getMergedTransferInfos_(transferReq);
+    var fromAddresses = [];
+    var amountTotalPay = 0;
+    for (var i = 0; i < newTransferInfos.length; i++) {
+        fromAddresses.push(newTransferInfos[i].from);
+        amountTotalPay += transferReq.transferInfos[i].amount;
+    }
+    Async.parallel ([
+        function (cb) {self.getUnspentByUserAddresses_.bind(self)(fromAddresses, cb)},
+        function (cb) {self.getAHotAddressByRandom_.bind(self)(cb)}
+        ], function(err, result){
+            if (err) {
+                self.log.error(err);
+                callback(err);
+            } else {
+                var unspentTxs = result[0];
+                var toAddress = result[1];
+                var amountTotalUnspent = 0;
+                var transactions = [];
+                var addresses = {};
+                for (var m = 0; m < unspentTxs.length; m++) {
+                    var amountTotalUnspentOfAddr = 0;
+                    var unspentTxsPerAddr = unspentTxs[m];
+                    for (var n =0; n < unspentTxsPerAddr.length; n++) {
+                        amountTotalUnspentOfAddr += unspentTxsPerAddr[n].amount;
+                        var transaction = {txid: unspentTxsPerAddr[n].txid, vout: unspentTxsPerAddr[n].vout};
+                        transactions.push(transaction);
+                    }
+                    if (amountTotalUnspentOfAddr > newTransferInfos[m].amount) {
+                        addresses[newTransferInfos[m].from] = self.jsonToAmount_(amountTotalUnspentOfAddr - newTransferInfos[m].amount);
+                    }
+                    amountTotalUnspent += amountTotalUnspentOfAddr;
+                }
+                if (amountTotalUnspent == amountTotalPay || amountTotalUnspent > amountTotalPay) {
+                    addresses[toAddress] = self.jsonToAmount_((amountTotalPay)- self.minerFee);
+                    var rawData = {transactions: transactions, addresses: addresses};
+                    callback(null, rawData);
+                } else {
+                    self.log.error("Lack of balance!");
+                    var err = {code: "Lack of balance!", message: "Lack of balance!"};
+                    callback(err);
+                }
+            }
+        });
+};
+
+CryptoProxy.prototype.constructUsers2Inner_ = function(transferReq, callback) {
+    var self = this;
+    Async.parallel ([
+        function (cb) {self.getUnspentByUserAddresses_.bind(self)(fromAddresses, cb)},
+        function (cb) {self.getAHotAddressByRandom_.bind(self)(cb)}
+        ], function(err, result){
+            if (err) {
+                self.log.error(err);
+                callback(err);
+            } else {
+                var unspentTxs = result[0];
+                var toAddress = result[1];
+                var amountTotalUnspent = 0;
+                var transactions = [];
+                var addresses = {};
+                var minerFee = 0;
+                for (var m = 0; m < unspentTxs.length; m++) {
+                    var amountTotalUnspentOfAddr = 0;
+                    var unspentTxsPerAddr = unspentTxs[m];
+                    for (var n =0; n < unspentTxsPerAddr.length; n++) {
+                        minerFee = self.minerFee * Math.ceil((m * unspentTxsPerAddr.length + n + 1)/4.0);
+                        amountTotalUnspentOfAddr += unspentTxsPerAddr[n].amount;
+                        var transaction = {txid: unspentTxsPerAddr[n].txid, vout: unspentTxsPerAddr[n].vout};
+                        transactions.push(transaction);
+                    }
+                    amountTotalUnspent += amountTotalUnspentOfAddr;
+                }
+                if (transferReq.transferInfos[0].coldPercent == 0) {
+                    addresses[toAddress] = self.jsonToAmount_((amountTotalUnspent) - minerFee);
+                    var rawData = {transactions: transactions, addresses: addresses};
+                    callback(null, rawData);
+                } else if (transferReq.transferInfos[0].coldPercent == 0) {
+                    addresses[transferReq.transferInfos[0].to] = self.jsonToAmount_((amountTotalUnspent) - minerFee);
+                } else {
+                    var amount2Cold = self.jsonToAmount_(amountTotalPay * (transferReq.transferInfos[0].coldPercent/100.0));
+                    addresses[toAddress] = self.jsonToAmount_((amountTotalPay) - amount2Cold - minerFee);
+                    addresses[transferReq.transferInfos[0].to] = self.jsonToAmount_(amount2Cold);
+                    var rawData = {transactions: transactions, addresses: addresses};
+                    callback(null, rawData);
+                }
+            }
+        });
+};
+
 CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback) {
     var self = this;
     switch(transferReq.type){
         case TransferType.WITHDRAWAL:
         case TransferType.HOT_TO_COLD:
-            Async.parallel ([
-                function(cb) {self.getHotUnspent_.bind(self)(cb)},
-                function(cb) {self.getAHotAddressByRandom_.bind(self)(cb)}
-                ], function(err, result){
-                if (!err) {
-                    var unspentTxs = result[0];
-                    var changeAddress = result[1];
-                    var amountUnspent = 0;
-                    var transactions = [];
-                    var addresses = {};
-                    var amountTotalPay = self.calTotalPay_(transferReq);
-                    for (var i = 0; i < unspentTxs.length; i++) {
-                        amountUnspent += unspentTxs[i].amount;
-                        var transaction = {txid: unspentTxs[i].txid, vout: unspentTxs[i].vout};
-                        transactions.push(transaction);
-                        var minerFee = self.minerFee * Math.ceil((i + 1)/4.0);
-                        if (amountUnspent > (amountTotalPay + minerFee)) {
-                            addresses[changeAddress] = self.jsonToAmount_(amountUnspent - amountTotalPay - minerFee);
-                            break;
-                        } else if((amountUnspent < (amountTotalPay + minerFee) && amountUnspent > amountTotalPay)
-                                || amountUnspent == (amountTotalPay + minerFee)) {
-                            break;
-                        }
-                    }
-                    if (amountUnspent < amountTotalPay) {
-                        self.log.error("Lack of balance!");
-                        var err = {code: "Lack of balance!", message: "Lack of balance!"};
-                        callback(err);
-                    } else {
-                        for(var j =0; j < transferReq.transferInfos.length; j++)
-                        {
-                            addresses[transferReq.transferInfos[j].to] = transferReq.transferInfos[j].amount;
-                        }
-                        var rawData = {transactions: transactions, addresses: addresses};
-                        callback(null, rawData);
-                    }
+            self.constructWithdrawal_(transferReq, function(error, result) {
+                if (!error) {
+                    callback(null, result);
                 } else {
-                    callback(err);
+                    callback(error, null);
                 }
             });
             break;
         case TransferType.USER_TO_HOT:
-            var newTransferInfos = self.getMergedTransferInfos_(transferReq);
-            var fromAddresses = [];
-            var amountTotalPay = 0;
-            for (var i = 0; i < newTransferInfos.length; i++) {
-                fromAddresses.push(newTransferInfos[i].from);
-                amountTotalPay += transferReq.transferInfos[i].amount;
-            }
-            Async.parallel ([
-                function (cb) {self.getUnspentByUserAddresses_.bind(self)(fromAddresses, cb)},
-                function (cb) {self.getAHotAddressByRandom_.bind(self)(cb)}
-                ], function(err, result){
-                    if (err) {
-                        self.log.error(err);
-                        callback(err);
-                    } else {
-                        var unspentTxs = result[0];
-                        var toAddress = result[1];
-                        var amountTotalUnspent = 0;
-                        var transactions = [];
-                        var addresses = {};
-                        for (var m = 0; m < unspentTxs.length; m++) {
-                            var amountTotalUnspentOfAddr = 0;
-                            var unspentTxsPerAddr = unspentTxs[m];
-                            for (var n =0; n < unspentTxsPerAddr.length; n++) {
-                                amountTotalUnspentOfAddr += unspentTxsPerAddr[n].amount;
-                                var transaction = {txid: unspentTxsPerAddr[n].txid, vout: unspentTxsPerAddr[n].vout};
-                                transactions.push(transaction);
-                            }
-                            if (amountTotalUnspentOfAddr > newTransferInfos[m].amount) {
-                                addresses[newTransferInfos[m].from] = self.jsonToAmount_(amountTotalUnspentOfAddr - newTransferInfos[m].amount);
-                            }
-                            amountTotalUnspent += amountTotalUnspentOfAddr;
-                        }
-                        if (amountTotalUnspent == amountTotalPay || amountTotalUnspent > amountTotalPay) {
-                            addresses[toAddress] = self.jsonToAmount_((amountTotalPay)- self.minerFee);
-                            var rawData = {transactions: transactions, addresses: addresses};
-                            callback(null, rawData);
-                        } else {
-                            self.log.error("Lack of balance!");
-                            var err = {code: "Lack of balance!", message: "Lack of balance!"};
-                            callback(err);
-                        }
-                    }
-                });
+            self.constructUser2Hot_(transferReq, function(error, result) {
+                if (!error) {
+                    callback(null, result);
+                } else {
+                    callback(error, null);
+                }
+            });
+            break;
+        case USERS_TO_INNER:
+            self.constructUsers2Inner_(transferReq, function(error, result) {
+                if (!error) {
+                    callback(null, result);
+                } else {
+                    callback(error, null);
+                }
+            });
             break;
         default:
             this.log.error("Invalid type: " + type);

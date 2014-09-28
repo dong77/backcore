@@ -38,7 +38,6 @@ describe('crypto proxy', function() {
                         {"address":"addr","privateKey":"priv","nxtRsAddress":null,"accountName":null,"signMessage":null,"message":null},
                         {"address":"addr","privateKey":"priv","nxtRsAddress":null,"accountName":null,"signMessage":null,"message":null}],
                         addressType: CryptoCurrencyAddressType.UNUSED})})
-                console.log("%j",response);
                 Assert.deepEqual(response, expectRes);
                 done();
             });
