@@ -48,7 +48,7 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
     if (opt_config) {
         opt_config.redis != undefined && (this.redis = opt_config.redis);
         opt_config.checkInterval != undefined && (this.checkInterval = opt_config.checkInterval);
-        opt_config.minerfee != undefined && (self.minerFee = opt_config.minerFee);
+        opt_config.minerFee != undefined && (self.minerFee = opt_config.minerFee);
         opt_config.walletName != undefined && (this.walletName = opt_config.walletName);
         opt_config.walletPassPhrase != undefined && (this.walletPassPhrase = opt_config.walletPassPhrase);
     }

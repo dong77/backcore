@@ -47,7 +47,7 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
         opt_config.redis != undefined && (this.redis = opt_config.redis);
         opt_config.minConfirm != undefined && (this.minConfirm = opt_config.minConfirm);
         opt_config.checkInterval != undefined && (this.checkInterval = opt_config.checkInterval);
-        opt_config.minerfee != undefined && (self.minerFee = opt_config.minerFee);
+        opt_config.minerFee != undefined && (this.minerFee = opt_config.minerFee);
         opt_config.walletPassPhrase != undefined && (this.walletPassPhrase = opt_config.walletPassPhrase);
     }
 
@@ -476,6 +476,10 @@ CryptoProxy.prototype.constructUser2Hot_ = function(transferReq, callback) {
 
 CryptoProxy.prototype.constructUsers2Inner_ = function(transferReq, callback) {
     var self = this;
+    var fromAddresses = [];
+    for (var i = 0; i < transferReq.transferInfos.length; i++) {
+        fromAddresses.push(transferReq.transferInfos[i].from);
+    }
     Async.parallel ([
         function (cb) {self.getUnspentByUserAddresses_.bind(self)(fromAddresses, cb)},
         function (cb) {self.getAHotAddressByRandom_.bind(self)(cb)}
@@ -508,8 +512,8 @@ CryptoProxy.prototype.constructUsers2Inner_ = function(transferReq, callback) {
                 } else if (transferReq.transferInfos[0].coldPercent == 0) {
                     addresses[transferReq.transferInfos[0].to] = self.jsonToAmount_((amountTotalUnspent) - minerFee);
                 } else {
-                    var amount2Cold = self.jsonToAmount_(amountTotalPay * (transferReq.transferInfos[0].coldPercent/100.0));
-                    addresses[toAddress] = self.jsonToAmount_((amountTotalPay) - amount2Cold - minerFee);
+                    var amount2Cold = self.jsonToAmount_(amountTotalUnspent * (transferReq.transferInfos[0].coldPercent/100.0));
+                    addresses[toAddress] = self.jsonToAmount_(amountTotalUnspent - amount2Cold - minerFee);
                     addresses[transferReq.transferInfos[0].to] = self.jsonToAmount_(amount2Cold);
                     var rawData = {transactions: transactions, addresses: addresses};
                     callback(null, rawData);
@@ -540,7 +544,7 @@ CryptoProxy.prototype.constructRawTransaction_ = function(transferReq, callback)
                 }
             });
             break;
-        case USERS_TO_INNER:
+        case TransferType.USERS_TO_INNER:
             self.constructUsers2Inner_(transferReq, function(error, result) {
                 if (!error) {
                     callback(null, result);
