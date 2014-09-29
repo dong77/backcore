@@ -15,7 +15,7 @@
 
 package com.coinport.coinex.users
 
-import scala.collection.mutable.{Map, ListBuffer}
+import scala.collection.mutable.{ Map, ListBuffer }
 import com.coinport.coinex.data._
 import com.coinport.coinex.data.Currency.Nxt
 import com.coinport.coinex.common.Manager

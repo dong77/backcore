@@ -547,6 +547,7 @@ trait BitwayManagerBehavior {
               manager.cleanNxtDepositAddress()
             case CleanActionType.RemoveNxtAddressNoPubkey =>
               manager.removeNxtAddressNoPubkey()
+            case _ =>
           }
       }
 
