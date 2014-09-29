@@ -208,10 +208,12 @@ class UserProcessor(mailer: ActorRef, bitwayProcessors: collection.immutable.Map
   }
 
   private def sendVerificationCodeEmail(email: String, code: String) {
+    println(s"(email verification code : $email, $code)")
     mailer ! DoSendEmail(email, EmailType.VerificationCode, Map("CODE" -> code))
   }
 
   private def sendEmailVerificationEmail(profile: UserProfile) {
+    println(s"(register verification code : ${profile.email}, ${profile.verificationToken.get})")
     mailer ! DoSendEmail(profile.email, EmailType.RegisterVerify, Map(
       "NAME" -> profile.realName.getOrElse(profile.email),
       "LANG" -> "CHINESE",
