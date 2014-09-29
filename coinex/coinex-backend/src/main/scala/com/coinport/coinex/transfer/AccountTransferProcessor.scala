@@ -306,7 +306,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
   }
 
   private def handleCryptoMessage(msg: MultiCryptoCurrencyTransactionMessage) {
-    val message = msg.copy(confirmNum = accountTransferConfig.confirmNumMap.get(msg.currency), timestamp = Some(System.currentTimeMillis()), enableUsersToInner = Some(accountTransferConfig.enableUsersToInner))
+    val message = msg.copy(confirmNum = accountTransferConfig.confirmNumMap.get(msg.currency), timestamp = Some(System.currentTimeMillis()), enableUsersToInner = accountTransferConfig.enableUsersToInner.get(msg.currency))
     updateState(message)
     if (needPersistCryptoMsg) {
       persist(message) {

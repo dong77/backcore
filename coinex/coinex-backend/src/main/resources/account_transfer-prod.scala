@@ -18,4 +18,5 @@ new AccountTransferConfig {
       Btsx -> 50000E8.toLong,
       Nxt -> 3000E8.toLong,
       Xrp -> 100000E8.toLong)
+  override val enableUsersToInner:collection.Map[Currency, Boolean] = collection.Map(Btc -> true, Ltc -> true, Doge -> true, Bc -> true, Drk -> true, Vrc -> true, Zet -> true, Btsx -> false, Nxt -> false, Xrp -> false)
 }

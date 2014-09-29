@@ -127,7 +127,8 @@ BitwayConfigs(Map(
     maintainedChainLength = 120,
     enableHotColdTransfer = false,
     confirmNum = 5,
-    usersToInnerNumThreshold = 100E8.toLong
+    usersToInnerNumThreshold = 100E8.toLong,
+    enableUsersToInnerTransfer = false
   ),
   Xrp -> BitwayConfig(
     ip = "bitway",

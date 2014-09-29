@@ -37,15 +37,19 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 20,
     coldAddresses = List(
- //     CryptoAddress("D8mHXhuo9XFH5VKVWVWa25eCHbAPu3iGyp",
-      CryptoAddress("nUmdT61hFz2MWeHdLbGDjDmdVKVRUiuhnu",
+      CryptoAddress("D8mHXhuo9XFH5VKVWVWa25eCHbAPu3iGyp",
+//      CryptoAddress("nUmdT61hFz2MWeHdLbGDjDmdVKVRUiuhnu",
         message = Some("coinport"),
         signMessage = Some("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"))
     ),
-    enableHotColdTransfer = false,
+    hotColdTransfer = Some(HotColdTransferStrategy(0.6, 0.1)),
+    confirmNum = 4,
+    hotColdTransferNumThreshold = 50E8.toLong,
     hot2ColdTransferInterval = 60 seconds,
     hot2ColdTransferIntervalLarge = 150 seconds,
-    cold2HotTransferInterval = 300 seconds
+    cold2HotTransferInterval = 300 seconds,
+    usersToInnerNumThreshold = 300E8.toLong,
+    users2InnerTransferInterval = 30 seconds
   ),
   Bc -> BitwayConfig(
     ip = "bitway",
@@ -88,7 +92,8 @@ BitwayConfigs(Map(
     port = 6379,
     maintainedChainLength = 120,
     confirmNum = 1,
-    enableHotColdTransfer = false
+    enableHotColdTransfer = false,
+    enableUsersToInnerTransfer = false
   ),
   Xrp -> BitwayConfig(
     ip = "bitway",

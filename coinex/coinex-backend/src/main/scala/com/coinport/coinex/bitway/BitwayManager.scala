@@ -187,7 +187,11 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     val inputsMatched = getIntersectSet(inputs)
     val outputsMatched = getIntersectSet(outputs)
     if (inputsMatched.contains(USER) && (outputsMatched.contains(COLD) || outputsMatched.contains(HOT))) {
-      Some(TransferType.UsersToInner)
+      if (config.enableUsersToInnerTransfer) {
+        Some(TransferType.UsersToInner)
+      } else {
+        Some(TransferType.UserToHot)
+      }
     } else if (inputsMatched.contains(HOT)) {
       //TODO: add interest transfer type, with input and output all are hot address
       if (outputsMatched.contains(COLD))
@@ -448,7 +452,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     if (userAmount < config.usersToInnerNumThreshold) {
       return None
     }
-    val userAddresses = addresses(CryptoCurrencyAddressType.User).toList
+    val userAddresses = getReservedAddresses(CryptoCurrencyAddressType.User, Some(config.confirmNum))
     if (!config.enableHotColdTransfer || config.coldAddresses.isEmpty) {
       return Some((Some(userAddresses), None, None))
     }
@@ -580,5 +584,9 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
   private def syncSignData(addrs: Seq[CryptoAddress]) {
     val unsetSignData = addrs.filter(i => i.message.isDefined && i.signMessage.isDefined && !address2SignDataMap.contains(i.address))
     address2SignDataMap ++= Map(unsetSignData.map(i => (i.address -> List(i.message.get, i.signMessage.get))).toSeq: _*)
+  }
+
+  private def getReservedAddresses(addressType: CryptoCurrencyAddressType, confirmNum: Option[Int] = None): List[String] = {
+    getAddressStatus(addressType, confirmNum).filter { kv => kv._2.confirmedAmount > 0 }.map { i => i._1 }.toList
   }
 }

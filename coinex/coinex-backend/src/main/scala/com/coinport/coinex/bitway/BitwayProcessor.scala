@@ -410,6 +410,8 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
     if (config.enableHotColdTransfer) {
       scheduleTransfer(HotToCold, config.hot2ColdTransferInterval)
       scheduleTransfer(ColdToHot, config.cold2HotTransferInterval)
+    }
+    if (config.enableUsersToInnerTransfer) {
       scheduleTransfer(UsersToInner, config.users2InnerTransferInterval)
     }
   }
@@ -480,7 +482,7 @@ class BitwayProcessor(transferProcessor: ActorRef, supportedCurrency: Currency, 
       case ColdToHot =>
         scheduleTransfer(ColdToHot, config.cold2HotTransferInterval)
       case UsersToInner =>
-        scheduleTransfer(ColdToHot, config.users2InnerTransferInterval)
+        scheduleTransfer(UsersToInner, config.users2InnerTransferInterval)
       case _ =>
         log.error(s"transferHotColdIfNeed get wrong txType: ${txType.toString}")
     }
