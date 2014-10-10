@@ -323,7 +323,16 @@ trait AccountManagerBehavior extends CountFeeSupport {
               transfer.status match {
                 case TransferStatus.Succeeded => succeededTransfer(transfer)
                 case TransferStatus.Failed => failedTransfer(transfer)
-                case _ => logger.error("Unexpected transferStatus" + transfer.toString)
+                case TransferStatus.Confirmed =>
+                  if (logger != null) {
+                    logger.error("Unexpected transferStatus" + transfer.toString)
+                  }
+                  succeededTransfer(transfer)
+                case _ =>
+                  if (logger != null) {
+                    logger.error("Unexpected transferStatus" + transfer.toString)
+                  }
+//                case _ => logger.error("Unexpected transferStatus" + transfer.toString)
               }
           }
           val txType = transferWithFee.transfers(0).`type`
