@@ -511,6 +511,8 @@ CryptoProxy.prototype.constructUsers2Inner_ = function(transferReq, callback) {
                     callback(null, rawData);
                 } else if (transferReq.transferInfos[0].coldPercent == 100) {
                     addresses[transferReq.transferInfos[0].to] = self.jsonToAmount_((amountTotalUnspent) - minerFee);
+                    var rawData = {transactions: transactions, addresses: addresses};
+                    callback(null, rawData);
                 } else {
                     var amount2Cold = self.jsonToAmount_(amountTotalUnspent * (transferReq.transferInfos[0].coldPercent/100.0));
                     addresses[toAddress] = self.jsonToAmount_(amountTotalUnspent - amount2Cold - minerFee);
