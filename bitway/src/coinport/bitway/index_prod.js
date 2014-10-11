@@ -18,6 +18,7 @@ var btc = {
             port: '8332',
         },
         minConfirm: 1,
+        minerFee: 0.0001,
         checkInterval : 5000,
         walletPassPhrase: ""
     },
@@ -39,6 +40,7 @@ var ltc = {
             port: '9332',
         },
         minConfirm: 4,
+        minerFee: 0.0001,
         checkInterval : 5000,
         walletPassPhrase: ""
     },
@@ -60,6 +62,7 @@ var dog = {
             port: '22555',
         },
         minConfirm: 4,
+        minerFee: 1,
         checkInterval : 5000,
         walletPassPhrase: ""
     },
@@ -81,6 +84,7 @@ var drk = {
             port: '7332',
         },
         minConfirm: 4,
+        minerFee: 0.0001,
         checkInterval : 5000,
         walletPassPhrase: ""
     },
@@ -102,6 +106,7 @@ var bc = {
             port: '15715',
         },
         minConfirm: 10,
+        minerFee: 0.0001,
         checkInterval : 5000,
         walletPassPhrase: ""
     },
@@ -123,6 +128,7 @@ var vrc = {
             port: '58683',
         },
         minConfirm: 4,
+        minerFee: 0.0001,
         checkInterval : 5000,
         walletPassPhrase: ""
     },
@@ -144,6 +150,7 @@ var zet = {
             port: '6332',
         },
         minConfirm: 10,
+        minerFee: 0.0001,
         checkInterval : 5000,
         walletPassPhrase: ""
     },

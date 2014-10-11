@@ -62,7 +62,7 @@ var dog = {
             port: '44555',
         },
         minConfirm: 1,
-        minerFee: 0.001,
+        minerFee: 1,
         checkInterval : 5000,
         walletPassPhrase: ""
     },

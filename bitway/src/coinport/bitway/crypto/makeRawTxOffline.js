@@ -39,7 +39,7 @@ var dog = {
         host: '127.0.0.1',
         port: '22555',
     },
-    minerFee: 0.0001,
+    minerFee: 1,
 };
 
 
