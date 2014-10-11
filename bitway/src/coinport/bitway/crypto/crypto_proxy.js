@@ -695,8 +695,8 @@ CryptoProxy.prototype.createRawTransaction_ = function(rawData, callback) {
     var self = this;
     var transactions = rawData.transactions;
     var addresses = rawData.addresses;
-    self.log.debug(transactions);
-    self.log.debug(addresses);
+    self.log.info("createRawTransaction_transactions: ", transactions);
+    self.log.info("createRawTransaction_addresses: ", addresses);
     this.rpc.createRawTransaction(transactions, addresses, function(error, createReply) {
         if (error) {
             self.log.error("create error: " + error);
@@ -726,7 +726,6 @@ CryptoProxy.prototype.walletLock_ = function(callback) {
 
 CryptoProxy.prototype.sign_ = function(data, callback) {
     var self = this;
-    self.log.info("sign_ rawdata:", JSON.stringify(data));
     self.rpc.signRawTransaction(data, function(error, signReply) {
         if (error) {
             self.log.error("sign error: " + error);
