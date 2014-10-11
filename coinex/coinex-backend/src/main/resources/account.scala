@@ -53,7 +53,7 @@ AccountConfig(
     transferFeeRules = Map(
       Btc -> ConstantFee(0.0005.internalValue(Btc)),
       Ltc -> ConstantFee(0.0005.internalValue(Ltc)),
-      Doge -> ConstantFee(0.0005.internalValue(Doge)),
+      Doge -> ConstantFee(2.internalValue(Doge)),
       Pts -> ConstantFee(0.0005.internalValue(Pts)),
       Drk -> ConstantFee(0.0005.internalValue(Drk)),
       Bc -> ConstantFee(0.0005.internalValue(Bc)),

@@ -50,7 +50,7 @@ BitwayConfigs(Map(
     cold2HotTransferInterval = 300 seconds,
     usersToInnerNumThreshold = 300E8.toLong,
     users2InnerTransferInterval = 30 seconds,
-    enableUsersToInnerTransfer = false
+    enableUsersToInnerTransfer = true
   ),
   Bc -> BitwayConfig(
     ip = "bitway",
