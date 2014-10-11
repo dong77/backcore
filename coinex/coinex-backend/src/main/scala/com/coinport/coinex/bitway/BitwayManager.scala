@@ -454,7 +454,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     }
     val userAddresses = getReservedAddresses(CryptoCurrencyAddressType.User, Some(config.confirmNum))
     if (!config.enableHotColdTransfer || config.coldAddresses.isEmpty) {
-      return Some((Some(userAddresses), None, None))
+      return Some((Some(userAddresses), None, Some(0)))
     }
     val hotAmount = getAvailableReserveAmount(CryptoCurrencyAddressType.Hot, Some(config.confirmNum))
     val coldAmount = getAvailableReserveAmount(CryptoCurrencyAddressType.Cold, Some(config.confirmNum))
@@ -469,7 +469,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
         Some((Some(userAddresses), Some(config.coldAddresses.head.address), Some(coldPercent)))
       }
     } else {
-      Some((Some(userAddresses), None, None))
+      Some((Some(userAddresses), None, Some(0)))
     }
   }
 

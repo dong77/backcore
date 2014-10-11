@@ -39,7 +39,7 @@ object CryptoCurrencyTransferUsersToInnerHandler extends CryptoCurrencyTransferB
       case Some(outputList) if outputList.nonEmpty && tx.inputs.isDefined && tx.inputs.get.nonEmpty =>
         val validOutputs = outputList filter (out => out.userId == Some(COLD_UID) || out.userId == Some(HOT_UID))
         val validInputs = tx.inputs.get filter (in => in.userId.isDefined && in.userId != Some(COLD_UID) && in.userId != Some(HOT_UID))
-        if (!validOutputs.isEmpty) {
+        if (validOutputs.nonEmpty) {
           tx.status match {
             case Failed =>
               getItemHandlerFromMap(tx.sigId.get) match {
@@ -57,10 +57,12 @@ object CryptoCurrencyTransferUsersToInnerHandler extends CryptoCurrencyTransferB
                   id2HandlerMap.put(hd.item.id, hd)
               }
           }
+          updateSigId2MinerFee(tx)
+        } else {
+          logger.warning(s"""${"~" * 50} ${currency.toString} innerHandleTx() ${tx.txType.get.toString} tx have not valid outputs : ${tx.toString}""")
         }
-        updateSigId2MinerFee(tx)
       case _ =>
-        logger.warning(s"""${"~" * 50} ${currency.toString} innerHandleTx() ${tx.txType.get.toString} tx have not valid outputs or outputs : ${tx.toString}""")
+        logger.warning(s"""${"~" * 50} ${currency.toString} innerHandleTx() ${tx.txType.get.toString} tx have not valid inputs or outputs : ${tx.toString}""")
     }
   }
 

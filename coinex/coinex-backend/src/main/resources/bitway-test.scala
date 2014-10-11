@@ -42,14 +42,15 @@ BitwayConfigs(Map(
         message = Some("coinport"),
         signMessage = Some("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"))
     ),
-    hotColdTransfer = Some(HotColdTransferStrategy(0.6, 0.1)),
+    hotColdTransfer = Some(HotColdTransferStrategy(0.5, 0.4)),
     confirmNum = 4,
     hotColdTransferNumThreshold = 50E8.toLong,
     hot2ColdTransferInterval = 60 seconds,
     hot2ColdTransferIntervalLarge = 150 seconds,
     cold2HotTransferInterval = 300 seconds,
     usersToInnerNumThreshold = 300E8.toLong,
-    users2InnerTransferInterval = 30 seconds
+    users2InnerTransferInterval = 30 seconds,
+    enableUsersToInnerTransfer = false
   ),
   Bc -> BitwayConfig(
     ip = "bitway",
