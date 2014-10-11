@@ -726,6 +726,7 @@ CryptoProxy.prototype.walletLock_ = function(callback) {
 
 CryptoProxy.prototype.sign_ = function(data, callback) {
     var self = this;
+    self.log.info("sign_ rawdata:", JSON.stringify(data));
     self.rpc.signRawTransaction(data, function(error, signReply) {
         if (error) {
             self.log.error("sign error: " + error);
