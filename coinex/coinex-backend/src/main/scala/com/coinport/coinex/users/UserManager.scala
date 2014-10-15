@@ -107,7 +107,9 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
   def changePassword(email: String, newPassword: String): UserProfile = {
     val profile = getUser(email).get
     val passwordHash = computePassword(profile.id, profile.email, newPassword)
-    val updatedProfile = profile.copy(passwordHash = Some(passwordHash))
+    val passwordResetToken = profile.passwordResetToken.getOrElse("")
+    val updatedProfile = profile.copy(passwordHash = Some(passwordHash), passwordResetToken = None)
+    passwordResetTokenMap -= passwordResetToken
     profileMap += profile.id -> updatedProfile
     updatedProfile
   }
