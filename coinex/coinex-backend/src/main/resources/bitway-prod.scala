@@ -22,6 +22,7 @@ BitwayConfigs(Map(
         message = Some("coinport"),
         signMessage = Some("H0YkvkM11/6tVddcu8dr+TEzhKjNuXVTn1ckaJJQOc0IVoAkCrhiA9CUFUWvTXRBL+DwLgPUrWi7gHnD+LBLztw="))
     ),
+    hotColdTransfer = Some(HotColdTransferStrategy(0.3, 0.1)),
     hotColdTransferNumThreshold = 3E8.toLong,
     confirmNum = 1,
     usersToInnerNumThreshold = 1E7.toLong
