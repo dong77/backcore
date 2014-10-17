@@ -30,7 +30,12 @@ abstract class SimpleJsonMongoCollection[T <: AnyRef, S <: T](implicit man: Mani
         Seq.empty[T]
     }
 
-  def count(q: MongoDBObject): Long = coll.count(q)
+  def count(q: MongoDBObject): Long =
+    try {
+      coll.count(q)
+    } catch {
+      case e: Exception => 0L
+    }
 }
 
 abstract class SimpleBinaryMongoCollection[T <: AnyRef, S <: T](implicit man: Manifest[S]) extends SimpleMongoCollection[T] {

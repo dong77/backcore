@@ -36,10 +36,21 @@ trait OrderMongoHandler {
   def cancelItem(orderId: Long) =
     coll.update(MongoDBObject(OID -> orderId), $set(STATUS -> OrderStatus.Cancelled.getValue()), false, false, com.mongodb.WriteConcern.ACKNOWLEDGED)
 
-  def countItems(q: QueryOrder): Long = coll.count(mkQuery(q))
+  def countItems(q: QueryOrder): Long =
+    try {
+      coll.count(mkQuery(q))
+    } catch {
+      case e: Exception =>
+        0L
+    }
 
   def getItems(q: QueryOrder): Seq[OrderInfo] =
-    coll.find(mkQuery(q)).sort(DBObject(OID -> -1)).skip(q.cursor.skip).limit(q.cursor.limit).map(toClass(_)).toSeq
+    try {
+      coll.find(mkQuery(q)).sort(DBObject(OID -> -1)).skip(q.cursor.skip).limit(q.cursor.limit).map(toClass(_)).toSeq
+    } catch {
+      case e: Exception =>
+        Seq.empty[OrderInfo]
+    }
 
   private def toBson(item: OrderInfo, quantity: Long) = {
     val side = item.side

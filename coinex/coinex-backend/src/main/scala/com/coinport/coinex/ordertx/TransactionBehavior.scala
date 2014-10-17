@@ -22,10 +22,21 @@ trait TransactionBehavior {
 
   def addItem(item: Transaction) = coll.save(toBson(item), com.mongodb.WriteConcern.ACKNOWLEDGED)
 
-  def countItems(q: QueryTransaction) = coll.count(mkQuery(q))
+  def countItems(q: QueryTransaction) =
+    try {
+      coll.count(mkQuery(q))
+    } catch {
+      case e: Exception =>
+        0L
+    }
 
   def getItems(q: QueryTransaction): Seq[Transaction] = {
-    coll.find(mkQuery(q)).sort(DBObject(TID -> -1)).skip(q.cursor.skip).limit(q.cursor.limit).map(toClass(_)).toSeq
+    try {
+      coll.find(mkQuery(q)).sort(DBObject(TID -> -1)).skip(q.cursor.skip).limit(q.cursor.limit).map(toClass(_)).toSeq
+    } catch {
+      case e: Exception =>
+        Seq.empty[Transaction]
+    }
   }
 
   private def toBson(t: Transaction) = {
