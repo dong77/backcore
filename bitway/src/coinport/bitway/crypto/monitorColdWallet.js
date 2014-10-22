@@ -4,12 +4,12 @@
  *Filename: monitorColdWallet.js
  *Copyright 2014 Coinport Inc. All Rights Reserved.
  */
-var Bitcore                       = require('bitcore');
-
+var Bitcore  = require('bitcore');
 var program = require('commander');
 var Async = require('async');
 var fs = require('fs');
 var RpcClient   = require('bitcore').RpcClient;
+
 var btc = {
     cryptoRpcConfig: {
         protocol: 'http',
@@ -98,38 +98,47 @@ var latest = 0;
 var rpc = new Object();
 var timeBegin = new Date().getTime();
 
+program                                                                         
+    .usage("monitor the cold wallet")                                     
+    .command('monitorColdWallet.js <currency>')
+
 var initData_ = function(callback) {
-    program.parse(process.argv); 
-    currency = program.args[0];
-    var config = new Object();
-    switch (currency) {
-        case 'btc':
-            config = btc;
-            break;
-        case 'ltc':
-            config = ltc;
-            break;
-        case 'dog':
-            config = dog;
-            break;
-        case 'drk':
-            config = drk;
-            break;
-        case 'bc':
-            config = bc;
-            break;
-        case 'vrc':
-            config = vrc;
-            break;
-        case 'zet':
-            config = zet;
-            break;
-        default:
-            console.log('unknown currency!');
+    program.parse(process.argv);
+    if (program.args.length != 1) {
+        callback("parameter error!");
+    } else {
+        currency = program.args[0];
+        var config = new Object();
+        switch (currency) {
+            case 'btc':
+                config = btc;
+                break;
+            case 'ltc':
+                config = ltc;
+                break;
+            case 'dog':
+                config = dog;
+                break;
+            case 'drk':
+                config = drk;
+                break;
+            case 'bc':
+                config = bc;
+                break;
+            case 'vrc':
+                config = vrc;
+                break;
+            case 'zet':
+                config = zet;
+                break;
+            default:
+                callback('unknown currency: ' + currency);
+                return;
+        }
+        rpc = new RpcClient(config.cryptoRpcConfig);
+        height = config.height;
+        callback();
     }
-    rpc = new RpcClient(config.cryptoRpcConfig);
-    height = config.height;
-    callback();
 };
 
 var readHistoryFile_ = function(address, callback) {
@@ -373,5 +382,10 @@ Async.auto({
         writeFile_(callback);
     }]
 }, function(err, results) {
+    if (err) {
+        console.log("ERROR:", err);
+        console.log("node monitorColdWallet.js <currency>");
+    } else {
 
+    }
 });

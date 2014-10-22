@@ -8,7 +8,8 @@ var Bitcore = require('bitcore');
 var program = require('commander');
 var Async = require('async');
 var fs = require('fs');
-var RpcClient   = require('bitcore').RpcClient;
+var RpcClient = require('bitcore').RpcClient;
+
 var btc = {
     cryptoRpcConfig: {
         protocol: 'http',
@@ -99,48 +100,56 @@ var prevTxs = [];
 var rpc = new Object();
 var timeBegin = new Date().getTime();
 
+program  
+    .usage("make a signed tx data offline")
+    .command('makeRawTxOffline.js <currency> <coldAddress> <coldPrivateKey> <destAddress> <amount>')
+
 var initData_ = function(callback) {
     program.parse(process.argv); 
-    console.log("%j", program);
-    var currency = program.args[0]
-    coldAddr = program.args[1];
-    privateKeys.push(program.args[2]);
-    destAddr = program.args[3];
-    amount = program.args[4];
-    var config = new Object();
-    switch (currency) {
-        case 'btc':
-            config = btc;
-            break;
-        case 'ltc':
-            config = ltc;
-            break;
-        case 'dog':
-            config = dog;
-            break;
-        case 'drk':
-            config = drk;
-            break;
-        case 'bc':
-            config = bc;
-            break;
-        case 'vrc':
-            config = vrc;
-            break;
-        case 'zet':
-            config = zet;
-            break;
-        default:
-            console.log('unknown currency!');
+    if (program.args.length != 5) {
+        callback("parameter error!");
+    } else {
+        var currency = program.args[0]
+        coldAddr = program.args[1];
+        privateKeys.push(program.args[2]);
+        destAddr = program.args[3];
+        amount = program.args[4];
+        var config = new Object();
+        switch (currency) {
+            case 'btc':
+                config = btc;
+                break;
+            case 'ltc':
+                config = ltc;
+                break;
+            case 'dog':
+                config = dog;
+                break;
+            case 'drk':
+                config = drk;
+                break;
+            case 'bc':
+                config = bc;
+                break;
+            case 'vrc':
+                config = vrc;
+                break;
+            case 'zet':
+                config = zet;
+                break;
+            default:
+                callback('unknown currency: ' + currency);
+                return;
+        }
+        rpc = new RpcClient(config.cryptoRpcConfig);
+        minerFee = config.minerFee;
+        callback();
     }
-    rpc = new RpcClient(config.cryptoRpcConfig);
-    minerFee = config.minerFee;
-    callback();
 };
 
 var readFile_ = function(callback) {
     var fileName = './coldWallet/' + coldAddr.toString();
-    console.log(fileName);
+    console.log("readFile_: ", fileName);
     fs.readFile(fileName, function(error, data){
         if (!error) {
             if (data.length != 0) {
@@ -153,7 +162,6 @@ var readFile_ = function(callback) {
             }
             callback();
         } else {
-            console.log(error);
             callback(error);
         }
     });
@@ -235,5 +243,10 @@ Async.auto({
         signRawTransaction_(callback);
     }]
 }, function(err, results) {
-    console.log(err);
+    if (err) {
+        console.log("ERROR: ", err);
+        console.log("node makeRawTxOffline.js <currency> <coldAddress> <coldPrivateKey> <destAddress> <amount>");
+    } else {
+        console.log(results);
+    }
 });
