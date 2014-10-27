@@ -65,7 +65,7 @@ class BitwayManagerSpec extends Specification {
     }
 
     "get tx type test" in {
-      val bwm = new BitwayManager(Btc, new BitwayConfig())
+      val bwm = new BitwayManager(Btc, new BitwayConfig(enableUsersToInnerTransfer = false))
       bwm.faucetAddress(User, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
       bwm.faucetAddress(Hot, Set(CryptoAddress("h1"), CryptoAddress("h2")))
       bwm.faucetAddress(Cold, Set(CryptoAddress("c1")))
@@ -151,7 +151,7 @@ class BitwayManagerSpec extends Specification {
     }
 
     "tx generation test" in {
-      val bwm = new BitwayManager(Btc, new BitwayConfig())
+      val bwm = new BitwayManager(Btc, new BitwayConfig(enableUsersToInnerTransfer = false))
       bwm.faucetAddress(Unused, Set(CryptoAddress("u7")))
       bwm.faucetAddress(User, Set(CryptoAddress("u1"), CryptoAddress("u2"), CryptoAddress("u3"), CryptoAddress("u4"), CryptoAddress("u5"), CryptoAddress("u6")))
       bwm.faucetAddress(Hot, Set(CryptoAddress("h1"), CryptoAddress("h2"), CryptoAddress("h3")))
