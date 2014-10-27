@@ -8,7 +8,7 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 
 trait AkkaService {
-  implicit val timeout = Timeout(2 seconds)
+  implicit val timeout = Timeout(4 seconds)
   val backend = Akka.backend
 }
 
