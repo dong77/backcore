@@ -86,7 +86,7 @@ object UserService extends AkkaService {
     val command = DoAddNewApiSecret(userId)
     backend ? command map {
       case ApiSecretOperationResult(error, secrets) if secrets.nonEmpty =>
-        val secret = secrets.head.secret
+        val secret = secrets.head.identifier //secret
         ApiResult(true, 0, "", Some(secret))
       case _ => ApiResult(false, -1, "", None)
     }
@@ -260,6 +260,19 @@ object UserService extends AkkaService {
     }
   }
 
+  def verifyRealName(userId: Long, realName: String, location: String, identiType: String, idNumber: String) = {
+    val command = DoVerifyRealName(userId, realName, location, identiType, idNumber)
+    backend ? command map {
+      case succeeded: VerifyRealNameSucceeded =>
+        val returnProfile = succeeded.userProfile
+        ApiResult(true, 0, returnProfile.id.toString)
+      case failed: VerifyRealNameFailed =>
+        ApiResult(false, failed.error.value, failed.toString)
+      case x =>
+        ApiResult(false, -1, x.toString)
+    }
+  }
+
   def login(user: User) = {
     val email = user.email
     val password = user.password
@@ -268,7 +281,9 @@ object UserService extends AkkaService {
 
     backend ? command map {
       case succeeded: LoginSucceeded =>
-        ApiResult(true, 0, "登录成功", Some(succeeded))
+        val profile = succeeded.userProfile
+        val user = User(id = profile.id, email = profile.email, realName = profile.realName, password = "", mobile = profile.mobile, googleAuthenticatorSecret = profile.googleAuthenticatorSecret, securityPreference = profile.securityPreference, realName2 = profile.realName2)
+        ApiResult(true, 0, "登录成功", Some(user))
       case failed: LoginFailed =>
         ApiResult(false, failed.error.value, failed.toString)
       case x =>

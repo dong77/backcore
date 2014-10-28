@@ -122,6 +122,7 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cDoSuspendUser = JsonScalaCodec(DoSuspendUser)
   lazy val _cDoUpdateMetrics = JsonScalaCodec(DoUpdateMetrics)
   lazy val _cDoUpdateUserProfile = JsonScalaCodec(DoUpdateUserProfile)
+  lazy val _cDoVerifyRealName = JsonScalaCodec(DoVerifyRealName)
   lazy val _cDumpStateToFile = JsonScalaCodec(DumpStateToFile)
   lazy val _cGenerateAddresses = JsonScalaCodec(GenerateAddresses)
   lazy val _cGenerateAddressesResult = JsonScalaCodec(GenerateAddressesResult)
@@ -223,6 +224,8 @@ class ThriftJsonSerializer extends Serializer {
   lazy val _cVerifyEmailFailed = JsonScalaCodec(VerifyEmailFailed)
   lazy val _cVerifyEmailSucceeded = JsonScalaCodec(VerifyEmailSucceeded)
   lazy val _cVerifyGoogleAuthCode = JsonScalaCodec(VerifyGoogleAuthCode)
+  lazy val _cVerifyRealNameFailed = JsonScalaCodec(VerifyRealNameFailed)
+  lazy val _cVerifyRealNameSucceeded = JsonScalaCodec(VerifyRealNameSucceeded)
   lazy val _cTAccountState = JsonScalaCodec(TAccountState)
   lazy val _cTAccountTransferState = JsonScalaCodec(TAccountTransferState)
   lazy val _cTApiSecretState = JsonScalaCodec(TApiSecretState)
@@ -344,6 +347,7 @@ class ThriftJsonSerializer extends Serializer {
     case m: DoSuspendUser => _cDoSuspendUser(m)
     case m: DoUpdateMetrics => _cDoUpdateMetrics(m)
     case m: DoUpdateUserProfile => _cDoUpdateUserProfile(m)
+    case m: DoVerifyRealName => _cDoVerifyRealName(m)
     case m: DumpStateToFile => _cDumpStateToFile(m)
     case m: GenerateAddresses => _cGenerateAddresses(m)
     case m: GenerateAddressesResult => _cGenerateAddressesResult(m)
@@ -445,6 +449,8 @@ class ThriftJsonSerializer extends Serializer {
     case m: VerifyEmailFailed => _cVerifyEmailFailed(m)
     case m: VerifyEmailSucceeded => _cVerifyEmailSucceeded(m)
     case m: VerifyGoogleAuthCode => _cVerifyGoogleAuthCode(m)
+    case m: VerifyRealNameFailed => _cVerifyRealNameFailed(m)
+    case m: VerifyRealNameSucceeded => _cVerifyRealNameSucceeded(m)
     case m: TAccountState => _cTAccountState(m)
     case m: TAccountTransferState => _cTAccountTransferState(m)
     case m: TApiSecretState => _cTApiSecretState(m)
@@ -570,6 +576,7 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[DoSuspendUser.Immutable] => _cDoSuspendUser.invert(bytes).get
     case Some(c) if c == classOf[DoUpdateMetrics.Immutable] => _cDoUpdateMetrics.invert(bytes).get
     case Some(c) if c == classOf[DoUpdateUserProfile.Immutable] => _cDoUpdateUserProfile.invert(bytes).get
+    case Some(c) if c == classOf[DoVerifyRealName.Immutable] => _cDoVerifyRealName.invert(bytes).get
     case Some(c) if c == classOf[DumpStateToFile.Immutable] => _cDumpStateToFile.invert(bytes).get
     case Some(c) if c == classOf[GenerateAddresses.Immutable] => _cGenerateAddresses.invert(bytes).get
     case Some(c) if c == classOf[GenerateAddressesResult.Immutable] => _cGenerateAddressesResult.invert(bytes).get
@@ -671,6 +678,8 @@ class ThriftJsonSerializer extends Serializer {
     case Some(c) if c == classOf[VerifyEmailFailed.Immutable] => _cVerifyEmailFailed.invert(bytes).get
     case Some(c) if c == classOf[VerifyEmailSucceeded.Immutable] => _cVerifyEmailSucceeded.invert(bytes).get
     case Some(c) if c == classOf[VerifyGoogleAuthCode.Immutable] => _cVerifyGoogleAuthCode.invert(bytes).get
+    case Some(c) if c == classOf[VerifyRealNameFailed.Immutable] => _cVerifyRealNameFailed.invert(bytes).get
+    case Some(c) if c == classOf[VerifyRealNameSucceeded.Immutable] => _cVerifyRealNameSucceeded.invert(bytes).get
     case Some(c) if c == classOf[TAccountState.Immutable] => _cTAccountState.invert(bytes).get
     case Some(c) if c == classOf[TAccountTransferState.Immutable] => _cTAccountTransferState.invert(bytes).get
     case Some(c) if c == classOf[TApiSecretState.Immutable] => _cTApiSecretState.invert(bytes).get

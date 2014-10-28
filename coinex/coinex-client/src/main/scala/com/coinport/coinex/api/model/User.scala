@@ -16,4 +16,7 @@ case class User(id: Long,
   depositAddress: Option[Map[Currency, String]] = None,
   withdrawalAddress: Option[Map[Currency, String]] = None,
   referedToken: Option[String] = None,
-  status: UserStatus = UserStatus.Normal)
+  status: UserStatus = UserStatus.Normal,
+  googleAuthenticatorSecret: Option[String] = None,
+  securityPreference: Option[String] = None,
+  realName2: Option[String] = None)

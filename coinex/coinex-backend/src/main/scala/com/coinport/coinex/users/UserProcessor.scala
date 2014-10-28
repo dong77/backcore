@@ -145,10 +145,22 @@ class UserProcessor(mailer: ActorRef, bitwayProcessors: collection.immutable.Map
           sender ! VerifyEmailFailed(TokenNotMatch)
       }
 
+    case m @ DoVerifyRealName(userId, realName, location, identiType, idNumber) =>
+      manager.profileMap.get(userId) match {
+        case Some(profile) =>
+          val newProfile = profile.copy(realName2 = Some(realName),
+            location = Some(location), identificationType = Some(identiType),
+            nationalId = Some(idNumber))
+          sender ! VerifyRealNameSucceeded(newProfile)
+          persist(DoUpdateUserProfile(newProfile))(updateState)
+        case None =>
+          sender ! VerifyRealNameFailed(UserNotExist)
+      }
+
     case Login(email, password) =>
       manager.checkLogin(email, password) match {
         case Left(error) => sender ! LoginFailed(error)
-        case Right(profile) => sender ! LoginSucceeded(profile.id, profile.email, profile.referralToken, profile.mobile, profile.realName, profile.googleAuthenticatorSecret, profile.securityPreference)
+        case Right(profile) => sender ! LoginSucceeded(profile)
       }
 
     case ValidatePasswordResetToken(token) =>

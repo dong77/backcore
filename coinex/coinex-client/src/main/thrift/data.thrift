@@ -271,7 +271,7 @@ struct RDouble {
 struct UserProfile {
     1:  i64 id
     2:  string email
-    3:  optional string realName
+    3:  optional string realName  // use as nickname.
     4:  optional string nationalId
     5:  optional string passwordHash
     6:  bool emailVerified
@@ -287,6 +287,9 @@ struct UserProfile {
     17: optional i64 referralToken
     18: optional i64 referralUserId  // this should be hidden for this user
     19: optional string securityPreference // 01:email 10:sms 11: email && sms
+    20: optional string identificationType
+    21: optional string location
+    22: optional string realName2  // verified real name.
 }
 
 struct UserAction {

@@ -105,6 +105,10 @@ typedef data.CleanActionType                    _CleanActionType
 /* R-   */ struct UpdateUserProfileFailed                 {1: _ErrorCode error}
 /* R+   */ struct UpdateUserProfileSucceeded              {1: _UserProfile userProfile /* previous profile */}
 
+/* C,P  */ struct DoVerifyRealName                        {1: i64 uid, 2: string realName, 3: string location, 4: string identiType, 5: string idNumber}
+/* R-   */ struct VerifyRealNameFailed                    {1: _ErrorCode error}
+/* R+   */ struct VerifyRealNameSucceeded                 {1: _UserProfile userProfile /* previous profile */}
+
 /* C,P  */ struct DoRequestPasswordReset                  {1: string email, 2: optional string passwordResetToken /* ignored */}
 /* R-   */ struct RequestPasswordResetFailed              {1: _ErrorCode error}
 /* R+   */ struct RequestPasswordResetSucceeded           {1: i64 id, 2: string email}
@@ -132,7 +136,7 @@ typedef data.CleanActionType                    _CleanActionType
 
 /* C    */ struct Login                                   {1: string email, 2: string password} // TODO: this may also be a persistent command
 /* R-   */ struct LoginFailed                             {1: _ErrorCode error}
-/* R+   */ struct LoginSucceeded                          {1: i64 id, 2: string email, 3: optional i64 referralToken, 4: optional string mobile, 5: optional string realName, 6: optional string googleSecret, 7: optional string perference}
+/* R+   */ struct LoginSucceeded                          {1: _UserProfile userProfile }
 
 /* Q    */ struct VerifyGoogleAuthCode                    {1: string email, 2: i32 code}
 /* R    */ struct GoogleAuthCodeVerificationResult        {1: optional _UserProfile userProfile}
