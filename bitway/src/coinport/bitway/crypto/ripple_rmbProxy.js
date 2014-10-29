@@ -72,7 +72,6 @@ Util.inherits(CryptoProxy, Events.EventEmitter);
 
 CryptoProxy.DROP_CONVERSION = 1000000;
 //CryptoProxy.URL = 'https://s1.ripple.com:51234/';
-//CryptoProxy.URL = 'http://127.0.0.1:8088/';
 CryptoProxy.URL = 'https://54.64.138.26:5005/';
 CryptoProxy.TIMEOUT = 10000;
 
@@ -85,7 +84,7 @@ CryptoProxy.EventType = {
 CryptoProxy.prototype.logFunction = function log(type) {
     var self = this;
     return function() {
-        self.log.info(type, 'ripple crypto_rmbProxy');
+        self.log.info(type, 'crypto_rmbProxy');
     };
 };
 
@@ -133,7 +132,13 @@ CryptoProxy.prototype.sign_ = function(transferInfo, callback) {
               "secret": self.secret,                          
               "tx_json": {                                                        
                  "Account": self.hotAccount,                 
-                 "Amount": (transferInfo.amount) * CryptoProxy.DROP_CONVERSION,                                                   
+                 "Fee": "10000",
+                 "Amount":
+                 { 
+                     "currency" : "CNY",
+                     "value" : transferInfo.amount,
+                     "issuer" : "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"
+                 },
                  "Destination": transferInfo.to,             
                  "TransactionType": "Payment"                                     
                }                                                                  
@@ -155,7 +160,7 @@ CryptoProxy.prototype.sign_ = function(transferInfo, callback) {
             if (responseBody.result.status == "success") {
                 callback(null, responseBody.result.tx_blob);
             } else {
-                self.log.error("sign_ error");
+                self.log.error("sign_ error: ", responseBody.result.error_message);
                 callback("sign_ error", null);
             }
         } else {
@@ -187,12 +192,13 @@ CryptoProxy.prototype.submit_ = function(tx_blob, callback) {
         if (!error && response.statusCode == 200 && body) {
             self.log.info('submit_ Response:', body);
             var responseBody = JSON.parse(body);
-            if (responseBody.result.status == "success") {
+            if (responseBody.result.engine_result == "tesSUCCESS" 
+                && responseBody.result.status == "success") {
                 var tx = responseBody.result.tx_json;
                 var cctx = self.constructCctxByTxJson_(tx); 
                 callback(null, cctx);
             } else {
-                self.log.error("submit_ error");
+                self.log.error("submit_ error: ", responseBody.result.engine_result_message);
                 callback("submit_ error", null);
             }
         } else {
@@ -384,7 +390,7 @@ CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
     var self = this;
     if (tx.TransactionType == "Payment") {
         var input = new CryptoCurrencyTransactionPort({address: tx.Account, 
-                amount: (self.convertAmount_(tx.Amount) + self.convertAmount_(tx.Fee))});
+                amount: parseFloat(tx.Amount.value)});
         var inputs = [];
         inputs.push(input);
         if (tx.DestinationTag) {
@@ -476,7 +482,11 @@ CryptoProxy.prototype.getCCBlockByIndex_ = function(startIndex, endIndex, callba
                         if (responseBody.result.transactions) {
                             for (var j = 0; j < responseBody.result.transactions.length; j++) {
                                var tx = responseBody.result.transactions[j].tx;
-                               if (i == tx.ledger_index && tx.TransactionType == "Payment") {
+                               if (i == tx.ledger_index 
+                                   && responseBody.result.transactions[j].meta.TransactionResult == "tesSUCCESS"
+                                   && tx.Amount.currency == "CNY"
+                                   && tx.Amount.issuer == "razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA") {
+                                   && tx.TransactionType == "Payment") {
                                    cctxs.push(self.constructCctxByTxJson_(tx));
                                } else {
 

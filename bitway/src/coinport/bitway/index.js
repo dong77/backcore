@@ -201,9 +201,23 @@ var xrp = {
     }
 };
 
+var xrprmb = {
+    currency: Currency.XRPRMB,
+    cryptoConfig: {
+        hotAccount: "rpX6Sujw8hkK8bBiFqH9oVQdNaogtT81z2",
+        checkInterval : 10000,
+        secret: "shGbSXqEM3gvtNDKHae21scBBVbRQ",
+        walletPassPhrase: ""
+    },
+    redisProxyConfig: {
+        currency: Currency.XRPRMB,
+        ip: 'bitway',
+        port: '6379',
+    }
+};
 // var configs = [ btc, ltc, dog, drk, bc, vrc, zet ];
 // var configs = [ btc ];
-var configs = [ xrp ];
+var configs = [ xrprmb ];
 
 
 fs.readFile('./pw', function(error, data){
