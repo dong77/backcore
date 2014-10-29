@@ -132,6 +132,7 @@ CryptoProxy.prototype.sign_ = function(transferInfo, callback) {
               "secret": self.secret,                          
               "tx_json": {                                                        
                  "Account": self.hotAccount,                 
+                 "Fee": "10000",
                  "Amount": (transferInfo.amount) * CryptoProxy.DROP_CONVERSION,                                                   
                  "Destination": transferInfo.to,             
                  "TransactionType": "Payment"                                     
@@ -154,7 +155,7 @@ CryptoProxy.prototype.sign_ = function(transferInfo, callback) {
             if (responseBody.result.status == "success") {
                 callback(null, responseBody.result.tx_blob);
             } else {
-                self.log.error("sign_ error");
+                self.log.error("sign_ error: ", responseBody.result.error_message);
                 callback("sign_ error", null);
             }
         } else {
