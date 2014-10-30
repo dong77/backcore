@@ -265,11 +265,48 @@ object UserService extends AkkaService {
     backend ? command map {
       case succeeded: VerifyRealNameSucceeded =>
         val returnProfile = succeeded.userProfile
-        ApiResult(true, 0, returnProfile.id.toString)
+        ApiResult(true, 0, "")
       case failed: VerifyRealNameFailed =>
         ApiResult(false, failed.error.value, failed.toString)
       case x =>
         ApiResult(false, -1, x.toString)
+    }
+  }
+
+  def addBankCard(userId: Long, bankName: String, ownerName: String, cardNumber: String, branchBankName: String) = {
+    val branchOpt = if (branchBankName != null && branchBankName.trim.nonEmpty) Some(branchBankName) else None
+    val bankCard = BankCard(bankName, ownerName, cardNumber, branchOpt)
+    val command = DoAddBankCard(userId, bankCard)
+    backend ? command map {
+      case succeeded: AddBankCardSucceeded =>
+        ApiResult(true, 0, "")
+      case failed: AddBankCardFailed =>
+        ApiResult(false, failed.error.value, failed.toString)
+      case x =>
+        ApiResult(false, -1, x.toString)
+    }
+  }
+
+  def deleteBankCard(userId: Long, cardNumber: String) = {
+    val command = DoDeleteBankCard(userId, cardNumber)
+    backend ? command map {
+      case succeeded: DeleteBankCardSucceeded =>
+        ApiResult(true, 0, "")
+      case failed: DeleteBankCardFailed =>
+        ApiResult(false, failed.error.value, failed.toString)
+      case x =>
+        ApiResult(false, -1, x.toString)
+    }
+  }
+
+  def queryBankCards(uid: Long) = {
+    val command = QueryProfile(uid = Some(uid))
+    backend ? command map {
+      case result: QueryProfileResult =>
+        val bankCards = result.userProfile.map(_.bankCards.getOrElse(Seq[BankCard]()))
+        ApiResult(true, 0, "", bankCards)
+      case e =>
+        ApiResult(false, -1, e.toString)
     }
   }
 

@@ -269,6 +269,13 @@ struct RDouble {
     2: bool rm // reciprocal mark
 }
 
+struct BankCard {
+    1: string bankName
+    2: string ownerName
+    3: string cardNumber
+    4: optional string branchBankName
+}
+
 struct UserProfile {
     1:  i64 id
     2:  string email
@@ -291,6 +298,7 @@ struct UserProfile {
     20: optional string identificationType
     21: optional string location
     22: optional string realName2  // verified real name.
+    23: optional list<BankCard> bankCards
 }
 
 struct UserAction {

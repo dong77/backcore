@@ -19,6 +19,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cAccountTransfersWithMinerFee = BinaryScalaCodec(AccountTransfersWithMinerFee)
   lazy val _cAddressStatusResult = BinaryScalaCodec(AddressStatusResult)
   lazy val _cApiSecret = BinaryScalaCodec(ApiSecret)
+  lazy val _cBankCard = BinaryScalaCodec(BankCard)
   lazy val _cBlockIndex = BinaryScalaCodec(BlockIndex)
   lazy val _cCandleData = BinaryScalaCodec(CandleData)
   lazy val _cCandleDataItem = BinaryScalaCodec(CandleDataItem)
@@ -69,6 +70,8 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cUserAction = BinaryScalaCodec(UserAction)
   lazy val _cUserLogsState = BinaryScalaCodec(UserLogsState)
   lazy val _cUserProfile = BinaryScalaCodec(UserProfile)
+  lazy val _cAddBankCardFailed = BinaryScalaCodec(AddBankCardFailed)
+  lazy val _cAddBankCardSucceeded = BinaryScalaCodec(AddBankCardSucceeded)
   lazy val _cAddRobotDNAFailed = BinaryScalaCodec(AddRobotDNAFailed)
   lazy val _cAddRobotDNASucceeded = BinaryScalaCodec(AddRobotDNASucceeded)
   lazy val _cAdjustAddressAmount = BinaryScalaCodec(AdjustAddressAmount)
@@ -92,6 +95,9 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cCryptoTransferFailed = BinaryScalaCodec(CryptoTransferFailed)
   lazy val _cCryptoTransferResult = BinaryScalaCodec(CryptoTransferResult)
   lazy val _cCryptoTransferSucceeded = BinaryScalaCodec(CryptoTransferSucceeded)
+  lazy val _cDeleteBankCardFailed = BinaryScalaCodec(DeleteBankCardFailed)
+  lazy val _cDeleteBankCardSucceeded = BinaryScalaCodec(DeleteBankCardSucceeded)
+  lazy val _cDoAddBankCard = BinaryScalaCodec(DoAddBankCard)
   lazy val _cDoAddNewApiSecret = BinaryScalaCodec(DoAddNewApiSecret)
   lazy val _cDoAddRobotDNA = BinaryScalaCodec(DoAddRobotDNA)
   lazy val _cDoBindMobile = BinaryScalaCodec(DoBindMobile)
@@ -103,6 +109,7 @@ class ThriftBinarySerializer extends Serializer {
   lazy val _cDoChangePasswordFailed = BinaryScalaCodec(DoChangePasswordFailed)
   lazy val _cDoChangePasswordSucceeded = BinaryScalaCodec(DoChangePasswordSucceeded)
   lazy val _cDoDeleteApiSecret = BinaryScalaCodec(DoDeleteApiSecret)
+  lazy val _cDoDeleteBankCard = BinaryScalaCodec(DoDeleteBankCard)
   lazy val _cDoRegisterUser = BinaryScalaCodec(DoRegisterUser)
   lazy val _cDoRemoveRobotDNA = BinaryScalaCodec(DoRemoveRobotDNA)
   lazy val _cDoRequestACodeQuery = BinaryScalaCodec(DoRequestACodeQuery)
@@ -244,6 +251,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: AccountTransfersWithMinerFee => _cAccountTransfersWithMinerFee(m)
     case m: AddressStatusResult => _cAddressStatusResult(m)
     case m: ApiSecret => _cApiSecret(m)
+    case m: BankCard => _cBankCard(m)
     case m: BlockIndex => _cBlockIndex(m)
     case m: CandleData => _cCandleData(m)
     case m: CandleDataItem => _cCandleDataItem(m)
@@ -294,6 +302,8 @@ class ThriftBinarySerializer extends Serializer {
     case m: UserAction => _cUserAction(m)
     case m: UserLogsState => _cUserLogsState(m)
     case m: UserProfile => _cUserProfile(m)
+    case m: AddBankCardFailed => _cAddBankCardFailed(m)
+    case m: AddBankCardSucceeded => _cAddBankCardSucceeded(m)
     case m: AddRobotDNAFailed => _cAddRobotDNAFailed(m)
     case m: AddRobotDNASucceeded => _cAddRobotDNASucceeded(m)
     case m: AdjustAddressAmount => _cAdjustAddressAmount(m)
@@ -317,6 +327,9 @@ class ThriftBinarySerializer extends Serializer {
     case m: CryptoTransferFailed => _cCryptoTransferFailed(m)
     case m: CryptoTransferResult => _cCryptoTransferResult(m)
     case m: CryptoTransferSucceeded => _cCryptoTransferSucceeded(m)
+    case m: DeleteBankCardFailed => _cDeleteBankCardFailed(m)
+    case m: DeleteBankCardSucceeded => _cDeleteBankCardSucceeded(m)
+    case m: DoAddBankCard => _cDoAddBankCard(m)
     case m: DoAddNewApiSecret => _cDoAddNewApiSecret(m)
     case m: DoAddRobotDNA => _cDoAddRobotDNA(m)
     case m: DoBindMobile => _cDoBindMobile(m)
@@ -328,6 +341,7 @@ class ThriftBinarySerializer extends Serializer {
     case m: DoChangePasswordFailed => _cDoChangePasswordFailed(m)
     case m: DoChangePasswordSucceeded => _cDoChangePasswordSucceeded(m)
     case m: DoDeleteApiSecret => _cDoDeleteApiSecret(m)
+    case m: DoDeleteBankCard => _cDoDeleteBankCard(m)
     case m: DoRegisterUser => _cDoRegisterUser(m)
     case m: DoRemoveRobotDNA => _cDoRemoveRobotDNA(m)
     case m: DoRequestACodeQuery => _cDoRequestACodeQuery(m)
@@ -473,6 +487,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[AccountTransfersWithMinerFee.Immutable] => _cAccountTransfersWithMinerFee.invert(bytes).get
     case Some(c) if c == classOf[AddressStatusResult.Immutable] => _cAddressStatusResult.invert(bytes).get
     case Some(c) if c == classOf[ApiSecret.Immutable] => _cApiSecret.invert(bytes).get
+    case Some(c) if c == classOf[BankCard.Immutable] => _cBankCard.invert(bytes).get
     case Some(c) if c == classOf[BlockIndex.Immutable] => _cBlockIndex.invert(bytes).get
     case Some(c) if c == classOf[CandleData.Immutable] => _cCandleData.invert(bytes).get
     case Some(c) if c == classOf[CandleDataItem.Immutable] => _cCandleDataItem.invert(bytes).get
@@ -523,6 +538,8 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[UserAction.Immutable] => _cUserAction.invert(bytes).get
     case Some(c) if c == classOf[UserLogsState.Immutable] => _cUserLogsState.invert(bytes).get
     case Some(c) if c == classOf[UserProfile.Immutable] => _cUserProfile.invert(bytes).get
+    case Some(c) if c == classOf[AddBankCardFailed.Immutable] => _cAddBankCardFailed.invert(bytes).get
+    case Some(c) if c == classOf[AddBankCardSucceeded.Immutable] => _cAddBankCardSucceeded.invert(bytes).get
     case Some(c) if c == classOf[AddRobotDNAFailed.Immutable] => _cAddRobotDNAFailed.invert(bytes).get
     case Some(c) if c == classOf[AddRobotDNASucceeded.Immutable] => _cAddRobotDNASucceeded.invert(bytes).get
     case Some(c) if c == classOf[AdjustAddressAmount.Immutable] => _cAdjustAddressAmount.invert(bytes).get
@@ -546,6 +563,9 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[CryptoTransferFailed.Immutable] => _cCryptoTransferFailed.invert(bytes).get
     case Some(c) if c == classOf[CryptoTransferResult.Immutable] => _cCryptoTransferResult.invert(bytes).get
     case Some(c) if c == classOf[CryptoTransferSucceeded.Immutable] => _cCryptoTransferSucceeded.invert(bytes).get
+    case Some(c) if c == classOf[DeleteBankCardFailed.Immutable] => _cDeleteBankCardFailed.invert(bytes).get
+    case Some(c) if c == classOf[DeleteBankCardSucceeded.Immutable] => _cDeleteBankCardSucceeded.invert(bytes).get
+    case Some(c) if c == classOf[DoAddBankCard.Immutable] => _cDoAddBankCard.invert(bytes).get
     case Some(c) if c == classOf[DoAddNewApiSecret.Immutable] => _cDoAddNewApiSecret.invert(bytes).get
     case Some(c) if c == classOf[DoAddRobotDNA.Immutable] => _cDoAddRobotDNA.invert(bytes).get
     case Some(c) if c == classOf[DoBindMobile.Immutable] => _cDoBindMobile.invert(bytes).get
@@ -557,6 +577,7 @@ class ThriftBinarySerializer extends Serializer {
     case Some(c) if c == classOf[DoChangePasswordFailed.Immutable] => _cDoChangePasswordFailed.invert(bytes).get
     case Some(c) if c == classOf[DoChangePasswordSucceeded.Immutable] => _cDoChangePasswordSucceeded.invert(bytes).get
     case Some(c) if c == classOf[DoDeleteApiSecret.Immutable] => _cDoDeleteApiSecret.invert(bytes).get
+    case Some(c) if c == classOf[DoDeleteBankCard.Immutable] => _cDoDeleteBankCard.invert(bytes).get
     case Some(c) if c == classOf[DoRegisterUser.Immutable] => _cDoRegisterUser.invert(bytes).get
     case Some(c) if c == classOf[DoRemoveRobotDNA.Immutable] => _cDoRemoveRobotDNA.invert(bytes).get
     case Some(c) if c == classOf[DoRequestACodeQuery.Immutable] => _cDoRequestACodeQuery.invert(bytes).get

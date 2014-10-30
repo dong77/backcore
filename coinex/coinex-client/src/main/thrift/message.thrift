@@ -61,6 +61,7 @@ typedef data.TransferConfig                     _TransferConfig
 typedef data.UserAction                         _UserAction
 typedef data.UserActionType                     _UserActionType
 typedef data.CleanActionType                    _CleanActionType
+typedef data.BankCard                           _BankCard
 
 ///////////////////////////////////////////////////////////////////////
 // 'C' stands for external command,
@@ -133,6 +134,14 @@ typedef data.CleanActionType                    _CleanActionType
 /* C,P  */ struct DoBindMobile                             {1: string email, 2: string newMobile}
 /* R-   */ struct DoBindMobileFailed                       {1: _ErrorCode error}
 /* R+   */ struct DoBindMobileSucceeded                    {1: i64 id, 2: string mobile}
+
+/* C,P  */ struct DoAddBankCard                            {1: i64 uid, 2: _BankCard bankCard}
+/* R-   */ struct AddBankCardFailed                        {1: _ErrorCode error}
+/* R+   */ struct AddBankCardSucceeded                     {1: i64 id, 2: _BankCard bankCard}
+
+/* C,P  */ struct DoDeleteBankCard                         {1: i64 uid, 2: string cardNumber}
+/* R-   */ struct DeleteBankCardFailed                     {1: _ErrorCode error}
+/* R+   */ struct DeleteBankCardSucceeded                  {1: i64 id, 2: string cardNumber}
 
 /* C    */ struct Login                                   {1: string email, 2: string password} // TODO: this may also be a persistent command
 /* R-   */ struct LoginFailed                             {1: _ErrorCode error}

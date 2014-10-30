@@ -157,6 +157,26 @@ class UserProcessor(mailer: ActorRef, bitwayProcessors: collection.immutable.Map
           sender ! VerifyRealNameFailed(UserNotExist)
       }
 
+    case m @ DoAddBankCard(uid, bankCard) =>
+      manager.profileMap.get(uid) match {
+        case Some(profile) =>
+          val newProfile = profile.copy(bankCards = profile.bankCards.map(_ :+ bankCard))
+          sender ! AddBankCardSucceeded(uid, bankCard)
+          persist(DoUpdateUserProfile(newProfile))(updateState)
+        case None =>
+          sender ! AddBankCardFailed(UserNotExist)
+      }
+
+    case m @ DoDeleteBankCard(uid, cardNumber) =>
+      manager.profileMap.get(uid) match {
+        case Some(profile) =>
+          val newProfile = profile.copy(bankCards = profile.bankCards.map(_.filter(_.cardNumber != cardNumber)))
+          sender ! DeleteBankCardSucceeded(uid, cardNumber)
+          persist(DoUpdateUserProfile(newProfile))(updateState)
+        case None =>
+          sender ! DeleteBankCardFailed(UserNotExist)
+      }
+
     case Login(email, password) =>
       manager.checkLogin(email, password) match {
         case Left(error) => sender ! LoginFailed(error)
