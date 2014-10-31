@@ -95,6 +95,7 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
   }
 
   def resetPassword(newPassword: String, passwordResetToken: String): UserProfile = {
+    assert(passwordResetTokenMap.contains(passwordResetToken))
     val id = passwordResetTokenMap(passwordResetToken)
     val profile = profileMap(id)
     val passwordHash = computePassword(profile.id, profile.email, newPassword)
@@ -109,7 +110,7 @@ class UserManager(googleAuthenticator: GoogleAuthenticator, passwordSecret: Stri
     val passwordHash = computePassword(profile.id, profile.email, newPassword)
     val passwordResetToken = profile.passwordResetToken.getOrElse("")
     val updatedProfile = profile.copy(passwordHash = Some(passwordHash), passwordResetToken = None)
-    passwordResetTokenMap -= passwordResetToken
+    //passwordResetTokenMap -= passwordResetToken
     profileMap += profile.id -> updatedProfile
     updatedProfile
   }
