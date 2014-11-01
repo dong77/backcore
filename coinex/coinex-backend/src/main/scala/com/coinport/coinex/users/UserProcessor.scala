@@ -160,7 +160,7 @@ class UserProcessor(mailer: ActorRef, bitwayProcessors: collection.immutable.Map
     case m @ DoAddBankCard(uid, bankCard) =>
       manager.profileMap.get(uid) match {
         case Some(profile) =>
-          val newProfile = profile.copy(bankCards = profile.bankCards.map(_ :+ bankCard))
+          val newProfile = profile.copy(bankCards = Some(profile.bankCards.getOrElse(List.empty[BankCard]) :+ bankCard))
           sender ! AddBankCardSucceeded(uid, bankCard)
           persist(DoUpdateUserProfile(newProfile))(updateState)
         case None =>
