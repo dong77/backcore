@@ -192,7 +192,10 @@ var xrp = {
         hotAccount: "rpX6Sujw8hkK8bBiFqH9oVQdNaogtT81z2",
         checkInterval : 10000,
         secret: "shGbSXqEM3gvtNDKHae21scBBVbRQ",
-        walletPassPhrase: ""
+        walletPassPhrase: "",
+        trustGateway: [
+            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"    
+        ]
     },
     redisProxyConfig: {
         currency: Currency.XRP,
@@ -217,7 +220,7 @@ var xrprmb = {
 };
 // var configs = [ btc, ltc, dog, drk, bc, vrc, zet ];
 // var configs = [ btc ];
-var configs = [ xrprmb ];
+var configs = [ xrp ];
 
 
 fs.readFile('./pw', function(error, data){

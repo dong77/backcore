@@ -52,6 +52,7 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
         opt_config.minerfee != undefined && (self.minerFee = opt_config.minerFee);
         opt_config.hotAccount != undefined && (this.hotAccount = opt_config.hotAccount);
         opt_config.secret != undefined && (this.secret = opt_config.secret);
+        opt_config.trustGateway != undefined && (this.trustGateway = opt_config.trustGateway);
     }
 
     this.currency || (this.currency = currency);
@@ -71,8 +72,8 @@ var CryptoProxy = module.exports.CryptoProxy = function(currency, opt_config) {
 Util.inherits(CryptoProxy, Events.EventEmitter);
 
 CryptoProxy.DROP_CONVERSION = 1000000;
-//CryptoProxy.URL = 'https://s1.ripple.com:51234/';
-CryptoProxy.URL = CryptoProxy.URL = 'http://172.31.17.22:5005/';
+CryptoProxy.URL = 'https://s1.ripple.com:51234/';
+//CryptoProxy.URL = CryptoProxy.URL = 'http://172.31.17.22:5005/';
 CryptoProxy.TIMEOUT = 10000;
 
 CryptoProxy.EventType = {
@@ -381,21 +382,48 @@ CryptoProxy.prototype.convertAmount_ = function(valueStr) {
     return value/CryptoProxy.DROP_CONVERSION;
 };
 
+CryptoProxy.prototype.isValidIssuer_ = function(issuer) {
+    var self = this;
+    for (var i = 0; i < self.trustGateway.length; i++) {
+        if (issuer == self.trustGateway[i]) {
+            return true;
+        }
+    }
+    return false;
+};
+
 CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
     var self = this;
+    var inputs = [];
+    var outputs = [];
     if (tx.TransactionType == "Payment") {
-        var input = new CryptoCurrencyTransactionPort({address: tx.Account, 
-                amount: (self.convertAmount_(tx.Amount) + self.convertAmount_(tx.Fee))});
-        var inputs = [];
-        inputs.push(input);
-        if (tx.DestinationTag) {
-            var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: self.convertAmount_(tx.Amount), 
-                memo: (tx.DestinationTag).toString()});
+        if ((typeof tx.Amount)  == "string") {
+            var input = new CryptoCurrencyTransactionPort({address: tx.Account, 
+                    amount: (self.convertAmount_(tx.Amount) + self.convertAmount_(tx.Fee))});
+            inputs.push(input);
+            if (tx.DestinationTag) {
+                var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: self.convertAmount_(tx.Amount), 
+                    memo: (tx.DestinationTag).toString()});
+                outputs.push(output);
+            } else {
+                var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: self.convertAmount_(tx.Amount)});
+            }
         } else {
-            var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: self.convertAmount_(tx.Amount)});
+            if (tx.Amount.currency == "CNY" && self.isValidIssuer_(tx.Amount.issuer)) {
+                var input = new CryptoCurrencyTransactionPort({address: tx.Account, 
+                        amount: parseFloat(tx.Amount.value), currency: "CNY"});
+                inputs.push(input);
+                if (tx.DestinationTag) {
+                    var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: parseFloat(tx.Amount.value), 
+                        currency: "CNY", memo: (tx.DestinationTag).toString()});
+                    outputs.push(output);
+                } else {
+                    var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: self.convertAmount_(tx.Amount)});
+                }
+            } else {
+                self.log.warn("Illegal currency at ledger_index: ", tx.ledger_index);
+            }
         }
-        var outputs = [];
-        outputs.push(output);
         var cctx = new CryptoCurrencyTransaction({txid: tx.hash, inputs: inputs, outputs: outputs,            
             status: TransferStatus.CONFIRMING});                                                                    
         cctx.sigId = tx.hash;        

@@ -625,6 +625,7 @@ struct CryptoCurrencyTransactionPort {
     6: optional string accountName
     7: optional string memo
     8: optional string nxtPublicKey
+    9: optional string currency
 }
 
 struct CryptoCurrencyTransferInfo {
