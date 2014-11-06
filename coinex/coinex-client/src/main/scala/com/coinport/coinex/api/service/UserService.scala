@@ -93,20 +93,21 @@ object UserService extends AkkaService {
   }
 
   def getDepositAddress(currencySeq: Seq[Currency], userId: Long) = {
+    val cryptoCurrencySeq = currencySeq.filter(_.value >= 1000)
     backend ? QueryProfile(Some(userId)) map {
       case qpr: QueryProfileResult =>
         val addr = qpr.userProfile match {
           case Some(profile) =>
             // allocate new address
             val map: Map[Currency, String] = if (!profile.depositAddresses.isDefined) {
-              getDepositAddressFromBackend(currencySeq, userId)
+              getDepositAddressFromBackend(cryptoCurrencySeq, userId)
             } else {
               val curSeq = profile.depositAddresses.get.map { pair =>
                 if (pair._1 == Currency.Nxt && pair._2.startsWith("//NXT")) null
                 else if (pair._2 != "") pair._1
                 else null
               }.filter(_ != null)
-              val currencyDiff = currencySeq.diff(curSeq.toSeq)
+              val currencyDiff = cryptoCurrencySeq.diff(curSeq.toSeq)
               val mapFromBackend = getDepositAddressFromBackend(currencyDiff, userId)
               (profile.depositAddresses.get ++ mapFromBackend).toMap
             }
@@ -116,7 +117,7 @@ object UserService extends AkkaService {
           case None => Map.empty[Currency, String]
         }
 
-        val rv = currencySeq.map { c =>
+        val rv = cryptoCurrencySeq.map { c =>
           val s: String = c
           s -> addr.getOrElse(c, "")
         }.toMap

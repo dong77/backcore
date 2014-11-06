@@ -53,6 +53,7 @@ object CurrencyConversion {
     Ltc ~> Cny -> 4,
     Btsx ~> Cny -> 4,
     Xrp ~> Cny -> 4,
+    Cny ~> Btc -> 6,
     Ltc ~> Btc -> 4,
     Doge ~> Btc -> 8,
     Drk ~> Btc -> 6,
