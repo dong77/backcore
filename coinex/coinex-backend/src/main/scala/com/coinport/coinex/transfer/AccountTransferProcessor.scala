@@ -60,7 +60,8 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
     case p @ ConfirmablePersistent(DoRequestTransfer(w, _, _), _, _) =>
       confirm(p)
       val msg = DoRequestTransfer(w.copy(id = manager.getTransferId, updated = w.created), transferDebug = Some(transferDebugConfig), Some(transferConfig))
-      if (isTransferByBitway(w.currency, msg.transferConfig) && !transferDebugConfig) {
+      val byBitway = isTransferByBitway(w.currency, msg.transferConfig)
+      if (byBitway && !transferDebugConfig) {
         w.`type` match {
           case TransferType.Deposit =>
             sender ! RequestTransferFailed(UnsupportTransferType)
@@ -89,7 +90,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
         handleTransfer(msg)
         sender ! RequestTransferSucceeded(msg.transfer) // wait for admin confirm
       }
-      if (w.`type` == TransferType.Withdrawal && transferConfig.enableAutoConfirm.getOrElse(false)) {
+      if (w.`type` == TransferType.Withdrawal && byBitway && transferConfig.enableAutoConfirm.getOrElse(false)) {
         tryAutoConfirm(msg.transfer)
       }
 
@@ -187,7 +188,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
                   event =>
                     deliverToAccountManager(event)
                     updateState(event)
-                    if (event.transfer.`type` == Withdrawal) {
+                    if (event.transfer.`type` == Withdrawal && transferDebugConfig) { // withdrawal debug mode should send message here
                       sendWithdrawalNotification(transfer.userId, transfer.amount, transfer.currency)
                     }
                 }
