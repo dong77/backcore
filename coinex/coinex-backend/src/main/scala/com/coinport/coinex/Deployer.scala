@@ -82,7 +82,7 @@ class Deployer(config: Config, hostname: String, markets: Seq[MarketSide])(impli
       deploy(Props(new CandleDataView(m) with StackableView[TCandleDataState, CandleDataManager]), candle_data_view << m)
     }
 
-    deploy(Props(new UserWriter(dbForViews, userManagerSecret)), user_mongo_writer <<)
+    deploy(Props(new UserWriter(dbForViews, userManagerSecret) with StackableView[TUserState, UserManager]), user_mongo_writer <<)
     deploy(Props(new AccountView(accountConfig) with StackableView[TAccountState, AccountManager]), account_view <<)
     deploy(Props(new AssetView with StackableView[TAssetState, AssetManager]), asset_view <<)
     deploy(Props(new MetricsView with StackableView[TMetricsState, MetricsManager]), metrics_view <<)

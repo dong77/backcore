@@ -19,7 +19,6 @@ object PersistentId extends Enumeration {
   val MARKET_DEPTH_VIEW = Value("v_md")
   val METRICS_VIEW = Value("v_m")
   val ROBOT_VIEW = Value("v_r")
-  val USER_VIEW = Value("v_u")
   val USER_WRITER_VIEW = Value("v_uw")
   val USER_ASSET = Value("v_ua")
   val BITWAY_VIEW = Value("v_bw")
