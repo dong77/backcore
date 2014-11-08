@@ -26,7 +26,7 @@ import dispatch.url
 
 class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpdateInterval: Long, adjustUserId: Long = 1000000000L) {
 
-  case class User(email: String, exchangeFrequency: Int = 900, takerPercentage: Int = 90, riskPercentage: Int = 10, buyPercentage: Int = 50)
+  case class User(email: String, exchangeFrequency: Int = 80, takerPercentage: Int = 80, riskPercentage: Int = 10, buyPercentage: Int = 50)
   case class DepthElem(price: Double, quantity: Double)
 
   var depthBuy: Map[MarketSide, List[DepthElem]] = Map.empty[MarketSide, List[DepthElem]]
@@ -34,12 +34,25 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
 
   var userMap: Map[Long, User] = Map.empty[Long, User]
 
+  def changeToBtcDepth(depths: List[DepthElem], side: MarketSide): List[DepthElem] = {
+    // println("depth change before : " + depths)
+    val json = getDepthJsonByUrl("https://www.okcoin.cn/api/ticker.do")
+    val jsonData = parseFull(json)
+    val btcPrice = jsonData.get.asInstanceOf[Map[String, Any]].get("ticker").get.asInstanceOf[Map[String, Any]].get("buy").get.asInstanceOf[String].toDouble
+    // println(">>>>>>>  btc price is : " + btcPrice)
+    depths map (d => DepthElem(roundByMarketSide(d.price / btcPrice, Btc ~> side.inCurrency), d.quantity))
+  }
+
   def updateDepth() {
     marketUrlMap.map { kv =>
       val (sell, buy) = jsonToDepth(getDepthJsonByUrl(kv._2), kv._1)
+      // depthSell += MarketSide(Btc, kv._1.inCurrency) -> changeToBtcDepth(sell, kv._1)
+      // depthBuy += MarketSide(Btc, kv._1.inCurrency) -> changeToBtcDepth(buy, kv._1)
       depthSell += kv._1 -> sell
       depthBuy += kv._1 -> buy
     }
+    // println("depth change aftersell : " + depthSell)
+    // println("depth change afterbuy : " + depthBuy)
     //
     //    println("========================")
     //    println(depthSell)
@@ -143,6 +156,7 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
     new Thread(new Runnable {
       def run() {
         while (true) {
+          println("update depth")
           updateDepth()
           Thread.sleep(marketUpdateInterval)
         }
@@ -171,6 +185,7 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
       new Thread(new Runnable {
         def run() {
           while (true) {
+            println(kv._1.toString + " submit order")
             createOrder(kv._1, kv._2) foreach {
               o => submitOrder(o)
             }
@@ -182,22 +197,13 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
     }
   }
 
-  //  def initDefaultUser() {
-  //    userMap ++= Map(
-  //      1000000000L -> User("dong"),
-  //      1000000001L -> User("dong"),
-  //      1000000002L -> User("xiaolu"),
-  //      // 1000000001L -> User("dong3"))
-  //
-  //      1000000008L -> User("xiaolu"))
-  //  }
-
   def initDefaultUser() {
     userMap ++= Map(
+      1000000000L -> User("dong"),
+      1000000001L -> User("dong"),
+      1000000002L -> User("xiaolu"),
+      // 1000000001L -> User("dong3"))
 
-      1000000453L -> User("dong"),
-      1000000340L -> User("xiaolu"),
-      1000000004L -> User("chunming"),
       1000000008L -> User("xiaolu"))
   }
 
@@ -227,6 +233,18 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
       case MarketSide(Btc, Drk) => roundDouble(src, 6)
       case MarketSide(Btc, Vrc) => roundDouble(src, 8)
       case MarketSide(Btc, Zet) => roundDouble(src, 8)
+      case MarketSide(Btc, Btsx) => roundDouble(src, 8)
+      case MarketSide(Btc, Nxt) => roundDouble(src, 8)
+      case MarketSide(Btc, Xrp) => roundDouble(src, 8)
+      case MarketSide(Cny, Ltc) => roundDouble(src, 2)
+      case MarketSide(Cny, Doge) => roundDouble(src, 7)
+      case MarketSide(Cny, Bc) => roundDouble(src, 5)
+      case MarketSide(Cny, Drk) => roundDouble(src, 3)
+      case MarketSide(Cny, Vrc) => roundDouble(src, 5)
+      case MarketSide(Cny, Zet) => roundDouble(src, 5)
+      case MarketSide(Cny, Btsx) => roundDouble(src, 5)
+      case MarketSide(Cny, Nxt) => roundDouble(src, 5)
+      case MarketSide(Cny, Xrp) => roundDouble(src, 5)
     }
   }
 
@@ -238,6 +256,9 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
       case MarketSide(Btc, Drk) => roundDouble(src, 2)
       case MarketSide(Btc, Vrc) => roundDouble(src, 3)
       case MarketSide(Btc, Zet) => roundDouble(src, 3)
+      case MarketSide(Btc, Btsx) => roundDouble(src, 3)
+      case MarketSide(Btc, Nxt) => roundDouble(src, 3)
+      case MarketSide(Btc, Xrp) => roundDouble(src, 4)
     }
   }
 
@@ -259,23 +280,33 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
 
   def createOrder(uid: Long, user: User): Future[Option[UserOrder]] = {
     val sides = marketUrlMap.keySet.toArray
+    // val preSides = marketUrlMap.keySet map { k => MarketSide(Btc, k.inCurrency) }
+    // val sides = preSides.toArray
+    // sides foreach { case e => println(e) }
     val side = sides(Random.nextInt(sides.size))
     val isTaker = hit(user.takerPercentage)
-
     val priceTerm = 5
     var price = 0.0
     var quantity = 0.0
+
     var operationsType = Operations.Buy
 
     (hit(user.takerPercentage), hit(user.buyPercentage)) match {
       case (true, true) => {
         operationsType = Operations.Buy
-        val item = depthSell(side).drop(Random.nextInt(priceTerm)).head
+        var items = depthSell(side).drop(Random.nextInt(priceTerm))
+        var item = depthSell(side).head
+        if (!items.isEmpty) {
+          item = items.head
+        }
         price = item.price
         quantity = randomQuantityBySide(side)
         getAccount(uid, side._1.name.toUpperCase) map {
           q =>
             {
+              println(quantity)
+              println(price)
+              println(q)
               if (quantity * price > q * 0.1) quantity = quantityRoundByMarketSide(q * 0.1 / price, side)
               Some(UserOrder(uid.toString, operationsType, side._2.name, side._1.name, Some(price), Some(quantity), None))
             }
@@ -283,7 +314,11 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
       }
       case (true, false) => {
         operationsType = Operations.Sell
-        val item = depthBuy(side).drop(Random.nextInt(priceTerm)).head
+        var items = depthBuy(side).drop(Random.nextInt(priceTerm))
+        var item = depthBuy(side).head
+        if (!items.isEmpty) {
+          item = items.head
+        }
         price = item.price
         quantity = randomQuantityBySide(side)
         getAccount(uid, side._2.name.toUpperCase) map {
@@ -315,6 +350,9 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
         getAccount(uid, side._1.name.toUpperCase) map {
           q =>
             {
+              println(quantity)
+              println(price)
+              println(q)
               if (quantity * price > q * 0.1) quantity = quantityRoundByMarketSide(q * 0.1 / price, side)
               Some(UserOrder(uid.toString, operationsType, side._2.name, side._1.name, Some(price), Some(quantity), None))
             }
@@ -335,6 +373,9 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
         getAccount(uid, side._2.name.toUpperCase) map {
           q =>
             {
+              println(quantity)
+              println(price)
+              println(q)
               if (quantity > q * 0.1) quantity = quantityRoundByMarketSide(q * 0.1, side)
               Some(UserOrder(uid.toString, operationsType, side._2.name, side._1.name, Some(price), Some(quantity), None))
             }
@@ -353,12 +394,15 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
 
   def randomQuantityBySide(side: MarketSide): Double = {
     side match {
-      case MarketSide(Btc, Ltc) => roundDouble(Random.nextDouble() / 5, 4)
-      case MarketSide(Btc, Doge) => roundDouble(Random.nextDouble() * 10000, 4)
-      case MarketSide(Btc, Bc) => roundDouble(Random.nextDouble() * 10, 3)
-      case MarketSide(Btc, Drk) => roundDouble(Random.nextDouble() / 5, 2)
-      case MarketSide(Btc, Vrc) => roundDouble(Random.nextDouble() * 5, 3)
-      case MarketSide(Btc, Zet) => roundDouble(Random.nextDouble() * 5, 3)
+      case MarketSide(Btc, Ltc) => roundDouble((1 + Random.nextDouble()) / 5, 4)
+      case MarketSide(Btc, Doge) => roundDouble((1 + Random.nextDouble()) * 10000, 4)
+      case MarketSide(Btc, Bc) => roundDouble((1 + Random.nextDouble()) * 10, 3)
+      case MarketSide(Btc, Drk) => roundDouble((1 + Random.nextDouble()) / 5, 2)
+      case MarketSide(Btc, Vrc) => roundDouble((1 + Random.nextDouble()) * 5, 3)
+      case MarketSide(Btc, Zet) => roundDouble((1 + Random.nextDouble()) * 5, 3)
+      case MarketSide(Btc, Btsx) => roundDouble((1 + Random.nextDouble()) * 100, 3)
+      case MarketSide(Btc, Nxt) => roundDouble((1 + Random.nextDouble()) * 20, 3)
+      case MarketSide(Btc, Xrp) => roundDouble((1 + Random.nextDouble()) * 1000, 4)
     }
   }
 
@@ -385,7 +429,7 @@ class AutoExchangeRobotExecutor(marketUrlMap: Map[MarketSide, String], marketUpd
 
 }
 
-object AutoExchangeRobotExecutor {
+object Executor {
 
   def main(args: Array[String]) {
     val marketUrlMap: Map[MarketSide, String] = Map(
@@ -394,7 +438,21 @@ object AutoExchangeRobotExecutor {
       Btc ~> Bc -> "http://data.bter.com/api/1/depth/bc_btc",
       Btc ~> Drk -> "http://data.bter.com/api/1/depth/drk_btc",
       Btc ~> Vrc -> "http://data.bter.com/api/1/depth/vrc_btc",
+      Btc ~> Btsx -> "http://data.bter.com/api/1/depth/btsx_btc",
+      Btc ~> Nxt -> "http://data.bter.com/api/1/depth/nxt_btc",
       Btc ~> Zet -> "http://data.bter.com/api/1/depth/zet_btc")
+    //  Btc ~> Zet -> "http://data.bter.com/api/1/depth/zet_btc",
+    //  Btc ~> Xrp -> "http://api.btc38.com/v1/depth.php?c=xrp&mk_type=btc")
+    //  val marketUrlMap: Map[MarketSide, String] = Map(
+    //    Cny ~> Ltc -> "http://data.bter.com/api/1/depth/ltc_cny",
+    //    Cny ~> Doge -> "http://data.bter.com/api/1/depth/doge_cny",
+    //    Cny ~> Bc -> "http://data.bter.com/api/1/depth/bc_cny",
+    //    Cny ~> Drk -> "http://data.bter.com/api/1/depth/drk_cny",
+    //    Cny ~> Vrc -> "http://data.bter.com/api/1/depth/vrc_cny",
+    //    Cny ~> Btsx -> "http://data.bter.com/api/1/depth/btsx_cny",
+    //    Cny ~> Nxt -> "http://data.bter.com/api/1/depth/nxt_cny",
+    //    Cny ~> Zet -> "http://data.bter.com/api/1/depth/zet_cny",
+    //    Cny ~> Xrp -> "http://api.btc38.com/v1/depth.php?c=xrp&mk_type=cny")
     val executor = new AutoExchangeRobotExecutor(marketUrlMap, 10000)
     executor.startExecutor
   }
@@ -406,7 +464,10 @@ object AutoExchangeRobotExecutor {
       Btc ~> Bc -> "http://data.bter.com/api/1/depth/bc_btc",
       Btc ~> Drk -> "http://data.bter.com/api/1/depth/drk_btc",
       Btc ~> Vrc -> "http://data.bter.com/api/1/depth/vrc_btc",
-      Btc ~> Zet -> "http://data.bter.com/api/1/depth/zet_btc")
+      Btc ~> Btsx -> "http://data.bter.com/api/1/depth/btsx_btc",
+      Btc ~> Nxt -> "http://data.bter.com/api/1/depth/nxt_btc",
+      Btc ~> Zet -> "http://data.bter.com/api/1/depth/zet_btc",
+      Btc ~> Xrp -> "http://api.btc38.com/v1/depth.php?c=xrp&mk_type=btc")
     val executor = new AutoExchangeRobotExecutor(marketUrlMap, 10000)
     executor.startExecutor
   }
