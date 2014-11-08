@@ -14,13 +14,14 @@ import com.coinport.coinex.fee.CountFeeSupport
 import com.coinport.coinex.common.PersistentId._
 import com.coinport.coinex.common.Constants._
 import com.coinport.coinex.fee.FeeConfig
+import akka.actor.ActorLogging
 
-class AccountView(accountConfig: AccountConfig) extends ExtendedView with AccountManagerBehavior {
+class AccountView(accountConfig: AccountConfig) extends ExtendedView with AccountManagerBehavior with ActorLogging {
   val feeConfig = accountConfig.feeConfig
   override val processorId = ACCOUNT_PROCESSOR <<
   override val viewId = ACCOUNT_VIEW<<
   val manager = new AccountManager(0L)
-  implicit val logger: LoggingAdapter = null
+  lazy implicit val logger: LoggingAdapter = log
 
   def receive = LoggingReceive {
     case Persistent(msg, _) => updateState(msg)
