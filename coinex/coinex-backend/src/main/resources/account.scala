@@ -62,7 +62,7 @@ AccountConfig(
       Btsx -> ConstantFee(2.internalValue(Btsx)),
       Nxt -> ConstantFee(2.internalValue(Nxt)),
       Xrp -> ConstantFee(1.internalValue(Xrp)),
-      Cny -> PercentageFee(0.005)),
+      Cny -> PercentageFee(0.004)),
 
     freeOfTxChargeUserIdThreshold = 1E9.toLong + 2000 // 1 thousand
     )
