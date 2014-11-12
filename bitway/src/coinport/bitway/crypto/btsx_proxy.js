@@ -252,7 +252,7 @@ CryptoProxy.prototype.walletTransfer_ = function(type, amount, from, to, id, mem
     var self = this;
     var params = [];
     params.push(amount);
-    params.push("BTSX");
+    params.push("BTS");
     params.push(from);
     params.push(to);
     params.push(memo);
@@ -779,7 +779,7 @@ CryptoProxy.prototype.getWalletTransactionByIndex_ = function(height, callback) 
     self.log.info("Enter into getWalletTransactionByIndex_");
     var params = [];
     params.push("");
-    params.push("BTSX");
+    params.push("BTS");
     params.push(0);
     params.push(height);
     params.push(height);
