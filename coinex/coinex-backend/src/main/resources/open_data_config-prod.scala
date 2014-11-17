@@ -13,6 +13,6 @@ new OpenDataConfig {
   }
   override val scheduleInterval = 3600 second
   override val openSnapshotSerializerMap = Map.empty[String,com.coinport.coinex.serializers.BaseJsonSerializer]
-  override val openSnapshotFilterMap = Map(TAccountState.Immutable.getClass.getEnclosingClass.getSimpleName -> TAccountStateFilter)
+  override val openSnapshotFilterMap = Map(TAccountState.Immutable.getClass.getEnclosingClass.getSimpleName -> TAccountStateFilter, TAccountTransferState.Immutable.getClass.getEnclosingClass.getSimpleName -> TAccountTransferStateFilter)
   override val snapshotWriterMap: Map[String, SnapshotWriter] = Map(TAccountState.Immutable.getClass.getEnclosingClass.getSimpleName -> AccountSnapshotCvsWriter)
 }

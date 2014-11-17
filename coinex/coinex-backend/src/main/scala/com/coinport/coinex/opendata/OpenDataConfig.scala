@@ -1,7 +1,7 @@
 package com.coinport.coinex.opendata
 
 import com.coinport.coinex.serializers.BaseJsonSerializer
-import com.coinport.coinex.data.TAccountState
+import com.coinport.coinex.data._
 import scala.concurrent.duration._
 
 class OpenDataConfig() {
@@ -33,5 +33,11 @@ object TAccountStateFilter extends BaseJsonFilter {
       codeAIndexMap = Map.empty,
       codeBIndexMap = Map.empty
     )
+  }
+}
+
+object TAccountTransferStateFilter extends BaseJsonFilter {
+  override def filter(original: Any): Any = {
+    original.asInstanceOf[TAccountTransferState.Immutable].copy(userId2WithdrawalsInner = Map.empty)
   }
 }
