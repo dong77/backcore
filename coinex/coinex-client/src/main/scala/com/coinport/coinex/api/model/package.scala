@@ -182,7 +182,8 @@ package object model {
     }
     val txid = t.txid.getOrElse("")
 
-    ApiTransferItem(id, uid, amount, status.value, created, updated, operation.getValue, t.address.getOrElse(""), txid, t.nxtRsAddress)
+    ApiTransferItem(id, uid, amount, status.value, created, updated, operation.getValue,
+      if (!fromAdmin && t.currency.value < 1000) "" else t.address.getOrElse(""), txid, t.nxtRsAddress)
   }
 
   def fromMarketDepth(depth: MarketDepth) = {
