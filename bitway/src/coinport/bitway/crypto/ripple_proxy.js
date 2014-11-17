@@ -125,6 +125,7 @@ CryptoProxy.prototype.transfer = function(request, callback) {
 
 CryptoProxy.prototype.sign_ = function(transferInfo, callback) {
     var self = this;
+    var amount = (parseInt((transferInfo.amount) * CryptoProxy.DROP_CONVERSION)).toString();
     var requestBody = {                                                                      
        "method": "sign",                                                              
        "params": [                                                                    
@@ -134,7 +135,7 @@ CryptoProxy.prototype.sign_ = function(transferInfo, callback) {
               "tx_json": {                                                        
                  "Account": self.hotAccount,                 
                  "Fee": "10000",
-                 "Amount": (transferInfo.amount) * CryptoProxy.DROP_CONVERSION,                                                   
+                 "Amount": amount,                                                   
                  "Destination": transferInfo.to,             
                  "TransactionType": "Payment"                                     
                }                                                                  
