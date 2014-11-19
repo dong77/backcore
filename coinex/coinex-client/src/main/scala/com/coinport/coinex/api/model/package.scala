@@ -148,6 +148,17 @@ package object model {
     ApiTicker(market, price, high, low, volume, gain, trend)
   }
 
+  def mFromTicker(metrics: MetricsByMarket, side: MarketSide, currency: Currency) = {
+    val item = currency2String(side.inCurrency)
+    val c = currency2String(currency)
+    val price = PriceObject(side, metrics.price).display
+    val volume = CurrencyObject(currency, metrics.volume).display
+    val gain = metrics.gain.getOrElse(0.0)
+    val trend = Some(metrics.direction.toString.toLowerCase)
+
+    ApiTickerM(item, c, price, volume, gain, trend)
+  }
+
   def fromTransferItem(t: AccountTransfer, fromAdmin: Boolean = false) = {
     import TransferStatus._
     import TransferType._

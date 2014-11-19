@@ -18,6 +18,8 @@ case class ApiMarketDepth(bids: Seq[ApiMarketDepthItem], asks: Seq[ApiMarketDept
 
 case class ApiTicker(market: String, price: PriceObject, high: PriceObject, low: PriceObject, volume: CurrencyObject, gain: Double = 0.0, trend: Option[String] = None)
 
+case class ApiTickerM(i: String, c: String, p: String, v: String, g: Double = 0.0, t: Option[String] = None)
+
 case class ApiTransaction(id: String, timestamp: Long, price: PriceObject, subjectAmount: CurrencyObject, currencyAmount: CurrencyObject, maker: String, taker: String, sell: Boolean, tOrder: ApiOrderState, mOrder: ApiOrderState)
 
 case class ApiOrderState(oid: String, uid: String, preAmount: CurrencyObject, curAmount: CurrencyObject)
