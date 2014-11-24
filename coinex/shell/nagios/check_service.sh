@@ -8,7 +8,7 @@
 # 1     Warning
 # 2     Critical
 # 3     Unknown
-res=`curl https://coinport.com/api/open/reserve/BTC`
+res=`curl https://exchange.coinport.com/api/open/reserve/BTC`
 echo "=====>>>>>>>  response is "$res
 isOk=`echo $res | grep '"success":true,"code":0' | wc -l`
 
