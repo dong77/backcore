@@ -204,6 +204,21 @@ package object model {
     ApiMarketDepth(bids, asks)
   }
 
+  def mFromMarketDepth(depth: MarketDepth) = {
+    val bids = depth.bids.map { item =>
+      val price = PriceObject(depth.side, item.price)
+      val amount = CurrencyObject(depth.side.outCurrency, item.quantity)
+      ApiMarketDepthItemM(price.display, price.value, amount.display, amount.value)
+    }
+    val asks = depth.asks.map { item =>
+      val price = PriceObject(depth.side, item.price)
+      val amount = CurrencyObject(depth.side.outCurrency, item.quantity)
+      ApiMarketDepthItemM(price.display, price.value, amount.display, amount.value)
+    }
+
+    ApiMarketDepthM(bids, asks)
+  }
+
   def fromCandleItem(item: CandleDataItem, side: MarketSide, currency: Currency, timeSkip: Long) = {
     val time = item.timestamp * timeSkip
     val open = PriceObject(side, item.open)

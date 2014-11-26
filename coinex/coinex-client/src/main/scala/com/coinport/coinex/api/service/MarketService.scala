@@ -19,6 +19,13 @@ object MarketService extends AkkaService {
     }
   }
 
+  def getMDepth(marketSide: MarketSide, depth: Int): Future[ApiResult] = {
+    backend ? QueryMarketDepth(marketSide, depth) map {
+      case result: QueryMarketDepthResult => ApiResult(data = Some(mFromMarketDepth(result.marketDepth)))
+      case x => ApiResult(false)
+    }
+  }
+
   def getHistory(marketSide: MarketSide, timeDimension: ChartTimeDimension, from: Long, to: Long): Future[ApiResult] = {
     backend ? QueryCandleData(marketSide, timeDimension, from, to) map {
       case rv: QueryCandleDataResult =>
