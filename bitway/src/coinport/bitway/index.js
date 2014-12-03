@@ -194,7 +194,7 @@ var xrp = {
         secret: "shGbSXqEM3gvtNDKHae21scBBVbRQ",
         walletPassPhrase: "",
         trustGateway: [
-            "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn"    
+            "razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA"
         ]
     },
     redisProxyConfig: {
