@@ -64,6 +64,6 @@ AccountConfig(
       Xrp -> ConstantFee(1.internalValue(Xrp)),
       Cny -> PercentageFee(0.004)),
 
-    freeOfTxChargeUserIdThreshold = 1E9.toLong + 2000 // 1 thousand
+    freeOfTxChargeUserIdThreshold = 1E9.toLong + 20000000 // 1 thousand
     )
 )
