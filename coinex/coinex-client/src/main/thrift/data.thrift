@@ -165,6 +165,7 @@ enum TransferType {
     UNKNOWN     = 5
     DEPOSIT_HOT = 6
     USERS_TO_INNER = 7
+    DEPOSIT_CNY_BY_XRP = 8
 }
 
 enum RechargeCodeStatus {

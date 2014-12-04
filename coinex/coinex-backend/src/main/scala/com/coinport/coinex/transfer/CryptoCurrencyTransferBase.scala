@@ -317,6 +317,8 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
                             Some(new CryptoCurrencyTransferColdToHotHandler(currency, outputPort, tx, timestamp))
                           case Some(DepositHot) =>
                             Some(new CryptoCurrencyTransferDepositHotHandler(currency, outputPort, tx, timestamp))
+                          case Some(DepositCnyByXrp) =>
+                            Some(new CryptoCurrencyTransferDepositHotHandler(Currency.Xrprmb, outputPort, tx, timestamp))
                           case _ =>
                             logger.error(s"""${"~" * 50} innerHandleTx() ${tx.txType.get.toString} tx is not valid txType : ${tx.toString}""")
                             None
