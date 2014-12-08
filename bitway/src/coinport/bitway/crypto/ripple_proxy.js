@@ -18,6 +18,7 @@ var Async                         = require('async'),
     CryptoCurrencyBlockMessage    = MessageTypes.CryptoCurrencyBlockMessage,
     BitwayResponseType            = DataTypes.BitwayResponseType,
     ErrorCode                     = DataTypes.ErrorCode,
+    Currency                      = DataTypes.Currency,
     GenerateAddressesResult       = MessageTypes.GenerateAddressesResult,
     TransferStatus                = DataTypes.TransferStatus,
     CryptoCurrencyAddressType     = DataTypes.CryptoCurrencyAddressType,
@@ -384,11 +385,11 @@ CryptoProxy.prototype.convertAmount_ = function(valueStr) {
 
 CryptoProxy.prototype.isValidIssuer_ = function(paths) {
     var self = this;
-    console.log("paths: %j", paths);
+    self.log.info("isValidIssuer paths: %j", paths);
     for (var i = 0; i < paths.length; i++) {
         var path = paths[i];
         var issuer = path[path.length - 1].account;
-        console.log("issuer: ", issuer);
+        self.log.info("issuer: ", issuer);
         for (var j = 0; j < self.trustGateway.length; j++) {
             if (issuer == self.trustGateway[j]) {
                 return true;
@@ -402,6 +403,7 @@ CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
     var self = this;
     var inputs = [];
     var outputs = [];
+    var minerFee = 0;
     if (tx.TransactionType == "Payment") {
         if ((typeof tx.Amount)  == "string") {
             var input = new CryptoCurrencyTransactionPort({address: tx.Account, 
@@ -414,16 +416,17 @@ CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
             } else {
                 var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: self.convertAmount_(tx.Amount)});
             }
+            minerFee = self.convertAmount_(tx.Fee);
         } else {
             if (tx.Amount.currency == "CNY" && self.isValidIssuer_(tx.Paths)) {
                 var input = new CryptoCurrencyTransactionPort({address: tx.Account, 
-                        amount: parseFloat(tx.Amount.value), currency: "CNY"});
+                        amount: parseFloat(tx.Amount.value), currency: Currency.CNY});
                 inputs.push(input);
                 if (tx.DestinationTag) {
                     var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: parseFloat(tx.Amount.value), 
-                        currency: "CNY", memo: (tx.DestinationTag).toString()});
+                        currency: Currency.CNY, memo: (tx.DestinationTag).toString()});
                 } else {
-                    var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: parseFloat(tx.Amount.value), currency: "CNY"});
+                    var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: parseFloat(tx.Amount.value), currency: Currency.CNY});
                 }
                 outputs.push(output);
             } else {
@@ -437,7 +440,7 @@ CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
             status: TransferStatus.CONFIRMING});                                                                    
         cctx.sigId = tx.hash;        
         cctx.ids = [];
-        cctx.minerFee = self.convertAmount_(tx.Fee);
+        cctx.minerFee = minerFee;
         console.log("cctx: %j", cctx);
         return cctx;
     } else {

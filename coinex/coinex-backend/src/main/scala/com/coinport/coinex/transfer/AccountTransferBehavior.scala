@@ -37,7 +37,6 @@ trait AccountTransferBehavior {
     transferHandlerObjectMap += HotToCold -> CryptoCurrencyTransferHotToColdHandler.setEnv(env)
     transferHandlerObjectMap += ColdToHot -> CryptoCurrencyTransferColdToHotHandler.setEnv(env)
     transferHandlerObjectMap += DepositHot -> CryptoCurrencyTransferDepositHotHandler.setEnv(env)
-    transferHandlerObjectMap += DepositCnyByXrp -> CryptoCurrencyTransferDepositHotHandler.setEnv(env)
     transferHandlerObjectMap += UsersToInner -> CryptoCurrencyTransferUsersToInnerHandler.setEnv(env)
     manager.setTransferHandlers(transferHandlerObjectMap)
     CryptoCurrencyTransferUnknownHandler.setEnv(env)
@@ -52,7 +51,6 @@ trait AccountTransferBehavior {
           case TransferType.UserToHot =>
           case TransferType.DepositHot =>
           case TransferType.Withdrawal =>
-          case TransferType.DepositCnyByXrp =>
             transferHandler.put(t)
           case TransferType.ColdToHot => //Just log, will confirmed by admin
             transferHandler.put(t)
@@ -126,11 +124,7 @@ trait AccountTransferBehavior {
               transferHandlerObjectMap.contains(txType) match {
                 case true =>
                   needPersistCryptoMsg = true
-                  if (txType == TransferType.DepositCnyByXrp) {
-                    transferHandlerObjectMap(txType).handleTx(Currency.Xrprmb, tx, timestamp)
-                  } else {
-                    transferHandlerObjectMap(txType).handleTx(currency, tx, timestamp)
-                  }
+                  transferHandlerObjectMap(txType).handleTx(currency, tx, timestamp)
                 case _ =>
                   logger.warning(s"Unknown tx meet : ${currency.toString} ${tx.toString}")
               }
@@ -193,7 +187,6 @@ trait AccountTransferBehavior {
         }
     }
     multiAccountTransfers
-
   }
 
   def canHotColdInterTransfer(currency: Currency, transferType: TransferType): Boolean = {

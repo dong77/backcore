@@ -315,7 +315,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
     }
 
     case CryptoTransferResult(multiTransfers) => {
-      //      println(s">>>>>>>>>>>>>>>>>>>>> AccountProcessor got success accountTransfer => ${t.toString}")
+      //println(s"AccountProcessor got success accountTransfer => ${multiTransfers.toString}")
       multiTransfers.values foreach {
         transferWithFee =>
           transferWithFee.transfers.foreach {
@@ -332,7 +332,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
                   if (logger != null) {
                     logger.error("Unexpected transferStatus" + transfer.toString)
                   }
-                //                case _ => logger.error("Unexpected transferStatus" + transfer.toString)
+                // case _ => logger.error("Unexpected transferStatus" + transfer.toString)
               }
           }
           val txType = transferWithFee.transfers(0).`type`
@@ -393,6 +393,7 @@ trait AccountManagerBehavior extends CountFeeSupport {
             manager.updateCashAccount(t.userId, CashAccount(t.currency, 0, 0, -t.amount))
         }
       case _ =>
+        println("succeededTransfer type not match")
     }
 
     def depositAction(transfer: AccountTransfer) {

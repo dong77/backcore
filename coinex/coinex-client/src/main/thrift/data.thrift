@@ -107,7 +107,6 @@ enum Currency {
     NXT  = 2200
     QORA = 2210
     XRP  = 3100
-    XRPRMB = 3200
 }
 
 enum OrderStatus {
@@ -165,7 +164,6 @@ enum TransferType {
     UNKNOWN     = 5
     DEPOSIT_HOT = 6
     USERS_TO_INNER = 7
-    DEPOSIT_CNY_BY_XRP = 8
 }
 
 enum RechargeCodeStatus {
@@ -465,6 +463,7 @@ struct AccountTransfer {
     14: optional string nxtRsAddress
     15: optional string memo
     16: optional string nxtPublicKey
+    17: optional string source // the source of the transfer     
 }
 
 struct AccountTransfersWithMinerFee {
@@ -626,7 +625,7 @@ struct CryptoCurrencyTransactionPort {
     6: optional string accountName
     7: optional string memo
     8: optional string nxtPublicKey
-    9: optional string currency
+    9: optional Currency currency
 }
 
 struct CryptoCurrencyTransferInfo {

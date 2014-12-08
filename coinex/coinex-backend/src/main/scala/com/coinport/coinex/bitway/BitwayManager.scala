@@ -281,15 +281,11 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
       None
     } else {
       val txType =
-        if (tx.inputs.get(0).currency.get == "CNY") {
-          Some(TransferType.DepositCnyByXrp)
-        } else {
-          if (tx.txType.isDefined)
-            tx.txType
-          else
+        if (tx.txType.isDefined)
+          tx.txType
+        else
           getTransferType(Set.empty[String] ++ inputs.get.map(_.address),
             Set.empty[String] ++ outputs.get.map(_.address))
-        }
       if (txType.isDefined) {
         val regularizeInputs = inputs.map(_.map(i => i.copy(
           internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)),
