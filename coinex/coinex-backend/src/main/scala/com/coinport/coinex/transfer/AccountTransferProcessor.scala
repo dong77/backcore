@@ -60,7 +60,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
     case p @ ConfirmablePersistent(DoRequestTransfer(w, _, _), _, _) =>
       confirm(p)
       val msg = DoRequestTransfer(w.copy(id = manager.getTransferId, updated = w.created), transferDebug = Some(transferDebugConfig), Some(transferConfig))
-      val byBitway = isTransferByBitway(w.currency, msg.transferConfig)
+      val byBitway = isTransferByBitway(w, msg.transferConfig)
       if (byBitway && !transferDebugConfig) {
         w.`type` match {
           case TransferType.Deposit =>
@@ -143,7 +143,7 @@ class AccountTransferProcessor(val db: MongoDB, accountProcessorPath: ActorPath,
     case AdminConfirmTransferSuccess(t, _, _) =>
       transferHandler.get(t.id) match {
         case Some(transfer) if transfer.status == Pending || transfer.status == HotInsufficient || transfer.status == Processing || transfer.status == BitwayFailed || transfer.status == ReorgingSucceeded =>
-          if (isTransferByBitway(transfer.currency, Some(transferConfig)) && !transferDebugConfig) {
+          if (isTransferByBitway(transfer, Some(transferConfig)) && !transferDebugConfig) {
             transfer.`type` match {
               case TransferType.Deposit if transfer.status == ReorgingSucceeded =>
                 confirmSuccess(transfer, Succeeded)
