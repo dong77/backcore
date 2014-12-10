@@ -333,16 +333,17 @@ CryptoProxy.prototype.getNextCCBlockSinceLastIndex_ = function(index, callback) 
         if (error) {
             self.log.error(error);
             callback(error);
-        } else if (index == count) {
-            self.log.debug('no new block found');
+        } else if (index > count - 3) {
+            self.log.info('no new block found, current count is: ', count);
             callback('no new block found');
         } else {
             var nextIndex = (index == -1) ? count : index + 1;
             self.log.info("getNextCCBlockSinceLastIndex_ nextIndex: ", nextIndex);
-            self.getCCBlockByIndex_(nextIndex, count, callback);
+            self.getCCBlockByIndex_(nextIndex, count - 2, callback);
         }
     });
 };
+
 
 CryptoProxy.prototype.getBlockCount_ = function(callback) {
     var self = this;
