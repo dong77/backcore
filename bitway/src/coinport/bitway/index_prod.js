@@ -190,7 +190,14 @@ var xrp = {
         hotAccount: "",
         checkInterval : 10000,
         secret: "",
-        walletPassPhrase: ""
+        walletPassPhrase: "",
+        trustGateway: [
+            {
+                gatewayName: "ripplecn",
+                gateway: "rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK",
+                withdrawFeeRate: 0.003
+            }
+        ]
     },
     redisProxyConfig: {
         currency: Currency.XRP,
