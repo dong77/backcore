@@ -9,7 +9,7 @@ class CryptoCurrencyTransferDepositLikeHandler(currency: Currency, outputPort: C
   if (currency != null && outputPort != null && tx != null) {
     val transferId = manager.getTransferId
     manager.setLastTransferId(transferId)
-    if (outputPort.currency.isDefined && outputPort.currency.get == Currency.Cny) {
+    if (outputPort.currency.isDefined && (outputPort.currency.get == Currency.Cny || outputPort.currency.get == Currency.Btc)) {
       transferHandler.put(AccountTransfer(transferId, outputPort.userId.get, tx.txType.get, outputPort.currency.get, outputPort.internalAmount.get, Confirming, getTimestamp(), getTimestamp(), address = Some(outputPort.address), txid = tx.txid, nxtRsAddress = outputPort.nxtRsAddress, source = Some(currency)))
     } else {
       transferHandler.put(AccountTransfer(transferId, outputPort.userId.get, tx.txType.get, currency, outputPort.internalAmount.get, Confirming, getTimestamp(), getTimestamp(), address = Some(outputPort.address), txid = tx.txid, nxtRsAddress = outputPort.nxtRsAddress))

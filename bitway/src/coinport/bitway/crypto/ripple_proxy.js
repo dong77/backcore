@@ -409,6 +409,7 @@ CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
     var inputs = [];
     var outputs = [];
     var minerFee = 0;
+    var currency = null;
     if (tx.TransactionType == "Payment") {
         if ((typeof tx.Amount)  == "string") {
             var input = new CryptoCurrencyTransactionPort({address: tx.Account, 
@@ -423,28 +424,28 @@ CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
             }
             minerFee = self.convertAmount_(tx.Fee);
         } else {
-            if (tx.Amount.currency == "CNY" && self.isValidIssuer_(tx.Paths)) {
-                var input = new CryptoCurrencyTransactionPort({address: tx.Account, 
-                        amount: parseFloat(tx.Amount.value), currency: Currency.CNY});
-                inputs.push(input);
-                var amount = parseFloat(tx.Amount.value);
-                if (amount < 0.000001) {
-                    self.log.warn("tiny amount: ", amount);
-                    amount = 0;
-                } 
-                if (tx.DestinationTag) {
-                    var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: amount, 
-                        currency: Currency.CNY, memo: (tx.DestinationTag).toString()});
-                } else {
-                    var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: parseFloat(tx.Amount.value), currency: Currency.CNY});
-                }
-                outputs.push(output);
+            if (tx.Amount.currency == "CNY") {
+                currency = Currency.CNY;
+            } else if (tx.Amount.currency == "BTC") {
+                currency = Currency.BTC;
             } else {
                 self.log.warn("tx.Amount.currency: ", tx.Amount.currency);
                 self.log.warn("tx.Amount.issuer: ", tx.Amount.issuer);
                 self.log.warn("Illegal currency at ledger_index: ", tx.ledger_index);
                 return null;
             }
+            var input = new CryptoCurrencyTransactionPort({address: tx.Account, 
+                    amount: parseFloat(tx.Amount.value), currency: currency});
+            inputs.push(input);
+            var amount = parseFloat(tx.Amount.value);
+            if (tx.DestinationTag) {
+                var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: amount, 
+                    currency: currency, memo: (tx.DestinationTag).toString()});
+            } else {
+                var output = new CryptoCurrencyTransactionPort({address: tx.Destination, 
+                    amount: parseFloat(tx.Amount.value), currency: currency});
+            }
+            outputs.push(output);
         }
         var cctx = new CryptoCurrencyTransaction({txid: tx.hash, inputs: inputs, outputs: outputs,            
             status: TransferStatus.CONFIRMING});                                                                    
