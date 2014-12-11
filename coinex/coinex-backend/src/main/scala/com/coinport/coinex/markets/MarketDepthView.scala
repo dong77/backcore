@@ -77,7 +77,7 @@ class MarketDepthView(market: MarketSide, maxNumOfTxPerOrder: Int) extends Exten
   private def takeDepthItemsByDepth(orders: SortedSet[Order], depth: Int, isAsk: Boolean) = {
     val buffer = new ListBuffer[MarketDepthItem]
     var index = 0
-    while (buffer.size < depth && index < orders.size) {
+    while (buffer.size <= depth && index < orders.size) {
       val order = orders.view(index, index + 1).head
       val item = orderToDepthItem(order, isAsk)
       if (buffer.isEmpty || buffer.last.price != item.price) buffer += item
@@ -90,7 +90,7 @@ class MarketDepthView(market: MarketSide, maxNumOfTxPerOrder: Int) extends Exten
       }
       index += 1
     }
-    buffer.toSeq
+    buffer.toSeq.take(depth)
   }
 
   private def takeDepthItemsByPrice(orders: SortedSet[Order], price: Double, isAsk: Boolean) = {
