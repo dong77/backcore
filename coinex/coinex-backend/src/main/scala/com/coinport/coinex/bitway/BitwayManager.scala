@@ -257,6 +257,8 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     }
   }
 
+  // TODO(yangli): need get real currency instead of supportedCurrency when supporting withdrawal cny/btc... to ripple
+  // network.
   def completeTransferInfos(infos: Seq[CryptoCurrencyTransferInfo],
     isHotToCold: Boolean = false): (List[CryptoCurrencyTransferInfo], Boolean /* isFail */ ) = {
     if (isHotToCold) {
@@ -270,6 +272,12 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
       (infos.map(info => info.copy(amount = info.internalAmount.map((new CurrencyWrapper(_).externalValue(
         supportedCurrency))))).toList, false)
     }
+  }
+
+  // *NOTE* XRP BitwayManager need handle deposit/withdrawal cny/btc... from/to ripple network, so the real currency may
+  // not be XRP.
+  private def getCurrency(port: CryptoCurrencyTransactionPort): Currency = {
+    if (port.currency.isDefined) port.currency.get else supportedCurrency
   }
 
   def completeCryptoCurrencyTransaction(
@@ -288,10 +296,10 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
             Set.empty[String] ++ outputs.get.map(_.address))
       if (txType.isDefined) {
         val regularizeInputs = inputs.map(_.map(i => i.copy(
-          internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)),
+          internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(getCurrency(i))),
           userId = addressUidMap.get(i.address), accountName = address2AccountNameMap.get(i.address), nxtRsAddress = getNxtRsAddress(i))))
         val regularizeOutputs = outputs.map(_.map(i => i.copy(
-          internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency)),
+          internalAmount = i.amount.map(new CurrencyWrapper(_).internalValue(getCurrency(i))),
           userId = getUserId(i, tx, txType.get), accountName = address2AccountNameMap.get(i.address), nxtRsAddress = getNxtRsAddress(i))))
         val sumInput = regularizeInputs.get.map(i => i.internalAmount.getOrElse(0L)).sum
         val sumOutput = regularizeOutputs.get.map(i => i.internalAmount.getOrElse(0L)).sum
@@ -523,7 +531,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
           ports.filter(port => addressStatus.contains(port.address)).foreach { port =>
             val addrStatus = addressStatus.getOrElse(port.address, AddressStatus())
             val newAddrStatus = addrStatus.updateTxid(Some(txid)).updateHeight(h).updateBook(h,
-              port.amount.map(new CurrencyWrapper(_).internalValue(supportedCurrency) * (if (isDeposit) 1 else -1)))
+              port.amount.map(new CurrencyWrapper(_).internalValue(getCurrency(port)) * (if (isDeposit) 1 else -1)))
             addressStatus += (port.address -> newAddrStatus)
           }
         }

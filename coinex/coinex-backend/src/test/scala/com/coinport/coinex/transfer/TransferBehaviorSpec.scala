@@ -67,7 +67,7 @@ class TransferBehaviorSpec extends IntegrationSpec(new Environment) {
     }
 
     "check isCryptoCurrency as expected" in {
-      dw.isTransferByBitway(Btc, None) should equal(true)
+      dw.isTransferByBitway(AccountTransfer(0, 0, TransferType.DepositHot, Btc, 1), None) should equal(true)
     }
 
     "DoRequestTransfer act as expected" in {
