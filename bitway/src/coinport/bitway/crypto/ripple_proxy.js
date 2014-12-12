@@ -421,6 +421,7 @@ CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
                 outputs.push(output);
             } else {
                 var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: self.convertAmount_(tx.Amount)});
+                outputs.push(output);
             }
             minerFee = self.convertAmount_(tx.Fee);
         } else {
@@ -441,11 +442,12 @@ CryptoProxy.prototype.constructCctxByTxJson_ = function(tx) {
             if (tx.DestinationTag) {
                 var output = new CryptoCurrencyTransactionPort({address: tx.Destination, amount: amount, 
                     currency: currency, memo: (tx.DestinationTag).toString()});
+                outputs.push(output);
             } else {
                 var output = new CryptoCurrencyTransactionPort({address: tx.Destination, 
                     amount: parseFloat(tx.Amount.value), currency: currency});
+                outputs.push(output);
             }
-            outputs.push(output);
         }
         var cctx = new CryptoCurrencyTransaction({txid: tx.hash, inputs: inputs, outputs: outputs,            
             status: TransferStatus.CONFIRMING});                                                                    
