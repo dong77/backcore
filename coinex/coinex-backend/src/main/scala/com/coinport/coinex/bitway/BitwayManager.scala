@@ -531,7 +531,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
           ports.filter(port => addressStatus.contains(port.address)).foreach { port =>
             val addrStatus = addressStatus.getOrElse(port.address, AddressStatus())
             val newAddrStatus = addrStatus.updateTxid(Some(txid)).updateHeight(h).updateBook(h,
-              port.amount.map(new CurrencyWrapper(_).internalValue(getCurrency(port)) * (if (isDeposit) 1 else -1)))
+              port.amount.map(new CurrencyWrapper(_).internalValue(getCurrency(port)) * (if (port.currency.isDefined) 0 else { if (isDeposit) 1 else -1 })))
             addressStatus += (port.address -> newAddrStatus)
           }
         }
