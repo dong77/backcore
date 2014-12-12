@@ -23,3 +23,9 @@ case class ConstantFee(fee: Long) extends FeeRule {
 
   def toThrift = TFeeRule(fee = Some(fee))
 }
+
+case class LadderFee(threshold: Long, constantFee: Long, percentage: Double = 0.0) extends FeeRule {
+  def getFee(amount: Long) = if (amount < threshold) constantFee else (amount * percentage).round
+
+  def toThrift = TFeeRule(threshold = Some(threshold), constantFee = Some(constantFee), percentage = Some(percentage))
+}

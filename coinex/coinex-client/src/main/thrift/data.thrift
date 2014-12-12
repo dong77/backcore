@@ -321,6 +321,8 @@ struct MarketSide {
 struct TFeeRule {
     1: optional i64 fee
     2: optional double percentage
+    3: optional i64 threshold
+    4: optional i64 constantFee
 }
 
 struct TFeeConfig {
