@@ -14,7 +14,7 @@ import com.coinport.coinex.common.Constants
 class RichDouble(d: Double) {
   def reciprocal = RDouble(d, true)
   def !!! = {
-    if (d < 1.0) scaled(26)
+    if (d < 1.0) scaled(12)
     else if (d > 1.0) scaled(8)
     else d
   }
