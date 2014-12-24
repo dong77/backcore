@@ -15,35 +15,38 @@ import Implicits._
 AccountConfig(
   feeConfig = FeeConfig(
     marketFeeRules = Map(
-      (Btc ~> Ltc) -> PercentageFee(0.001),
-      (Ltc ~> Btc) -> PercentageFee(0.001),
+      (Btc ~> Ltc) -> PercentageFee(0.000),
+      (Ltc ~> Btc) -> PercentageFee(0.000),
 
-      (Btc ~> Doge) -> PercentageFee(0.001),
-      (Doge ~> Btc) -> PercentageFee(0.001),
+      (Btc ~> Doge) -> PercentageFee(0.000),
+      (Doge ~> Btc) -> PercentageFee(0.000),
 
-      (Btc ~> Pts) -> PercentageFee(0.001),
-      (Pts ~> Btc) -> PercentageFee(0.001),
+      (Btc ~> Pts) -> PercentageFee(0.000),
+      (Pts ~> Btc) -> PercentageFee(0.000),
 
-      (Btc ~> Drk) -> PercentageFee(0.001),
-      (Drk ~> Btc) -> PercentageFee(0.001),
+      (Btc ~> Drk) -> PercentageFee(0.000),
+      (Drk ~> Btc) -> PercentageFee(0.000),
 
-      (Btc ~> Bc) -> PercentageFee(0.001),
-      (Bc ~> Btc) -> PercentageFee(0.001),
+      (Btc ~> Bc) -> PercentageFee(0.000),
+      (Bc ~> Btc) -> PercentageFee(0.000),
 
-      (Btc ~> Vrc) -> PercentageFee(0.001),
-      (Vrc ~> Btc) -> PercentageFee(0.001),
+      (Btc ~> Vrc) -> PercentageFee(0.000),
+      (Vrc ~> Btc) -> PercentageFee(0.000),
 
-      (Btc ~> Zet) -> PercentageFee(0.001),
-      (Zet ~> Btc) -> PercentageFee(0.001),
+      (Btc ~> Zet) -> PercentageFee(0.000),
+      (Zet ~> Btc) -> PercentageFee(0.000),
 
-      (Btc ~> Btsx) -> PercentageFee(0.001),
-      (Btsx ~> Btc) -> PercentageFee(0.001),
+      (Btc ~> Btsx) -> PercentageFee(0.000),
+      (Btsx ~> Btc) -> PercentageFee(0.000),
 
-      (Btc ~> Nxt) -> PercentageFee(0.001),
-      (Nxt ~> Btc) -> PercentageFee(0.001),
+      (Btc ~> Nxt) -> PercentageFee(0.000),
+      (Nxt ~> Btc) -> PercentageFee(0.000),
 
-      (Btc ~> Xrp) -> PercentageFee(0.001),
-      (Xrp ~> Btc) -> PercentageFee(0.001)
+      (Btc ~> Xrp) -> PercentageFee(0.000),
+      (Xrp ~> Btc) -> PercentageFee(0.000),
+
+      (Cny ~> Gooc) -> PercentageFee(0.002),
+      (Gooc ~> Cny) -> PercentageFee(0.002)
     ),
 
     robotFeeRules = Map(
@@ -62,8 +65,9 @@ AccountConfig(
       Btsx -> ConstantFee(2.internalValue(Btsx)),
       Nxt -> ConstantFee(2.internalValue(Nxt)),
       Xrp -> ConstantFee(1.internalValue(Xrp)),
+      Gooc -> ConstantFee(1.internalValue(Gooc)),
       Cny -> LadderFee(500.internalValue(Cny), 2.internalValue(Cny), 0.004)),
 
-    freeOfTxChargeUserIdThreshold = 1E9.toLong + 20000000 // 1 thousand
+    freeOfTxChargeUserIdThreshold = 1E9.toLong + 1440 // 1 thousand
     )
 )

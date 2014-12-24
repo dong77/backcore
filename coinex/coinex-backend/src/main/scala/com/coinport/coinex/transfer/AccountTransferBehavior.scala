@@ -30,7 +30,11 @@ trait AccountTransferBehavior {
       case Some(Currency.Xrp) => Currency.Xrp
       case _ => transfer.currency
     }
-    checkCurrency.value >= Currency.Btc.value && (transferConfig.isEmpty || !(transferConfig.get.manualCurrency.getOrElse(Set.empty[Currency]).contains(checkCurrency)))
+    // TODO(c): remove this hack after supporting auto deposit gooc
+    if (checkCurrency == Currency.Gooc)
+      false
+    else
+      checkCurrency.value >= Currency.Btc.value && (transferConfig.isEmpty || !(transferConfig.get.manualCurrency.getOrElse(Set.empty[Currency]).contains(checkCurrency)))
   }
 
   def intTransferHandlerObjectMap() {
