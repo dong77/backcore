@@ -45,8 +45,8 @@ AccountConfig(
       (Btc ~> Xrp) -> PercentageFee(0.000),
       (Xrp ~> Btc) -> PercentageFee(0.000),
 
-      (Cny ~> Gooc) -> PercentageFee(0.002),
-      (Gooc ~> Cny) -> PercentageFee(0.002)
+      (Cny ~> Gooc) -> PercentageFee(0.001),
+      (Gooc ~> Cny) -> PercentageFee(0.001)
     ),
 
     robotFeeRules = Map(
@@ -68,6 +68,6 @@ AccountConfig(
       Gooc -> ConstantFee(1.internalValue(Gooc)),
       Cny -> LadderFee(500.internalValue(Cny), 2.internalValue(Cny), 0.004)),
 
-    freeOfTxChargeUserIdThreshold = 1E9.toLong + 1440 // 1 thousand
+    freeOfTxChargeUserIdThreshold = 1E9.toLong + 1440 // first 1440 users
     )
 )
