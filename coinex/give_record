@@ -18,4 +18,7 @@ date        from         id          amount     currency  reason
 2014-08-18  1000000453   1000001012  0.001      btc       new users a 0.001BTC reward for up to 500 users
 2014-08-22  1000000015   1000001010  199.01     nxt       deposit nxt(after fix nxt can't deposit bug)
 2014-08-18  1000000453   1000001414  100000     btsx      use for depth Btsx-Cny making
-2014-08-18  0            1           9955.006   btsx      fix bug: two withdrawal are recognized as minerfee
+2014-12-25  0            1           9955.006   btsx      fix bug: two withdrawal are recognized as minerfee
+2014-12-15  1000001435   1000001436  1000       cny       k line maker use
+2014-12-15  1000001418   1000001436  0.5        btc       k line maker use
+2014-12-15  1000001419   1000001436  50         ltc       k line maker use
