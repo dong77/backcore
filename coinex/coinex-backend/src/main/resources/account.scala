@@ -68,6 +68,6 @@ AccountConfig(
       Gooc -> ConstantFee(1.internalValue(Gooc)),
       Cny -> LadderFee(500.internalValue(Cny), 2.internalValue(Cny), 0.004)),
 
-    freeOfTxChargeUserIdThreshold = 1E9.toLong + 1440 // first 1440 users
+    freeOfTxChargeUserIdThreshold = 1E9.toLong + 1000 // first 1000 users
     )
 )
