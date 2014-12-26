@@ -7,9 +7,17 @@ package com.coinport.coinex.fee
 
 import com.coinport.coinex.data.Fee
 import com.coinport.coinex.data._
+import com.coinport.coinex.common.Constants
 import Implicits._
 
+object FeeCounter {
+  val goocMarket = MarketSide(Currency.Gooc, Currency.Cny)
+  val goocReverseMarket = MarketSide(Currency.Cny, Currency.Gooc)
+}
+
 final class FeeCounter(feeConfig: FeeConfig) {
+  import FeeCounter._
+
   def count(event: Any): Seq[Fee] = if (countFee.isDefinedAt(event)) countFee(event) else Nil
 
   val countFee: PartialFunction[Any, Seq[Fee]] = {
@@ -39,8 +47,12 @@ final class FeeCounter(feeConfig: FeeConfig) {
         } { makerFee += rule.getFee(makerInAmount) }
       }
 
-      val result = Seq(Fee(tx.makerUpdate.current.userId, None, tx.side.outCurrency, makerFee),
-        Fee(tx.takerUpdate.current.userId, None, tx.side.inCurrency, takerFee))
+      val payee = if (tx.side == goocMarket || tx.side == goocReverseMarket)
+        Some(Constants.GOOC_TEAM_ID)
+      else
+        None
+
+      val result = Seq(Fee(tx.makerUpdate.current.userId, payee, tx.side.outCurrency, makerFee), Fee(tx.takerUpdate.current.userId, payee, tx.side.inCurrency, takerFee))
 
       result.filter(_.amount > 0)
 

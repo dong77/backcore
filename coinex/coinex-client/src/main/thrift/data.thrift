@@ -338,7 +338,7 @@ struct Fee {
     2: optional i64 payee  // pay to coinport if None
     3: Currency currency
     4: i64 amount
-    5: optional string basis
+    5: optional string basis  // the source of the fee. txid/transferId....
 }
 
 struct Refund {
