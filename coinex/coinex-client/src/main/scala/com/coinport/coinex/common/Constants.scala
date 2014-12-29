@@ -21,7 +21,7 @@ object Constants {
   val FIRST_USER_ID = 1000000000
   val NULL_USER_ID = 0
 
-  val GOOC_TEAM_ID = COINPORT_UID
+  val GOOC_TEAM_ID = 1000001449L
 
   // WARNING: use an enum somewhere else?
   val STOP_ORDER_ROBOT_TYPE = 1

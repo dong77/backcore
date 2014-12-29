@@ -59,7 +59,11 @@ final class FeeCounter(feeConfig: FeeConfig) {
     case t: AccountTransfer if t.`type` == TransferType.Withdrawal =>
       feeConfig.transferFeeRules.get(t.currency) match {
         case Some(rule) =>
-          Seq(Fee(t.userId, None, t.currency, rule.getFee(t.amount)))
+          if (t.userId == Constants.GOOC_TEAM_ID) {
+            Nil
+          } else {
+            Seq(Fee(t.userId, None, t.currency, rule.getFee(t.amount)))
+          }
         case None =>
           Nil
       }
