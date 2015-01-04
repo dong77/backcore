@@ -33,9 +33,12 @@ class UserProcessor(mailer: ActorRef, bitwayProcessors: collection.immutable.Map
         case None =>
           val verificationToken = generateRandomHexToken(userProfile.email)
           val profile = manager.regulateProfile(userProfile, password, verificationToken, referralParams)
-          persist(DoRegisterUser(profile, null, referralParams))(updateState)
-          sender ! RegisterUserSucceeded(profile)
-          sendEmailVerificationEmail(profile)
+          persist(DoRegisterUser(profile, null, referralParams)) {
+            event =>
+              updateState(event)
+              sender ! RegisterUserSucceeded(profile)
+              sendEmailVerificationEmail(profile)
+          }
       }
 
     case m @ DoSendVerificationCodeEmail(email, code) =>
@@ -48,6 +51,15 @@ class UserProcessor(mailer: ActorRef, bitwayProcessors: collection.immutable.Map
 
     case m @ DoResendVerifyEmail(email) =>
       manager.getUser(email) match {
+        case Some(profile) if profile.verificationToken.isEmpty =>
+          val newProfile = profile.copy(verificationToken = Some(generateRandomHexToken(profile.email)))
+          persist(DoUpdateUserProfile(newProfile)) {
+            event =>
+              log.error(s"Request send mail to user without verificationToken, reset verificationToken : $newProfile")
+              updateState(event)
+              sender ! ResendVerifyEmailSucceeded(profile.id, profile.email)
+              sendEmailVerificationEmail(newProfile)
+          }
         case Some(profile) =>
           sender ! ResendVerifyEmailSucceeded(profile.id, profile.email)
           sendEmailVerificationEmail(profile)
