@@ -243,11 +243,12 @@ class UserProcessor(mailer: ActorRef, bitwayProcessors: collection.immutable.Map
   }
 
   private def sendEmailVerificationEmail(profile: UserProfile) {
-    log.info(s"(register verification code : ${profile.email}, ${profile.verificationToken.get})")
-    mailer ! DoSendEmail(profile.email, EmailType.RegisterVerify, Map(
-      "NAME" -> profile.realName.getOrElse(profile.email),
-      "LANG" -> "CHINESE",
-      "TOKEN" -> profile.verificationToken.get))
+    log.info(s"(register verification code : ${profile.email}, ${profile.verificationToken.getOrElse("")})")
+    if (profile.verificationToken.isDefined)
+      mailer ! DoSendEmail(profile.email, EmailType.RegisterVerify, Map(
+        "NAME" -> profile.realName.getOrElse(profile.email),
+        "LANG" -> "CHINESE",
+        "TOKEN" -> profile.verificationToken.get))
   }
 
   private def sendRequestPasswordResetEmail(profile: UserProfile) {
