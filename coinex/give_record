@@ -22,3 +22,4 @@ date        from         id          amount     currency  reason
 2014-12-15  1000001435   1000001436  1000       cny       k line maker use
 2014-12-15  1000001418   1000001436  0.5        btc       k line maker use
 2014-12-15  1000001419   1000001436  50         ltc       k line maker use
+2014-12-15  1000001415   1000001414  45000      btsx      depth maker use
