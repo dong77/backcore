@@ -50,11 +50,11 @@ object CoinexBuild extends Build {
     scalacOptions += "-deprecation",
     publishArtifact in Test := false,
     publishMavenStyle := true,
-    publishTo := Some("Sonatype Snapshots Nexus" at "http://192.168.0.105:8081/nexus/content/repositories/snapshots"),
+    publishTo := Some("Sonatype Snapshots Nexus" at "https://nexus.coinport.com/nexus/content/repositories/snapshots"),
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     resolvers ++= Seq(
       Resolver.sonatypeRepo("snapshots"),
-      "Nexus Snapshots" at "http://192.168.0.105:8081/nexus/content/groups/public",
+      "Nexus Snapshots" at "https://nexus.coinport.com/nexus/content/groups/public",
       "Spray Repo" at "http://repo.spray.io"
       // "scct-github-repository" at "http://mtkopone.github.com/scct/maven-repo"
       )) ++ assemblySettings ++ Seq(
@@ -124,7 +124,7 @@ object CoinexBuild extends Build {
     .settings(packageArchetype.java_server:_*)
     .settings(packageDescription in Debian := "coinex")
     .settings(
-      libraryDependencies += ("com.coinport" %% "akka-persistence-hbase" % "1.0.9-SNAPSHOT")
+      libraryDependencies += ("com.coinport" %% "akka-persistence-hbase" % "1.0.10-SNAPSHOT")
         .exclude("org.jboss.netty", "netty")
         .exclude("org.jruby", "jruby-complete")
         .exclude("javax.xml.stream", "stax-api")
