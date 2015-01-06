@@ -50,6 +50,8 @@ object CoinexBuild extends Build {
     scalacOptions += "-deprecation",
     publishArtifact in Test := false,
     publishMavenStyle := true,
+    publishArtifact in (Compile, packageDoc) := false,
+    publishArtifact in (Compile, packageSrc) := false,
     publishTo := Some("Sonatype Snapshots Nexus" at "https://nexus.coinport.com/nexus/content/repositories/snapshots"),
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     resolvers ++= Seq(
