@@ -51,7 +51,7 @@ object MessageJsonWriter extends MessageWriter {
   }
 
   private def emptyCnyAddress(transfer: AccountTransfer): AccountTransfer = {
-    if (transfer.currency == Currency.Cny && transfer.`type` == TransferType.Withdrawal) {
+    if ((transfer.currency == Currency.Cny || transfer.currency == Currency.Gooc) && transfer.`type` == TransferType.Withdrawal) {
       transfer.copy(address = None)
     } else {
       transfer
