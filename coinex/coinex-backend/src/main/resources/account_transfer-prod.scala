@@ -9,15 +9,15 @@ new AccountTransferConfig {
   override val manualCurrency: collection.Set[Currency] = collection.Set(Cny, Gooc)
   override val autoConfirmAmount: collection.Map[Currency, Long] =
     collection.Map(
-      Btc -> 3E8.toLong,
-      Ltc -> 120E8.toLong,
-      Doge -> 2000000E8.toLong,
-      Bc -> 5000E8.toLong,
-      Drk -> 140E8.toLong,
-      Vrc -> 2000E8.toLong,
-      Zet -> 5000E8.toLong,
+      Btc -> 5E8.toLong,
+      Ltc -> 600E8.toLong,
+      Doge -> 5000000E8.toLong,
+      Bc -> 50000E8.toLong,
+      Drk -> 500E8.toLong,
+      Vrc -> 5000E8.toLong,
+      Zet -> 10000E8.toLong,
       Btsx -> 50000E8.toLong,
-      Nxt -> 3000E8.toLong,
+      Nxt -> 5000E8.toLong,
       Xrp -> 100000E8.toLong)
   override val enableUsersToInner:collection.Map[Currency, Boolean] = collection.Map(Btc -> true, Ltc -> true, Doge -> true, Bc -> true, Drk -> true, Vrc -> true, Zet -> true, Btsx -> false, Nxt -> false, Xrp -> false)
 }
