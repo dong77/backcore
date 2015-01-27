@@ -23,7 +23,13 @@ class ApiAuthView(seed: String) extends ExtendedView {
   def receive = LoggingReceive {
     case QueryApiSecrets(userId, identifier) =>
       identifier match {
-        case Some(identifier) => sender ! QueryApiSecretsResult(userId, manager.getSecret(identifier))
+        case Some(identifier) => {
+          val secrets = manager.getSecret(identifier) match {
+            case Some(secret) => Seq(secret)
+            case None => Nil
+          }
+          sender ! QueryApiSecretsResult(userId, secrets)
+        }
         case None => sender ! QueryApiSecretsResult(userId, manager.getUserSecrets(userId))
       }
 
@@ -38,6 +44,9 @@ class ApiAuthView(seed: String) extends ExtendedView {
         case Left(code) => sender ! ApiSecretOperationResult(code, Nil)
         case Right(_) => sender ! ApiSecretOperationResult(ErrorCode.Ok, Nil)
       }
+
+    case QueryApiSecretByToken(identifier) =>
+      QueryApiSecretByTokenResult(manager.getSecret(identifier))
   }
 }
 

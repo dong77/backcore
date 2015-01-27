@@ -82,6 +82,15 @@ object UserService extends AkkaService {
     }
   }
 
+  def getApiSecret(token: String) = {
+    val command = QueryApiSecretByToken(token)
+    backend ? command map {
+      case QueryApiSecretByTokenResult(secret) if secret.isDefined =>
+        ApiResult(true, 0, "", secret)
+      case _ => ApiResult(false, 0, "not found secret by this token", None)
+    }
+  }
+
   def generateApiSecret(userId: Long) = {
     val command = DoAddNewApiSecret(userId)
     backend ? command map {

@@ -147,4 +147,16 @@ object MarketService extends AkkaService {
         ApiResult(data = Some(data))
     }
   }
+
+  def getJsonTickers(marketSides: Seq[MarketSide]) = {
+    backend ? QueryMetrics map {
+      case result: Metrics =>
+        val map = result.metricsByMarket
+        val data = marketSides
+          .filter(s => map.contains(s))
+          .map(side => side.S -> jsonFromTicker(map.get(side).get, side, side.outCurrency)).toMap
+        ApiResult(data = Some(data))
+    }
+  }
+
 }

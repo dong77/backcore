@@ -196,10 +196,10 @@ typedef data.BankCard                           _BankCard
 /* C,P  */ struct DoAddNewApiSecret                       {1: i64 userId}
 /* C,P  */ struct DoDeleteApiSecret                       {1: _ApiSecret secret}
 /* R    */ struct ApiSecretOperationResult                {1: _ErrorCode error, 2: list<_ApiSecret> secrets}
-
 /* Q    */ struct QueryApiSecrets                         {1: i64 userId, 2: optional string identifier}
 /* R    */ struct QueryApiSecretsResult                   {1: i64 userId, 2: list<_ApiSecret> secrets}
-
+/* R    */ struct QueryApiSecretByToken                   {1: string identifier}
+/* Q    */ struct QueryApiSecretByTokenResult             {1: optional _ApiSecret secret}
 
 ////////// MarketProcessor
 /* C,P  */ struct DoCancelOrder                           {1: _MarketSide side, 2: i64 id, 3: i64 userId}

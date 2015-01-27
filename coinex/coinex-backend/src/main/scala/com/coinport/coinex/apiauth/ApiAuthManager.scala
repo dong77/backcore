@@ -29,10 +29,7 @@ class ApiAuthManager(initialSeed: String) extends Manager[TApiSecretState] {
   }
 
   def getSecret(identifier: String) = {
-    state.identifierLookupMap.get(identifier) match {
-      case Some(secret) => Seq(secret)
-      case None => Nil
-    }
+    state.identifierLookupMap.get(identifier)
   }
 
   def addNewSecret(userId: Long): Either[ErrorCode, ApiSecret] = {

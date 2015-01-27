@@ -1,5 +1,5 @@
 #!/bin/sh
-exec scala "$0" "$@"
+exec ~/software/scala-2.10.3/bin/scala "$0" "$@"
 !#
 
 
