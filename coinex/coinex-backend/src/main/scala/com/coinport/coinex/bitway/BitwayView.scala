@@ -22,6 +22,8 @@ class BitwayView(supportedCurrency: Currency, config: BitwayConfig) extends Exte
     case Persistent(msg, _) => updateState(msg)
     case QueryCryptoCurrencyAddressStatus(currency, addressType) =>
       sender ! QueryCryptoCurrencyAddressStatusResult(currency, manager.getAddressStatus(addressType))
+    case QueryAllDetailReserve(currency) =>
+      sender ! QueryAllDetailReserveResult(currency, manager.getAllAddressStatus(), manager.getReserveAmounts)
     case QueryCryptoCurrencyNetworkStatus(currency) =>
       sender ! QueryCryptoCurrencyNetworkStatusResult(currency, manager.getNetworkStatus)
     case QueryReserveStatus(currency) =>

@@ -2,6 +2,7 @@ package com.coinport.coinex.api.service
 
 import com.coinport.coinex.api.model._
 import com.coinport.coinex.data._
+import com.coinport.coinex.data.CryptoCurrencyAddressType._
 import akka.pattern.ask
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -46,6 +47,37 @@ object BitwayService extends AkkaService {
             )
         }
         ApiResult(data = Some(data))
+      case r =>
+        ApiResult(false, -1, "unknown result", Some(r))
+    }
+  }
+
+  def getReserve(currency: Currency) = {
+    backend ? QueryAllDetailReserve(currency) map {
+      case result: QueryAllDetailReserveResult =>
+        val total = result.amounts.map(_._2).sum.toLong
+        val user = result.amounts.get(CryptoCurrencyAddressType.User).getOrElse(0L)
+        val hot = result.amounts.get(Hot).getOrElse(0L)
+        val cold = result.amounts.get(Cold).getOrElse(0L)
+        val stats = Seq(CurrencyObject(currency, total).value,
+          CurrencyObject(currency, user).value,
+          CurrencyObject(currency, hot).value,
+          CurrencyObject(currency, cold).value)
+        val timestamp = System.currentTimeMillis
+        val distribution = result.status.map {
+          case kv =>
+            val addressType = kv._1.toString.toLowerCase
+            val stat = kv._2 map {
+              case s =>
+                Seq(s._1,
+                  CurrencyObject(currency, s._2.confirmedAmount).value,
+                  addressType,
+                  s._2.message,
+                  s._2.signMessage)
+            }
+            stat.toSeq
+        }
+        ApiResult(data = Some(ApiDetailReserve(timestamp, currency, stats, distribution.toSeq)))
       case r =>
         ApiResult(false, -1, "unknown result", Some(r))
     }

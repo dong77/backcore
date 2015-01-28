@@ -358,6 +358,12 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
     Cold -> getReserveAmount(Cold)
   )
 
+  def getAllAddressStatus(confirmationNum: Option[Int] = None): Map[CryptoCurrencyAddressType, Map[String, AddressStatusResult]] = {
+    val addressTypes: Seq[CryptoCurrencyAddressType] = Seq(CryptoCurrencyAddressType.User, CryptoCurrencyAddressType.Cold, CryptoCurrencyAddressType.Hot)
+    val statuss = Map(addressTypes.map(t => (t -> getAddressStatus(t))): _*)
+    statuss
+  }
+
   def notProcessed(tx: CryptoCurrencyTransaction): Boolean = {
     tx.sigId.isDefined && !sigIdsSinceLastBlock.contains(tx.sigId.get)
   }

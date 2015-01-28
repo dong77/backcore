@@ -226,6 +226,8 @@ typedef data.BankCard                           _BankCard
 /* I    */ struct MultiCryptoCurrencyTransactionMessage   {1: _Currency currency, 2: list<_CryptoCurrencyTransaction> txs, 3: optional _BlockIndex reorgIndex, 4: optional i32 confirmNum, 5: optional i64 timestamp, 6: optional bool enableUsersToInner}
 /* Q    */ struct QueryCryptoCurrencyAddressStatus        {1: _Currency currency, 2: _CryptoCurrencyAddressType addressType}
 /* R    */ struct QueryCryptoCurrencyAddressStatusResult  {1: _Currency currency, 2: map<string, _AddressStatusResult> status}
+/* Q    */ struct QueryAllDetailReserve                   {1: _Currency currency}
+/* R    */ struct QueryAllDetailReserveResult             {1: _Currency currency, 2: map<_CryptoCurrencyAddressType, map<string, _AddressStatusResult>> status, 3: map<_CryptoCurrencyAddressType, i64> amounts}
 /* Q    */ struct QueryCryptoCurrencyNetworkStatus        {1: _Currency currency}
 /* R    */ struct QueryCryptoCurrencyNetworkStatusResult  {1: _Currency currency, 2: _CryptoCurrencyNetworkStatus status}
 /* Q    */ struct QueryReserveStatus                      {1: _Currency currency}

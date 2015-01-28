@@ -52,3 +52,5 @@ case class ApiActorsInfo(pathList: Seq[ApiActorsPath])
 
 case class ApiCurrencyReserve(available: CurrencyObject, total: CurrencyObject, user: CurrencyObject, hot: CurrencyObject, cold: CurrencyObject)
 
+case class ApiDetailReserve(timestamp: Long, currency: String, stats: Seq[Double], distribution: Seq[Seq[Any]])
+
