@@ -54,3 +54,4 @@ case class ApiCurrencyReserve(available: CurrencyObject, total: CurrencyObject, 
 
 case class ApiDetailReserve(timestamp: Long, currency: String, stats: Seq[Double], distribution: Seq[Seq[Any]])
 
+case class ApiV2Transaction(id: String, timestamp: Long, price: Double, amount: Double, maker: String, taker: String, isSell: Boolean, taker_order_id: String, maker_order_id: String)
