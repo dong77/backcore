@@ -72,6 +72,21 @@ object UserService extends AkkaService {
     }
   }
 
+  def getProfileApiV2(userId: Long) = {
+    val command = QueryProfile(uid = Some(userId))
+    backend ? command map {
+      case result: QueryProfileResult =>
+        result.userProfile match {
+          case Some(profile) =>
+            ApiResult(true, 0, "", Some(apiV2FromProfile(profile)))
+          case None =>
+            ApiResult(false, ErrorCode.UserNotExist.value, "用户不存在", None)
+        }
+      case e =>
+        ApiResult(false, -1, e.toString)
+    }
+  }
+
   def getApiSecret(userId: Long) = {
     val command = QueryApiSecrets(userId, None)
     backend ? command map {

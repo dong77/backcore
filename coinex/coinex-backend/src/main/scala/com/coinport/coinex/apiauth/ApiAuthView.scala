@@ -46,7 +46,7 @@ class ApiAuthView(seed: String) extends ExtendedView {
       }
 
     case QueryApiSecretByToken(identifier) =>
-      QueryApiSecretByTokenResult(manager.getSecret(identifier))
+      sender ! QueryApiSecretByTokenResult(manager.getSecret(identifier))
   }
 }
 

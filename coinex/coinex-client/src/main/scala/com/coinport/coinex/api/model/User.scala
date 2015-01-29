@@ -20,3 +20,15 @@ case class User(id: Long,
   googleAuthenticatorSecret: Option[String] = None,
   securityPreference: Option[String] = None,
   realName2: Option[String] = None)
+
+case class ApiV2Profile(
+  uid: Long,
+  email: String,
+  name: Option[String],
+  mobile: Option[String],
+  apiToken: Option[String],
+  apiSecret: Option[String],
+  emailVerified: Boolean,
+  mobileVerified: Boolean,
+  googleAuthEnabled: Boolean)
+
