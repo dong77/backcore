@@ -359,7 +359,7 @@ class BitwayManager(supportedCurrency: Currency, config: BitwayConfig)
   )
 
   def getAllAddressStatus(confirmationNum: Option[Int] = None): Map[CryptoCurrencyAddressType, Map[String, AddressStatusResult]] = {
-    val addressTypes: Seq[CryptoCurrencyAddressType] = Seq(CryptoCurrencyAddressType.User, CryptoCurrencyAddressType.Cold, CryptoCurrencyAddressType.Hot)
+    val addressTypes: Seq[CryptoCurrencyAddressType] = Seq(CryptoCurrencyAddressType.Cold, CryptoCurrencyAddressType.Hot)
     val statuss = Map(addressTypes.map(t => (t -> getAddressStatus(t))): _*)
     statuss
   }
