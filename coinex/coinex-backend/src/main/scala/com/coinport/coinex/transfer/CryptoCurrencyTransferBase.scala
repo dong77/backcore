@@ -276,7 +276,8 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
           port =>
             val handler = sigIdWithTxPort2HandlerMap(sigId)(port)
             val created = handler.item.created.getOrElse(System.currentTimeMillis() - REMOVE_OBSOLETE_TIME)
-            if (System.currentTimeMillis - created >= REMOVE_OBSOLETE_TIME) {
+            if ((handler.item.status == TransferStatus.Succeeded || handler.item.status == TransferStatus.ReorgingSucceeded)
+              && System.currentTimeMillis - created >= REMOVE_OBSOLETE_TIME) {
               removeItemHandlerFromMap(sigId, port)
             }
         }
