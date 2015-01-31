@@ -270,17 +270,17 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
   }
 
   def removeObsoleteItems() {
-   sigIdWithTxPort2HandlerMap.keys.foreach {
-     sigId =>
-      sigIdWithTxPort2HandlerMap(sigId).keys foreach {
-        port =>
-          val handler = sigIdWithTxPort2HandlerMap(sigId)(port)
-          val created = handler.item.created.getOrElse(System.currentTimeMillis() - REMOVE_OBSOLETE_TIME)
-          if (System.currentTimeMillis - created >= REMOVE_OBSOLETE_TIME) {
-            removeItemHandlerFromMap(sigId, port)
-          }
-      }
-    } 
+    sigIdWithTxPort2HandlerMap.keys.foreach {
+      sigId =>
+        sigIdWithTxPort2HandlerMap(sigId).keys foreach {
+          port =>
+            val handler = sigIdWithTxPort2HandlerMap(sigId)(port)
+            val created = handler.item.created.getOrElse(System.currentTimeMillis() - REMOVE_OBSOLETE_TIME)
+            if (System.currentTimeMillis - created >= REMOVE_OBSOLETE_TIME) {
+              removeItemHandlerFromMap(sigId, port)
+            }
+        }
+    }
   }
 
   override def handleFailed(handler: CryptoCurrencyTransferHandler, error: Option[ErrorCode] = None) {
@@ -321,7 +321,7 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
                 case _ =>
                   getItemHandlerFromMap(tx.sigId.get, outputPort) match {
                     case Some(handler) if handler.item.status == TransferStatus.Succeeded =>
-                      log.info(s"succeeded deposit item meet tx again: ${tx.toString}, ${handler.item.toString}")
+                      logger.info(s"succeeded deposit item meet tx again: ${tx.toString}, ${handler.item.toString}")
                     case Some(handler) =>
                       handler.setTimeStamp(timestamp).onNormal(tx)
                     case _ =>
