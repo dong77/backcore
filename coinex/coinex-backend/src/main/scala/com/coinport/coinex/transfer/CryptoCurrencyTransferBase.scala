@@ -259,13 +259,28 @@ trait CryptoCurrencyTransferBase {
 
 trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
   val sigIdWithTxPort2HandlerMap = Map.empty[String, Map[CryptoCurrencyTransactionPort, CryptoCurrencyTransferHandler]]
-
+  val REMOVE_OBSOLETE_TIME = 48 * 3600 * 1000L
   override def handleSucceeded(itemId: Long) {
-    if (id2HandlerMap.contains(itemId)) {
-      val item = id2HandlerMap(itemId).item
-      removeItemHandlerFromMap(item.sigId.get, item.to.get)
-    }
     super.handleSucceeded(itemId)
+    //if (id2HandlerMap.contains(itemId)) {
+    // val item = id2HandlerMap(itemId).item
+    // removeItemHandlerFromMap(item.sigId.get, item.to.get)
+    //}
+    removeObsoleteItems()
+  }
+
+  def removeObsoleteItems() {
+   sigIdWithTxPort2HandlerMap.keys.foreach {
+     sigId =>
+      sigIdWithTxPort2HandlerMap(sigId).keys foreach {
+        port =>
+          val handler = sigIdWithTxPort2HandlerMap(sigId)(port)
+          val created = handler.item.created.getOrElse(System.currentTimeMillis() - REMOVE_OBSOLETE_TIME)
+          if (System.currentTimeMillis - created >= REMOVE_OBSOLETE_TIME) {
+            removeItemHandlerFromMap(sigId, port)
+          }
+      }
+    } 
   }
 
   override def handleFailed(handler: CryptoCurrencyTransferHandler, error: Option[ErrorCode] = None) {
@@ -305,6 +320,8 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
                   }
                 case _ =>
                   getItemHandlerFromMap(tx.sigId.get, outputPort) match {
+                    case Some(handler) if handler.item.status == TransferStatus.Succeeded =>
+                      log.info(s"succeeded deposit item meet tx again: ${tx.toString}, ${handler.item.toString}")
                     case Some(handler) =>
                       handler.setTimeStamp(timestamp).onNormal(tx)
                     case _ =>
