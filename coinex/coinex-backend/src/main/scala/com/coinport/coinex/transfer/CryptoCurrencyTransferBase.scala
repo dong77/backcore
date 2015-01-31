@@ -321,7 +321,7 @@ trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
                   }
                 case _ =>
                   getItemHandlerFromMap(tx.sigId.get, outputPort) match {
-                    case Some(handler) if handler.item.status == TransferStatus.Succeeded =>
+                    case Some(handler) if handler.item.status == TransferStatus.Succeeded || handler.item.status == TransferStatus.ReorgingSucceeded =>
                       logger.info(s"succeeded deposit item meet tx again: ${tx.toString}, ${handler.item.toString}")
                     case Some(handler) =>
                       handler.setTimeStamp(timestamp).onNormal(tx)
