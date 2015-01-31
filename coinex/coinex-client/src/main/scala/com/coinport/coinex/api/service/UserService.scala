@@ -102,7 +102,7 @@ object UserService extends AkkaService {
     backend ? command map {
       case QueryApiSecretByTokenResult(secret) if secret.isDefined =>
         ApiResult(true, 0, "", secret)
-      case _ => ApiResult(false, 0, "not found secret by this token", None)
+      case _ => ApiResult(false, 1002, "not found secret by this token", None)
     }
   }
 
