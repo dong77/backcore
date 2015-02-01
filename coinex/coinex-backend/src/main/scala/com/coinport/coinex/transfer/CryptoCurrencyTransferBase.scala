@@ -259,7 +259,7 @@ trait CryptoCurrencyTransferBase {
 
 trait CryptoCurrencyTransferDepositLikeBase extends CryptoCurrencyTransferBase {
   val sigIdWithTxPort2HandlerMap = Map.empty[String, Map[CryptoCurrencyTransactionPort, CryptoCurrencyTransferHandler]]
-  val REMOVE_OBSOLETE_TIME = 48 * 3600 * 1000L
+  val REMOVE_OBSOLETE_TIME = 24 * 3600 * 1000L
   override def handleSucceeded(itemId: Long) {
     super.handleSucceeded(itemId)
     //if (id2HandlerMap.contains(itemId)) {

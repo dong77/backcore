@@ -62,7 +62,7 @@ trait CryptoCurrencyTransferHandler {
   }
 
   def checkConfirm(lastBlockHeight: Long): Boolean = {
-    if (item.includedBlock.isDefined && item.status.get != Succeeded && item.status.get != Confirmed && item.status.get != ReorgingSucceeded ) {
+    if (item.includedBlock.isDefined && item.status.get != Succeeded && item.status.get != Confirmed && item.status.get != ReorgingSucceeded) {
       val confirmed = lastBlockHeight - item.includedBlock.get.height.getOrElse(Long.MaxValue) >= itemComfirmNum - 1
       if (confirmed) {
         val statusUpdate = item.txType.get match {
