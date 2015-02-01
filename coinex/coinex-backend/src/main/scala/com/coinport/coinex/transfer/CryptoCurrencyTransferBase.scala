@@ -61,7 +61,7 @@ trait CryptoCurrencyTransferBase {
 
   def checkConfirm(currency: Currency, timestamp: Option[Long], confirmNum: Option[Int], enableUsersToInner: Option[Boolean]) {
     val lastBlockHeight: Long = manager.getLastBlockHeight(currency)
-    id2HandlerMap.values filter (_.item.currency == currency) foreach {
+    id2HandlerMap.values filter (i => i.item.currency == currency && i.item.status.get != TransferStatus.Succeeded && i.item.status.get != TransferStatus.ReorgingSucceeded) foreach {
       handler =>
         handler.setTimeStamp(timestamp).setConfirmNum(confirmNum).setEnableUsersToInner(enableUsersToInner)
         if (handler.checkConfirm(lastBlockHeight) && handler.item.status.get == Succeeded) {
