@@ -78,7 +78,7 @@ object UserService extends AkkaService {
       case result: QueryProfileResult =>
         result.userProfile match {
           case Some(profile) =>
-            ApiResult(true, 0, "", Some(apiV2FromProfile(profile)))
+            ApiResult(true, 0, "", Some(apiV2FromProfile(profile, Seq.empty)))
           case None =>
             ApiResult(false, ErrorCode.UserNotExist.value, "用户不存在", None)
         }
@@ -97,12 +97,12 @@ object UserService extends AkkaService {
     }
   }
 
-  def getApiTokenPairs(userId: Long) = {
+  def getAllApiSecrets(userId: Long) = {
     val command = QueryApiSecrets(userId, None)
     backend ? command map {
       case QueryApiSecretsResult(userId, secrets) if secrets.nonEmpty =>
         ApiResult(true, 0, "", Some(secrets))
-      case _ => ApiResult(true, 0, "", None)
+      case _ => ApiResult(false, 0, "no api created", None)
     }
   }
 

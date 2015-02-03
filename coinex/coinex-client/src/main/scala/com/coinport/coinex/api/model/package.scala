@@ -246,8 +246,8 @@ package object model {
     User(u.id, u.email, u.realName, u.passwordHash.getOrElse(""), u.nationalId, u.mobile, dmap, wmap)
   }
 
-  def apiV2FromProfile(u: UserProfile) = {
-    ApiV2Profile(u.id, u.email, u.realName, u.mobile, None, None, u.emailVerified, u.mobileVerified, u.googleAuthenticatorSecret.isDefined)
+  def apiV2FromProfile(u: UserProfile, apiTokenPairs: Seq[Seq[Option[String]]]) = {
+    ApiV2Profile(u.id, u.email, u.realName, u.mobile, apiTokenPairs, u.emailVerified, u.mobileVerified, u.googleAuthenticatorSecret.isDefined)
   }
 
   def fromNotification(n: Notification) = {
