@@ -77,7 +77,7 @@ object BitwayService extends AkkaService {
             }
             stat.toSeq
         }
-        ApiResult(data = Some(ApiDetailReserve(timestamp, currency, stats, distribution.toSeq)))
+        ApiResult(data = Some(ApiDetailReserve(timestamp, currency, stats, distribution.toSeq.flatten)))
       case r =>
         ApiResult(false, -1, "unknown result", Some(r))
     }

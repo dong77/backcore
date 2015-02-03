@@ -160,11 +160,10 @@ package object model {
   }
 
   def jsonFromTicker(metrics: MetricsByMarket, side: MarketSide, currency: Currency) = {
-    val item = currency2String(side.inCurrency)
-    val price = metrics.price
-    val high = metrics.high.getOrElse(0.0)
-    val low = metrics.low.getOrElse(0.0)
-    val volume = metrics.volume
+    val price = PriceObject(side, metrics.price).value
+    val high = PriceObject(side, metrics.high.getOrElse(0.0)).value
+    val low = PriceObject(side, metrics.low.getOrElse(0.0)).value
+    val volume = CurrencyObject(currency, metrics.volume).value
     val gain = metrics.gain.getOrElse(0.0)
 
     Seq(price, high, low, volume, gain)
