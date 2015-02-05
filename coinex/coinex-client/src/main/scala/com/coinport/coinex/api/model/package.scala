@@ -243,7 +243,7 @@ package object model {
   def fromProfile(u: UserProfile) = {
     val dmap = u.depositAddresses.map(_.toMap)
     val wmap = u.depositAddresses.map(_.toMap)
-    User(u.id, u.email, u.realName, u.passwordHash.getOrElse(""), u.nationalId, u.mobile, dmap, wmap)
+    User(u.id, u.email, u.realName, u.passwordHash.getOrElse(""), u.nationalId, u.mobile, dmap, wmap, None, u.status)
   }
 
   def apiV2FromProfile(u: UserProfile, apiTokenPairs: Seq[Seq[Option[String]]]) = {
